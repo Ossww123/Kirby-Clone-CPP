@@ -1,0 +1,24 @@
+.vs/
+# Visual Studio
+.vs/
+*.user
+bin/
+obj/
+Debug/
+Release/
+x64/
+*.suo
+*.sdf
+*.opensdf
+*.db
+*.opendb
+*.log
+*.tlog
+*.lastbuildstate
+*.idb
+*.pdb
+*.ilk
+*.exe
+*.dll
+*.lib
+*.exp
