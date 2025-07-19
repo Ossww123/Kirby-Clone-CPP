@@ -3,8 +3,14 @@
 class CCore
 {
 	SINGLE(CCore);
-	
+private:
+	HWND	m_hWnd;
+	POINT	m_ptResolution;
+
+
 public:
-	void init();
+	int init(HWND _hWnd, POINT _ptResolution);
+	void progress();
+
 };
 
