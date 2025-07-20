@@ -133,16 +133,19 @@
   <ItemGroup>
     <ClInclude Include="CCore.h" />
     <ClInclude Include="CKeyMgr.h" />
+    <ClInclude Include="CObject.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="KirbyClone.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="struct.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCore.cpp" />
     <ClCompile Include="CKeyMgr.cpp" />
+    <ClCompile Include="CObject.cpp" />
     <ClCompile Include="KirbyClone.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -23,6 +23,9 @@
     <Filter Include="Engine\03.Manager\KeyMgr">
       <UniqueIdentifier>{25a58a93-3963-47b0-bcb0-ec33c7bee689}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object">
+      <UniqueIdentifier>{635c0da9-812d-4bcf-a4b7-75e099e9c370}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -47,6 +50,12 @@
       <Filter>Engine\03.Manager\KeyMgr</Filter>
     </ClInclude>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="CObject.h">
+      <Filter>Engine\04. Object</Filter>
+    </ClInclude>
+    <ClInclude Include="struct.h">
+      <Filter>Engine\01. Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -69,5 +78,8 @@
       <Filter>Engine\03.Manager\KeyMgr</Filter>
     </ClCompile>
     <ClCompile Include="KirbyClone.cpp" />
+    <ClCompile Include="CObject.cpp">
+      <Filter>Engine\04. Object</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
