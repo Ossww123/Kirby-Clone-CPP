@@ -70,14 +70,30 @@ void CCore::update()
 {
 	Vec2 vPos = g_obj.GetPos();
 
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	if (CKeyMgr::GetInst()->IsKeyHold(KEY::LEFT))
 	{
 		vPos.x -= 200.f * CTimeMgr::GetInst()->GetfDT();
 	}
 
-	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	if (CKeyMgr::GetInst()->IsKeyHold(KEY::RIGHT))
 	{
 		vPos.x += 200.f * CTimeMgr::GetInst()->GetfDT();
+	}
+
+	if (CKeyMgr::GetInst()->IsKeyHold(KEY::UP))
+	{
+		vPos.y -= 200.f * CTimeMgr::GetInst()->GetfDT();
+	}
+
+	if (CKeyMgr::GetInst()->IsKeyHold(KEY::DOWN))
+	{
+		vPos.y += 200.f * CTimeMgr::GetInst()->GetfDT();
+	}
+
+	// TAP 테스트 - 스페이스바 누르면 중앙으로
+	if (CKeyMgr::GetInst()->IsKeyTap(KEY::SPACE))
+	{
+		vPos = Vec2(640.f, 400.f);
 	}
 
 	g_obj.SetPos(vPos);

@@ -38,7 +38,7 @@ void CKeyMgr::update()
     // 윈도우가 포커스 상태가 아니라면 모든 키를 AWAY상태로 처리
     if (nullptr == hFocusedWnd || hWnd != hFocusedWnd)
     {
-        for (int i = 0; i < (int)KEY::LAST; ++i)
+        for (size_t i = 0; i < (size_t)KEY::LAST; ++i)
         {
             m_vecKey[i].bPrevPush = false;
 
@@ -55,7 +55,7 @@ void CKeyMgr::update()
     }
 
     // 모든 키에 대해 상태 업데이트
-    for (int i = 0; i < (int)KEY::LAST; ++i)
+    for (size_t i = 0; i < (size_t)KEY::LAST; ++i)
     {
         // 키가 현재 눌려있는지 확인
         if (GetAsyncKeyState(g_arrVK[i]) & 0x8000)
