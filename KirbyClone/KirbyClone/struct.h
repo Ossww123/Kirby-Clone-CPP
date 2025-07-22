@@ -21,3 +21,10 @@ public:
 		, y((float)_y)
 	{}
 };
+
+
+struct tKeyInfo
+{
+	KEY_STATE   eState;     // 키의 상태
+	bool        bPrevPush;  // 이전 프레임에 눌렸는지 여부
+};

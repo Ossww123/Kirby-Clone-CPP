@@ -62,6 +62,9 @@
     <ClInclude Include="CTimeMgr.h">
       <Filter>Engine\03. Manager\TimeMgr</Filter>
     </ClInclude>
+    <ClInclude Include="enum.h">
+      <Filter>Engine\01. Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
