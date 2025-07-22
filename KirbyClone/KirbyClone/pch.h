@@ -9,5 +9,5 @@ using std::cout;
 using std::vector;
 
 #include "define.h"
-#include "struct.h"
 #include "enum.h"
+#include "struct.h"
