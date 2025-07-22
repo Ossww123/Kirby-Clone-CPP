@@ -10,3 +10,9 @@
 						 type();\
 						 ~type();
 
+/* ------------- */
+/* 키 매니저 관련 */
+/* ------------- */
+#define KEY_TAP(key)    CKeyMgr::GetInst()->IsKeyTap(key)
+#define KEY_HOLD(key)   CKeyMgr::GetInst()->IsKeyHold(key)
+#define KEY_AWAY(key)   CKeyMgr::GetInst()->IsKeyAway(key)

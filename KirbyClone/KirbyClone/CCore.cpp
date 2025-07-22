@@ -70,28 +70,28 @@ void CCore::update()
 {
 	Vec2 vPos = g_obj.GetPos();
 
-	if (CKeyMgr::GetInst()->IsKeyHold(KEY::LEFT))
+	if (KEY_HOLD(KEY::LEFT))
 	{
 		vPos.x -= 200.f * CTimeMgr::GetInst()->GetfDT();
 	}
 
-	if (CKeyMgr::GetInst()->IsKeyHold(KEY::RIGHT))
+	if (KEY_HOLD(KEY::RIGHT))
 	{
 		vPos.x += 200.f * CTimeMgr::GetInst()->GetfDT();
 	}
 
-	if (CKeyMgr::GetInst()->IsKeyHold(KEY::UP))
+	if (KEY_HOLD(KEY::UP))
 	{
 		vPos.y -= 200.f * CTimeMgr::GetInst()->GetfDT();
 	}
 
-	if (CKeyMgr::GetInst()->IsKeyHold(KEY::DOWN))
+	if (KEY_HOLD(KEY::DOWN))
 	{
 		vPos.y += 200.f * CTimeMgr::GetInst()->GetfDT();
 	}
 
 	// TAP 테스트 - 스페이스바 누르면 중앙으로
-	if (CKeyMgr::GetInst()->IsKeyTap(KEY::SPACE))
+	if (KEY_TAP(KEY::SPACE))
 	{
 		vPos = Vec2(640.f, 400.f);
 	}
@@ -114,4 +114,7 @@ void CCore::render()
 
 	BitBlt(m_hDC, 0, 0, m_ptResolution.x, m_ptResolution.y,
 		m_memDC, 0, 0, SRCCOPY);
+
+	// FPS 정보 업데이트 (여기!)
+	CTimeMgr::GetInst()->render();
 }
