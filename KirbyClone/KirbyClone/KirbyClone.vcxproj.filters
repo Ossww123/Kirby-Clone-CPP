@@ -17,14 +17,17 @@
     <Filter Include="Engine\01. Header">
       <UniqueIdentifier>{6d4c4080-1035-4e3c-aba5-38c6a746ebd1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\03.Manager">
-      <UniqueIdentifier>{1cd59d1a-6eaf-4e15-9e12-a0dd94783f39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\03.Manager\KeyMgr">
-      <UniqueIdentifier>{25a58a93-3963-47b0-bcb0-ec33c7bee689}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\04. Object">
       <UniqueIdentifier>{635c0da9-812d-4bcf-a4b7-75e099e9c370}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager">
+      <UniqueIdentifier>{1cd59d1a-6eaf-4e15-9e12-a0dd94783f39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\KeyMgr">
+      <UniqueIdentifier>{25a58a93-3963-47b0-bcb0-ec33c7bee689}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\TimeMgr">
+      <UniqueIdentifier>{7e795c79-488a-421b-9ac5-50d9d143f5be}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -47,7 +50,7 @@
       <Filter>Engine\01. Header</Filter>
     </ClInclude>
     <ClInclude Include="CKeyMgr.h">
-      <Filter>Engine\03.Manager\KeyMgr</Filter>
+      <Filter>Engine\03. Manager\KeyMgr</Filter>
     </ClInclude>
     <ClInclude Include="pch.h" />
     <ClInclude Include="CObject.h">
@@ -55,6 +58,9 @@
     </ClInclude>
     <ClInclude Include="struct.h">
       <Filter>Engine\01. Header</Filter>
+    </ClInclude>
+    <ClInclude Include="CTimeMgr.h">
+      <Filter>Engine\03. Manager\TimeMgr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -75,11 +81,14 @@
       <Filter>Engine\02. Core</Filter>
     </ClCompile>
     <ClCompile Include="CKeyMgr.cpp">
-      <Filter>Engine\03.Manager\KeyMgr</Filter>
+      <Filter>Engine\03. Manager\KeyMgr</Filter>
     </ClCompile>
     <ClCompile Include="KirbyClone.cpp" />
     <ClCompile Include="CObject.cpp">
       <Filter>Engine\04. Object</Filter>
+    </ClCompile>
+    <ClCompile Include="CTimeMgr.cpp">
+      <Filter>Engine\03. Manager\TimeMgr</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
