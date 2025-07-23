@@ -5,6 +5,7 @@ class CObject
 private:
 	Vec2	m_vPos;
 	Vec2	m_vScale;
+	CCollider* m_pCollider;
 
 public:
 	void SetPos(Vec2 _vPos) { m_vPos = _vPos; }
@@ -16,6 +17,9 @@ public:
 	// 가상 함수로 선언 - 자식 클래스에서 재정의 가능
 	virtual void Update() = 0;  // 순수 가상 함수 - 자식이 반드시 구현
 	virtual void Render(HDC _dc);  // 기본 렌더링 제공
+
+	void CreateCollider();
+	CCollider* GetCollider() { return m_pCollider; }
 
 public:
 	CObject();

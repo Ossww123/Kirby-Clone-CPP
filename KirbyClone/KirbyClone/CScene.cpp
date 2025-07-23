@@ -9,11 +9,7 @@ CScene::CScene()
 CScene::~CScene()
 {
     // 씬이 소멸할 때 관리하던 모든 오브젝트 삭제
-    for (size_t i = 0; i < m_vecObj.size(); ++i)
-    {
-        delete m_vecObj[i];
-    }
-    m_vecObj.clear();
+    DeleteAllObject();
 }
 
 void CScene::Update()
@@ -32,4 +28,14 @@ void CScene::Render(HDC _dc)
     {
         m_vecObj[i]->Render(_dc);
     }
+}
+
+void CScene::DeleteAllObject()
+{
+    // 모든 오브젝트 삭제
+    for (size_t i = 0; i < m_vecObj.size(); ++i)
+    {
+        delete m_vecObj[i];
+    }
+    m_vecObj.clear();
 }

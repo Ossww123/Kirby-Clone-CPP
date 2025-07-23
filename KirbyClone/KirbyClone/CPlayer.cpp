@@ -3,9 +3,13 @@
 
 #include "CKeyMgr.h"
 #include "CTimeMgr.h"
+#include "CCollider.h"
 
 CPlayer::CPlayer()
 {
+    // 충돌체 생성
+    CreateCollider();
+    GetCollider()->SetScale(Vec2(80.f, 80.f));  // 충돌 박스는 조금 작게
 }
 
 CPlayer::~CPlayer()

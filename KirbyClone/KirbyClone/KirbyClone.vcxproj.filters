@@ -41,6 +41,21 @@
     <Filter Include="Engine\04. Object\Player">
       <UniqueIdentifier>{4942750a-8b5f-4c86-a74b-0f379049a56b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Monster">
+      <UniqueIdentifier>{91f16e62-fc50-4254-ad58-0023ed82334c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Tool">
+      <UniqueIdentifier>{ba6c9beb-b9b1-4d36-afff-db96e81ad3b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource">
+      <UniqueIdentifier>{57ae8287-c2f7-4cf7-bc87-280f2db14933}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Component">
+      <UniqueIdentifier>{4c727cdb-3f60-47a6-8d8b-6db1a7926829}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Component\Collider">
+      <UniqueIdentifier>{a229fa59-d47a-4586-b41d-41d0fcbad801}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -89,6 +104,15 @@
     <ClInclude Include="CPlayer.h">
       <Filter>Engine\04. Object\Player</Filter>
     </ClInclude>
+    <ClInclude Include="CMonster.h">
+      <Filter>Engine\04. Object\Monster</Filter>
+    </ClInclude>
+    <ClInclude Include="CScene_Tool.h">
+      <Filter>Engine\05. Scene\Scene_Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="CCollider.h">
+      <Filter>Engine\07. Component\Collider</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -128,6 +152,15 @@
     </ClCompile>
     <ClCompile Include="CPlayer.cpp">
       <Filter>Engine\04. Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="CMonster.cpp">
+      <Filter>Engine\04. Object\Monster</Filter>
+    </ClCompile>
+    <ClCompile Include="CScene_Tool.cpp">
+      <Filter>Engine\05. Scene\Scene_Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="CCollider.cpp">
+      <Filter>Engine\07. Component\Collider</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -108,6 +108,8 @@
 ### 완료
 - [X] CScene 클래스 생성
 - [X] CObject Update와 Render 추가
+- [X] Player, Monster 오브젝트 추가 
+- [X] Scene 전환 시 사용할 DeleteAllObject 함수
 
 ### 중요 개념
 - 순수 가상 함수 - 자식 클래스는 이 함수를 반드시 구현해야 한다.

@@ -1,34 +1,60 @@
 #include "pch.h"
 #include "CSceneMgr.h"
+#include "CKeyMgr.h"
 
 #include "CScene.h"
 #include "CScene_Start.h"
+#include "CScene_Tool.h"
 
 CSceneMgr::CSceneMgr()
     : m_pCurScene(nullptr)
+    , m_arrScene{}
 {
 }
 
 CSceneMgr::~CSceneMgr()
 {
-    // 현재 씬 삭제
-    if (nullptr != m_pCurScene)
-        delete m_pCurScene;
+    // 모든 씬 삭제
+    for (UINT i = 0; i < (UINT)SCENE_TYPE::END; ++i)
+    {
+        if (nullptr != m_arrScene[i])
+            delete m_arrScene[i];
+    }
 }
 
 void CSceneMgr::init()
 {
-    // 시작 씬 생성
-    m_pCurScene = new CScene_Start;
+    // 모든 씬 생성
+    m_arrScene[(UINT)SCENE_TYPE::START] = new CScene_Start;
+    m_arrScene[(UINT)SCENE_TYPE::TOOL] = new CScene_Tool;
+
+    // 시작 씬 설정
+    m_pCurScene = m_arrScene[(UINT)SCENE_TYPE::START];
     m_pCurScene->Enter();
 }
 
 void CSceneMgr::update()
 {
     m_pCurScene->Update();
+
+    // 씬 전환 체크 (T키)
+    if (KEY_TAP(KEY::T))
+    {
+        if (m_pCurScene == m_arrScene[(UINT)SCENE_TYPE::START])
+            ChangeScene(SCENE_TYPE::TOOL);
+        else
+            ChangeScene(SCENE_TYPE::START);
+    }
 }
 
 void CSceneMgr::render(HDC _dc)
 {
     m_pCurScene->Render(_dc);
+}
+
+void CSceneMgr::ChangeScene(SCENE_TYPE _eNext)
+{
+    m_pCurScene->Exit();
+    m_pCurScene = m_arrScene[(UINT)_eNext];
+    m_pCurScene->Enter();
 }

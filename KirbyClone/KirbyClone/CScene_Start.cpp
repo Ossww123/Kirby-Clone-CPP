@@ -3,6 +3,7 @@
 
 #include "CObject.h"
 #include "CPlayer.h"
+#include "CMonster.h"
 
 CScene_Start::CScene_Start()
 {
@@ -21,10 +22,16 @@ void CScene_Start::Enter()
 
     // 씬에 플레이어 추가
     AddObject(pPlayer);
+
+    // 몬스터 생성
+    CMonster* pMonster = new CMonster;
+    pMonster->SetPos(Vec2(300.f, 300.f));
+    pMonster->SetScale(Vec2(60.f, 60.f));
+
+    AddObject(pMonster);
 }
 
 void CScene_Start::Exit()
 {
-    // 부모 클래스(CScene)의 소멸자가 오브젝트들을 자동으로 정리하므로
-    // 여기서는 특별히 할 일이 없음
+    DeleteAllObject();  // 부모 클래스의 함수 호출
 }
