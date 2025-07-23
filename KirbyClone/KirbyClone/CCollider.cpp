@@ -41,9 +41,9 @@ void CCollider::Render(HDC _dc)
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
     Rectangle(_dc, int(vPos.x - m_vScale.x / 2.f)
-        , int(vPos.y - m_vScale.y / 2.f)
-        , int(vPos.x + m_vScale.x / 2.f)
-        , int(vPos.y + m_vScale.y / 2.f));
+                , int(vPos.y - m_vScale.y / 2.f)
+                , int(vPos.x + m_vScale.x / 2.f)
+                , int(vPos.y + m_vScale.y / 2.f));
 
     SelectObject(_dc, hOldBrush);
     SelectObject(_dc, hOldPen);
@@ -67,4 +67,19 @@ bool CCollider::IsCollision(CCollider* _pOther)
     }
 
     return false;
+}
+
+void CCollider::OnCollisionEnter(CCollider* _pOther)
+{
+    m_pOwner->OnCollisionEnter(_pOther);
+}
+
+void CCollider::OnCollision(CCollider* _pOther)
+{
+    m_pOwner->OnCollision(_pOther);
+}
+
+void CCollider::OnCollisionExit(CCollider* _pOther)
+{
+    m_pOwner->OnCollisionExit(_pOther);
 }

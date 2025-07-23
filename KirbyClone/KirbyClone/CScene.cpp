@@ -14,28 +14,42 @@ CScene::~CScene()
 
 void CScene::Update()
 {
-    // 모든 오브젝트 업데이트
-    for (size_t i = 0; i < m_vecObj.size(); ++i)
+    // 모든 그룹의 오브젝트 업데이트
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
-        m_vecObj[i]->Update();
+        for (size_t j = 0; j < m_arrObj[i].size(); ++j)
+        {
+            m_arrObj[i][j]->Update();
+        }
     }
 }
 
 void CScene::Render(HDC _dc)
 {
-    // 모든 오브젝트 렌더링
-    for (size_t i = 0; i < m_vecObj.size(); ++i)
+    // 모든 그룹의 오브젝트 렌더링
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
-        m_vecObj[i]->Render(_dc);
+        for (size_t j = 0; j < m_arrObj[i].size(); ++j)
+        {
+            m_arrObj[i][j]->Render(_dc);
+        }
     }
 }
 
 void CScene::DeleteAllObject()
 {
-    // 모든 오브젝트 삭제
-    for (size_t i = 0; i < m_vecObj.size(); ++i)
+    // 모든 그룹의 오브젝트 삭제
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
-        delete m_vecObj[i];
+        for (size_t j = 0; j < m_arrObj[i].size(); ++j)
+        {
+            delete m_arrObj[i][j];
+        }
+        m_arrObj[i].clear();
     }
-    m_vecObj.clear();
+}
+
+void CScene::AddObject(CObject* _pObj, GROUP_TYPE _eType)
+{
+    m_arrObj[(UINT)_eType].push_back(_pObj);
 }

@@ -30,6 +30,11 @@ public:
     // 두 충돌체가 충돌했는지 검사
     bool IsCollision(CCollider* _pOther);
 
+    // 충돌 콜백 함수
+    void OnCollisionEnter(CCollider* _pOther);  // 충돌 시작
+    void OnCollision(CCollider* _pOther);       // 충돌 중
+    void OnCollisionExit(CCollider* _pOther);   // 충돌 끝
+
 public:
     CCollider();
     ~CCollider();

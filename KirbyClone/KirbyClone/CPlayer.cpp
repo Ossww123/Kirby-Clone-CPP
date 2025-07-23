@@ -5,6 +5,8 @@
 #include "CTimeMgr.h"
 #include "CCollider.h"
 
+#include "CCore.h"
+
 CPlayer::CPlayer()
 {
     // 충돌체 생성
@@ -48,4 +50,18 @@ void CPlayer::Update()
     }
 
     SetPos(vPos);
+}
+
+
+void CPlayer::OnCollisionEnter(CCollider* _pOther)
+{
+    CObject* pOtherObj = _pOther->GetOwner();
+
+    // 디버그 출력 (윈도우 타이틀에 표시)
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"충돌 시작!");
+}
+
+void CPlayer::OnCollisionExit(CCollider* _pOther)
+{
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"충돌 끝!");
 }

@@ -24,7 +24,7 @@ void CScene_Tool::Enter()
         pMonster->SetPos(Vec2(200.f + i * 200.f, 300.f + i * 50.f));
         pMonster->SetScale(Vec2(50.f, 50.f));
 
-        AddObject(pMonster);
+        AddObject(pMonster, GROUP_TYPE::MONSTER);
     }
 
     // 플레이어도 하나 추가 (테스트용)
@@ -32,7 +32,7 @@ void CScene_Tool::Enter()
     pPlayer->SetPos(Vec2(640.f, 600.f));
     pPlayer->SetScale(Vec2(100.f, 100.f));
 
-    AddObject(pPlayer);
+    AddObject(pPlayer, GROUP_TYPE::PLAYER);
 }
 
 void CScene_Tool::Exit()

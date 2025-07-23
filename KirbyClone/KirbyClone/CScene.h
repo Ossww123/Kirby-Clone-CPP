@@ -5,7 +5,7 @@ class CObject;
 class CScene
 {
 private:
-    vector<CObject*> m_vecObj;  // 이 씬이 관리하는 오브젝트들
+    vector<CObject*> m_arrObj[(UINT)GROUP_TYPE::END];  // 그룹별로 오브젝트 관리
 
 public:
     void Update();              // 모든 오브젝트 업데이트
@@ -19,7 +19,8 @@ protected:
     void DeleteAllObject();     // 모든 오브젝트 삭제
 
 public:
-    void AddObject(CObject* _pObj) { m_vecObj.push_back(_pObj); }
+    void AddObject(CObject* _pObj, GROUP_TYPE _eType);
+    const vector<CObject*>& GetGroupObject(GROUP_TYPE _eType) { return m_arrObj[(UINT)_eType]; }
 
 public:
     CScene();
