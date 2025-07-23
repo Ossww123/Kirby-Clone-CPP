@@ -3,6 +3,7 @@
 
 #include "CTimeMgr.h"
 #include "CKeyMgr.h"
+#include "CSceneMgr.h"
 
 CCore::CCore()
 	: m_hWnd(0)
@@ -44,23 +45,22 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	// Manager 초기화
 	CTimeMgr::GetInst()->init();
 	CKeyMgr::GetInst()->init();
+	CSceneMgr::GetInst()->init();
 
 	return S_OK;
 }
 
 void CCore::progress()
 {
-	CTimeMgr::GetInst()->update();
-	CKeyMgr::GetInst()->update();
-
-
 	update();
 	render();
 }
 
 void CCore::update()
 {
-
+	CTimeMgr::GetInst()->update();
+	CKeyMgr::GetInst()->update();
+	CSceneMgr::GetInst()->update();
 }
 
 
@@ -68,9 +68,12 @@ void CCore::render()
 {
 	Rectangle(m_memDC, -1, -1, m_ptResolution.x + 1, m_ptResolution.y + 1);
 
+
+	CSceneMgr::GetInst()->render(m_memDC);
+
 	BitBlt(m_hDC, 0, 0, m_ptResolution.x, m_ptResolution.y,
 		m_memDC, 0, 0, SRCCOPY);
 
-	// FPS 정보 업데이트 (여기!)
+	// FPS 정보 업데이트
 	CTimeMgr::GetInst()->render();
 }

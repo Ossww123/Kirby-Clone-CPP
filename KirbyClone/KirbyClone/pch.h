@@ -9,7 +9,7 @@ using std::cout;
 using std::vector;
 
 #include <string>
-using std::wstring
+using std::wstring;
 
 #include "define.h"
 #include "enum.h"
