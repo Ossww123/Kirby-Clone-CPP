@@ -25,3 +25,24 @@ enum class KEY
 
     LAST,  // enum의 끝
 };
+
+enum class GROUP_TYPE
+{
+    DEFAULT,
+    PLAYER,
+    MONSTER,
+    PROJ_PLAYER,    // 플레이어 투사체
+    PROJ_MONSTER,   // 몬스터 투사체
+
+    END = 32,
+};
+
+enum class SCENE_TYPE
+{
+    TOOL,
+    START,
+    STAGE_01,
+    STAGE_02,
+
+    END,
+};

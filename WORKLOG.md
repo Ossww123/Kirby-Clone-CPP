@@ -104,3 +104,11 @@
    - `IsKeyTap()`, `IsKeyHold()`, `IsKeyAway()` 등 편의 함수 제공
 
 </details>
+
+### 완료
+- [X] CScene 클래스 생성
+- [X] CObject Update와 Render 추가
+
+### 중요 개념
+- 순수 가상 함수 - 자식 클래스는 이 함수를 반드시 구현해야 한다.
+- 자식 클래스의 소멸자를 호출해야 하기 때문에 소멸자에 'virtual' 키워드 필요

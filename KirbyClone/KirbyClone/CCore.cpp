@@ -1,12 +1,8 @@
 #include "pch.h"
 #include "CCore.h"
 
-#include "CObject.h"
-
 #include "CTimeMgr.h"
 #include "CKeyMgr.h"
-
-CObject g_obj;
 
 CCore::CCore()
 	: m_hWnd(0)
@@ -49,10 +45,6 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	CTimeMgr::GetInst()->init();
 	CKeyMgr::GetInst()->init();
 
-
-	g_obj.SetPos(Vec2(640.f, 400.f));  // 화면 중앙쯤
-	g_obj.SetScale(Vec2(100.f, 100.f)); // 100x100 크기
-
 	return S_OK;
 }
 
@@ -68,49 +60,13 @@ void CCore::progress()
 
 void CCore::update()
 {
-	Vec2 vPos = g_obj.GetPos();
 
-	if (KEY_HOLD(KEY::LEFT))
-	{
-		vPos.x -= 200.f * CTimeMgr::GetInst()->GetfDT();
-	}
-
-	if (KEY_HOLD(KEY::RIGHT))
-	{
-		vPos.x += 200.f * CTimeMgr::GetInst()->GetfDT();
-	}
-
-	if (KEY_HOLD(KEY::UP))
-	{
-		vPos.y -= 200.f * CTimeMgr::GetInst()->GetfDT();
-	}
-
-	if (KEY_HOLD(KEY::DOWN))
-	{
-		vPos.y += 200.f * CTimeMgr::GetInst()->GetfDT();
-	}
-
-	// TAP 테스트 - 스페이스바 누르면 중앙으로
-	if (KEY_TAP(KEY::SPACE))
-	{
-		vPos = Vec2(640.f, 400.f);
-	}
-
-	g_obj.SetPos(vPos);
 }
 
 
 void CCore::render()
 {
 	Rectangle(m_memDC, -1, -1, m_ptResolution.x + 1, m_ptResolution.y + 1);
-
-	Vec2 vPos = g_obj.GetPos();
-	Vec2 vScale = g_obj.GetScale();
-
-	Rectangle(m_memDC, int(vPos.x - vScale.x / 2.f)
-					, int(vPos.y - vScale.y / 2.f)
-					, int(vPos.x + vScale.x / 2.f)
-					, int(vPos.y + vScale.y / 2.f));
 
 	BitBlt(m_hDC, 0, 0, m_ptResolution.x, m_ptResolution.y,
 		m_memDC, 0, 0, SRCCOPY);

@@ -10,3 +10,12 @@ CObject::CObject()
 CObject::~CObject()
 {
 }
+
+void CObject::Render(HDC _dc)
+{
+	// ±âº» ·»´õ¸µ
+	Rectangle(_dc, (int)(m_vPos.x - m_vScale.x / 2.f)
+		, (int)(m_vPos.y - m_vScale.y / 2.f)
+		, (int)(m_vPos.x + m_vScale.x / 2.f)
+		, (int)(m_vPos.y + m_vScale.y / 2.f));
+}
