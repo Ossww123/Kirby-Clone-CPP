@@ -6,6 +6,9 @@
 #include "CSceneMgr.h"
 #include "CCollisionMgr.h"
 #include "CEventMgr.h"
+#include "CCamera.h"
+#include "CPathMgr.h"
+#include "CResMgr.h"
 
 CCore::CCore()
 	: m_hWnd(0)
@@ -47,9 +50,12 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	// Manager 초기화
 	CTimeMgr::GetInst()->init();
 	CKeyMgr::GetInst()->init();
+	CPathMgr::GetInst()->init();
+	CResMgr::GetInst()->init();
 	CSceneMgr::GetInst()->init();
 	CCollisionMgr::GetInst()->init();
 	CEventMgr::GetInst()->init();
+	CCamera::GetInst()->init(m_ptResolution.x, m_ptResolution.y);
 
 	return S_OK;
 }
@@ -64,6 +70,7 @@ void CCore::update()
 {
 	CTimeMgr::GetInst()->update();
 	CKeyMgr::GetInst()->update();
+	CCamera::GetInst()->update();  // 씬 업데이트 전
 	CSceneMgr::GetInst()->update();
 	CCollisionMgr::GetInst()->update();
 
@@ -77,6 +84,7 @@ void CCore::render()
 	Rectangle(m_memDC, -1, -1, m_ptResolution.x + 1, m_ptResolution.y + 1);
 
 	CSceneMgr::GetInst()->render(m_memDC);
+	CCamera::GetInst()->render(m_memDC);
 
 	BitBlt(m_hDC, 0, 0, m_ptResolution.x, m_ptResolution.y,
 		m_memDC, 0, 0, SRCCOPY);

@@ -20,6 +20,7 @@ private:
 	void render();
 
 public:
+	HDC GetMainDC() { return m_hDC; }
 	HWND GetMainHwnd() { return m_hWnd; }
+	Vec2 GetResolution() { return Vec2((float)m_ptResolution.x, (float)m_ptResolution.y); }
 };
-

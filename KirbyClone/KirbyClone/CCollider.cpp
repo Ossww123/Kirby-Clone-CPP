@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CCollider.h"
 #include "CObject.h"
+#include "CCamera.h"
 
 UINT CCollider::g_iNextID = 0;
 
@@ -24,26 +25,27 @@ Vec2 CCollider::GetFinalPos()
 
 void CCollider::FinalUpdate()
 {
-    // 오브젝트의 위치를 따라감
+    // 충돌체의 위치를 따라감
 }
 
 void CCollider::Render(HDC _dc)
 {
-    // 충돌체 시각화 (디버그용)
+    // 월드 좌표를 카메라 좌표로 변환
     Vec2 vPos = GetFinalPos();
+    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
 
-    // 초록색 브러시
+    // 충돌체 시각화 (디버그용)
     HBRUSH hBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
 
-    // 초록색 펜
+    // 충돌체 펜
     HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
-    Rectangle(_dc, int(vPos.x - m_vScale.x / 2.f)
-                , int(vPos.y - m_vScale.y / 2.f)
-                , int(vPos.x + m_vScale.x / 2.f)
-                , int(vPos.y + m_vScale.y / 2.f));
+    Rectangle(_dc, int(vRenderPos.x - m_vScale.x / 2.f)
+        , int(vRenderPos.y - m_vScale.y / 2.f)
+        , int(vRenderPos.x + m_vScale.x / 2.f)
+        , int(vRenderPos.y + m_vScale.y / 2.f));
 
     SelectObject(_dc, hOldBrush);
     SelectObject(_dc, hOldPen);
@@ -52,7 +54,7 @@ void CCollider::Render(HDC _dc)
 
 bool CCollider::IsCollision(CCollider* _pOther)
 {
-    // 사각형 충돌 검사 (AABB)
+    // 사각형 충돌 검사 (AABB) - 월드 좌표에서 계산
     Vec2 vPos = GetFinalPos();
     Vec2 vOtherPos = _pOther->GetFinalPos();
 
