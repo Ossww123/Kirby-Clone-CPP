@@ -120,3 +120,23 @@ struct tKeyInfo
 	KEY_STATE   eState;     // 키의 상태
 	bool        bPrevPush;  // 이전 프레임에 눌렸는지 여부
 };
+
+// 이벤트 구조체
+struct tEvent
+{
+	EVENT_TYPE  eType;      // 이벤트 타입
+	DWORD_PTR   wParam;     // 첫 번째 매개변수
+	DWORD_PTR   lParam;     // 두 번째 매개변수
+
+	tEvent()
+		: eType(EVENT_TYPE::END)
+		, wParam(0)
+		, lParam(0)
+	{}
+
+	tEvent(EVENT_TYPE _type, DWORD_PTR _wParam, DWORD_PTR _lParam)
+		: eType(_type)
+		, wParam(_wParam)
+		, lParam(_lParam)
+	{}
+};

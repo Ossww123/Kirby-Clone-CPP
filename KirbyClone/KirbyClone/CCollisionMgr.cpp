@@ -2,6 +2,8 @@
 #include "CCollisionMgr.h"
 
 #include "CSceneMgr.h"
+#include "CEventMgr.h"
+
 #include "CScene.h"
 #include "CObject.h"
 #include "CCollider.h"
@@ -114,30 +116,31 @@ void CCollisionMgr::CollisionGroupUpdate(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
 
                 if (iter->second)
                 {
-                    // 이전에도 충돌
-
-                    // 둘 중 하나라도 삭제 예정이면 충돌 해제
+                    // 이전에도 충돌 - 계속 충돌 중 (OnCollision)
+                    // 둘 중 하나라도 죽을 예정이면 충돌 해제
                     if (vecLeft[i]->IsDead() || vecRight[j]->IsDead())
                     {
-                        pLeftCol->OnCollisionExit(pRightCol);
-                        pRightCol->OnCollisionExit(pLeftCol);
+                        // 이벤트로 충돌 종료 처리
+                        tEvent event(EVENT_TYPE::COLLISION_EXIT, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);
+                        CEventMgr::GetInst()->AddEvent(event);
                         iter->second = false;
                     }
                     else
                     {
+                        // 계속 충돌 중 - 즉시 처리 (매 프레임 호출되어야 함)
                         pLeftCol->OnCollision(pRightCol);
                         pRightCol->OnCollision(pLeftCol);
                     }
                 }
                 else
                 {
-                    // 이전에는 충돌하지 않음 - 충돌 시작
-
-                    // 둘 중 하나라도 삭제 예정이면 충돌하지 않음
+                    // 이전에는 충돌하지 않음 - 충돌 시작 (OnCollisionEnter)
+                    // 둘 중 하나라도 죽을 예정이면 충돌하지 않음
                     if (!vecLeft[i]->IsDead() && !vecRight[j]->IsDead())
                     {
-                        pLeftCol->OnCollisionEnter(pRightCol);
-                        pRightCol->OnCollisionEnter(pLeftCol);
+                        // 이벤트로 충돌 시작 처리
+                        tEvent event(EVENT_TYPE::COLLISION_ENTER, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);
+                        CEventMgr::GetInst()->AddEvent(event);
                         iter->second = true;
                     }
                 }
@@ -148,9 +151,9 @@ void CCollisionMgr::CollisionGroupUpdate(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
 
                 if (iter->second)
                 {
-                    // 이전에는 충돌 - 충돌 해제
-                    pLeftCol->OnCollisionExit(pRightCol);
-                    pRightCol->OnCollisionExit(pLeftCol);
+                    // 이전에는 충돌 - 충돌 해제 (OnCollisionExit)
+                    tEvent event(EVENT_TYPE::COLLISION_EXIT, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);
+                    CEventMgr::GetInst()->AddEvent(event);
                     iter->second = false;
                 }
             }

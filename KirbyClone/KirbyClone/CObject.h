@@ -18,6 +18,7 @@ public:
 	Vec2 GetScale() { return m_vScale; }
 
 	bool IsDead() { return !m_bAlive; }
+	void SetDead() { m_bAlive = false; }
 
 	// 가상 함수로 선언 - 자식 클래스에서 재정의 가능
 	virtual void Update() = 0;  // 순수 가상 함수 - 자식이 반드시 구현
@@ -30,9 +31,6 @@ public:
 
 	void CreateCollider();
 	CCollider* GetCollider() { return m_pCollider; }
-
-private:
-	void SetDead() { m_bAlive = false; }
 
 public:
 	CObject();

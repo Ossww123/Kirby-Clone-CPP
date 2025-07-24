@@ -4,6 +4,7 @@
 #include "CKeyMgr.h"
 #include "CTimeMgr.h"
 #include "CCollider.h"
+#include "CEventMgr.h"
 
 #include "CCore.h"
 
@@ -59,6 +60,14 @@ void CPlayer::OnCollisionEnter(CCollider* _pOther)
 
     // 디버그 출력 (윈도우 타이틀에 표시)
     SetWindowText(CCore::GetInst()->GetMainHwnd(), L"충돌 시작!");
+
+    // 필요하다면 여기서 추가 이벤트
+    // 예: 파티클 이펙트, 사운드 재생, UI 업데이트 등
+}
+
+void CPlayer::OnCollision(CCollider* _pOther)
+{
+    // 지속적인 충돌 처리 (매 프레임 호출)
 }
 
 void CPlayer::OnCollisionExit(CCollider* _pOther)

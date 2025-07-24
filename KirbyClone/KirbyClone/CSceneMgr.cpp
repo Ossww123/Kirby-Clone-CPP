@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CSceneMgr.h"
 #include "CKeyMgr.h"
+#include "CEventMgr.h"
 
 #include "CScene.h"
 #include "CScene_Start.h"
@@ -41,9 +42,17 @@ void CSceneMgr::update()
     if (KEY_TAP(KEY::T))
     {
         if (m_pCurScene == m_arrScene[(UINT)SCENE_TYPE::START])
-            ChangeScene(SCENE_TYPE::TOOL);
+        {
+            // START 씬에서 TOOL 씬으로 전환 이벤트 발생
+            tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::TOOL);
+            CEventMgr::GetInst()->AddEvent(event);
+        }
         else
-            ChangeScene(SCENE_TYPE::START);
+        {
+            // TOOL 씬에서 START 씬으로 전환 이벤트 발생  
+            tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
+            CEventMgr::GetInst()->AddEvent(event);
+        }
     }
 }
 

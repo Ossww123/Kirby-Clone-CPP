@@ -5,6 +5,7 @@
 #include "CKeyMgr.h"
 #include "CSceneMgr.h"
 #include "CCollisionMgr.h"
+#include "CEventMgr.h"
 
 CCore::CCore()
 	: m_hWnd(0)
@@ -48,6 +49,7 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	CKeyMgr::GetInst()->init();
 	CSceneMgr::GetInst()->init();
 	CCollisionMgr::GetInst()->init();
+	CEventMgr::GetInst()->init();
 
 	return S_OK;
 }
@@ -64,13 +66,15 @@ void CCore::update()
 	CKeyMgr::GetInst()->update();
 	CSceneMgr::GetInst()->update();
 	CCollisionMgr::GetInst()->update();
+
+	// 이벤트는 마지막에 처리
+	CEventMgr::GetInst()->update();
 }
 
 
 void CCore::render()
 {
 	Rectangle(m_memDC, -1, -1, m_ptResolution.x + 1, m_ptResolution.y + 1);
-
 
 	CSceneMgr::GetInst()->render(m_memDC);
 

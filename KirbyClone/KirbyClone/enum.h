@@ -46,3 +46,15 @@ enum class SCENE_TYPE
 
     END,
 };
+
+// 이벤트 타입 추가
+enum class EVENT_TYPE
+{
+    CREATE_OBJECT,      // 오브젝트 생성 (wParam: GROUP_TYPE, lParam: CObject*)
+    DELETE_OBJECT,      // 오브젝트 삭제 (lParam: CObject*)
+    SCENE_CHANGE,       // 씬 변경 (lParam: SCENE_TYPE)
+    COLLISION_ENTER,    // 충돌 시작 이벤트
+    COLLISION_EXIT,     // 충돌 종료 이벤트
+
+    END
+};
