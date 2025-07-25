@@ -58,3 +58,12 @@ enum class EVENT_TYPE
 
     END
 };
+
+// 플레이어 상태 열거형
+enum class PLAYER_STATE
+{
+    IDLE,
+    WALK,
+    JUMP,
+    END
+};

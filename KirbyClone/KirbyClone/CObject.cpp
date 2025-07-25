@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CObject.h"
 #include "CCollider.h"
+#include "CAnimator.h"
 #include "CCamera.h"
 #include "CTexture.h"
 
@@ -8,6 +9,7 @@ CObject::CObject()
 	: m_vPos{}
 	, m_vScale{}
 	, m_pCollider(nullptr)
+	, m_pAnimator(nullptr)
 	, m_bAlive(true)
 	, m_pTex(nullptr)
 {
@@ -16,15 +18,29 @@ CObject::CObject()
 CObject::~CObject()
 {
 	if (nullptr != m_pCollider)
+	{
 		delete m_pCollider;
+		m_pCollider = nullptr;
+	}
+
+	if (nullptr != m_pAnimator)
+	{
+		delete m_pAnimator;
+		m_pAnimator = nullptr;
+	}
 }
 
 void CObject::Render(HDC _dc)
 {
 	Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_vPos);
 
+	// 애니메이터가 있으면 애니메이션으로 렌더링
+	if (nullptr != m_pAnimator)
+	{
+		m_pAnimator->Render(_dc);
+	}
 	// 텍스처가 있으면 텍스처로 렌더링
-	if (nullptr != m_pTex)
+	else if (nullptr != m_pTex)
 	{
 		// 텍스처 크기 얻기
 		UINT width = m_pTex->GetWidth();
@@ -56,4 +72,10 @@ void CObject::CreateCollider()
 {
 	m_pCollider = new CCollider;
 	m_pCollider->m_pOwner = this;
+}
+
+void CObject::CreateAnimator()
+{
+	m_pAnimator = new CAnimator;
+	m_pAnimator->m_pOwner = this;
 }

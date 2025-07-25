@@ -2,6 +2,7 @@
 
 class CCollider;
 class CTexture;
+class CAnimator;
 
 class CObject
 {
@@ -9,6 +10,7 @@ private:
 	Vec2	m_vPos;
 	Vec2	m_vScale;
 	CCollider* m_pCollider;
+	CAnimator* m_pAnimator;
 	bool m_bAlive;
 	CTexture* m_pTex;
 
@@ -35,6 +37,9 @@ public:
 
 	void CreateCollider();
 	CCollider* GetCollider() { return m_pCollider; }
+
+	void CreateAnimator();
+	CAnimator* GetAnimator() { return m_pAnimator; }
 
 public:
 	CObject();

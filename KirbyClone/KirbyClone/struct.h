@@ -140,3 +140,23 @@ struct tEvent
 		, lParam(_lParam)
 	{}
 };
+
+// 애니메이션 프레임 정보
+struct tAnimFrame
+{
+	Vec2 vLT;           // 스프라이트 시트에서 좌상단 좌표
+	Vec2 vSlice;        // 프레임 크기 (가로, 세로)
+	float fDuration;    // 이 프레임의 지속 시간
+
+	tAnimFrame()
+		: vLT{}
+		, vSlice{}
+		, fDuration(0.1f)
+	{}
+
+	tAnimFrame(Vec2 _vLT, Vec2 _vSlice, float _fDuration)
+		: vLT(_vLT)
+		, vSlice(_vSlice)
+		, fDuration(_fDuration)
+	{}
+};
