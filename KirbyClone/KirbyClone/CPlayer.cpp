@@ -9,18 +9,17 @@
 #include "CResMgr.h"
 #include "CTexture.h"
 #include "CAnimator.h"
+#include "CRigidBody.h"
 
 #include "CCore.h"
 
 CPlayer::CPlayer()
     : m_pAnimator(nullptr)
+    , m_pRigidBody(nullptr)
     , m_eCurState(PLAYER_STATE::IDLE)
     , m_ePrevState(PLAYER_STATE::END)
-    , m_vVelocity{}
     , m_fSpeed(200.f)
     , m_fJumpPower(400.f)
-    , m_bGround(true)
-    , m_fGravity(980.f)
 {
     // 충돌체 생성
     CreateCollider();
@@ -29,6 +28,16 @@ CPlayer::CPlayer()
     // 애니메이터 생성
     CreateAnimator();
     m_pAnimator = GetAnimator();
+
+    // 리지드바디 생성
+    CreateRigidBody();
+    m_pRigidBody = GetRigidBody();
+
+    // 리지드바디 설정
+    m_pRigidBody->SetMass(1.f);
+    m_pRigidBody->SetMaxVelocity(500.f);
+    m_pRigidBody->SetFriction(10.f);
+    m_pRigidBody->SetUseGravity(true);
 
     // 애니메이션 생성
     CreateAnimation();
@@ -42,6 +51,7 @@ CPlayer::~CPlayer()
     // 부모 클래스에서 이미 m_pAnimator를 삭제하므로
     // 여기서는 nullptr로만 설정
     m_pAnimator = nullptr;
+    m_pRigidBody = nullptr;
 }
 
 void CPlayer::CreateAnimation()
@@ -63,6 +73,10 @@ void CPlayer::Update()
 {
     UpdateMove();
     UpdateState();
+
+    // 리지드바디 업데이트
+    if (nullptr != m_pRigidBody)
+        m_pRigidBody->Update();
 
     // 애니메이터 업데이트
     if (nullptr != m_pAnimator)
@@ -86,59 +100,61 @@ void CPlayer::Update()
 
 void CPlayer::UpdateMove()
 {
-    Vec2 vPos = GetPos();
+    if (nullptr == m_pRigidBody)
+        return;
 
-    // 좌우 이동
+    // 점프 (바닥에 있을 때만)
+    if (KEY_TAP(KEY::SPACE) && m_pRigidBody->IsGround())
+    {
+        // 점프 직전에 중력 영향을 받지 않도록 즉시 바닥 상태 해제
+        m_pRigidBody->SetGround(false);
+        m_pRigidBody->SetVelocityY(-m_fJumpPower);
+    }
+
+    // 좌우 이동 (리지드바디의 X 속도 직접 설정)
     if (KEY_HOLD(KEY::LEFT))
     {
-        m_vVelocity.x = -m_fSpeed;
+        m_pRigidBody->SetVelocityX(-m_fSpeed);
     }
     else if (KEY_HOLD(KEY::RIGHT))
     {
-        m_vVelocity.x = m_fSpeed;
+        m_pRigidBody->SetVelocityX(m_fSpeed);
     }
     else
     {
-        m_vVelocity.x = 0.f;
+        // 키를 누르지 않으면 X축 속도를 0으로 (마찰로 자연스럽게 감속)
+        if (m_pRigidBody->IsGround())
+        {
+            m_pRigidBody->SetVelocityX(0.f);
+        }
     }
 
-    // 점프
-    if (KEY_TAP(KEY::SPACE) && m_bGround)
-    {
-        m_vVelocity.y = -m_fJumpPower;
-        m_bGround = false;
-    }
+    // 간단한 바닥 충돌 처리 (y = 400 기준)
+    Vec2 vPos = GetPos();
+    Vec2 vVelocity = m_pRigidBody->GetVelocity();
 
-    // 중력 적용
-    if (!m_bGround)
-    {
-        m_vVelocity.y += m_fGravity * CTimeMgr::GetInst()->GetfDT();
-    }
-
-    // 위치 업데이트
-    vPos.x += m_vVelocity.x * CTimeMgr::GetInst()->GetfDT();
-    vPos.y += m_vVelocity.y * CTimeMgr::GetInst()->GetfDT();
-
-    // 간단한 바닥 충돌 (y = 400 기준)
-    if (vPos.y >= 400.f)
+    if (vPos.y >= 400.f && vVelocity.y >= 0.f)
     {
         vPos.y = 400.f;
-        m_vVelocity.y = 0.f;
-        m_bGround = true;
+        SetPos(vPos);
+        m_pRigidBody->SetVelocityY(0.f);
+        m_pRigidBody->SetGround(true);
     }
-
-    SetPos(vPos);
 }
 
 void CPlayer::UpdateState()
 {
-    PLAYER_STATE eNewState = m_eCurState;
+    if (nullptr == m_pRigidBody)
+        return;
 
-    if (!m_bGround)
+    PLAYER_STATE eNewState = m_eCurState;
+    Vec2 vVelocity = m_pRigidBody->GetVelocity();
+
+    if (!m_pRigidBody->IsGround())
     {
         eNewState = PLAYER_STATE::JUMP;
     }
-    else if (abs(m_vVelocity.x) > 0.f)
+    else if (abs(vVelocity.x) > 10.f)  // 속도가 일정 이상일 때만 걷기 상태
     {
         eNewState = PLAYER_STATE::WALK;
     }

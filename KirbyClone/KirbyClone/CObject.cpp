@@ -4,12 +4,14 @@
 #include "CAnimator.h"
 #include "CCamera.h"
 #include "CTexture.h"
+#include "CRigidBody.h"
 
 CObject::CObject()
 	: m_vPos{}
 	, m_vScale{}
 	, m_pCollider(nullptr)
 	, m_pAnimator(nullptr)
+	, m_pRigidBody(nullptr)
 	, m_bAlive(true)
 	, m_pTex(nullptr)
 {
@@ -27,6 +29,12 @@ CObject::~CObject()
 	{
 		delete m_pAnimator;
 		m_pAnimator = nullptr;
+	}
+
+	if (nullptr != m_pRigidBody)
+	{
+		delete m_pRigidBody;
+		m_pRigidBody = nullptr;
 	}
 }
 
@@ -78,4 +86,10 @@ void CObject::CreateAnimator()
 {
 	m_pAnimator = new CAnimator;
 	m_pAnimator->m_pOwner = this;
+}
+
+void CObject::CreateRigidBody()
+{
+	m_pRigidBody = new CRigidBody;
+	m_pRigidBody->m_pOwner = this;
 }

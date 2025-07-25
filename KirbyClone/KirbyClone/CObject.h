@@ -3,6 +3,7 @@
 class CCollider;
 class CTexture;
 class CAnimator;
+class CRigidBody;
 
 class CObject
 {
@@ -11,6 +12,7 @@ private:
 	Vec2	m_vScale;
 	CCollider* m_pCollider;
 	CAnimator* m_pAnimator;
+	CRigidBody* m_pRigidBody;
 	bool m_bAlive;
 	CTexture* m_pTex;
 
@@ -18,7 +20,6 @@ public:
 	void SetPos(Vec2 _vPos) { m_vPos = _vPos; }
 	void SetScale(Vec2 _vScale) { m_vScale = _vScale; }
 	void SetTexture(CTexture* _pTex) { m_pTex = _pTex; }
-
 	Vec2 GetPos() { return m_vPos; }
 	Vec2 GetScale() { return m_vScale; }
 	CTexture* GetTexture() { return m_pTex; }
@@ -40,6 +41,9 @@ public:
 
 	void CreateAnimator();
 	CAnimator* GetAnimator() { return m_pAnimator; }
+
+	void CreateRigidBody();
+	CRigidBody* GetRigidBody() { return m_pRigidBody; }
 
 public:
 	CObject();

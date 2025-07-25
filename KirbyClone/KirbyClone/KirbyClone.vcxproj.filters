@@ -80,6 +80,9 @@
     <Filter Include="Engine\07. Component\Animator\Animation">
       <UniqueIdentifier>{e9ff361a-4c33-47a3-af32-05bff1d241ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\07. Component\RigidBody">
+      <UniqueIdentifier>{d59eee77-6ebb-415d-8272-858fbfb0f011}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -164,6 +167,9 @@
     <ClInclude Include="CAnimation.h">
       <Filter>Engine\07. Component\Animator\Animation</Filter>
     </ClInclude>
+    <ClInclude Include="CRigidBody.h">
+      <Filter>Engine\07. Component\RigidBody</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -239,6 +245,9 @@
     </ClCompile>
     <ClCompile Include="CAnimation.cpp">
       <Filter>Engine\07. Component\Animator\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="CRigidBody.cpp">
+      <Filter>Engine\07. Component\RigidBody</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

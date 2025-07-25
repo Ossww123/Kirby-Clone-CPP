@@ -2,19 +2,18 @@
 #include "CObject.h"
 
 class CAnimator;
+class CRigidBody;
 
 class CPlayer : public CObject
 {
 private:
     CAnimator*      m_pAnimator;        // 애니메이터 컴포넌트
+    CRigidBody*     m_pRigidBody;       // 리지드바디 컴포넌트
     PLAYER_STATE    m_eCurState;        // 현재 상태
     PLAYER_STATE    m_ePrevState;       // 이전 상태
 
-    Vec2            m_vVelocity;        // 속도 벡터
     float           m_fSpeed;           // 이동 속도
     float           m_fJumpPower;       // 점프력
-    bool            m_bGround;          // 바닥에 있는지 여부
-    float           m_fGravity;         // 중력
 
 public:
     virtual void Update();
