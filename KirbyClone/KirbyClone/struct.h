@@ -160,3 +160,42 @@ struct tAnimFrame
 		, fDuration(_fDuration)
 	{}
 };
+
+// 레벨 오브젝트 데이터
+struct tLevelObjectData
+{
+	GROUP_TYPE  eGroupType;     // 오브젝트 그룹 타입
+	Vec2        vPos;           // 위치
+	Vec2        vScale;         // 크기
+	int         iSubType;       // 서브 타입 (추후 몬스터 종류 구분용)
+
+	tLevelObjectData()
+		: eGroupType(GROUP_TYPE::DEFAULT)
+		, vPos{}
+		, vScale{}
+		, iSubType(0)
+	{}
+
+	tLevelObjectData(GROUP_TYPE _eType, Vec2 _vPos, Vec2 _vScale, int _iSubType = 0)
+		: eGroupType(_eType)
+		, vPos(_vPos)
+		, vScale(_vScale)
+		, iSubType(_iSubType)
+	{}
+};
+
+// 레벨 전체 데이터
+struct tLevelData
+{
+	wstring                     strLevelName;   // 레벨 이름
+	Vec2                        vPlayerSpawn;   // 플레이어 스폰 위치
+	vector<tLevelObjectData>    vecObjects;     // 배치된 오브젝트들
+	int                         iVersion;       // 파일 버전
+
+	tLevelData()
+		: strLevelName{}
+		, vPlayerSpawn{}
+		, vecObjects{}
+		, iVersion(1)
+	{}
+};

@@ -23,6 +23,10 @@ enum class KEY
     ENTER,
     ESC,
 
+    MOUSE_LEFT,
+    MOUSE_RIGHT,
+    MOUSE_MIDDLE,
+
     LAST,  // enum의 끝
 };
 
@@ -65,5 +69,16 @@ enum class PLAYER_STATE
     IDLE,
     WALK,
     JUMP,
+    END
+};
+
+// 에디터 모드 열거형
+enum class EDITOR_MODE
+{
+    NONE,           // 기본 모드
+    PLACE_MONSTER,  // 몬스터 배치 모드
+    SELECT,         // 선택 모드 (추후 구현)
+    ERASE,          // 삭제 모드 (추후 구현)
+    CAMERA_MOVE,    // 카메라 이동 모드 (추후 구현)
     END
 };

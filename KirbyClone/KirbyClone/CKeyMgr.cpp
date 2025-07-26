@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CKeyMgr.h"
 #include "CCore.h"
+#include "CCamera.h"
 
 int g_arrVK[(int)KEY::LAST] =
 {
@@ -16,9 +17,15 @@ int g_arrVK[(int)KEY::LAST] =
     VK_SPACE,
     VK_RETURN,
     VK_ESCAPE,
+
+    VK_LBUTTON,
+    VK_RBUTTON,
+    VK_MBUTTON,
+
 };
 
 CKeyMgr::CKeyMgr()
+    : m_vMousePos{}
 {}
 
 CKeyMgr::~CKeyMgr()
@@ -54,6 +61,9 @@ void CKeyMgr::update()
         return;
     }
 
+    // 마우스 좌표 업데이트
+    UpdateMousePos();
+
     // 모든 키에 대해 상태 업데이트
     for (size_t i = 0; i < (size_t)KEY::LAST; ++i)
     {
@@ -87,4 +97,21 @@ void CKeyMgr::update()
             m_vecKey[i].bPrevPush = false;
         }
     }
+}
+
+void CKeyMgr::UpdateMousePos()
+{
+    // 마우스 스크린 좌표 얻기
+    POINT ptMouse;
+    GetCursorPos(&ptMouse);
+    ScreenToClient(CCore::GetInst()->GetMainHwnd(), &ptMouse);
+
+    m_vMousePos.x = (float)ptMouse.x;
+    m_vMousePos.y = (float)ptMouse.y;
+}
+
+Vec2 CKeyMgr::GetMouseWorldPos()
+{
+    // 스크린 좌표를 월드 좌표로 변환
+    return CCamera::GetInst()->GetRealPos(m_vMousePos);
 }
