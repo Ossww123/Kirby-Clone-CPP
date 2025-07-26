@@ -27,6 +27,7 @@ private:
     void UpdateInput();     // 입력 처리
     void UpdateMouse();     // 마우스 입력 처리
     void UpdateModeInput(); // 모드 전환 입력 처리
+    void UpdateGridInput(); // 그리드 관련 입력 처리
     void UpdateCameraMove(); // 카메라 이동 처리
     void HandleMouseClick(); // 마우스 클릭 처리
     void RenderUI(HDC _dc); // UI 렌더링

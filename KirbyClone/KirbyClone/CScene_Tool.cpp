@@ -10,6 +10,7 @@
 #include "CTimeMgr.h"
 #include "CEventMgr.h"
 #include "CPathMgr.h"
+#include "CGrid.h"
 
 CScene_Tool::CScene_Tool()
     : m_bShowUI(true)
@@ -29,29 +30,16 @@ CScene_Tool::~CScene_Tool()
 
 void CScene_Tool::Enter()
 {
-    // 기존 테스트 오브젝트들 그대로 유지
-    // 몬스터 여러 마리 배치 테스트
-    for (int i = 0; i < 5; ++i)
-    {
-        CMonster* pMonster = new CMonster;
-        pMonster->SetPos(Vec2(200.f + i * 200.f, 300.f + i * 50.f));
-        pMonster->SetScale(Vec2(50.f, 50.f));
-        AddObject(pMonster, GROUP_TYPE::MONSTER);
-    }
+    // 그리드 시스템 초기화
+    CGrid::GetInst()->init();
 
-    // 플레이어도 하나 추가 (테스트용)
-    CPlayer* pPlayer = new CPlayer;
-    pPlayer->SetPos(Vec2(640.f, 600.f));
-    pPlayer->SetScale(Vec2(100.f, 100.f));
-    AddObject(pPlayer, GROUP_TYPE::PLAYER);
-
-    // 에디터 모드 안내 메시지
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level Editor Mode - Mouse input enabled");
+    // 깔끔한 빈 레벨로 시작 (임시 오브젝트들 제거)
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level Editor - Clean slate ready!");
 }
 
 void CScene_Tool::Exit()
 {
-    DeleteAllObject();  // 부모 클래스의 함수 호출
+    DeleteAllObject();
 }
 
 void CScene_Tool::Update()
@@ -69,6 +57,9 @@ void CScene_Tool::Update()
 
 void CScene_Tool::Render(HDC _dc)
 {
+    // 그리드 먼저 렌더링 (배경)
+    CGrid::GetInst()->Render(_dc);
+
     // 부모 클래스의 Render 호출 (모든 오브젝트 렌더링)
     CScene::Render(_dc);
 
@@ -101,8 +92,58 @@ void CScene_Tool::UpdateInput()
             SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level Editor - UI OFF");
     }
 
+    // 그리드 관련 입력
+    UpdateGridInput();
+
     // 모드 전환 입력 처리
     UpdateModeInput();
+}
+
+void CScene_Tool::UpdateGridInput()
+{
+    // 그리드 표시 토글 (G 키)
+    if (KEY_TAP(KEY::G))
+    {
+        bool bShowGrid = CGrid::GetInst()->IsShowGrid();
+        CGrid::GetInst()->SetShowGrid(!bShowGrid);
+
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"Grid %s", bShowGrid ? L"OFF" : L"ON");
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+    }
+
+    // 그리드 스냅 토글 (Ctrl + G)
+    if (KEY_HOLD(KEY::G) && KEY_TAP(KEY::G))
+    {
+        bool bSnapToGrid = CGrid::GetInst()->IsSnapToGrid();
+        CGrid::GetInst()->SetSnapToGrid(!bSnapToGrid);
+
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"Grid Snap %s", bSnapToGrid ? L"OFF" : L"ON");
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+    }
+
+    // 그리드 크기 조절 (1, 2, 3, 4 키)
+    if (KEY_TAP(KEY::ALPHA_1))
+    {
+        CGrid::GetInst()->SetGridSizePreset(1);
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 32px");
+    }
+    else if (KEY_TAP(KEY::ALPHA_2))
+    {
+        CGrid::GetInst()->SetGridSizePreset(2);
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 64px");
+    }
+    else if (KEY_TAP(KEY::ALPHA_3))
+    {
+        CGrid::GetInst()->SetGridSizePreset(3);
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 128px");
+    }
+    else if (KEY_TAP(KEY::ALPHA_4))
+    {
+        CGrid::GetInst()->SetGridSizePreset(4);
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 256px");
+    }
 }
 
 void CScene_Tool::UpdateMouse()
@@ -110,13 +151,18 @@ void CScene_Tool::UpdateMouse()
     // CKeyMgr에서 마우스 좌표 가져오기
     m_vMousePos = CKeyMgr::GetInst()->GetMouseWorldPos();
 
-    // 마우스 클릭 감지 (새로운 방식 사용)
+    // 그리드 스냅 적용
+    if (CGrid::GetInst()->IsSnapToGrid())
+    {
+        m_vMousePos = CGrid::GetInst()->SnapToGrid(m_vMousePos);
+    }
+
+    // 마우스 클릭 감지
     if (KEY_TAP(KEY::MOUSE_LEFT))
     {
         m_bMouseClick = true;
-        m_fClickTime = 0.5f;  // 0.5초 동안 클릭 표시
+        m_fClickTime = 0.5f;
 
-        // 현재 모드에 따른 동작 처리
         HandleMouseClick();
     }
 
@@ -126,7 +172,7 @@ void CScene_Tool::UpdateMouse()
         m_bDragging = false;
     }
 
-    // 드래그 중이면 선택된 오브젝트 이동
+    // 드래그 중이면 선택된 오브젝트 이동 (그리드 스냅 적용)
     if (m_bDragging && m_pSelectedObject && m_eCurrentMode == EDITOR_MODE::SELECT)
     {
         m_pSelectedObject->SetPos(m_vMousePos);
@@ -178,10 +224,29 @@ void CScene_Tool::RenderMouse(HDC _dc)
     MoveToEx(_dc, (int)vRenderPos.x, (int)vRenderPos.y - size, nullptr);
     LineTo(_dc, (int)vRenderPos.x, (int)vRenderPos.y + size);
 
+    // 그리드 스냅이 활성화된 경우 그리드 위치 표시
+    if (CGrid::GetInst()->IsSnapToGrid())
+    {
+        HPEN hGridPen = CreatePen(PS_DOT, 1, cursorColor);
+        SelectObject(_dc, hGridPen);
+
+        float fGridSize = CGrid::GetInst()->GetGridSize();
+        Vec2 vGridRenderPos = CCamera::GetInst()->GetRenderPos(m_vMousePos);
+
+        // 그리드 셀 경계 표시
+        Rectangle(_dc,
+            (int)(vGridRenderPos.x - fGridSize / 2.f),
+            (int)(vGridRenderPos.y - fGridSize / 2.f),
+            (int)(vGridRenderPos.x + fGridSize / 2.f),
+            (int)(vGridRenderPos.y + fGridSize / 2.f));
+
+        DeleteObject(hGridPen);
+    }
+
     SelectObject(_dc, hOldPen);
     DeleteObject(hPen);
 
-    // 클릭했을 때 원 그리기 (색상은 모드에 따라)
+    // 클릭했을 때 원 그리기
     if (m_bMouseClick)
     {
         HPEN hClickPen = CreatePen(PS_SOLID, 3, cursorColor);
@@ -245,12 +310,31 @@ void CScene_Tool::RenderUI(HDC _dc)
     // 일반 폰트로 변경
     yPos += 25;
 
-    // 현재 모드 표시 (강조)
+    // 현재 모드 표시
+    SetTextColor(_dc, RGB(100, 255, 100));
     wchar_t szBuffer[256];
-    SetTextColor(_dc, RGB(100, 255, 100)); // 녹색으로 강조
     swprintf_s(szBuffer, L"Mode: %s", GetModeString());
     TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
-    SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
+    SetTextColor(_dc, RGB(255, 255, 255));
+    yPos += lineHeight + 5;
+
+    // 그리드 정보 추가
+    yPos += 5;
+    SetTextColor(_dc, RGB(255, 255, 100));
+    TextOut(_dc, 20, yPos, L"Grid Settings:", 14);
+    SetTextColor(_dc, RGB(255, 255, 255));
+    yPos += lineHeight;
+
+    swprintf_s(szBuffer, L"Size: %.0fpx", CGrid::GetInst()->GetGridSize());
+    TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
+    yPos += lineHeight;
+
+    swprintf_s(szBuffer, L"Show: %s", CGrid::GetInst()->IsShowGrid() ? L"ON" : L"OFF");
+    TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
+    yPos += lineHeight;
+
+    swprintf_s(szBuffer, L"Snap: %s", CGrid::GetInst()->IsSnapToGrid() ? L"ON" : L"OFF");
+    TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
     yPos += lineHeight + 5;
 
     // 현재 오브젝트 개수 정보
@@ -302,37 +386,37 @@ void CScene_Tool::RenderUI(HDC _dc)
     yPos += lineHeight;
 
     // 클릭 상태 표시 (시간 기반으로 개선)
-    if (m_bMouseClick && m_fClickTime > 0.f)
-    {
-        SetTextColor(_dc, RGB(255, 100, 100)); // 빨간색으로 변경
-        swprintf_s(szBuffer, L"CLICK! (%.1f)", m_fClickTime);
-        TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
-        SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
-    }
-    else
-    {
-        // 현재 모드에 따른 액션 안내
-        switch (m_eCurrentMode)
-        {
-        case EDITOR_MODE::PLACE_MONSTER:
-            SetTextColor(_dc, RGB(100, 255, 100)); // 녹색
-            TextOut(_dc, 20, yPos, L"Click to place monster", 22);
-            break;
-        case EDITOR_MODE::SELECT:
-            SetTextColor(_dc, RGB(100, 200, 255)); // 파란색
-            TextOut(_dc, 20, yPos, L"Click to select object", 22);
-            break;
-        case EDITOR_MODE::ERASE:
-            SetTextColor(_dc, RGB(255, 150, 100)); // 주황색
-            TextOut(_dc, 20, yPos, L"Click to delete object", 23);
-            break;
-        default:
-            TextOut(_dc, 20, yPos, L"Ready to click...", 17);
-            break;
-        }
-        SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
-    }
-    yPos += lineHeight;
+    //if (m_bMouseClick && m_fClickTime > 0.f)
+    //{
+    //    SetTextColor(_dc, RGB(255, 100, 100)); // 빨간색으로 변경
+    //    swprintf_s(szBuffer, L"CLICK! (%.1f)", m_fClickTime);
+    //    TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
+    //    SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
+    //}
+    //else
+    //{
+    //    // 현재 모드에 따른 액션 안내
+    //    switch (m_eCurrentMode)
+    //    {
+    //    case EDITOR_MODE::PLACE_MONSTER:
+    //        SetTextColor(_dc, RGB(100, 255, 100)); // 녹색
+    //        TextOut(_dc, 20, yPos, L"Click to place monster", 22);
+    //        break;
+    //    case EDITOR_MODE::SELECT:
+    //        SetTextColor(_dc, RGB(100, 200, 255)); // 파란색
+    //        TextOut(_dc, 20, yPos, L"Click to select object", 22);
+    //        break;
+    //    case EDITOR_MODE::ERASE:
+    //        SetTextColor(_dc, RGB(255, 150, 100)); // 주황색
+    //        TextOut(_dc, 20, yPos, L"Click to delete object", 23);
+    //        break;
+    //    default:
+    //        TextOut(_dc, 20, yPos, L"Ready to click...", 17);
+    //        break;
+    //    }
+    //    SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
+    //}
+    //yPos += lineHeight;
 
     // 구분선
     yPos += 5;
@@ -358,7 +442,14 @@ void CScene_Tool::RenderUI(HDC _dc)
     TextOut(_dc, 20, yPos, L"ESC - Normal Mode", 17);
     yPos += lineHeight;
 
-    // 기타 컨트롤
+    yPos += 5;
+    TextOut(_dc, 20, yPos, L"Grid Controls:", 14);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"G - Toggle Grid", 15);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"1,2,3,4 - Grid Size", 19);
+    yPos += lineHeight;
+
     yPos += 5;
     TextOut(_dc, 20, yPos, L"Other Controls:", 15);
     yPos += lineHeight;
@@ -400,11 +491,12 @@ void CScene_Tool::UpdateModeInput()
     {
         ChangeMode(EDITOR_MODE::NONE);
     }
+    // F키: 빠른 저장
     else if (KEY_TAP(KEY::F))
     {
-        QuickSave();  // ← 여기서 F키로 저장!
+        QuickSave();
     }
-    // V키: 빠른 로딩 (F9 대신 V키 사용)  
+    // V키: 빠른 로딩 
     else if (KEY_TAP(KEY::V))
     {
         QuickLoad();
@@ -490,7 +582,8 @@ void CScene_Tool::PlaceMonster(Vec2 _vPos)
     // 성공 메시지 표시
     const vector<CObject*>& vecMonster = GetGroupObject(GROUP_TYPE::MONSTER);
     wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Monster placed! Total: %d monsters", (int)vecMonster.size());
+    swprintf_s(szBuffer, L"Monster placed at (%.0f, %.0f)! Total: %d",
+        _vPos.x, _vPos.y, (int)vecMonster.size());
     SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 

@@ -896,3 +896,7 @@ GetRigidBody()->SetFriction(5.f);
 </details>
 
 ---
+
+### 완료
+- [X] 그리드 매니저 추가
+- 

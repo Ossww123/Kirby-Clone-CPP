@@ -19,6 +19,11 @@ enum class KEY
     A, S, D, F, G, H,
     Z, X, C, V, B,
 
+    // 숫자 키 추가
+    ALPHA_1, ALPHA_2, ALPHA_3, ALPHA_4,
+    ALPHA_5, ALPHA_6, ALPHA_7, ALPHA_8,
+    ALPHA_9, ALPHA_0,
+
     SPACE,
     ENTER,
     ESC,
@@ -77,8 +82,8 @@ enum class EDITOR_MODE
 {
     NONE,           // 기본 모드
     PLACE_MONSTER,  // 몬스터 배치 모드
-    SELECT,         // 선택 모드 (추후 구현)
-    ERASE,          // 삭제 모드 (추후 구현)
+    SELECT,         // 선택 모드
+    ERASE,          // 삭제 모드
     CAMERA_MOVE,    // 카메라 이동 모드 (추후 구현)
     END
 };

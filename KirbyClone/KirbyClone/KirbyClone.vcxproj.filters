@@ -83,6 +83,9 @@
     <Filter Include="Engine\07. Component\RigidBody">
       <UniqueIdentifier>{d59eee77-6ebb-415d-8272-858fbfb0f011}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\03. Manager\Grid">
+      <UniqueIdentifier>{bd0531ee-c04c-4f0a-a57b-5f1cdc2290dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -170,6 +173,9 @@
     <ClInclude Include="CRigidBody.h">
       <Filter>Engine\07. Component\RigidBody</Filter>
     </ClInclude>
+    <ClInclude Include="CGrid.h">
+      <Filter>Engine\03. Manager\Grid</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -248,6 +254,9 @@
     </ClCompile>
     <ClCompile Include="CRigidBody.cpp">
       <Filter>Engine\07. Component\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="CGrid.cpp">
+      <Filter>Engine\03. Manager\Grid</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

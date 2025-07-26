@@ -9,6 +9,7 @@
 #include "CCamera.h"
 #include "CPathMgr.h"
 #include "CResMgr.h"
+#include "CGrid.h"
 
 CCore::CCore()
 	: m_hWnd(0)
@@ -56,6 +57,7 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	CCollisionMgr::GetInst()->init();
 	CEventMgr::GetInst()->init();
 	CCamera::GetInst()->init(m_ptResolution.x, m_ptResolution.y);
+	CGrid::GetInst()->init();
 
 	return S_OK;
 }
