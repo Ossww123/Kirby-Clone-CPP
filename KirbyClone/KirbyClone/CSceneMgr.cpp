@@ -6,6 +6,7 @@
 #include "CScene.h"
 #include "CScene_Start.h"
 #include "CScene_Tool.h"
+#include "CScene_Stage01.h"
 
 CSceneMgr::CSceneMgr()
     : m_pCurScene(nullptr)
@@ -28,6 +29,7 @@ void CSceneMgr::init()
     // 모든 씬 생성
     m_arrScene[(UINT)SCENE_TYPE::START] = new CScene_Start;
     m_arrScene[(UINT)SCENE_TYPE::TOOL] = new CScene_Tool;
+    m_arrScene[(UINT)SCENE_TYPE::STAGE_01] = new CScene_Stage01;
 
     // 시작 씬 설정
     m_pCurScene = m_arrScene[(UINT)SCENE_TYPE::START];
@@ -53,6 +55,13 @@ void CSceneMgr::update()
             tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
             CEventMgr::GetInst()->AddEvent(event);
         }
+    }
+
+    // STAGE_01로 전환 (Ctrl+1키)
+    if (KEY_TAP(KEY::ALPHA_1) && KEY_HOLD(KEY::CTRL))
+    {
+        tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::STAGE_01);
+        CEventMgr::GetInst()->AddEvent(event);
     }
 }
 

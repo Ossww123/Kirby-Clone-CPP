@@ -1,6 +1,8 @@
 #pragma once
 #include "CObject.h"
 
+class CCollider;
+
 class CTile : public CObject
 {
 private:
@@ -9,11 +11,8 @@ private:
     bool m_bHarmful;        // 데미지 여부 (가시 등)
 
 public:
-    virtual void Update() override
-    {
-        // 타일은 기본적으로 움직이지 않음
-        // TODO: 특수 타일 (움직이는 플랫폼 등) 구현
-    }
+    virtual void Update();
+    virtual void Render(HDC _dc);
 
     void SetTileType(OBJECT_TYPE _eType) { m_eTileType = _eType; }
     void SetSolid(bool _bSolid) { m_bSolid = _bSolid; }
@@ -23,18 +22,9 @@ public:
     bool IsSolid() { return m_bSolid; }
     bool IsHarmful() { return m_bHarmful; }
 
-    virtual void OnCollisionEnter(CCollider* _pOther) override
-    {
-        // TODO: 플레이어와 충돌 시 효과 처리 (데미지, 워프 등)
-    }
+    virtual void OnCollisionEnter(CCollider* _pOther);
 
 public:
-    CTile()
-        : m_eTileType(OBJECT_TYPE::TILE_GROUND)
-        , m_bSolid(true)
-        , m_bHarmful(false)
-    {
-        // 기본 타일 설정
-    }
-    ~CTile() {}
+    CTile();
+    ~CTile();
 };

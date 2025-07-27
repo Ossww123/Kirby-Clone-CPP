@@ -21,6 +21,8 @@ void CCollisionMgr::init()
 {
     // 충돌 체크할 그룹 설정
     CheckGroup(GROUP_TYPE::PLAYER, GROUP_TYPE::MONSTER);
+    CheckGroup(GROUP_TYPE::PLAYER, GROUP_TYPE::TILE);
+    CheckGroup(GROUP_TYPE::MONSTER, GROUP_TYPE::TILE);
 }
 
 void CCollisionMgr::update()

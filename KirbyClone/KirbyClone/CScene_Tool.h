@@ -61,6 +61,8 @@ private:
     void LoadLevel(const wstring& _strFileName);    // 레벨 로딩
     void QuickSave();                               // 빠른 저장 (F5)
     void QuickLoad();                               // 빠른 로딩 (F9)
+    void SaveAsDialog();                            // 다른 이름으로 저장 (Ctrl+S)
+    void OpenDialog();                              // 파일 열기 (Ctrl+O)
 
     // 유틸리티 함수
     void ChangeMode(EDITOR_MODE _eMode);    // 모드 변경

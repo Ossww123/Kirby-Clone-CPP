@@ -4,6 +4,8 @@
 #include "CCamera.h"
 #include "CTimeMgr.h"
 
+#pragma comment(lib, "msimg32.lib")
+
 CAnimation::CAnimation()
     : m_strName{}
     , m_pTex(nullptr)
@@ -75,8 +77,9 @@ void CAnimation::Render(HDC _dc, Vec2 _vPos)
     // 현재 프레임 정보 가져오기
     tAnimFrame& frame = m_vecFrame[m_iCurFrame];
 
-    // 스프라이트 시트에서 해당 프레임 영역만 그리기
-    BitBlt(_dc,
+    // 마젠타 투명 처리를 위한 TransparentBlt 사용
+    // RGB(255, 0, 255) = 마젠타 색상을 투명으로 처리
+    TransparentBlt(_dc,
         (int)(vRenderPos.x - frame.vSlice.x / 2.f),     // 대상 좌상단 X
         (int)(vRenderPos.y - frame.vSlice.y / 2.f),     // 대상 좌상단 Y
         (int)frame.vSlice.x,                            // 가로 크기
@@ -84,11 +87,31 @@ void CAnimation::Render(HDC _dc, Vec2 _vPos)
         m_pTex->GetDC(),                                // 소스 DC
         (int)frame.vLT.x,                               // 소스 좌상단 X
         (int)frame.vLT.y,                               // 소스 좌상단 Y
-        SRCCOPY);
+        (int)frame.vSlice.x,                            // 소스 가로 크기
+        (int)frame.vSlice.y,                            // 소스 세로 크기
+        RGB(255, 0, 255));                              // 투명 처리할 색상 (마젠타)
 }
 
 void CAnimation::Reset()
 {
+    m_iCurFrame = 0;
+    m_fAccTime = 0.f;
+    m_bFinish = false;
+}
+
+void CAnimation::AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration)
+{
+    tAnimFrame frame;
+    frame.vLT = _vLT;
+    frame.vSlice = _vSliceSize;
+    frame.fDuration = _fDuration;
+
+    m_vecFrame.push_back(frame);
+}
+
+void CAnimation::ClearFrames()
+{
+    m_vecFrame.clear();
     m_iCurFrame = 0;
     m_fAccTime = 0.f;
     m_bFinish = false;

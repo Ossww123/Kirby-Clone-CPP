@@ -4,6 +4,9 @@
 #include "CObject.h"
 #include "CPlayer.h"
 #include "CMonster.h"
+#include "CKeyMgr.h"
+#include "CEventMgr.h"
+#include "CCore.h"
 
 CScene_Start::CScene_Start()
 {
@@ -26,9 +29,25 @@ void CScene_Start::Enter()
     pMonster->SetPos(Vec2(300.f, 300.f));
     pMonster->SetScale(Vec2(60.f, 60.f));
     AddObject(pMonster, GROUP_TYPE::MONSTER);  // GROUP_TYPE 추가
+
+    // 게임 시작 안내
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Kirby Clone - Press 1 to start STAGE 01!");
 }
 
 void CScene_Start::Exit()
 {
     DeleteAllObject();  // 부모 클래스의 함수 호출
+}
+
+void CScene_Start::Update()
+{
+    // 부모 클래스의 Update 호출
+    CScene::Update();
+
+    // 1키로 STAGE_01로 이동
+    if (KEY_TAP(KEY::ALPHA_1))
+    {
+        tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::STAGE_01);
+        CEventMgr::GetInst()->AddEvent(event);
+    }
 }

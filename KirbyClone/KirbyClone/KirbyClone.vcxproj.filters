@@ -98,6 +98,12 @@
     <Filter Include="Engine\04. Object\SpecialObject">
       <UniqueIdentifier>{eeea35af-6829-462c-8043-d6cfa28390de}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Stage">
+      <UniqueIdentifier>{eaead094-d6d3-46d1-bf4a-a3e73f2319c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Stage\Stage01">
+      <UniqueIdentifier>{958bef4a-452a-4c03-860d-d0375cfbb9d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -200,6 +206,9 @@
     <ClInclude Include="CSpecialObject.h">
       <Filter>Engine\04. Object\SpecialObject</Filter>
     </ClInclude>
+    <ClInclude Include="CScene_Stage01.h">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -293,6 +302,9 @@
     </ClCompile>
     <ClCompile Include="CSpecialObject.cpp">
       <Filter>Engine\04. Object\SpecialObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CScene_Stage01.cpp">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

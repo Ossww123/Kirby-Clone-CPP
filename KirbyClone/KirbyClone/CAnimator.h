@@ -24,6 +24,8 @@ public:
     CAnimation* FindAnimation(const wstring& _strName);
     CAnimation* GetCurAnim() { return m_pCurAnim; }
 
+    void AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim);
+
 public:
     CAnimator();
     ~CAnimator();

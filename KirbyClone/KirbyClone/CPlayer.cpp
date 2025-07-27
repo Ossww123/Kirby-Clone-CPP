@@ -10,6 +10,9 @@
 #include "CTexture.h"
 #include "CAnimator.h"
 #include "CRigidBody.h"
+#include "CTile.h"
+#include "CMonster.h"
+#include "CAnimation.h"
 
 #include "CCore.h"
 
@@ -23,7 +26,7 @@ CPlayer::CPlayer()
 {
     // 충돌체 생성
     CreateCollider();
-    GetCollider()->SetScale(Vec2(80.f, 80.f));
+    GetCollider()->SetScale(Vec2(56.f, 56.f));
 
     // 애니메이터 생성
     CreateAnimator();
@@ -56,16 +59,53 @@ CPlayer::~CPlayer()
 
 void CPlayer::CreateAnimation()
 {
-    // 커비 스프라이트 시트 로드
+    // 커비 IDLE 스프라이트 로드
+    CTexture* pIdleTex = CResMgr::GetInst()->LoadTexture(L"KirbyIDLE", L"texture\\kirby\\kirby_IDLE.bmp");
+
+    // 복잡한 IDLE 애니메이션 수동 생성
+    CAnimation* pIdleAnim = new CAnimation;
+    pIdleAnim->SetName(L"IDLE");
+    pIdleAnim->SetTexture(pIdleTex);
+    pIdleAnim->SetLoop(true);
+
+    // 패턴: 1번(0.5s) -> 2번(0.1s) -> 1번(0.5s) -> 2번(0.1s) -> 1번(0.1s) -> 2번(0.1s)
+    // 1번 프레임: (3, 3)에서 80x72 크기
+    // 2번 프레임: (100, 3)에서 80x72 크기
+
+    // 1번 프레임 5번 반복 (0.5초)
+    for (int i = 0; i < 5; ++i)
+    {
+        pIdleAnim->AddFrame(Vec2(4, 4), Vec2(80, 72), 0.1f);
+    }
+
+    // 2번 프레임 1번 (0.1초)
+    pIdleAnim->AddFrame(Vec2(100, 4), Vec2(80, 72), 0.1f);
+
+    // 1번 프레임 5번 반복 (0.5초)
+    for (int i = 0; i < 5; ++i)
+    {
+        pIdleAnim->AddFrame(Vec2(4, 4), Vec2(80, 72), 0.1f);
+    }
+
+    // 2번 프레임 1번 (0.1초)
+    pIdleAnim->AddFrame(Vec2(100, 4), Vec2(80, 72), 0.1f);
+
+    // 1번 프레임 1번 (0.1초)
+    pIdleAnim->AddFrame(Vec2(4, 4), Vec2(80, 72), 0.1f);
+
+    // 2번 프레임 1번 (0.1초)
+    pIdleAnim->AddFrame(Vec2(100, 4), Vec2(80, 72), 0.1f);
+
+    // 애니메이터에 수동 애니메이션 등록
+    m_pAnimator->AddCustomAnimation(L"IDLE", pIdleAnim);
+
+    // 기존 텍스처로 다른 애니메이션들 생성 (임시)
     CTexture* pTex = CResMgr::GetInst()->LoadTexture(L"KirbySprite", L"texture\\kirby_sprite.bmp");
 
-    // IDLE 애니메이션 (실제 스프라이트에 맞게 조정 필요)
-    m_pAnimator->CreateAnimation(L"IDLE", pTex, Vec2(0, 0), Vec2(32, 32), Vec2(32, 0), 0.3f, 4, true);
-
-    // WALK 애니메이션 (실제 스프라이트에 맞게 조정 필요)
+    // WALK 애니메이션 (기존과 동일)
     m_pAnimator->CreateAnimation(L"WALK", pTex, Vec2(0, 32), Vec2(32, 32), Vec2(32, 0), 0.15f, 8, true);
 
-    // JUMP 애니메이션 (실제 스프라이트에 맞게 조정 필요)
+    // JUMP 애니메이션 (기존과 동일)
     m_pAnimator->CreateAnimation(L"JUMP", pTex, Vec2(0, 64), Vec2(32, 32), Vec2(32, 0), 0.1f, 1, false);
 }
 
@@ -127,18 +167,6 @@ void CPlayer::UpdateMove()
         {
             m_pRigidBody->SetVelocityX(0.f);
         }
-    }
-
-    // 간단한 바닥 충돌 처리 (y = 400 기준)
-    Vec2 vPos = GetPos();
-    Vec2 vVelocity = m_pRigidBody->GetVelocity();
-
-    if (vPos.y >= 400.f && vVelocity.y >= 0.f)
-    {
-        vPos.y = 400.f;
-        SetPos(vPos);
-        m_pRigidBody->SetVelocityY(0.f);
-        m_pRigidBody->SetGround(true);
     }
 }
 
@@ -210,22 +238,107 @@ void CPlayer::OnCollisionEnter(CCollider* _pOther)
 {
     CObject* pOtherObj = _pOther->GetOwner();
 
-    // 충돌 시 화면 흔들림 효과
-    CCamera::GetInst()->CameraShake(0.3f, 10.f);
+    // 타일과의 충돌 처리
+    CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
+    if (pTile && pTile->IsSolid())
+    {
+        Vec2 vPlayerPos = GetPos();
+        Vec2 vTilePos = pTile->GetPos();
+        Vec2 vVelocity = m_pRigidBody->GetVelocity();
 
-    // 디버그 출력 (윈도우 타이틀에 표시)
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"충돌 시작!");
+        // 충돌체 크기 가져오기 (실제 충돌체 크기 사용)
+        Vec2 vPlayerColliderScale = GetCollider()->GetScale();
+        Vec2 vTileColliderScale = pTile->GetCollider()->GetScale();
 
-    // 필요하다면 여기서 추가 이벤트
-    // 예: 파티클 이펙트, 사운드 재생, UI 업데이트 등
+        // 플레이어가 타일 위에서 아래로 떨어지고 있을 때만 착지
+        if (vVelocity.y >= 0.f && vPlayerPos.y < vTilePos.y)
+        {
+            // 플레이어 충돌체의 바닥면과 타일 충돌체의 윗면이 맞닿도록 배치
+            float tileTop = vTilePos.y - vTileColliderScale.y / 2.f;
+            float playerHalfHeight = vPlayerColliderScale.y / 2.f;
+
+            // 플레이어 중심을 타일 윗면에서 플레이어 충돌체 높이의 절반만큼 위에 배치
+            // 이렇게 하면 플레이어 충돌체 바닥이 타일 충돌체 윗면과 정확히 맞닿음
+            float newY = tileTop - playerHalfHeight;
+
+            vPlayerPos.y = newY;
+            SetPos(vPlayerPos);
+
+            // 수직 속도만 0으로 설정
+            m_pRigidBody->SetVelocityY(0.f);
+            m_pRigidBody->SetGround(true);
+
+            SetWindowText(CCore::GetInst()->GetMainHwnd(), L"타일 위에 착지! (충돌체 맞닿음)");
+        }
+    }
+
+    // 몬스터와의 충돌 처리
+    CMonster* pMonster = dynamic_cast<CMonster*>(pOtherObj);
+    if (pMonster)
+    {
+        CCamera::GetInst()->CameraShake(0.3f, 10.f);
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"몬스터와 충돌!");
+    }
 }
 
 void CPlayer::OnCollision(CCollider* _pOther)
 {
-    // 지속적인 충돌 처리 (매 프레임 호출)
+    // 지속적인 충돌 처리 - 충돌체가 계속 맞닿아 있어야 함
+    CObject* pOtherObj = _pOther->GetOwner();
+
+    CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
+    if (pTile && pTile->IsSolid())
+    {
+        Vec2 vPlayerPos = GetPos();
+        Vec2 vTilePos = pTile->GetPos();
+        Vec2 vVelocity = m_pRigidBody->GetVelocity();
+
+        // 충돌체 크기
+        Vec2 vPlayerColliderScale = GetCollider()->GetScale();
+        Vec2 vTileColliderScale = pTile->GetCollider()->GetScale();
+
+        // 플레이어가 타일 위에 올바르게 서 있는지 확인
+        float tileTop = vTilePos.y - vTileColliderScale.y / 2.f;
+        float playerBottom = vPlayerPos.y + vPlayerColliderScale.y / 2.f;
+
+        // 플레이어 바닥과 타일 윗면이 거의 맞닿아 있고, 플레이어가 위에 있다면
+        if (abs(playerBottom - tileTop) < 8.f && vPlayerPos.y < vTilePos.y)
+        {
+            // 미세한 위치 조정 (중력에 의한 약간의 침투 보정)
+            if (playerBottom > tileTop + 2.f)  // 2픽셀 이상 침투했다면
+            {
+                float correctedY = tileTop - vPlayerColliderScale.y / 2.f;
+                vPlayerPos.y = correctedY;
+                SetPos(vPlayerPos);
+            }
+
+            m_pRigidBody->SetGround(true);
+
+            // 아래로 떨어지는 속도가 있다면 제거
+            if (vVelocity.y > 0.f)
+            {
+                m_pRigidBody->SetVelocityY(0.f);
+            }
+        }
+    }
 }
 
 void CPlayer::OnCollisionExit(CCollider* _pOther)
 {
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"충돌 끝!");
+    CObject* pOtherObj = _pOther->GetOwner();
+
+    CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
+    if (pTile && pTile->IsSolid())
+    {
+        // 점프나 이동으로 타일에서 벗어날 때만 Ground 해제
+        Vec2 vVelocity = m_pRigidBody->GetVelocity();
+
+        // 위쪽으로 빠르게 이동 중이거나 (점프), 수평으로 이동해서 벗어났을 때
+        if (vVelocity.y < -30.f || abs(vVelocity.x) > 50.f)
+        {
+            m_pRigidBody->SetGround(false);
+        }
+
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"타일에서 벗어남");
+    }
 }

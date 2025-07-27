@@ -59,7 +59,7 @@ enum class SCENE_TYPE
 {
     TOOL,
     START,
-    // STAGE_01,
+    STAGE_01,
     // STAGE_02,
 
     END,
@@ -83,6 +83,15 @@ enum class PLAYER_STATE
     IDLE,
     WALK,
     JUMP,
+    END
+};
+
+// 몬스터 상태 열거형
+enum class MONSTER_STATE
+{
+    IDLE,
+    WALK,
+    TURN,
     END
 };
 

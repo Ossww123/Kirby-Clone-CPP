@@ -11,6 +11,7 @@
 #include "CEventMgr.h"
 #include "CPathMgr.h"
 #include "CGrid.h"
+#include "CTile.h"
 
 CScene_Tool::CScene_Tool()
     : m_bShowUI(true)
@@ -60,6 +61,9 @@ void CScene_Tool::Update()
     // 에디터 전용 입력 처리
     UpdateInput();
     UpdateMouse();
+
+    // 오브젝트 선택 입력 처리
+    UpdateObjectSelection();
 }
 
 void CScene_Tool::Render(HDC _dc)
@@ -276,7 +280,7 @@ void CScene_Tool::RenderUI(HDC _dc)
     // UI 배경 패널
     HBRUSH hBrush = CreateSolidBrush(RGB(30, 30, 30));
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Rectangle(_dc, 10, 10, 450, 500); // 패널 크기 확장
+    Rectangle(_dc, 10, 10, 450, 800); // 패널 크기 확장
     SelectObject(_dc, hOldBrush);
     DeleteObject(hBrush);
 
@@ -285,7 +289,7 @@ void CScene_Tool::RenderUI(HDC _dc)
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
     HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
     HBRUSH hOldBrush2 = (HBRUSH)SelectObject(_dc, hHollowBrush);
-    Rectangle(_dc, 10, 10, 450, 500);
+    Rectangle(_dc, 10, 10, 450, 800);
     SelectObject(_dc, hOldPen);
     SelectObject(_dc, hOldBrush2);
     DeleteObject(hPen);
@@ -438,6 +442,14 @@ void CScene_Tool::RenderUI(HDC _dc)
     yPos += lineHeight;
     TextOut(_dc, 20, yPos, L"L - Quick Load", 14);
     yPos += lineHeight;
+    
+    SetTextColor(_dc, RGB(200, 255, 200));
+    TextOut(_dc, 20, yPos, L"Ctrl+S - Save As...", 19);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"Ctrl+O - Open File...", 21);
+    yPos += lineHeight;
+
+    SetTextColor(_dc, RGB(255, 255, 255));
     TextOut(_dc, 20, yPos, L"Ctrl+T - Game Mode", 18);
     yPos += lineHeight;
 
@@ -460,9 +472,21 @@ void CScene_Tool::RenderUI(HDC _dc)
 
 void CScene_Tool::UpdateModeInput()
 {
+    // === 파일 관리 (Ctrl 조합키를 먼저 체크) ===
+    // Ctrl+S키: 다른 이름으로 저장 (단순 S키보다 먼저 체크)
+    if (KEY_TAP(KEY::S) && KEY_HOLD(KEY::CTRL))
+    {
+        SaveAsDialog();
+    }
+    // Ctrl+O키: 파일 열기
+    else if (KEY_TAP(KEY::O) && KEY_HOLD(KEY::CTRL))
+    {
+        OpenDialog();
+    }
+
     // === 오브젝트 배치 모드들 ===
     // M키: 몬스터 배치 모드 (Monster)
-    if (KEY_TAP(KEY::M))
+    else if (KEY_TAP(KEY::M))
     {
         ChangeMode(EDITOR_MODE::PLACE_MONSTER);
         ChangeObjectCategory(L"Monster");
@@ -473,7 +497,7 @@ void CScene_Tool::UpdateModeInput()
         ChangeMode(EDITOR_MODE::PLACE_ITEM);
         ChangeObjectCategory(L"Item");
     }
-    // T키: 타일 배치 모드 (Tile) - 이제 충돌 없음
+    // T키: 타일 배치 모드 (Tile)
     else if (KEY_TAP(KEY::T))
     {
         ChangeMode(EDITOR_MODE::PLACE_TILE);
@@ -487,7 +511,7 @@ void CScene_Tool::UpdateModeInput()
     }
 
     // === 편집 모드들 ===
-    // S키: 선택 모드 (Select) - W키보다 직관적
+    // S키: 선택 모드 (Select) - Ctrl+S 체크 후에 배치
     else if (KEY_TAP(KEY::S))
     {
         ChangeMode(EDITOR_MODE::SELECT);
@@ -503,7 +527,7 @@ void CScene_Tool::UpdateModeInput()
         ChangeMode(EDITOR_MODE::NONE);
     }
 
-    // === 파일 관리 ===
+    // === 기본 파일 관리 ===
     // F키: 빠른 저장 (File save)
     else if (KEY_TAP(KEY::F))
     {
@@ -516,8 +540,108 @@ void CScene_Tool::UpdateModeInput()
     }
 
     // === 씬 전환 ===
-    // Ctrl+T키: 게임으로 복귀 (키 충돌 해결)
+    // Ctrl+T키: 게임으로 복귀
     // 실제 씬 전환은 CSceneMgr에서 처리됨
+}
+
+void CScene_Tool::SaveAsDialog()
+{
+    // 레벨 폴더 경로 확인 및 생성
+    wstring strContentPath = CPathMgr::GetInst()->GetContentPath();
+    wstring strLevelDir = strContentPath + L"level\\";
+    CreateDirectory(strLevelDir.c_str(), nullptr);
+
+    // 파일 대화상자 구조체 초기화
+    OPENFILENAME ofn;
+    wchar_t szFile[260] = { 0 };       // 파일명 버퍼
+    wchar_t szFileTitle[260] = { 0 };  // 파일 제목 버퍼
+
+    // 기본 파일명 설정
+    wcscpy_s(szFile, L"NewLevel.lvl");
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = CCore::GetInst()->GetMainHwnd();
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFileTitle = szFileTitle;
+    ofn.nMaxFileTitle = sizeof(szFileTitle);
+    ofn.lpstrInitialDir = strLevelDir.c_str();  // 초기 디렉토리를 level 폴더로 설정
+    ofn.lpstrFilter = L"Kirby Level Files (*.lvl)\0*.lvl\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrTitle = L"레벨 파일 저장";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = L"lvl";
+
+    // 저장 대화상자 표시
+    if (GetSaveFileName(&ofn))
+    {
+        // 전체 경로에서 파일명만 추출
+        wstring strFullPath = szFile;
+        wstring strFileName = szFileTitle;
+
+        // 확장자 제거 (SaveLevel 함수에서 자동으로 .lvl 추가)
+        size_t dotPos = strFileName.rfind(L'.');
+        if (dotPos != wstring::npos)
+        {
+            strFileName = strFileName.substr(0, dotPos);
+        }
+
+        // 레벨 저장
+        SaveLevel(strFileName);
+
+        // 성공 메시지
+        wchar_t szMsg[512];
+        swprintf_s(szMsg, L"레벨이 저장되었습니다: %s", strFileName.c_str());
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szMsg);
+    }
+}
+
+void CScene_Tool::OpenDialog()
+{
+    // 레벨 폴더 경로 확인
+    wstring strContentPath = CPathMgr::GetInst()->GetContentPath();
+    wstring strLevelDir = strContentPath + L"level\\";
+
+    // 파일 대화상자 구조체 초기화
+    OPENFILENAME ofn;
+    wchar_t szFile[260] = { 0 };       // 파일명 버퍼
+    wchar_t szFileTitle[260] = { 0 };  // 파일 제목 버퍼
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = CCore::GetInst()->GetMainHwnd();
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFileTitle = szFileTitle;
+    ofn.nMaxFileTitle = sizeof(szFileTitle);
+    ofn.lpstrInitialDir = strLevelDir.c_str();  // 초기 디렉토리를 level 폴더로 설정
+    ofn.lpstrFilter = L"Kirby Level Files (*.lvl)\0*.lvl\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrTitle = L"레벨 파일 열기";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+
+    // 열기 대화상자 표시
+    if (GetOpenFileName(&ofn))
+    {
+        // 전체 경로에서 파일명만 추출
+        wstring strFileName = szFileTitle;
+
+        // 확장자 제거 (LoadLevel 함수에서 자동으로 .lvl 추가)
+        size_t dotPos = strFileName.rfind(L'.');
+        if (dotPos != wstring::npos)
+        {
+            strFileName = strFileName.substr(0, dotPos);
+        }
+
+        // 레벨 로드
+        LoadLevel(strFileName);
+
+        // 성공 메시지
+        wchar_t szMsg[512];
+        swprintf_s(szMsg, L"레벨이 로드되었습니다: %s", strFileName.c_str());
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szMsg);
+    }
 }
 
 void CScene_Tool::UpdateObjectSelection()
@@ -957,6 +1081,22 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
                 objData.vScale = vecObj[j]->GetScale();
                 objData.iSubType = 0; // 추후 확장 가능
 
+                // 타일의 경우 타일 타입 정보도 저장
+                if (objData.eGroupType == GROUP_TYPE::TILE)
+                {
+                    CTile* pTile = dynamic_cast<CTile*>(vecObj[j]);
+                    if (pTile)
+                    {
+                        objData.iSubType = (int)pTile->GetTileType();
+                    }
+                }
+                // 몬스터의 경우 몬스터 타입 정보 저장 (추후 확장용)
+                else if (objData.eGroupType == GROUP_TYPE::MONSTER)
+                {
+                    // 현재는 모든 몬스터가 WADDLE_DEE이므로 기본값 사용
+                    objData.iSubType = (int)OBJECT_TYPE::MONSTER_WADDLE_DEE;
+                }
+
                 levelData.vecObjects.push_back(objData);
             }
         }
@@ -1089,9 +1229,37 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
         switch (objData.eGroupType)
         {
         case GROUP_TYPE::MONSTER:
-            pObj = new CMonster;
-            break;
-            // 추후 다른 오브젝트 타입들 추가
+        {
+            // 몬스터 타입에 따라 생성 (현재는 WADDLE_DEE만)
+            OBJECT_TYPE monsterType = (OBJECT_TYPE)objData.iSubType;
+            pObj = CObjectFactory::CreateObject(monsterType, objData.vPos);
+        }
+        break;
+
+        case GROUP_TYPE::TILE:
+        {
+            // 타일 타입에 따라 생성
+            OBJECT_TYPE tileType = (OBJECT_TYPE)objData.iSubType;
+            pObj = CObjectFactory::CreateObject(tileType, objData.vPos);
+        }
+        break;
+
+        case GROUP_TYPE::ITEM:
+        {
+            // 아이템 타입에 따라 생성 (추후 확장)
+            OBJECT_TYPE itemType = (OBJECT_TYPE)objData.iSubType;
+            pObj = CObjectFactory::CreateObject(itemType, objData.vPos);
+        }
+        break;
+
+        case GROUP_TYPE::SPECIAL:
+        {
+            // 특수 오브젝트 타입에 따라 생성 (추후 확장)
+            OBJECT_TYPE specialType = (OBJECT_TYPE)objData.iSubType;
+            pObj = CObjectFactory::CreateObject(specialType, objData.vPos);
+        }
+        break;
+
         default:
             continue;
         }

@@ -240,6 +240,7 @@ const wchar_t* CObjectFactory::GetObjectTypeName(OBJECT_TYPE _eType)
     }
 }
 
+
 GROUP_TYPE CObjectFactory::GetObjectGroup(OBJECT_TYPE _eType)
 {
     switch (_eType)
@@ -253,19 +254,22 @@ GROUP_TYPE CObjectFactory::GetObjectGroup(OBJECT_TYPE _eType)
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
         return GROUP_TYPE::MONSTER;
 
-        // TODO: 아이템, 타일, 특수 오브젝트용 GROUP_TYPE 추가 필요
     case OBJECT_TYPE::ITEM_STAR:
     case OBJECT_TYPE::ITEM_ENERGY_DRINK:
     case OBJECT_TYPE::ITEM_1UP:
     case OBJECT_TYPE::ITEM_ABILITY_STAR:
+        return GROUP_TYPE::ITEM;
+
     case OBJECT_TYPE::TILE_GROUND:
     case OBJECT_TYPE::TILE_SPIKE:
     case OBJECT_TYPE::TILE_WATER:
     case OBJECT_TYPE::TILE_WARP_STAR:
+        return GROUP_TYPE::TILE;
+
     case OBJECT_TYPE::OBJECT_DOOR:
     case OBJECT_TYPE::OBJECT_SWITCH:
     case OBJECT_TYPE::OBJECT_MIRROR:
-        return GROUP_TYPE::DEFAULT; // 임시로 DEFAULT 사용
+        return GROUP_TYPE::SPECIAL;
 
     default:
         return GROUP_TYPE::DEFAULT;

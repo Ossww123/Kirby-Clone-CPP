@@ -1049,3 +1049,6 @@ GetRigidBody()->SetFriction(5.f);
 </details>
 
 ---
+
+### 완료
+- [X] 오류 수정

@@ -30,6 +30,10 @@ public:
     void Render(HDC _dc, Vec2 _vPos);
     void Reset();
 
+    // 새로 추가된 함수들
+    void AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration);  // 개별 프레임 추가
+    void ClearFrames();                                            // 모든 프레임 제거
+
 public:
     CAnimation();
     ~CAnimation();

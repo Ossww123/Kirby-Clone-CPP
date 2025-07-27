@@ -98,3 +98,17 @@ CAnimation* CAnimator::FindAnimation(const wstring& _strName)
 
     return iter->second;
 }
+
+void CAnimator::AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim)
+{
+    // 이미 같은 이름의 애니메이션이 있다면 삭제
+    auto iter = m_mapAnim.find(_strName);
+    if (iter != m_mapAnim.end())
+    {
+        delete iter->second;
+        m_mapAnim.erase(iter);
+    }
+
+    // 새 애니메이션 추가
+    m_mapAnim.insert(make_pair(_strName, _pAnim));
+}
