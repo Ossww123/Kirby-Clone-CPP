@@ -15,9 +15,9 @@ enum class KEY
     UP,
     DOWN,
 
-    Q, W, E, R, T, Y,
-    A, S, D, F, G, H,
-    Z, X, C, V, B,
+    Q, W, E, R, T, Y, U, I, O, P,
+    A, S, D, F, G, H, J, K, L,
+    Z, X, C, V, B, N, M,
 
     // 숫자 키 추가
     ALPHA_1, ALPHA_2, ALPHA_3, ALPHA_4,
@@ -27,6 +27,9 @@ enum class KEY
     SPACE,
     ENTER,
     ESC,
+    TAB,
+    SHIFT,
+    CTRL,
 
     MOUSE_LEFT,
     MOUSE_RIGHT,
@@ -42,6 +45,12 @@ enum class GROUP_TYPE
     MONSTER,
     PROJ_PLAYER,    // 플레이어 투사체
     PROJ_MONSTER,   // 몬스터 투사체
+
+    // 새로운 그룹 타입들 추가
+    ITEM,           // 아이템
+    TILE,           // 타일/지형
+    SPECIAL,        // 특수 오브젝트 (문, 스위치 등)
+    UI,             // UI 요소
 
     END = 32,
 };
@@ -77,13 +86,48 @@ enum class PLAYER_STATE
     END
 };
 
-// 에디터 모드 열거형
+// 에디터 모드 열거형 (확장)
 enum class EDITOR_MODE
 {
     NONE,           // 기본 모드
     PLACE_MONSTER,  // 몬스터 배치 모드
+    PLACE_ITEM,     // 아이템 배치 모드
+    PLACE_TILE,     // 타일 배치 모드
+    PLACE_SPECIAL,  // 특수 오브젝트 배치 모드
     SELECT,         // 선택 모드
     ERASE,          // 삭제 모드
-    CAMERA_MOVE,    // 카메라 이동 모드 (추후 구현)
+    CAMERA_MOVE,    // 카메라 이동 모드
+    END
+};
+
+// 오브젝트 타입 열거형 추가
+enum class OBJECT_TYPE
+{
+    // 플레이어
+    PLAYER,
+
+    // 몬스터 타입들
+    MONSTER_WADDLE_DEE,     // 와들디 (기본 적)
+    MONSTER_GORDOS,         // 고르도스 (가시 적)
+    MONSTER_BRONTO_BURT,    // 브론토 버트 (날아다니는 적)
+    MONSTER_HOT_HEAD,       // 핫 헤드 (불 적)
+
+    // 아이템 타입들
+    ITEM_STAR,              // 별 (기본 아이템)
+    ITEM_ENERGY_DRINK,      // 에너지 드링크 (체력 회복)
+    ITEM_1UP,               // 1UP 아이템
+    ITEM_ABILITY_STAR,      // 능력 별
+
+    // 타일/환경 오브젝트
+    TILE_GROUND,            // 일반 땅
+    TILE_SPIKE,             // 가시 타일
+    TILE_WATER,             // 물 타일
+    TILE_WARP_STAR,         // 워프 스타
+
+    // 특수 오브젝트
+    OBJECT_DOOR,            // 문
+    OBJECT_SWITCH,          // 스위치
+    OBJECT_MIRROR,          // 거울 (게임 제목에 맞게)
+
     END
 };

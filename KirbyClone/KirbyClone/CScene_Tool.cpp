@@ -21,6 +21,9 @@ CScene_Tool::CScene_Tool()
     , m_pSelectedObject(nullptr)
     , m_bDragging(false)
     , m_vDragStartPos{}
+    , m_eCurrentObjectType(OBJECT_TYPE::MONSTER_WADDLE_DEE)
+    , m_iCurrentSubType(0)
+    , m_vecCurrentCategory{}
 {
 }
 
@@ -32,6 +35,10 @@ void CScene_Tool::Enter()
 {
     // 그리드 시스템 초기화
     CGrid::GetInst()->init();
+
+    // 오브젝트 팩토리 기본 설정
+    m_eCurrentObjectType = OBJECT_TYPE::MONSTER_WADDLE_DEE;
+    ChangeObjectCategory(L"Monster"); // 기본 카테고리 설정
 
     // 깔끔한 빈 레벨로 시작 (임시 오브젝트들 제거)
     SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level Editor - Clean slate ready!");
@@ -266,13 +273,10 @@ void CScene_Tool::RenderMouse(HDC _dc)
 
 void CScene_Tool::RenderUI(HDC _dc)
 {
-    // UI 배경 패널 (크기 증가)
-    HBRUSH hBrush = CreateSolidBrush(RGB(30, 30, 30));  // 어두운 회색
+    // UI 배경 패널
+    HBRUSH hBrush = CreateSolidBrush(RGB(30, 30, 30));
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-
-    // 패널 크기
-    Rectangle(_dc, 10, 10, 380, 340);
-
+    Rectangle(_dc, 10, 10, 450, 500); // 패널 크기 확장
     SelectObject(_dc, hOldBrush);
     DeleteObject(hBrush);
 
@@ -281,9 +285,7 @@ void CScene_Tool::RenderUI(HDC _dc)
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
     HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
     HBRUSH hOldBrush2 = (HBRUSH)SelectObject(_dc, hHollowBrush);
-
-    Rectangle(_dc, 10, 10, 380, 340);
-
+    Rectangle(_dc, 10, 10, 450, 500);
     SelectObject(_dc, hOldPen);
     SelectObject(_dc, hOldBrush2);
     DeleteObject(hPen);
@@ -292,7 +294,6 @@ void CScene_Tool::RenderUI(HDC _dc)
     SetTextColor(_dc, RGB(255, 255, 255));
     SetBkMode(_dc, TRANSPARENT);
 
-    // UI 텍스트 정보
     int yPos = 20;
     int lineHeight = 18;
 
@@ -302,12 +303,10 @@ void CScene_Tool::RenderUI(HDC _dc)
         DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
     HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
 
-    TextOut(_dc, 20, yPos, L"=== LEVEL EDITOR ===", 21);
+    TextOut(_dc, 20, yPos, L"=== KIRBY LEVEL EDITOR ===", 26);
 
     SelectObject(_dc, hOldFont);
     DeleteObject(hFont);
-
-    // 일반 폰트로 변경
     yPos += 25;
 
     // 현재 모드 표시
@@ -318,8 +317,24 @@ void CScene_Tool::RenderUI(HDC _dc)
     SetTextColor(_dc, RGB(255, 255, 255));
     yPos += lineHeight + 5;
 
-    // 그리드 정보 추가
-    yPos += 5;
+    // 현재 선택된 오브젝트 정보
+    if (m_eCurrentMode == EDITOR_MODE::PLACE_MONSTER ||
+        m_eCurrentMode == EDITOR_MODE::PLACE_ITEM ||
+        m_eCurrentMode == EDITOR_MODE::PLACE_TILE ||
+        m_eCurrentMode == EDITOR_MODE::PLACE_SPECIAL)
+    {
+        SetTextColor(_dc, RGB(255, 255, 100));
+        TextOut(_dc, 20, yPos, L"Selected Object:", 16);
+        yPos += lineHeight;
+
+        SetTextColor(_dc, RGB(255, 255, 255));
+        swprintf_s(szBuffer, L"%s (%d/%d)", GetCurrentObjectName(),
+            m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
+        TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
+        yPos += lineHeight + 5;
+    }
+
+    // 그리드 정보
     SetTextColor(_dc, RGB(255, 255, 100));
     TextOut(_dc, 20, yPos, L"Grid Settings:", 14);
     SetTextColor(_dc, RGB(255, 255, 255));
@@ -337,9 +352,17 @@ void CScene_Tool::RenderUI(HDC _dc)
     TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
     yPos += lineHeight + 5;
 
-    // 현재 오브젝트 개수 정보
+    // 오브젝트 개수 정보
+    SetTextColor(_dc, RGB(255, 255, 100));
+    TextOut(_dc, 20, yPos, L"Object Count:", 13);
+    SetTextColor(_dc, RGB(255, 255, 255));
+    yPos += lineHeight;
+
     const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);
     const vector<CObject*>& vecMonster = GetGroupObject(GROUP_TYPE::MONSTER);
+    const vector<CObject*>& vecItem = GetGroupObject(GROUP_TYPE::ITEM);
+    const vector<CObject*>& vecTile = GetGroupObject(GROUP_TYPE::TILE);
+    const vector<CObject*>& vecSpecial = GetGroupObject(GROUP_TYPE::SPECIAL);
 
     swprintf_s(szBuffer, L"Players: %d", (int)vecPlayer.size());
     TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
@@ -349,93 +372,56 @@ void CScene_Tool::RenderUI(HDC _dc)
     TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
     yPos += lineHeight;
 
-    // 선택된 오브젝트 정보 추가
-    if (m_pSelectedObject)
-    {
-        yPos += 5;
-        SetTextColor(_dc, RGB(255, 255, 100)); // 노란색으로 강조
-        TextOut(_dc, 20, yPos, L"Selected Object:", 16);
-        yPos += lineHeight;
-
-        Vec2 vSelPos = m_pSelectedObject->GetPos();
-        Vec2 vSelScale = m_pSelectedObject->GetScale();
-
-        swprintf_s(szBuffer, L"Pos: (%.0f, %.0f)", vSelPos.x, vSelPos.y);
-        TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
-        yPos += lineHeight;
-
-        swprintf_s(szBuffer, L"Size: (%.0f, %.0f)", vSelScale.x, vSelScale.y);
-        TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
-        yPos += lineHeight;
-
-        if (m_bDragging)
-        {
-            SetTextColor(_dc, RGB(100, 255, 100)); // 녹색
-            TextOut(_dc, 20, yPos, L"Dragging...", 11);
-            yPos += lineHeight;
-        }
-
-        SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
-        yPos += 5;
-    }
-
-    // 마우스 정보
-    yPos += 5;
-    swprintf_s(szBuffer, L"Mouse: (%.0f, %.0f)", m_vMousePos.x, m_vMousePos.y);
+    swprintf_s(szBuffer, L"Items: %d", (int)vecItem.size());
     TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
     yPos += lineHeight;
 
-    // 클릭 상태 표시 (시간 기반으로 개선)
-    //if (m_bMouseClick && m_fClickTime > 0.f)
-    //{
-    //    SetTextColor(_dc, RGB(255, 100, 100)); // 빨간색으로 변경
-    //    swprintf_s(szBuffer, L"CLICK! (%.1f)", m_fClickTime);
-    //    TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
-    //    SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
-    //}
-    //else
-    //{
-    //    // 현재 모드에 따른 액션 안내
-    //    switch (m_eCurrentMode)
-    //    {
-    //    case EDITOR_MODE::PLACE_MONSTER:
-    //        SetTextColor(_dc, RGB(100, 255, 100)); // 녹색
-    //        TextOut(_dc, 20, yPos, L"Click to place monster", 22);
-    //        break;
-    //    case EDITOR_MODE::SELECT:
-    //        SetTextColor(_dc, RGB(100, 200, 255)); // 파란색
-    //        TextOut(_dc, 20, yPos, L"Click to select object", 22);
-    //        break;
-    //    case EDITOR_MODE::ERASE:
-    //        SetTextColor(_dc, RGB(255, 150, 100)); // 주황색
-    //        TextOut(_dc, 20, yPos, L"Click to delete object", 23);
-    //        break;
-    //    default:
-    //        TextOut(_dc, 20, yPos, L"Ready to click...", 17);
-    //        break;
-    //    }
-    //    SetTextColor(_dc, RGB(255, 255, 255)); // 다시 흰색으로
-    //}
-    //yPos += lineHeight;
+    swprintf_s(szBuffer, L"Tiles: %d", (int)vecTile.size());
+    TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
+    yPos += lineHeight;
+
+    swprintf_s(szBuffer, L"Special: %d", (int)vecSpecial.size());
+    TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
+    yPos += lineHeight + 10;
 
     // 구분선
-    yPos += 5;
     HPEN hLinePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
     HPEN hOldLinePen = (HPEN)SelectObject(_dc, hLinePen);
-
     MoveToEx(_dc, 20, yPos, nullptr);
-    LineTo(_dc, 360, yPos);
-
+    LineTo(_dc, 430, yPos);
     SelectObject(_dc, hOldLinePen);
     DeleteObject(hLinePen);
     yPos += 10;
 
     // 컨트롤 안내
-    TextOut(_dc, 20, yPos, L"Mode Controls:", 14);
+    SetTextColor(_dc, RGB(255, 255, 100));
+    TextOut(_dc, 20, yPos, L"Object Placement:", 17);
+    SetTextColor(_dc, RGB(255, 255, 255));
     yPos += lineHeight;
-    TextOut(_dc, 20, yPos, L"Q - Monster Place Mode", 22);
+
+    TextOut(_dc, 20, yPos, L"M - Monster Mode", 16);
     yPos += lineHeight;
-    TextOut(_dc, 20, yPos, L"W - Select Mode", 15);
+    TextOut(_dc, 20, yPos, L"I - Item Mode", 13);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"T - Tile Mode", 13);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"P - Special Mode", 16);
+    yPos += lineHeight;
+
+    yPos += 3;
+    SetTextColor(_dc, RGB(200, 200, 255));
+    TextOut(_dc, 20, yPos, L"Tab - Next Object", 17);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"Shift+Tab - Prev Object", 23);
+    yPos += lineHeight;
+
+    yPos += 5;
+    SetTextColor(_dc, RGB(255, 255, 100));
+    TextOut(_dc, 20, yPos, L"Edit Tools:", 11);
+    SetTextColor(_dc, RGB(255, 255, 255));
+    yPos += lineHeight;
+
+    TextOut(_dc, 20, yPos, L"S - Select Mode", 15);
     yPos += lineHeight;
     TextOut(_dc, 20, yPos, L"E - Erase Mode", 14);
     yPos += lineHeight;
@@ -443,63 +429,108 @@ void CScene_Tool::RenderUI(HDC _dc)
     yPos += lineHeight;
 
     yPos += 5;
-    TextOut(_dc, 20, yPos, L"Grid Controls:", 14);
+    SetTextColor(_dc, RGB(255, 255, 100));
+    TextOut(_dc, 20, yPos, L"File & Navigation:", 18);
+    SetTextColor(_dc, RGB(255, 255, 255));
     yPos += lineHeight;
+
+    TextOut(_dc, 20, yPos, L"F - Quick Save", 14);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"L - Quick Load", 14);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"Ctrl+T - Game Mode", 18);
+    yPos += lineHeight;
+
+    yPos += 5;
+    SetTextColor(_dc, RGB(255, 255, 100));
+    TextOut(_dc, 20, yPos, L"View Controls:", 14);
+    SetTextColor(_dc, RGB(255, 255, 255));
+    yPos += lineHeight;
+
     TextOut(_dc, 20, yPos, L"G - Toggle Grid", 15);
     yPos += lineHeight;
     TextOut(_dc, 20, yPos, L"1,2,3,4 - Grid Size", 19);
     yPos += lineHeight;
-
-    yPos += 5;
-    TextOut(_dc, 20, yPos, L"Other Controls:", 15);
-    yPos += lineHeight;
-    TextOut(_dc, 20, yPos, L"Arrow Keys - Move Camera", 24);
-    yPos += lineHeight;
-    TextOut(_dc, 20, yPos, L"F - Quick Save", 14);
-    yPos += lineHeight;
-    TextOut(_dc, 20, yPos, L"V - Quick Load", 14);
+    TextOut(_dc, 20, yPos, L"Arrow Keys - Camera", 19);
     yPos += lineHeight;
     TextOut(_dc, 20, yPos, L"H - Toggle UI", 13);
     yPos += lineHeight;
-    TextOut(_dc, 20, yPos, L"T - Return to Game", 18);
+    TextOut(_dc, 20, yPos, L"Ctrl+T - Return to Game", 23);
 }
 
 void CScene_Tool::UpdateModeInput()
 {
-    // Q키: 몬스터 배치 모드
-    if (KEY_TAP(KEY::Q))
+    // === 오브젝트 배치 모드들 ===
+    // M키: 몬스터 배치 모드 (Monster)
+    if (KEY_TAP(KEY::M))
     {
         ChangeMode(EDITOR_MODE::PLACE_MONSTER);
+        ChangeObjectCategory(L"Monster");
     }
-    // W키: 선택 모드
-    else if (KEY_TAP(KEY::W))
+    // I키: 아이템 배치 모드 (Item)
+    else if (KEY_TAP(KEY::I))
+    {
+        ChangeMode(EDITOR_MODE::PLACE_ITEM);
+        ChangeObjectCategory(L"Item");
+    }
+    // T키: 타일 배치 모드 (Tile) - 이제 충돌 없음
+    else if (KEY_TAP(KEY::T))
+    {
+        ChangeMode(EDITOR_MODE::PLACE_TILE);
+        ChangeObjectCategory(L"Tile");
+    }
+    // P키: 특수 오브젝트 배치 모드 (sPecial)
+    else if (KEY_TAP(KEY::P))
+    {
+        ChangeMode(EDITOR_MODE::PLACE_SPECIAL);
+        ChangeObjectCategory(L"Special");
+    }
+
+    // === 편집 모드들 ===
+    // S키: 선택 모드 (Select) - W키보다 직관적
+    else if (KEY_TAP(KEY::S))
     {
         ChangeMode(EDITOR_MODE::SELECT);
     }
-    // E키: 삭제 모드
+    // E키: 삭제 모드 (Erase)
     else if (KEY_TAP(KEY::E))
     {
         ChangeMode(EDITOR_MODE::ERASE);
     }
-    // R키: 카메라 이동 모드 (추후 구현)
-    else if (KEY_TAP(KEY::R))
-    {
-        ChangeMode(EDITOR_MODE::CAMERA_MOVE);
-    }
-    // ESC키: 기본 모드로 돌아가기
+    // ESC키: 기본 모드
     else if (KEY_TAP(KEY::ESC))
     {
         ChangeMode(EDITOR_MODE::NONE);
     }
-    // F키: 빠른 저장
+
+    // === 파일 관리 ===
+    // F키: 빠른 저장 (File save)
     else if (KEY_TAP(KEY::F))
     {
         QuickSave();
     }
-    // V키: 빠른 로딩 
-    else if (KEY_TAP(KEY::V))
+    // L키: 빠른 로드 (Load)
+    else if (KEY_TAP(KEY::L))
     {
         QuickLoad();
+    }
+
+    // === 씬 전환 ===
+    // Ctrl+T키: 게임으로 복귀 (키 충돌 해결)
+    // 실제 씬 전환은 CSceneMgr에서 처리됨
+}
+
+void CScene_Tool::UpdateObjectSelection()
+{
+    // Tab키: 카테고리 내 다음 오브젝트
+    if (KEY_TAP(KEY::TAB) && !KEY_HOLD(KEY::SHIFT))
+    {
+        NextObjectInCategory();
+    }
+    // Shift+Tab키: 카테고리 내 이전 오브젝트
+    else if (KEY_TAP(KEY::TAB) && KEY_HOLD(KEY::SHIFT))
+    {
+        PrevObjectInCategory();
     }
 }
 
@@ -518,9 +549,12 @@ const wchar_t* CScene_Tool::GetModeString()
     switch (m_eCurrentMode)
     {
     case EDITOR_MODE::NONE:         return L"Normal";
-    case EDITOR_MODE::PLACE_MONSTER: return L"Place Monster";
-    case EDITOR_MODE::SELECT:       return L"Select";
-    case EDITOR_MODE::ERASE:        return L"Erase";
+    case EDITOR_MODE::PLACE_MONSTER: return L"Place Monster (M)";
+    case EDITOR_MODE::PLACE_ITEM:   return L"Place Item (I)";
+    case EDITOR_MODE::PLACE_TILE:   return L"Place Tile (T)";
+    case EDITOR_MODE::PLACE_SPECIAL: return L"Place Special (P)";
+    case EDITOR_MODE::SELECT:       return L"Select (S)";
+    case EDITOR_MODE::ERASE:        return L"Erase (E)";
     case EDITOR_MODE::CAMERA_MOVE:  return L"Camera Move";
     default:                        return L"Unknown";
     }
@@ -531,7 +565,10 @@ void CScene_Tool::HandleMouseClick()
     switch (m_eCurrentMode)
     {
     case EDITOR_MODE::PLACE_MONSTER:
-        PlaceMonster(m_vMousePos);
+    case EDITOR_MODE::PLACE_ITEM:
+    case EDITOR_MODE::PLACE_TILE:
+    case EDITOR_MODE::PLACE_SPECIAL:
+        PlaceObject(m_vMousePos);
         break;
 
     case EDITOR_MODE::SELECT:
@@ -569,78 +606,137 @@ void CScene_Tool::HandleMouseClick()
     }
 }
 
-void CScene_Tool::PlaceMonster(Vec2 _vPos)
+void CScene_Tool::PlaceObject(Vec2 _vPos)
 {
-    // 새 몬스터 생성
-    CMonster* pMonster = new CMonster;
-    pMonster->SetPos(_vPos);
-    pMonster->SetScale(Vec2(50.f, 50.f));  // 기본 크기
+    // 팩토리를 사용해서 오브젝트 생성
+    CObject* pObject = CObjectFactory::CreateObject(m_eCurrentObjectType, _vPos);
 
-    // 씬에 추가
-    AddObject(pMonster, GROUP_TYPE::MONSTER);
+    if (!pObject)
+    {
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Failed to create object!");
+        return;
+    }
 
-    // 성공 메시지 표시
-    const vector<CObject*>& vecMonster = GetGroupObject(GROUP_TYPE::MONSTER);
+    // 적절한 그룹에 추가
+    GROUP_TYPE eGroup = CObjectFactory::GetObjectGroup(m_eCurrentObjectType);
+    AddObject(pObject, eGroup);
+
+    // 성공 메시지
     wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Monster placed at (%.0f, %.0f)! Total: %d",
-        _vPos.x, _vPos.y, (int)vecMonster.size());
+    const wchar_t* szObjectName = CObjectFactory::GetObjectTypeName(m_eCurrentObjectType);
+    swprintf_s(szBuffer, L"%s placed at (%.0f, %.0f)!", szObjectName, _vPos.x, _vPos.y);
     SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+void CScene_Tool::ChangeObjectCategory(const wstring& _strCategory)
+{
+    m_vecCurrentCategory = CObjectFactory::GetObjectTypesByCategory(_strCategory);
+
+    if (!m_vecCurrentCategory.empty())
+    {
+        m_iCurrentSubType = 0;
+        m_eCurrentObjectType = m_vecCurrentCategory[0];
+
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"Category: %s - Object: %s",
+            _strCategory.c_str(), GetCurrentObjectName());
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+    }
+}
+
+void CScene_Tool::NextObjectInCategory()
+{
+    if (m_vecCurrentCategory.empty()) return;
+
+    m_iCurrentSubType = (m_iCurrentSubType + 1) % m_vecCurrentCategory.size();
+    m_eCurrentObjectType = m_vecCurrentCategory[m_iCurrentSubType];
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Selected: %s (%d/%d)",
+        GetCurrentObjectName(), m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+void CScene_Tool::PrevObjectInCategory()
+{
+    if (m_vecCurrentCategory.empty()) return;
+
+    m_iCurrentSubType = (m_iCurrentSubType - 1 + m_vecCurrentCategory.size()) % m_vecCurrentCategory.size();
+    m_eCurrentObjectType = m_vecCurrentCategory[m_iCurrentSubType];
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Selected: %s (%d/%d)",
+        GetCurrentObjectName(), m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+const wchar_t* CScene_Tool::GetCurrentObjectName()
+{
+    return CObjectFactory::GetObjectTypeName(m_eCurrentObjectType);
 }
 
 void CScene_Tool::RenderPreview(HDC _dc)
 {
     // 배치 모드일 때 배치 미리보기
-    if (m_eCurrentMode == EDITOR_MODE::PLACE_MONSTER)
+    if (m_eCurrentMode == EDITOR_MODE::PLACE_MONSTER ||
+        m_eCurrentMode == EDITOR_MODE::PLACE_ITEM ||
+        m_eCurrentMode == EDITOR_MODE::PLACE_TILE ||
+        m_eCurrentMode == EDITOR_MODE::PLACE_SPECIAL)
     {
-        // 마우스 월드 좌표를 화면 좌표로 변환
         Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_vMousePos);
+        Vec2 vObjectSize = CObjectFactory::GetDefaultScale(m_eCurrentObjectType);
 
-        // 배치될 몬스터 크기 (실제 몬스터와 같은 크기)
-        Vec2 vMonsterSize = Vec2(50.f, 50.f);
+        // 오브젝트 타입에 따른 색상 설정
+        COLORREF previewColor = RGB(100, 255, 100); // 기본 초록색
+        switch (m_eCurrentMode)
+        {
+        case EDITOR_MODE::PLACE_MONSTER:
+            previewColor = RGB(255, 100, 100); // 빨간색
+            break;
+        case EDITOR_MODE::PLACE_ITEM:
+            previewColor = RGB(255, 255, 100); // 노란색
+            break;
+        case EDITOR_MODE::PLACE_TILE:
+            previewColor = RGB(100, 100, 255); // 파란색
+            break;
+        case EDITOR_MODE::PLACE_SPECIAL:
+            previewColor = RGB(255, 100, 255); // 자주색
+            break;
+        }
 
-        // 반투명 효과를 위한 펜과 브러쉬 설정
-        HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 255, 100)); // 연한 녹색 테두리
+        // 반투명 효과를 위한 펜과 브러시 설정
+        HPEN hPen = CreatePen(PS_SOLID, 2, previewColor);
         HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-
-        // 반투명 브러쉬 (Windows에서는 완전한 반투명이 어려우므로 점선 패턴 사용)
-        HBRUSH hBrush = CreateHatchBrush(HS_DIAGCROSS, RGB(100, 255, 100)); // 대각선 패턴
+        HBRUSH hBrush = CreateHatchBrush(HS_DIAGCROSS, previewColor);
         HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
 
         // 미리보기 사각형 그리기
         Rectangle(_dc,
-            (int)(vRenderPos.x - vMonsterSize.x / 2.f),
-            (int)(vRenderPos.y - vMonsterSize.y / 2.f),
-            (int)(vRenderPos.x + vMonsterSize.x / 2.f),
-            (int)(vRenderPos.y + vMonsterSize.y / 2.f));
+            (int)(vRenderPos.x - vObjectSize.x / 2.f),
+            (int)(vRenderPos.y - vObjectSize.y / 2.f),
+            (int)(vRenderPos.x + vObjectSize.x / 2.f),
+            (int)(vRenderPos.y + vObjectSize.y / 2.f));
 
-        // 중앙에 작은 원 표시 (몬스터임을 나타냄)
-        Ellipse(_dc,
-            (int)vRenderPos.x - 8, (int)vRenderPos.y - 8,
-            (int)vRenderPos.x + 8, (int)vRenderPos.y + 8);
-
-        // 원래 펜과 브러쉬 복원
         SelectObject(_dc, hOldPen);
         SelectObject(_dc, hOldBrush);
         DeleteObject(hPen);
         DeleteObject(hBrush);
 
-        // 미리보기 텍스트 표시
-        SetTextColor(_dc, RGB(100, 255, 100));
+        // 오브젝트 이름 표시
+        SetTextColor(_dc, previewColor);
         SetBkMode(_dc, TRANSPARENT);
 
-        // 폰트 설정
         HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
             DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
         HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
 
-        // 텍스트 위치 (미리보기 박스 위쪽)
-        int textX = (int)vRenderPos.x - 25;
-        int textY = (int)vRenderPos.y - (int)vMonsterSize.y / 2 - 20;
+        const wchar_t* szObjectName = GetCurrentObjectName();
+        int textX = (int)vRenderPos.x - (wcslen(szObjectName) * 3);
+        int textY = (int)vRenderPos.y - (int)vObjectSize.y / 2 - 20;
 
-        TextOut(_dc, textX, textY, L"Monster", 7);
+        TextOut(_dc, textX, textY, szObjectName, wcslen(szObjectName));
 
-        // 폰트 복원
         SelectObject(_dc, hOldFont);
         DeleteObject(hFont);
     }

@@ -86,6 +86,18 @@
     <Filter Include="Engine\03. Manager\Grid">
       <UniqueIdentifier>{bd0531ee-c04c-4f0a-a57b-5f1cdc2290dd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\08. Factory">
+      <UniqueIdentifier>{b0932c43-2e2d-4662-8af5-0badf84f3e5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Item">
+      <UniqueIdentifier>{45f2e82c-5b31-4b91-a854-13f4d6f71f31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Tile">
+      <UniqueIdentifier>{bdfcb610-c2fc-42ec-918e-370e10e78822}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\SpecialObject">
+      <UniqueIdentifier>{eeea35af-6829-462c-8043-d6cfa28390de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -176,6 +188,18 @@
     <ClInclude Include="CGrid.h">
       <Filter>Engine\03. Manager\Grid</Filter>
     </ClInclude>
+    <ClInclude Include="CObjectFactory.h">
+      <Filter>Engine\08. Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="CItem.h">
+      <Filter>Engine\04. Object\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="CTile.h">
+      <Filter>Engine\04. Object\Tile</Filter>
+    </ClInclude>
+    <ClInclude Include="CSpecialObject.h">
+      <Filter>Engine\04. Object\SpecialObject</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -257,6 +281,18 @@
     </ClCompile>
     <ClCompile Include="CGrid.cpp">
       <Filter>Engine\03. Manager\Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="CObjectFactory.cpp">
+      <Filter>Engine\08. Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="CItem.cpp">
+      <Filter>Engine\04. Object\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="CTile.cpp">
+      <Filter>Engine\04. Object\Tile</Filter>
+    </ClCompile>
+    <ClCompile Include="CSpecialObject.cpp">
+      <Filter>Engine\04. Object\SpecialObject</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

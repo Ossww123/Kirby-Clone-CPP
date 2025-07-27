@@ -39,7 +39,7 @@ void CSceneMgr::update()
     m_pCurScene->Update();
 
     // 씬 전환 체크 (T키)
-    if (KEY_TAP(KEY::T))
+    if (KEY_TAP(KEY::T) && KEY_HOLD(KEY::CTRL))
     {
         if (m_pCurScene == m_arrScene[(UINT)SCENE_TYPE::START])
         {
