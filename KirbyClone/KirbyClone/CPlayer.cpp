@@ -38,6 +38,12 @@ CPlayer::CPlayer()
     , m_bFacingRight(true)      // 기본적으로 오른쪽을 보고 시작
     , m_iLastMoveDir(0)         // 초기에는 정지 상태
     , m_bDirectionChanged(false)
+    , m_fDeceleration(600.f)        // 감속도 (높을수록 빨리 멈춤)
+    , m_fMinMovingSpeed(30.f)       // 최소 이동 속도
+    , m_bIsDecelerating(false)
+    , m_fDecelTimer(0.f)
+    , m_bWasMovingLastFrame(false)
+    , m_bInputPressed(false)
 {
     // 충돌체 생성
     CreateCollider();
@@ -54,7 +60,7 @@ CPlayer::CPlayer()
     // 리지드바디 설정
     m_pRigidBody->SetMass(1.f);
     m_pRigidBody->SetMaxVelocity(500.f);
-    m_pRigidBody->SetFriction(10.f);
+    m_pRigidBody->SetFriction(0.1f);
     m_pRigidBody->SetUseGravity(true);
 
     // 애니메이션 생성
@@ -342,7 +348,7 @@ void CPlayer::UpdateMove()
     if (nullptr == m_pRigidBody)
         return;
 
-    // 머금은 것을 뱉기 (Z키)
+    // 물고 있는 것을 뱉기 (Z키)
     if (KEY_TAP(KEY::Z) && m_bHasMouthful)
     {
         SpitOut();
@@ -355,7 +361,7 @@ void CPlayer::UpdateMove()
         m_bRunMode = !m_bRunMode;
     }
 
-    // 빨아들이기 시작 (X키)
+    // 흡입하기 관련 처리는 기존과 동일...
     if (KEY_TAP(KEY::X))
     {
         if (!m_bInhaling && !m_bHasMouthful)
@@ -364,13 +370,11 @@ void CPlayer::UpdateMove()
         }
     }
 
-    // 빨아들이기 유지 중
     if (KEY_HOLD(KEY::X) && m_bInhaling)
     {
         UpdateInhale();
     }
 
-    // 빨아들이기 해제 (X키를 뗄 때)
     if (KEY_AWAY(KEY::X))
     {
         if (m_bInhaling)
@@ -379,30 +383,65 @@ void CPlayer::UpdateMove()
         }
     }
 
-    // === 이동 입력 처리 및 방향 결정 ===
-    int currentMoveDir = 0;  // 현재 프레임의 이동 방향
+    // 흡입하기 중일 때는 이동 제한
+    if (m_bInhaling)
+    {
+        m_pRigidBody->SetVelocityX(0.f);
+        m_bInputPressed = false;
+        return;
+    }
+
+    // === 개선된 이동 입력 처리 ===
+    int currentMoveDir = 0;
+    m_bInputPressed = false;
 
     if (KEY_HOLD(KEY::LEFT))
     {
-        currentMoveDir = -1;  // 왼쪽 이동
+        currentMoveDir = -1;
+        m_bInputPressed = true;
+        m_bIsDecelerating = false;  // 입력이 있으면 감속 중단
+
         float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
         if (m_bHasMouthful) fCurrentSpeed *= 0.7f;
         m_pRigidBody->SetVelocityX(-fCurrentSpeed);
     }
     else if (KEY_HOLD(KEY::RIGHT))
     {
-        currentMoveDir = 1;   // 오른쪽 이동
+        currentMoveDir = 1;
+        m_bInputPressed = true;
+        m_bIsDecelerating = false;  // 입력이 있으면 감속 중단
+
         float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
         if (m_bHasMouthful) fCurrentSpeed *= 0.7f;
         m_pRigidBody->SetVelocityX(fCurrentSpeed);
     }
     else
     {
-        currentMoveDir = 0;   // 정지
+        currentMoveDir = 0;
+
+        // === 핵심 수정: 감속 시작 조건 개선 ===
         if (m_pRigidBody->IsGround())
         {
-            m_pRigidBody->SetVelocityX(0.f);
+            Vec2 velocity = m_pRigidBody->GetVelocity();
+
+            // 현재 움직이고 있고 아직 감속 중이 아니라면 감속 시작
+            if (abs(velocity.x) > m_fMinMovingSpeed && !m_bIsDecelerating)
+            {
+                m_bIsDecelerating = true;
+                m_fDecelTimer = 0.f;
+
+                // 디버그용 메시지
+                wchar_t szBuffer[256];
+                swprintf_s(szBuffer, L"감속 시작! 현재 속도: %.1f", abs(velocity.x));
+                SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+            }
         }
+    }
+
+    // 감속 처리
+    if (m_bIsDecelerating)
+    {
+        ApplyDeceleration();
     }
 
     // 이동 방향 기록
@@ -414,6 +453,31 @@ void CPlayer::UpdateMove()
         m_pRigidBody->SetGround(false);
         m_pRigidBody->SetVelocityY(-m_fJumpPower);
     }
+
+    // 움직임 상태 업데이트
+    UpdateMovementState();
+}
+
+void CPlayer::UpdateMovementState()
+{
+    bool isCurrentlyMoving = IsActuallyMoving();
+
+    // 이전 프레임과 현재 프레임의 움직임 상태 비교
+    if (m_bWasMovingLastFrame && !isCurrentlyMoving && !m_bInputPressed)
+    {
+        // 움직이던 중에 입력이 없어지고 실제로 멈춤 → 감속 완료
+        m_bIsDecelerating = false;
+    }
+
+    m_bWasMovingLastFrame = isCurrentlyMoving;
+}
+
+bool CPlayer::IsActuallyMoving()
+{
+    if (!m_pRigidBody) return false;
+
+    Vec2 velocity = m_pRigidBody->GetVelocity();
+    return abs(velocity.x) > m_fMinMovingSpeed;
 }
 
 // === 방향 시스템 핵심 함수들 ===
@@ -432,6 +496,56 @@ void CPlayer::UpdateDirection()
             m_bDirectionChanged = true;
         }
     }
+}
+
+void CPlayer::ApplyDeceleration()
+{
+    if (!m_pRigidBody) return;
+
+    Vec2 velocity = m_pRigidBody->GetVelocity();
+    float currentSpeedX = velocity.x;
+
+    // 디버그용 현재 속도 출력
+    static float debugTimer = 0.f;
+    debugTimer += CTimeMgr::GetInst()->GetfDT();
+    if (debugTimer > 0.1f)  // 0.1초마다 출력
+    {
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"감속 중... 속도: %.1f", abs(currentSpeedX));
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+        debugTimer = 0.f;
+    }
+
+    if (abs(currentSpeedX) <= m_fMinMovingSpeed)
+    {
+        // 속도가 최소값 이하로 떨어지면 완전히 정지
+        m_pRigidBody->SetVelocityX(0.f);
+        m_bIsDecelerating = false;
+
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"감속 완료! IDLE 상태로 전환");
+        return;
+    }
+
+    // 감속 적용
+    float deltaTime = CTimeMgr::GetInst()->GetfDT();
+    float decelAmount = m_fDeceleration * deltaTime;
+
+    if (currentSpeedX > 0)
+    {
+        // 오른쪽으로 이동 중이면 왼쪽으로 감속
+        float newSpeedX = currentSpeedX - decelAmount;
+        if (newSpeedX < m_fMinMovingSpeed) newSpeedX = 0;  // 최소 속도 이하로 떨어지면 0
+        m_pRigidBody->SetVelocityX(newSpeedX);
+    }
+    else if (currentSpeedX < 0)
+    {
+        // 왼쪽으로 이동 중이면 오른쪽으로 감속
+        float newSpeedX = currentSpeedX + decelAmount;
+        if (newSpeedX > -m_fMinMovingSpeed) newSpeedX = 0;  // 최소 속도 이하로 떨어지면 0
+        m_pRigidBody->SetVelocityX(newSpeedX);
+    }
+
+    m_fDecelTimer += deltaTime;
 }
 
 void CPlayer::SetFacingDirection(bool _bRight)
@@ -627,7 +741,7 @@ void CPlayer::UpdateState()
     PLAYER_STATE eNewState = m_eCurState;
     Vec2 vVelocity = m_pRigidBody->GetVelocity();
 
-    // 빨아들이기 상태 처리
+    // 흡입하기 상태 처리 (기존과 동일)
     if (m_bInhaling)
     {
         if (m_fInhaleTime < 0.5f)
@@ -643,7 +757,7 @@ void CPlayer::UpdateState()
             eNewState = PLAYER_STATE::INHALE_HOLD;
         }
     }
-    // 뱉기 애니메이션이 끝났는지 확인
+    // 뱉기 애니메이션이 끝나는지 확인
     else if (m_eCurState == PLAYER_STATE::EXHALE)
     {
         if (m_pAnimator->GetCurAnim() && m_pAnimator->GetCurAnim()->IsFinish())
@@ -652,10 +766,10 @@ void CPlayer::UpdateState()
         }
         else
         {
-            eNewState = PLAYER_STATE::EXHALE; // 계속 뱉기 상태 유지
+            eNewState = PLAYER_STATE::EXHALE;
         }
     }
-    // 삼키기 애니메이션이 끝났는지 확인
+    // 삼키기 애니메이션이 끝나는지 확인
     else if (m_eCurState == PLAYER_STATE::SWALLOW)
     {
         if (m_pAnimator->GetCurAnim() && m_pAnimator->GetCurAnim()->IsFinish())
@@ -665,20 +779,20 @@ void CPlayer::UpdateState()
         }
         else
         {
-            eNewState = PLAYER_STATE::SWALLOW; // 계속 삼키기 상태 유지
+            eNewState = PLAYER_STATE::SWALLOW;
         }
     }
-    // 일반적인 상태 판정
+    // === 개선된 일반적인 상태 판정 ===
     else
     {
         // 공중에 있는 경우
         if (!m_pRigidBody->IsGround())
         {
-            if (vVelocity.y < -50.f)  // 위로 올라가는 중
+            if (vVelocity.y < -50.f)
             {
                 eNewState = m_bHasMouthful ? PLAYER_STATE::MOUTHFUL_JUMP : PLAYER_STATE::JUMP;
             }
-            else  // 떨어지는 중
+            else
             {
                 eNewState = PLAYER_STATE::FALL;
             }
@@ -686,10 +800,12 @@ void CPlayer::UpdateState()
         // 땅에 있는 경우
         else
         {
-            float fSpeedThreshold = 10.f;
+            // === 핵심 개선: 실제 움직임 기반 상태 결정 ===
+            bool isActuallyMoving = IsActuallyMoving();
 
-            if (abs(vVelocity.x) > fSpeedThreshold)  // 이동 중
+            if (isActuallyMoving || m_bIsDecelerating)
             {
+                // 실제로 움직이고 있거나 감속 중이면 WALK/RUN 유지
                 if (m_bHasMouthful)
                 {
                     eNewState = m_bRunMode ? PLAYER_STATE::MOUTHFUL_RUN : PLAYER_STATE::MOUTHFUL_WALK;
@@ -699,14 +815,15 @@ void CPlayer::UpdateState()
                     eNewState = m_bRunMode ? PLAYER_STATE::RUN : PLAYER_STATE::WALK;
                 }
             }
-            else  // 정지
+            else
             {
+                // 완전히 멈춘 상태에서만 IDLE
                 eNewState = m_bHasMouthful ? PLAYER_STATE::MOUTHFUL_IDLE : PLAYER_STATE::IDLE;
             }
         }
     }
 
-    // 상태가 변경되었다면 애니메이션 변경
+    // 상태가 변경되었으면 애니메이션 변경
     if (m_eCurState != eNewState)
     {
         ChangeState(eNewState);

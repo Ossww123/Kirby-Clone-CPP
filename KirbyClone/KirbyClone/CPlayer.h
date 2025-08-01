@@ -42,6 +42,16 @@ private:
     int             m_iLastMoveDir;     // 마지막 이동 방향 (1: 오른쪽, -1: 왼쪽, 0: 정지)
     bool            m_bDirectionChanged; // 방향이 바뀌었는지 체크
 
+    // === 부드러운 움직임 관련 변수들 ===
+    float           m_fDeceleration;        // 감속도 (키를 뗐을 때)
+    float           m_fMinMovingSpeed;      // 최소 이동 속도 (이 이하면 정지로 간주)
+    bool            m_bIsDecelerating;      // 현재 감속 중인지
+    float           m_fDecelTimer;          // 감속 타이머
+
+    // 입력 상태 추적
+    bool            m_bWasMovingLastFrame;  // 이전 프레임에 이동 중이었는지
+    bool            m_bInputPressed;        // 현재 입력이 눌려있는지
+
 public:
     virtual void Update();
     virtual void Render(HDC _dc);
@@ -65,6 +75,10 @@ private:
     void SetFacingDirection(bool _bRight); // 방향 설정 및 흡입 방향 동기화
     void UpdateInhaleDirection();       // 흡입 방향을 현재 바라보는 방향으로 업데이트
     void RenderFlippedAnimation(HDC _dc, CAnimation* _pAnim, Vec2 _vRenderPos);
+
+    void UpdateMovementState();             // 움직임 상태 업데이트
+    void ApplyDeceleration();               // 감속 적용
+    bool IsActuallyMoving();                // 실제로 움직이고 있는지 확인
 
 
 public:
