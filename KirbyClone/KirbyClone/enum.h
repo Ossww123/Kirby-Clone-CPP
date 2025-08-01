@@ -80,9 +80,22 @@ enum class EVENT_TYPE
 // 플레이어 상태 열거형
 enum class PLAYER_STATE
 {
-    IDLE,
-    WALK,
-    JUMP,
+    IDLE,           // 기본 대기
+    WALK,           // 걷기
+    RUN,            // 뛰기  
+    JUMP,           // 점프
+    FALL,           // 낙하
+    BOUNCE,         // 땅에서 바운스
+    INHALE_READY,   // 빨아들이기 준비 (공기머금기)
+    INHALE_1,       // 빨아들이기 1단계
+    INHALE_2,       // 빨아들이기 2단계
+    INHALE_HOLD,    // 숨참 (빨아들이기 유지)
+    EXHALE,         // 공기뱉기
+    SWALLOW,        // 삼키기
+    MOUTHFUL_IDLE,  // 머금은 상태 대기
+    MOUTHFUL_WALK,  // 머금은 상태 걷기
+    MOUTHFUL_RUN,   // 머금은 상태 뛰기
+    MOUTHFUL_JUMP,  // 머금은 상태 점프
     END
 };
 
