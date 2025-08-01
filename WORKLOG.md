@@ -1054,7 +1054,6 @@ GetRigidBody()->SetFriction(5.f);
 ### 완료
 - [X] Background, Tile 매니저 추가
 
-```
 <details>
   <summary>개발 회고</summary>
 
@@ -1332,4 +1331,7 @@ GetRigidBody()->SetFriction(5.f);
 3. **스크립트 시스템**: 게임 로직의 유연한 제어
 
 </details>
-```
+
+---
+### 완료
+- [X] ToolScene 플레이어 스폰 위치 기능 추가

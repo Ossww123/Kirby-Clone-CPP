@@ -107,6 +107,7 @@ enum class EDITOR_MODE
     ERASE,          // 삭제 모드
     CAMERA_MOVE,    // 카메라 이동 모드
     BACKGROUND,     // 배경 선택 모드
+    PLAYER_SPAWN,   // 플레이어 시작 위치 설정 모드
     END
 };
 

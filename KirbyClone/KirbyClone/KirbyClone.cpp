@@ -1,5 +1,7 @@
-﻿// KirbyClone.cpp : 애플리케이션에 대한 진입점을 정의합니다.
-//
+﻿// 포트폴리오용 데모 프로젝트
+// Kirby assets used for educational purposes only
+// © HAL Laboratory / Nintendo
+
 #include "pch.h"
 #include "framework.h"
 #include "KirbyClone.h"

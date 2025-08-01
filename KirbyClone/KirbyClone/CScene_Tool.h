@@ -35,6 +35,11 @@ private:
     bool m_bDragging;              // 드래그 중인지 여부
     Vec2 m_vDragStartPos;          // 드래그 시작 위치
 
+    // 플레이어 스폰 포인트 관련
+    Vec2 m_vPlayerSpawnPos;          // 플레이어 시작 위치
+    bool m_bShowPlayerSpawn;         // 플레이어 시작 위치 표시 여부
+    bool m_bPlayerSpawnMode;         // 플레이어 시작 위치 설정 모드
+
 public:
     virtual void Enter();
     virtual void Exit();
@@ -92,6 +97,17 @@ private:
     // 유틸리티 함수
     void ChangeMode(EDITOR_MODE _eMode);    // 모드 변경
     const wchar_t* GetModeString();         // 모드 이름 문자열 반환
+
+    // 플레이어 스폰 포인트 관련 함수들
+    void SetPlayerSpawnPosition(Vec2 _vPos);    // 플레이어 시작 위치 설정
+    void RenderPlayerSpawnPoint(HDC _dc);       // 플레이어 시작 위치 렌더링
+
+public:
+    // 플레이어 스폰 위치 접근자 함수들
+    Vec2 GetPlayerSpawnPos() { return m_vPlayerSpawnPos; }
+    void SetPlayerSpawnPos(Vec2 _vPos) { m_vPlayerSpawnPos = _vPos; }
+    bool IsShowPlayerSpawn() { return m_bShowPlayerSpawn; }
+    void SetShowPlayerSpawn(bool _bShow) { m_bShowPlayerSpawn = _bShow; }
 
 public:
     CScene_Tool();

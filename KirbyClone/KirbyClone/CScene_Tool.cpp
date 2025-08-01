@@ -28,6 +28,9 @@ CScene_Tool::CScene_Tool()
     , m_eCurrentObjectType(OBJECT_TYPE::MONSTER_WADDLE_DEE)
     , m_iCurrentSubType(0)
     , m_vecCurrentCategory{}
+    , m_vPlayerSpawnPos(Vec2(640.f, 400.f))  // 기본 플레이어 시작 위치
+    , m_bShowPlayerSpawn(true)               // 기본적으로 표시
+    , m_bPlayerSpawnMode(false)              // 기본적으로 비활성화
 {
 }
 
@@ -45,6 +48,11 @@ void CScene_Tool::Enter()
 
     // 타일 시각 시스템 초기화 (새로 추가)  
     InitializeTileVisualSystem();
+
+    // 플레이어 시작 위치 초기화
+    m_vPlayerSpawnPos = Vec2(640.f, 400.f);
+    m_bShowPlayerSpawn = true;
+    m_bPlayerSpawnMode = false;
 
     // 오브젝트 팩토리 기본 설정
     m_eCurrentObjectType = OBJECT_TYPE::MONSTER_WADDLE_DEE;
@@ -95,16 +103,22 @@ void CScene_Tool::Render(HDC _dc)
     // 3. 부모 클래스의 Render 호출 (모든 오브젝트 렌더링)
     CScene::Render(_dc);
 
-    // 4. 선택된 오브젝트 하이라이트 (오브젝트 위에)
+    // 4. 플레이어 스폰 포인트 렌더링 (새로 추가)
+    if (m_bShowPlayerSpawn)
+    {
+        RenderPlayerSpawnPoint(_dc);
+    }
+
+    // 5. 선택된 오브젝트 하이라이트 (오브젝트 위에)
     RenderSelectedObject(_dc);
 
-    // 5. 배치 미리보기 렌더링 (마우스 커서다 먼저)
+    // 6. 배치 미리보기 렌더링 (마우스 커서 맨 위)
     RenderPreview(_dc);
 
-    // 6. 마우스 커서 렌더링
+    // 7. 마우스 커서 렌더링
     RenderMouse(_dc);
 
-    // 7. 에디터 UI 렌더링 (맨 위에 그려야 함)
+    // 8. 에디터 UI 렌더링 (맨 위에 그려야 함)
     if (m_bShowUI)
     {
         RenderUI(_dc);
@@ -219,6 +233,50 @@ void CScene_Tool::UpdateMouse()
             m_bMouseClick = false;
         }
     }
+}
+
+// 플레이어 스폰 포인트 렌더링 함수 추가
+void CScene_Tool::RenderPlayerSpawnPoint(HDC _dc)
+{
+    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_vPlayerSpawnPos);
+
+    // 플레이어 스폰 포인트 표시 (초록색 원과 십자가)
+    HPEN hPen = CreatePen(PS_SOLID, 3, RGB(0, 255, 0)); // 초록색
+    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
+    HBRUSH hBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+
+    // 외곽 원
+    Ellipse(_dc,
+        (int)vRenderPos.x - 20, (int)vRenderPos.y - 20,
+        (int)vRenderPos.x + 20, (int)vRenderPos.y + 20);
+
+    // 십자가
+    MoveToEx(_dc, (int)vRenderPos.x - 15, (int)vRenderPos.y, nullptr);
+    LineTo(_dc, (int)vRenderPos.x + 15, (int)vRenderPos.y);
+    MoveToEx(_dc, (int)vRenderPos.x, (int)vRenderPos.y - 15, nullptr);
+    LineTo(_dc, (int)vRenderPos.x, (int)vRenderPos.y + 15);
+
+    SelectObject(_dc, hOldPen);
+    SelectObject(_dc, hOldBrush);
+    DeleteObject(hPen);
+
+    // "SPAWN" 텍스트 표시
+    SetTextColor(_dc, RGB(0, 255, 0));
+    SetBkMode(_dc, TRANSPARENT);
+
+    HFONT hFont = CreateFont(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
+    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+
+    int textX = (int)vRenderPos.x - 15;
+    int textY = (int)vRenderPos.y - 35;
+
+    TextOut(_dc, textX, textY, L"SPAWN", 5);
+
+    SelectObject(_dc, hOldFont);
+    DeleteObject(hFont);
 }
 
 void CScene_Tool::RenderMouse(HDC _dc)
@@ -593,6 +651,20 @@ void CScene_Tool::UpdateModeInput()
         OpenDialog();
     }
 
+    // === 플레이어 스폰 포인트 모드 추가 ===
+    else if (KEY_TAP(KEY::R))  // R키로 플레이어 스폰 포인트 모드
+    {
+        m_bPlayerSpawnMode = !m_bPlayerSpawnMode;
+        if (m_bPlayerSpawnMode)
+        {
+            ChangeMode(EDITOR_MODE::PLAYER_SPAWN);
+        }
+        else
+        {
+            ChangeMode(EDITOR_MODE::NONE);
+        }
+    }
+
     // === 배경 모드 (새로 추가) ===
     else if (KEY_TAP(KEY::B))
     {
@@ -808,6 +880,7 @@ const wchar_t* CScene_Tool::GetModeString()
     case EDITOR_MODE::ERASE:        return L"Erase (E)";
     case EDITOR_MODE::CAMERA_MOVE:  return L"Camera Move";
     case EDITOR_MODE::BACKGROUND:   return L"Background (B)";
+    case EDITOR_MODE::PLAYER_SPAWN: return L"Player Spawn (R)";
     default:                        return L"Unknown";
     }
 }
@@ -821,6 +894,10 @@ void CScene_Tool::HandleMouseClick()
     case EDITOR_MODE::PLACE_TILE:
     case EDITOR_MODE::PLACE_SPECIAL:
         PlaceObject(m_vMousePos);
+        break;
+
+    case EDITOR_MODE::PLAYER_SPAWN:  // 새로 추가
+        SetPlayerSpawnPosition(m_vMousePos);
         break;
 
     case EDITOR_MODE::SELECT:
@@ -863,6 +940,16 @@ void CScene_Tool::HandleMouseClick()
         }
         break;
     }
+}
+
+// 플레이어 스폰 위치 설정 함수 추가
+void CScene_Tool::SetPlayerSpawnPosition(Vec2 _vPos)
+{
+    m_vPlayerSpawnPos = _vPos;
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Player Spawn Position set to: (%.0f, %.0f)", _vPos.x, _vPos.y);
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
 void CScene_Tool::PlaceObject(Vec2 _vPos)
@@ -1214,6 +1301,7 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
     levelData.strLevelName = _strFileName;
     levelData.iVersion = 2;  // 배경 정보 추가로 버전 업데이트
     levelData.iBackgroundType = (int)m_eCurrentBgType;  // 배경 정보 저장
+    levelData.vPlayerSpawn = m_vPlayerSpawnPos;
 
     // 플레이어 스폰 위치 찾기
     const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);
@@ -1369,8 +1457,11 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
     levelData.strLevelName = szName;
     delete[] szName;
 
-    // 플레이어 스폰 위치
+    // 플레이어 스폰 위치 로드
     fread(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
+
+    // 툴에서 사용할 플레이어 스폰 위치 설정
+    m_vPlayerSpawnPos = levelData.vPlayerSpawn;
 
     // 플레이어 위치 설정
     const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);

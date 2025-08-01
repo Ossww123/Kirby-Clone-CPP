@@ -15,6 +15,8 @@
 #include "CPathMgr.h"
 #include "CEventMgr.h"
 #include "CTileMgr.h"
+#include "CBackground.h"
+#include "CBackgroundMgr.h"
 
 CScene_Stage01::CScene_Stage01()
     : m_strLevelFile(L"STAGE01")  // 기본 레벨 파일명
@@ -35,6 +37,9 @@ void CScene_Stage01::Enter()
 
     // 카메라가 플레이어를 따라가도록 설정
     CCamera::GetInst()->SetTarget(pPlayer);
+
+    // 배경 시스템 초기화
+    InitializeBackgroundSystem();
 
     // 스테이지 초기화
     InitializeStage();
@@ -57,6 +62,12 @@ void CScene_Stage01::Exit()
 
 void CScene_Stage01::Update()
 {
+    // 배경 업데이트 추가
+    if (m_pCurrentBackground)
+    {
+        m_pCurrentBackground->Update();
+    }
+
     // 부모 클래스의 Update 호출 (모든 오브젝트 업데이트)
     CScene::Update();
 
@@ -75,6 +86,34 @@ void CScene_Stage01::Update()
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
         CEventMgr::GetInst()->AddEvent(event);
     }
+}
+
+// Render() 함수 오버라이드 추가
+void CScene_Stage01::Render(HDC _dc)
+{
+    // 1. 배경 먼저 렌더링
+    if (m_pCurrentBackground)
+    {
+        m_pCurrentBackground->Render(_dc);
+    }
+
+    // 2. 부모 클래스의 Render 호출 (모든 오브젝트 렌더링)
+    CScene::Render(_dc);
+}
+
+// 배경 시스템 초기화 함수 추가
+void CScene_Stage01::InitializeBackgroundSystem()
+{
+    // 기본 배경 설정
+    m_eCurrentBgType = BACKGROUND_TYPE::GREEN_HILL;
+    m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
+}
+
+// 배경 변경 함수 추가
+void CScene_Stage01::ChangeBackground(BACKGROUND_TYPE _eBgType)
+{
+    m_eCurrentBgType = _eBgType;
+    m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(_eBgType);
 }
 
 void CScene_Stage01::InitializeStage()
@@ -139,8 +178,12 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
     {
         fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
 
-        // 스테이지에서는 배경 정보를 읽기만 하고 별도 처리 없음
-        // (실제 게임에서는 배경 매니저를 통해 배경 설정 가능)
+        // 배경 변경 적용
+        BACKGROUND_TYPE eBgType = (BACKGROUND_TYPE)levelData.iBackgroundType;
+        if (eBgType >= BACKGROUND_TYPE::GREEN_HILL && eBgType < BACKGROUND_TYPE::END)
+        {
+            ChangeBackground(eBgType);
+        }
     }
 
     // 오브젝트 개수
