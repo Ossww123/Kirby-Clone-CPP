@@ -2,13 +2,14 @@
 #include "CObject.h"
 
 class CAnimator;
+class CAnimation;
 class CRigidBody;
 
 class CPlayer : public CObject
 {
 private:
-    CAnimator*      m_pAnimator;        // 애니메이터 컴포넌트
-    CRigidBody*     m_pRigidBody;       // 리지드바디 컴포넌트
+    CAnimator* m_pAnimator;        // 애니메이터 컴포넌트
+    CRigidBody* m_pRigidBody;       // 리지드바디 컴포넌트
     PLAYER_STATE    m_eCurState;        // 현재 상태
     PLAYER_STATE    m_ePrevState;       // 이전 상태
 
@@ -16,25 +17,30 @@ private:
     float           m_fRunSpeed;        // 달리기 속도
     float           m_fJumpPower;       // 점프력
 
-    // 빨아들이기 관련
-    bool            m_bInhaling;        // 빨아들이기 중인지
-    float           m_fInhaleTime;      // 빨아들이기 지속 시간
-    bool            m_bHasMouthful;     // 입에 뭔가 머금고 있는지
+    // 흡입하기 관련
+    bool            m_bInhaling;        // 흡입하기 중인지
+    float           m_fInhaleTime;      // 흡입하기 지속 시간
+    bool            m_bHasMouthful;     // 입에 뭔가 물고 있는지
 
-    // 빨아들이기 범위와 효과
-    float           m_fInhaleRange;     // 빨아들이기 범위
-    Vec2            m_vInhaleDir;       // 빨아들이기 방향
-    vector<CObject*> m_vecInhaleTargets; // 빨아들이기 대상들
+    // 흡입하기 범위와 효과
+    float           m_fInhaleRange;     // 흡입하기 범위
+    Vec2            m_vInhaleDir;       // 흡입하기 방향
+    vector<CObject*> m_vecInhaleTargets; // 흡입하기 대상들
 
-    // 머금은 적의 정보
-    CObject* m_pMouthfulTarget;  // 머금고 있는 적
-    OBJECT_TYPE     m_eMouthfulType;    // 머금은 적의 타입
+    // 물고 있는 적의 정보
+    CObject* m_pMouthfulTarget;  // 물고 있는 적
+    OBJECT_TYPE     m_eMouthfulType;    // 물고 있는 적의 타입
 
     // 효과음 및 이펙트
-    bool            m_bPlayingInhaleEffect; // 빨아들이기 이펙트 재생 중
+    bool            m_bPlayingInhaleEffect; // 흡입하기 이펙트 재생 중
 
     // 입력 관련
     bool            m_bRunMode;         // 달리기 모드인지
+
+    // === 방향 시스템 관련 변수들 ===
+    bool            m_bFacingRight;     // 오른쪽을 보고 있는지 (true: 오른쪽, false: 왼쪽)
+    int             m_iLastMoveDir;     // 마지막 이동 방향 (1: 오른쪽, -1: 왼쪽, 0: 정지)
+    bool            m_bDirectionChanged; // 방향이 바뀌었는지 체크
 
 public:
     virtual void Update();
@@ -54,8 +60,15 @@ private:
     void UpdateMove();                  // 이동 처리
     void ChangeState(PLAYER_STATE _eState); // 상태 변경
 
+    // === 방향 시스템 관련 함수들 ===
+    void UpdateDirection();             // 방향 업데이트 (매 프레임 호출)
+    void SetFacingDirection(bool _bRight); // 방향 설정 및 흡입 방향 동기화
+    void UpdateInhaleDirection();       // 흡입 방향을 현재 바라보는 방향으로 업데이트
+    void RenderFlippedAnimation(HDC _dc, CAnimation* _pAnim, Vec2 _vRenderPos);
+
+
 public:
-    // 빨아들이기 관련 함수들
+    // 흡입하기 관련 함수들
     void StartInhale();
     void UpdateInhale();
     void StopInhale();
@@ -63,9 +76,17 @@ public:
     void SpitOut();
     void RenderInhaleEffect(HDC _dc);
 
-    // 머금은 상태 관리
+    // 물고 있는 상태 관리
     void ReleaseMouthful();
     OBJECT_TYPE GetMouthfulType() { return m_eMouthfulType; }
+
+    // 방향 관련 함수들
+    bool IsFacingRight() { return m_bFacingRight; }
+    void SetFacingRight(bool _bRight) { SetFacingDirection(_bRight); } // 내부적으로 SetFacingDirection 호출
+    int GetLastMoveDir() { return m_iLastMoveDir; }
+
+    // 방향이 바뀌었는지 확인 (디버깅용)
+    bool HasDirectionChanged() { return m_bDirectionChanged; }
 
 public:
     CPlayer();

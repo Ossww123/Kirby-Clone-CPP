@@ -1335,3 +1335,7 @@ GetRigidBody()->SetFriction(5.f);
 ---
 ### 완료
 - [X] ToolScene 플레이어 스폰 위치 기능 추가
+
+## 2025-08-02
+### 완료
+- [X] 커비 IDLE 애니메이션 수정

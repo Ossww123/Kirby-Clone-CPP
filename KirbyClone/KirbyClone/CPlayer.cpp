@@ -23,7 +23,7 @@ CPlayer::CPlayer()
     , m_pRigidBody(nullptr)
     , m_eCurState(PLAYER_STATE::IDLE)
     , m_ePrevState(PLAYER_STATE::END)
-    , m_fSpeed(150.f)           // 기본 걷기 속도
+    , m_fSpeed(300.f)           // 기본 걷기 속도
     , m_fRunSpeed(250.f)        // 달리기 속도 (새로 추가)
     , m_fJumpPower(400.f)
     , m_bInhaling(false)        // 새로 추가
@@ -35,6 +35,9 @@ CPlayer::CPlayer()
     , m_eMouthfulType(OBJECT_TYPE::END)
     , m_bPlayingInhaleEffect(false)
     , m_bRunMode(false)         // 새로 추가
+    , m_bFacingRight(true)      // 기본적으로 오른쪽을 보고 시작
+    , m_iLastMoveDir(0)         // 초기에는 정지 상태
+    , m_bDirectionChanged(false)
 {
     // 충돌체 생성
     CreateCollider();
@@ -82,13 +85,33 @@ void CPlayer::CreateAnimation()
     // ===========================================
     // 1행: IDLE 상태 (10프레임)
     // ===========================================
-    m_pAnimator->CreateAnimation(L"IDLE", pKirbyTex,
-        Vec2(BORDER, BORDER),           // 시작 위치 (테두리 제외)
-        Vec2(IMAGE_SIZE, IMAGE_SIZE),   // 프레임 크기
-        Vec2(SPRITE_SIZE, 0),           // 다음 프레임까지의 간격
-        0.15f,                          // 프레임 지속시간
-        10,                             // 프레임 개수
-        true);                          // 루프
+    CAnimation* pIdleAnim = new CAnimation();
+    pIdleAnim->SetName(L"IDLE");
+    pIdleAnim->SetTexture(pKirbyTex);
+    pIdleAnim->SetLoop(true);
+
+    // 깜빡임 시퀀스: 눈뜸(1.5초) → 깜빡(0.1초) → 눈뜸(1초) → 깜빡(0.1초) → 눈뜸(0.2초) → 깜빡(0.1초)
+
+    // 1. 눈 뜨고 오래 대기 (1.5초)
+    pIdleAnim->AddFrame(Vec2(BORDER, BORDER), Vec2(IMAGE_SIZE, IMAGE_SIZE), 1.5f);
+
+    // 2. 첫 번째 깜빡임 (0.1초)
+    pIdleAnim->AddFrame(Vec2(BORDER + SPRITE_SIZE, BORDER), Vec2(IMAGE_SIZE, IMAGE_SIZE), 0.1f);
+
+    // 3. 눈 뜨고 중간 대기 (1초)
+    pIdleAnim->AddFrame(Vec2(BORDER, BORDER), Vec2(IMAGE_SIZE, IMAGE_SIZE), 1.0f);
+
+    // 4. 두 번째 깜빡임 (0.1초)
+    pIdleAnim->AddFrame(Vec2(BORDER + SPRITE_SIZE, BORDER), Vec2(IMAGE_SIZE, IMAGE_SIZE), 0.1f);
+
+    // 5. 눈 뜨고 짧은 대기 (0.2초)
+    pIdleAnim->AddFrame(Vec2(BORDER, BORDER), Vec2(IMAGE_SIZE, IMAGE_SIZE), 0.2f);
+
+    // 6. 세 번째 깜빡임 (0.1초)
+    pIdleAnim->AddFrame(Vec2(BORDER + SPRITE_SIZE, BORDER), Vec2(IMAGE_SIZE, IMAGE_SIZE), 0.1f);
+
+    // 애니메이터에 추가
+    m_pAnimator->AddCustomAnimation(L"IDLE", pIdleAnim);
 
     // ===========================================
     // 2행: 걷기 상태 (10프레임)
@@ -277,6 +300,7 @@ void CPlayer::CreateAnimation()
 void CPlayer::Update()
 {
     UpdateMove();
+    UpdateDirection();  // 방향 업데이트 추가
     UpdateState();
 
     // 리지드바디 업데이트
@@ -355,35 +379,34 @@ void CPlayer::UpdateMove()
         }
     }
 
-    // 빨아들이기 중일 때는 이동 제한
-    if (m_bInhaling)
-    {
-        m_pRigidBody->SetVelocityX(0.f);
-        return;
-    }
+    // === 이동 입력 처리 및 방향 결정 ===
+    int currentMoveDir = 0;  // 현재 프레임의 이동 방향
 
-    // 이동 방향에 따라 빨아들이기 방향 업데이트
     if (KEY_HOLD(KEY::LEFT))
     {
-        m_vInhaleDir = Vec2(-1.f, 0.f);
+        currentMoveDir = -1;  // 왼쪽 이동
         float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
         if (m_bHasMouthful) fCurrentSpeed *= 0.7f;
         m_pRigidBody->SetVelocityX(-fCurrentSpeed);
     }
     else if (KEY_HOLD(KEY::RIGHT))
     {
-        m_vInhaleDir = Vec2(1.f, 0.f);
+        currentMoveDir = 1;   // 오른쪽 이동
         float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
         if (m_bHasMouthful) fCurrentSpeed *= 0.7f;
         m_pRigidBody->SetVelocityX(fCurrentSpeed);
     }
     else
     {
+        currentMoveDir = 0;   // 정지
         if (m_pRigidBody->IsGround())
         {
             m_pRigidBody->SetVelocityX(0.f);
         }
     }
+
+    // 이동 방향 기록
+    m_iLastMoveDir = currentMoveDir;
 
     // 점프
     if (KEY_TAP(KEY::SPACE) && m_pRigidBody->IsGround())
@@ -393,12 +416,57 @@ void CPlayer::UpdateMove()
     }
 }
 
-// 빨아들이기 시작
+// === 방향 시스템 핵심 함수들 ===
+void CPlayer::UpdateDirection()
+{
+    m_bDirectionChanged = false;
+
+    // 이동 중일 때만 방향 업데이트
+    if (m_iLastMoveDir != 0)
+    {
+        bool newFacingRight = (m_iLastMoveDir > 0);
+
+        if (m_bFacingRight != newFacingRight)
+        {
+            SetFacingDirection(newFacingRight);
+            m_bDirectionChanged = true;
+        }
+    }
+}
+
+void CPlayer::SetFacingDirection(bool _bRight)
+{
+    if (m_bFacingRight != _bRight)
+    {
+        m_bFacingRight = _bRight;
+
+        // 흡입 방향도 같이 업데이트
+        UpdateInhaleDirection();
+
+        // 디버그 메시지 (개발 중에만 사용)
+#ifdef _DEBUG
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"플레이어 방향 변경: %s", _bRight ? L"오른쪽" : L"왼쪽");
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+#endif
+    }
+}
+
+void CPlayer::UpdateInhaleDirection()
+{
+    // 현재 바라보는 방향으로 흡입 방향 설정
+    m_vInhaleDir = m_bFacingRight ? Vec2(1.f, 0.f) : Vec2(-1.f, 0.f);
+}
+
+// 흡입하기 시작 - 방향 시스템과 연동
 void CPlayer::StartInhale()
 {
     m_bInhaling = true;
     m_fInhaleTime = 0.f;
     m_vecInhaleTargets.clear();
+
+    // 현재 바라보는 방향으로 흡입 방향 설정
+    UpdateInhaleDirection();
 }
 
 // 빨아들이기 업데이트
@@ -702,23 +770,99 @@ void CPlayer::ChangeState(PLAYER_STATE _eState)
     }
 }
 
+// === 애니메이션 렌더링 시 방향 적용 ===
 void CPlayer::Render(HDC _dc)
 {
     // 애니메이션 렌더링
     if (nullptr != m_pAnimator)
     {
-        m_pAnimator->Render(_dc);
+        CAnimation* pCurAnim = m_pAnimator->GetCurAnim();
+        if (pCurAnim)
+        {
+            Vec2 vPos = GetPos();
+
+            if (!m_bFacingRight)
+            {
+                // 왼쪽을 보고 있을 때 - 스프라이트 뒤집기
+                Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
+                RenderFlippedAnimation(_dc, pCurAnim, vRenderPos);
+            }
+            else
+            {
+                // 오른쪽을 보고 있을 때 - 기본 렌더링
+                pCurAnim->Render(_dc, vPos);
+            }
+        }
     }
 
-    // 빨아들이기 중일 때 범위 표시 (디버그용)
+    // 흡입하기 중일 때 범위 표시
     if (m_bInhaling)
     {
         RenderInhaleEffect(_dc);
     }
 
-    // 충돌체가 있으면 충돌체도 렌더링
+    // 충돌체 렌더링 (디버그용)
     if (nullptr != GetCollider())
         GetCollider()->Render(_dc);
+}
+
+
+void CPlayer::RenderFlippedAnimation(HDC _dc, CAnimation* _pAnim, Vec2 _vRenderPos)
+{
+    if (!_pAnim) return;
+
+    CTexture* pTex = _pAnim->GetTexture();
+    if (!pTex) return;
+
+    if (_pAnim->GetCurFrame() >= _pAnim->GetMaxFrame()) return;
+
+    tAnimFrame& frame = _pAnim->GetFrame(_pAnim->GetCurFrame());
+
+    // 1단계: 원본을 메모리 DC에 복사
+    HDC hSrcDC = CreateCompatibleDC(_dc);
+    HBITMAP hSrcBitmap = CreateCompatibleBitmap(_dc, (int)frame.vSlice.x, (int)frame.vSlice.y);
+    HBITMAP hOldSrcBitmap = (HBITMAP)SelectObject(hSrcDC, hSrcBitmap);
+
+    // 원본 스프라이트를 그대로 복사
+    BitBlt(hSrcDC,
+        0, 0,
+        (int)frame.vSlice.x, (int)frame.vSlice.y,
+        pTex->GetDC(),
+        (int)frame.vLT.x, (int)frame.vLT.y,
+        SRCCOPY);
+
+    // 2단계: 뒤집힌 버전을 만들 메모리 DC 생성
+    HDC hFlipDC = CreateCompatibleDC(_dc);
+    HBITMAP hFlipBitmap = CreateCompatibleBitmap(_dc, (int)frame.vSlice.x, (int)frame.vSlice.y);
+    HBITMAP hOldFlipBitmap = (HBITMAP)SelectObject(hFlipDC, hFlipBitmap);
+
+    // 3단계: 좌우 반전 복사 (StretchBlt 사용)
+    StretchBlt(hFlipDC,
+        (int)frame.vSlice.x - 1, 0,        // 목적지: 오른쪽 끝에서 시작
+        -(int)frame.vSlice.x, (int)frame.vSlice.y,  // 음수 폭으로 뒤집기
+        hSrcDC,
+        0, 0,                              // 소스: 왼쪽부터
+        (int)frame.vSlice.x, (int)frame.vSlice.y,
+        SRCCOPY);
+
+    // 4단계: 최종 화면에 투명 처리로 그리기
+    TransparentBlt(_dc,
+        (int)(_vRenderPos.x - frame.vSlice.x / 2.f),
+        (int)(_vRenderPos.y - frame.vSlice.y / 2.f),
+        (int)frame.vSlice.x, (int)frame.vSlice.y,
+        hFlipDC,
+        0, 0,
+        (int)frame.vSlice.x, (int)frame.vSlice.y,
+        RGB(255, 0, 255)); // 마젠타 투명 처리
+
+    // 메모리 정리
+    SelectObject(hSrcDC, hOldSrcBitmap);
+    DeleteObject(hSrcBitmap);
+    DeleteDC(hSrcDC);
+
+    SelectObject(hFlipDC, hOldFlipBitmap);
+    DeleteObject(hFlipBitmap);
+    DeleteDC(hFlipDC);
 }
 
 // 빨아들이기 이펙트 렌더링

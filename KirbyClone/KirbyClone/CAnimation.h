@@ -24,6 +24,7 @@ public:
     tAnimFrame& GetFrame(int _iIdx) { return m_vecFrame[_iIdx]; }
     int GetMaxFrame() { return (int)m_vecFrame.size(); }
     int GetCurFrame() { return m_iCurFrame; }
+    CTexture* GetTexture() { return m_pTex; }
 
     void Create(CTexture* _pTex, Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep, float _fDuration, int _iFrameCount, bool _bLoop = true);
     void Update();
