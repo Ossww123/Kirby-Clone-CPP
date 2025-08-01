@@ -68,10 +68,6 @@ void CPlayer::CreateAnimation()
     pIdleAnim->SetTexture(pIdleTex);
     pIdleAnim->SetLoop(true);
 
-    // 패턴: 1번(0.5s) -> 2번(0.1s) -> 1번(0.5s) -> 2번(0.1s) -> 1번(0.1s) -> 2번(0.1s)
-    // 1번 프레임: (3, 3)에서 80x72 크기
-    // 2번 프레임: (100, 3)에서 80x72 크기
-
     // 1번 프레임 5번 반복 (0.5초)
     for (int i = 0; i < 5; ++i)
     {

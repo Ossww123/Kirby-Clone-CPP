@@ -161,41 +161,75 @@ struct tAnimFrame
 	{}
 };
 
-// 레벨 오브젝트 데이터
+// 레벨 오브젝트 데이터 (타일 시각 타입 정보 추가)
 struct tLevelObjectData
 {
 	GROUP_TYPE  eGroupType;     // 오브젝트 그룹 타입
 	Vec2        vPos;           // 위치
 	Vec2        vScale;         // 크기
-	int         iSubType;       // 서브 타입 (추후 몬스터 종류 구분용)
+	int         iSubType;       // 서브 타입 (기존 몬스터 종류 구분용)
+	int         iTileVisualType; // 타일 시각 타입 (새로 추가)
 
 	tLevelObjectData()
 		: eGroupType(GROUP_TYPE::DEFAULT)
 		, vPos{}
 		, vScale{}
 		, iSubType(0)
+		, iTileVisualType(0)  // 새로 추가
 	{}
 
-	tLevelObjectData(GROUP_TYPE _eType, Vec2 _vPos, Vec2 _vScale, int _iSubType = 0)
+	tLevelObjectData(GROUP_TYPE _eType, Vec2 _vPos, Vec2 _vScale, int _iSubType = 0, int _iTileVisualType = 0)
 		: eGroupType(_eType)
 		, vPos(_vPos)
 		, vScale(_vScale)
 		, iSubType(_iSubType)
+		, iTileVisualType(_iTileVisualType)  // 새로 추가
 	{}
 };
 
-// 레벨 전체 데이터
+// 레벨 전체 데이터 (배경 정보 추가)
 struct tLevelData
 {
-	wstring                     strLevelName;   // 레벨 이름
-	Vec2                        vPlayerSpawn;   // 플레이어 스폰 위치
-	vector<tLevelObjectData>    vecObjects;     // 배치된 오브젝트들
-	int                         iVersion;       // 파일 버전
+	wstring                     strLevelName;       // 레벨 이름
+	Vec2                        vPlayerSpawn;       // 플레이어 스폰 위치
+	vector<tLevelObjectData>    vecObjects;         // 배치된 오브젝트들
+	int                         iVersion;           // 파일 버전
+	int                         iBackgroundType;    // 배경 타입 (새로 추가)
 
 	tLevelData()
 		: strLevelName{}
 		, vPlayerSpawn{}
 		, vecObjects{}
-		, iVersion(1)
+		, iVersion(2)  // 버전을 2로 업데이트 (배경 정보 추가로 인해)
+		, iBackgroundType(0)  // 새로 추가 (기본값: GREEN_HILL)
+	{}
+};
+
+// 타일 정보 구조체
+struct tTileInfo
+{
+	TILE_VISUAL_TYPE eType;
+	Vec2 vDefaultSize;      // 기본 크기
+	bool bKeepAspectRatio;  // 비율 유지 여부
+	bool bDecorative;       // 장식용 여부 (충돌 없음)
+	bool bHarmful;          // 데미지 여부
+	wstring strTexturePath; // 텍스처 경로
+
+	tTileInfo()
+		: eType(TILE_VISUAL_TYPE::GRASS_PLATFORM)
+		, vDefaultSize(Vec2(64.f, 64.f))
+		, bKeepAspectRatio(true)
+		, bDecorative(false)
+		, bHarmful(false)
+		, strTexturePath(L"")
+	{}
+
+	tTileInfo(TILE_VISUAL_TYPE _eType, Vec2 _vSize, bool _bDeco = false, bool _bHarm = false, const wstring& _strPath = L"")
+		: eType(_eType)
+		, vDefaultSize(_vSize)
+		, bKeepAspectRatio(true)
+		, bDecorative(_bDeco)
+		, bHarmful(_bHarm)
+		, strTexturePath(_strPath)
 	{}
 };

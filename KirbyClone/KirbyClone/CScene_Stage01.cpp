@@ -14,6 +14,7 @@
 #include "CCore.h"
 #include "CPathMgr.h"
 #include "CEventMgr.h"
+#include "CTileMgr.h"
 
 CScene_Stage01::CScene_Stage01()
     : m_strLevelFile(L"STAGE01")  // 기본 레벨 파일명
@@ -106,7 +107,7 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
     // 버전 확인
     fread(&levelData.iVersion, sizeof(int), 1, pFile);
 
-    if (levelData.iVersion != 1)
+    if (levelData.iVersion < 1 || levelData.iVersion > 2)
     {
         fclose(pFile);
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Unsupported level version! Using default level.");
@@ -131,6 +132,15 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
     if (!vecPlayer.empty())
     {
         vecPlayer[0]->SetPos(levelData.vPlayerSpawn);
+    }
+
+    // 배경 타입 정보 (버전 2 이상에서만)
+    if (levelData.iVersion >= 2)
+    {
+        fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
+
+        // 스테이지에서는 배경 정보를 읽기만 하고 별도 처리 없음
+        // (실제 게임에서는 배경 매니저를 통해 배경 설정 가능)
     }
 
     // 오브젝트 개수
@@ -177,6 +187,20 @@ CObject* CScene_Stage01::CreateObjectFromData(const tLevelObjectData& _objData)
         // 타일 타입에 따라 생성
         OBJECT_TYPE tileType = (OBJECT_TYPE)_objData.iSubType;
         pObj = CObjectFactory::CreateObject(tileType, _objData.vPos);
+
+        // 타일 시각 타입 적용 (새로 추가)
+        if (pObj && _objData.iTileVisualType > 0)
+        {
+            CTile* pTile = dynamic_cast<CTile*>(pObj);
+            if (pTile)
+            {
+                TILE_VISUAL_TYPE eVisualType = (TILE_VISUAL_TYPE)_objData.iTileVisualType;
+                pTile->SetVisualType(eVisualType);
+
+                // 타일 매니저를 통해 적절한 텍스처와 속성 설정
+                CTileMgr::GetInst()->SetupTileProperties(pTile, eVisualType);
+            }
+        }
     }
     break;
 

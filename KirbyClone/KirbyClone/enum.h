@@ -106,6 +106,7 @@ enum class EDITOR_MODE
     SELECT,         // 선택 모드
     ERASE,          // 삭제 모드
     CAMERA_MOVE,    // 카메라 이동 모드
+    BACKGROUND,     // 배경 선택 모드
     END
 };
 
@@ -137,6 +138,42 @@ enum class OBJECT_TYPE
     OBJECT_DOOR,            // 문
     OBJECT_SWITCH,          // 스위치
     OBJECT_MIRROR,          // 거울 (게임 제목에 맞게)
+
+    END
+};
+
+// 배경 타입 열거형
+enum class BACKGROUND_TYPE
+{
+    GREEN_HILL,         // 첫 번째 초록 언덕 배경
+    RAINBOW_CASTLE,     // 두 번째 무지개와 성 배경
+
+    END
+};
+
+// 타일 시각적 타입 (이미지에서 보이는 다양한 타일들)
+enum class TILE_VISUAL_TYPE
+{
+    // 기본 지형
+    GRASS_PLATFORM,         // 초록 잔디 플랫폼
+    DIRT_BLOCK,            // 흙 블록
+    STONE_BLOCK,           // 돌 블록
+    GRASS_BLOCK,           // 잔디 블록
+
+    // 특수 타일
+    TREE,                  // 나무
+    FLOWER,                // 꽃
+    FENCE,                 // 울타리
+    PIPE,                  // 파이프
+
+    // 위험 요소
+    SPIKE,                 // 가시
+    LAVA,                  // 용암
+    WATER,                 // 물
+
+    // 플랫폼
+    MOVING_PLATFORM,       // 움직이는 플랫폼
+    BRIDGE,                // 다리
 
     END
 };

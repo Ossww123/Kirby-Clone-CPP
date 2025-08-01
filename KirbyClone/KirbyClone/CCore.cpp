@@ -10,6 +10,8 @@
 #include "CPathMgr.h"
 #include "CResMgr.h"
 #include "CGrid.h"
+#include "CBackgroundMgr.h"
+#include "CTileMgr.h"
 
 CCore::CCore()
 	: m_hWnd(0)
@@ -48,11 +50,16 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	HBITMAP hOldBit = (HBITMAP)SelectObject(m_memDC, m_hBit);
 	DeleteObject(hOldBit);
 
-	// Manager 초기화
+	// Manager 초기화 (순서 중요)
 	CTimeMgr::GetInst()->init();
 	CKeyMgr::GetInst()->init();
 	CPathMgr::GetInst()->init();
 	CResMgr::GetInst()->init();
+
+	// 새로 추가된 매니저들 초기화
+	CBackgroundMgr::GetInst()->init();
+	CTileMgr::GetInst()->init();
+
 	CSceneMgr::GetInst()->init();
 	CCollisionMgr::GetInst()->init();
 	CEventMgr::GetInst()->init();

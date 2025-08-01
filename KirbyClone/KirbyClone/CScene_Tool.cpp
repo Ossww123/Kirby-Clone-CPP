@@ -12,6 +12,9 @@
 #include "CPathMgr.h"
 #include "CGrid.h"
 #include "CTile.h"
+#include "CTileMgr.h"
+#include "CBackground.h"
+#include "CBackgroundMgr.h"
 
 CScene_Tool::CScene_Tool()
     : m_bShowUI(true)
@@ -37,11 +40,17 @@ void CScene_Tool::Enter()
     // 그리드 시스템 초기화
     CGrid::GetInst()->init();
 
+    // 배경 시스템 초기화 (새로 추가)
+    InitializeBackgroundSystem();
+
+    // 타일 시각 시스템 초기화 (새로 추가)  
+    InitializeTileVisualSystem();
+
     // 오브젝트 팩토리 기본 설정
     m_eCurrentObjectType = OBJECT_TYPE::MONSTER_WADDLE_DEE;
     ChangeObjectCategory(L"Monster"); // 기본 카테고리 설정
 
-    // 깔끔한 빈 레벨로 시작 (임시 오브젝트들 제거)
+    // 깨끗한 빈 레벨로 시작 (기존 오브젝트들 제거)
     SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level Editor - Clean slate ready!");
 }
 
@@ -52,6 +61,12 @@ void CScene_Tool::Exit()
 
 void CScene_Tool::Update()
 {
+    // 배경 업데이트
+    if (m_pCurrentBackground)
+    {
+        m_pCurrentBackground->Update();
+    }
+
     // 부모 클래스의 Update 호출 (모든 오브젝트 업데이트)
     CScene::Update();
 
@@ -68,22 +83,28 @@ void CScene_Tool::Update()
 
 void CScene_Tool::Render(HDC _dc)
 {
-    // 그리드 먼저 렌더링 (배경)
+    // 1. 배경 먼저 렌더링 (새로 추가)
+    if (m_pCurrentBackground)
+    {
+        m_pCurrentBackground->Render(_dc);
+    }
+
+    // 2. 그리드 먼저 렌더링 (배경 위에)
     CGrid::GetInst()->Render(_dc);
 
-    // 부모 클래스의 Render 호출 (모든 오브젝트 렌더링)
+    // 3. 부모 클래스의 Render 호출 (모든 오브젝트 렌더링)
     CScene::Render(_dc);
 
-    // 선택된 오브젝트 하이라이트 (오브젝트 위에)
+    // 4. 선택된 오브젝트 하이라이트 (오브젝트 위에)
     RenderSelectedObject(_dc);
 
-    // 배치 미리보기 렌더링 (마우스 커서보다 먼저)
+    // 5. 배치 미리보기 렌더링 (마우스 커서다 먼저)
     RenderPreview(_dc);
 
-    // 마우스 커서 렌더링
+    // 6. 마우스 커서 렌더링
     RenderMouse(_dc);
 
-    // 에디터 UI 렌더링 (맨 위에 그려야 함)
+    // 7. 에디터 UI 렌더링 (맨 위에 그려야 함)
     if (m_bShowUI)
     {
         RenderUI(_dc);
@@ -280,7 +301,7 @@ void CScene_Tool::RenderUI(HDC _dc)
     // UI 배경 패널
     HBRUSH hBrush = CreateSolidBrush(RGB(30, 30, 30));
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Rectangle(_dc, 10, 10, 450, 800); // 패널 크기 확장
+    Rectangle(_dc, 10, 10, 450, 800); // 패널 크기 확대
     SelectObject(_dc, hOldBrush);
     DeleteObject(hBrush);
 
@@ -321,6 +342,27 @@ void CScene_Tool::RenderUI(HDC _dc)
     SetTextColor(_dc, RGB(255, 255, 255));
     yPos += lineHeight + 5;
 
+    // === 배경 선택 UI 섹션 ===
+    yPos += 5;
+    SetTextColor(_dc, RGB(255, 255, 100));
+    TextOut(_dc, 20, yPos, L"Background Settings:", 19);
+    SetTextColor(_dc, RGB(255, 255, 255));
+    yPos += lineHeight;
+
+    // 현재 배경 표시
+    wchar_t szBgBuffer[256];
+    const wchar_t* szCurrentBgName = GetBackgroundName(m_eCurrentBgType);
+    swprintf_s(szBgBuffer, L"Current: %s", szCurrentBgName);
+    TextOut(_dc, 20, yPos, szBgBuffer, wcslen(szBgBuffer));
+    yPos += lineHeight;
+
+    // 배경 변경 단축키 안내
+    SetTextColor(_dc, RGB(200, 200, 255));
+    TextOut(_dc, 20, yPos, L"B - Background Mode", 19);
+    yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"Q / E - Change Background", 25);
+    yPos += lineHeight + 5;
+
     // 현재 선택된 오브젝트 정보
     if (m_eCurrentMode == EDITOR_MODE::PLACE_MONSTER ||
         m_eCurrentMode == EDITOR_MODE::PLACE_ITEM ||
@@ -335,6 +377,27 @@ void CScene_Tool::RenderUI(HDC _dc)
         swprintf_s(szBuffer, L"%s (%d/%d)", GetCurrentObjectName(),
             m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
         TextOut(_dc, 20, yPos, szBuffer, wcslen(szBuffer));
+        yPos += lineHeight + 5;
+    }
+
+    // === 타일 시각 타입 UI 섹션 ===
+    if (m_eCurrentMode == EDITOR_MODE::PLACE_TILE)
+    {
+        SetTextColor(_dc, RGB(255, 255, 100));
+        TextOut(_dc, 20, yPos, L"Tile Visual Settings:", 21);
+        SetTextColor(_dc, RGB(255, 255, 255));
+        yPos += lineHeight;
+
+        // 현재 타일 시각 타입 표시
+        wchar_t szTileBuffer[256];
+        const wchar_t* szCurrentTileName = GetTileVisualName(m_eCurrentTileVisual);
+        swprintf_s(szTileBuffer, L"Visual: %s", szCurrentTileName);
+        TextOut(_dc, 20, yPos, szTileBuffer, wcslen(szTileBuffer));
+        yPos += lineHeight;
+
+        // 타일 변경 단축키 안내
+        SetTextColor(_dc, RGB(200, 200, 255));
+        TextOut(_dc, 20, yPos, L"Q / E - Change Tile Visual", 26);
         yPos += lineHeight + 5;
     }
 
@@ -411,6 +474,8 @@ void CScene_Tool::RenderUI(HDC _dc)
     yPos += lineHeight;
     TextOut(_dc, 20, yPos, L"P - Special Mode", 16);
     yPos += lineHeight;
+    TextOut(_dc, 20, yPos, L"B - Background Mode", 19);
+    yPos += lineHeight;
 
     yPos += 3;
     SetTextColor(_dc, RGB(200, 200, 255));
@@ -442,7 +507,7 @@ void CScene_Tool::RenderUI(HDC _dc)
     yPos += lineHeight;
     TextOut(_dc, 20, yPos, L"L - Quick Load", 14);
     yPos += lineHeight;
-    
+
     SetTextColor(_dc, RGB(200, 255, 200));
     TextOut(_dc, 20, yPos, L"Ctrl+S - Save As...", 19);
     yPos += lineHeight;
@@ -467,43 +532,89 @@ void CScene_Tool::RenderUI(HDC _dc)
     yPos += lineHeight;
     TextOut(_dc, 20, yPos, L"H - Toggle UI", 13);
     yPos += lineHeight;
-    TextOut(_dc, 20, yPos, L"Ctrl+T - Return to Game", 23);
+
+    // 배경 모드일 때 특별한 UI 표시
+    if (m_eCurrentMode == EDITOR_MODE::BACKGROUND)
+    {
+        yPos += 10;
+
+        // 배경 모드 전용 안내 - 하이라이트 박스
+        HBRUSH hHighlightBrush = CreateSolidBrush(RGB(50, 50, 100));
+        HBRUSH hOldHighlightBrush = (HBRUSH)SelectObject(_dc, hHighlightBrush);
+        Rectangle(_dc, 15, yPos - 5, 435, yPos + 80);
+        SelectObject(_dc, hOldHighlightBrush);
+        DeleteObject(hHighlightBrush);
+
+        SetTextColor(_dc, RGB(255, 255, 100));
+        TextOut(_dc, 20, yPos, L"=== BACKGROUND MODE ===", 23);
+        yPos += lineHeight + 5;
+
+        SetTextColor(_dc, RGB(255, 255, 255));
+        TextOut(_dc, 20, yPos, L"Available Backgrounds:", 22);
+        yPos += lineHeight;
+
+        // 사용 가능한 배경 목록 표시
+        for (size_t i = 0; i < m_vecBackgroundTypes.size(); ++i)
+        {
+            const wchar_t* szBgName = GetBackgroundName(m_vecBackgroundTypes[i]);
+
+            // 현재 선택된 배경은 하이라이트
+            if (m_vecBackgroundTypes[i] == m_eCurrentBgType)
+            {
+                SetTextColor(_dc, RGB(255, 255, 100));
+                wchar_t szSelectedBg[256];
+                swprintf_s(szSelectedBg, L"-> %s (Selected)", szBgName);
+                TextOut(_dc, 25, yPos, szSelectedBg, wcslen(szSelectedBg));
+            }
+            else
+            {
+                SetTextColor(_dc, RGB(200, 200, 200));
+                wchar_t szBgEntry[256];
+                swprintf_s(szBgEntry, L"   %s", szBgName);
+                TextOut(_dc, 25, yPos, szBgEntry, wcslen(szBgEntry));
+            }
+            yPos += lineHeight;
+        }
+
+        SetTextColor(_dc, RGB(200, 200, 255));
+        TextOut(_dc, 20, yPos, L"Click or Q/E to change", 22);
+    }
 }
 
 void CScene_Tool::UpdateModeInput()
 {
     // === 파일 관리 (Ctrl 조합키를 먼저 체크) ===
-    // Ctrl+S키: 다른 이름으로 저장 (단순 S키보다 먼저 체크)
     if (KEY_TAP(KEY::S) && KEY_HOLD(KEY::CTRL))
     {
         SaveAsDialog();
     }
-    // Ctrl+O키: 파일 열기
     else if (KEY_TAP(KEY::O) && KEY_HOLD(KEY::CTRL))
     {
         OpenDialog();
     }
 
+    // === 배경 모드 (새로 추가) ===
+    else if (KEY_TAP(KEY::B))
+    {
+        ChangeMode(EDITOR_MODE::BACKGROUND);
+    }
+
     // === 오브젝트 배치 모드들 ===
-    // M키: 몬스터 배치 모드 (Monster)
     else if (KEY_TAP(KEY::M))
     {
         ChangeMode(EDITOR_MODE::PLACE_MONSTER);
         ChangeObjectCategory(L"Monster");
     }
-    // I키: 아이템 배치 모드 (Item)
     else if (KEY_TAP(KEY::I))
     {
         ChangeMode(EDITOR_MODE::PLACE_ITEM);
         ChangeObjectCategory(L"Item");
     }
-    // T키: 타일 배치 모드 (Tile)
     else if (KEY_TAP(KEY::T))
     {
         ChangeMode(EDITOR_MODE::PLACE_TILE);
         ChangeObjectCategory(L"Tile");
     }
-    // P키: 특수 오브젝트 배치 모드 (sPecial)
     else if (KEY_TAP(KEY::P))
     {
         ChangeMode(EDITOR_MODE::PLACE_SPECIAL);
@@ -511,37 +622,53 @@ void CScene_Tool::UpdateModeInput()
     }
 
     // === 편집 모드들 ===
-    // S키: 선택 모드 (Select) - Ctrl+S 체크 후에 배치
     else if (KEY_TAP(KEY::S))
     {
         ChangeMode(EDITOR_MODE::SELECT);
     }
-    // E키: 삭제 모드 (Erase)
     else if (KEY_TAP(KEY::E))
     {
         ChangeMode(EDITOR_MODE::ERASE);
     }
-    // ESC키: 기본 모드
     else if (KEY_TAP(KEY::ESC))
     {
         ChangeMode(EDITOR_MODE::NONE);
     }
 
     // === 기본 파일 관리 ===
-    // F키: 빠른 저장 (File save)
     else if (KEY_TAP(KEY::F))
     {
         QuickSave();
     }
-    // L키: 빠른 로드 (Load)
     else if (KEY_TAP(KEY::L))
     {
         QuickLoad();
     }
 
-    // === 씬 전환 ===
-    // Ctrl+T키: 게임으로 복귀
-    // 실제 씬 전환은 CSceneMgr에서 처리됨
+    // === 배경 변경 단축키 ===
+    // [ 키: 이전 배경
+    if (KEY_TAP(KEY::Q) && m_eCurrentMode == EDITOR_MODE::BACKGROUND)
+    {
+        PrevBackground();
+    }
+    // ] 키: 다음 배경  
+    else if (KEY_TAP(KEY::E) && m_eCurrentMode == EDITOR_MODE::BACKGROUND)
+    {
+        NextBackground();
+    }
+
+    // === 타일 시각 타입 변경 (타일 모드일 때만) ===
+    if (m_eCurrentMode == EDITOR_MODE::PLACE_TILE)
+    {
+        if (KEY_TAP(KEY::Q))
+        {
+            PrevTileVisual();
+        }
+        else if (KEY_TAP(KEY::E))
+        {
+            NextTileVisual();
+        }
+    }
 }
 
 void CScene_Tool::SaveAsDialog()
@@ -680,6 +807,7 @@ const wchar_t* CScene_Tool::GetModeString()
     case EDITOR_MODE::SELECT:       return L"Select (S)";
     case EDITOR_MODE::ERASE:        return L"Erase (E)";
     case EDITOR_MODE::CAMERA_MOVE:  return L"Camera Move";
+    case EDITOR_MODE::BACKGROUND:   return L"Background (B)";
     default:                        return L"Unknown";
     }
 }
@@ -717,6 +845,13 @@ void CScene_Tool::HandleMouseClick()
         DeleteObjectAtPosition(m_vMousePos);
         break;
 
+    case EDITOR_MODE::BACKGROUND:
+    {
+        // 배경 모드에서는 클릭으로 다음 배경으로 변경
+        NextBackground();
+    }
+    break;
+
     case EDITOR_MODE::NONE:
     case EDITOR_MODE::CAMERA_MOVE:
     default:
@@ -741,6 +876,19 @@ void CScene_Tool::PlaceObject(Vec2 _vPos)
         return;
     }
 
+    // 타일인 경우 시각적 타입 적용
+    if (m_eCurrentMode == EDITOR_MODE::PLACE_TILE)
+    {
+        CTile* pTile = dynamic_cast<CTile*>(pObject);
+        if (pTile)
+        {
+            pTile->SetVisualType(m_eCurrentTileVisual);
+
+            // 타일 매니저를 통해 적절한 텍스처와 속성 설정
+            CTileMgr::GetInst()->SetupTileProperties(pTile, m_eCurrentTileVisual);
+        }
+    }
+
     // 적절한 그룹에 추가
     GROUP_TYPE eGroup = CObjectFactory::GetObjectGroup(m_eCurrentObjectType);
     AddObject(pObject, eGroup);
@@ -748,7 +896,15 @@ void CScene_Tool::PlaceObject(Vec2 _vPos)
     // 성공 메시지
     wchar_t szBuffer[256];
     const wchar_t* szObjectName = CObjectFactory::GetObjectTypeName(m_eCurrentObjectType);
-    swprintf_s(szBuffer, L"%s placed at (%.0f, %.0f)!", szObjectName, _vPos.x, _vPos.y);
+    if (m_eCurrentMode == EDITOR_MODE::PLACE_TILE)
+    {
+        swprintf_s(szBuffer, L"%s (%s) placed at (%.0f, %.0f)!",
+            szObjectName, GetTileVisualName(m_eCurrentTileVisual), _vPos.x, _vPos.y);
+    }
+    else
+    {
+        swprintf_s(szBuffer, L"%s placed at (%.0f, %.0f)!", szObjectName, _vPos.x, _vPos.y);
+    }
     SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
@@ -1056,7 +1212,8 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
     // 레벨 데이터 수집
     tLevelData levelData;
     levelData.strLevelName = _strFileName;
-    levelData.iVersion = 1;
+    levelData.iVersion = 2;  // 배경 정보 추가로 버전 업데이트
+    levelData.iBackgroundType = (int)m_eCurrentBgType;  // 배경 정보 저장
 
     // 플레이어 스폰 위치 찾기
     const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);
@@ -1079,18 +1236,19 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
                 objData.eGroupType = (GROUP_TYPE)i;
                 objData.vPos = vecObj[j]->GetPos();
                 objData.vScale = vecObj[j]->GetScale();
-                objData.iSubType = 0; // 추후 확장 가능
+                objData.iSubType = 0; // 기본값
 
-                // 타일의 경우 타일 타입 정보도 저장
+                // 타일의 경우 시각 타입 정보도 저장
                 if (objData.eGroupType == GROUP_TYPE::TILE)
                 {
                     CTile* pTile = dynamic_cast<CTile*>(vecObj[j]);
                     if (pTile)
                     {
                         objData.iSubType = (int)pTile->GetTileType();
+                        objData.iTileVisualType = (int)pTile->GetVisualType(); // 시각 타입 저장
                     }
                 }
-                // 몬스터의 경우 몬스터 타입 정보 저장 (추후 확장용)
+                // 몬스터의 경우 몬스터 타입 정보 저장
                 else if (objData.eGroupType == GROUP_TYPE::MONSTER)
                 {
                     // 현재는 모든 몬스터가 WADDLE_DEE이므로 기본값 사용
@@ -1126,6 +1284,9 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
         // 플레이어 스폰 위치
         fwrite(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
+        // 배경 타입 정보 (새로 추가)
+        fwrite(&levelData.iBackgroundType, sizeof(int), 1, pFile);
+
         // 오브젝트 개수
         size_t objCount = levelData.vecObjects.size();
         fwrite(&objCount, sizeof(size_t), 1, pFile);
@@ -1140,7 +1301,10 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
 
         // 성공 메시지
         wchar_t szMsg[256];
-        swprintf_s(szMsg, L"Level Saved: %s (%d objects)", _strFileName.c_str(), (int)objCount);
+        swprintf_s(szMsg, L"Level Saved: %s (%d objects, Background: %s)",
+            _strFileName.c_str(),
+            (int)objCount,
+            GetBackgroundName(m_eCurrentBgType));
         SetWindowText(CCore::GetInst()->GetMainHwnd(), szMsg);
     }
     else
@@ -1148,6 +1312,7 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Failed to save level!");
     }
 }
+
 
 void CScene_Tool::LoadLevel(const wstring& _strFileName)
 {
@@ -1188,7 +1353,7 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
     // 버전 확인
     fread(&levelData.iVersion, sizeof(int), 1, pFile);
 
-    if (levelData.iVersion != 1)
+    if (levelData.iVersion < 1 || levelData.iVersion > 2)
     {
         fclose(pFile);
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Unsupported level version!");
@@ -1214,6 +1379,24 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
         vecPlayer[0]->SetPos(levelData.vPlayerSpawn);
     }
 
+    // 배경 타입 정보 (버전 2 이상에서만)
+    if (levelData.iVersion >= 2)
+    {
+        fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
+
+        // 배경 변경 적용
+        BACKGROUND_TYPE eBgType = (BACKGROUND_TYPE)levelData.iBackgroundType;
+        if (eBgType >= BACKGROUND_TYPE::GREEN_HILL && eBgType < BACKGROUND_TYPE::END)
+        {
+            ChangeBackground(eBgType);
+        }
+    }
+    else
+    {
+        // 구버전 파일의 경우 기본 배경 사용
+        ChangeBackground(BACKGROUND_TYPE::GREEN_HILL);
+    }
+
     // 오브젝트 개수
     size_t objCount;
     fread(&objCount, sizeof(size_t), 1, pFile);
@@ -1230,7 +1413,7 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
         {
         case GROUP_TYPE::MONSTER:
         {
-            // 몬스터 타입에 따라 생성 (현재는 WADDLE_DEE만)
+            // 몬스터 타입에 따라 생성
             OBJECT_TYPE monsterType = (OBJECT_TYPE)objData.iSubType;
             pObj = CObjectFactory::CreateObject(monsterType, objData.vPos);
         }
@@ -1241,12 +1424,26 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
             // 타일 타입에 따라 생성
             OBJECT_TYPE tileType = (OBJECT_TYPE)objData.iSubType;
             pObj = CObjectFactory::CreateObject(tileType, objData.vPos);
+
+            // 타일 시각 타입 적용 (버전 2 이상에서만)
+            if (levelData.iVersion >= 2 && pObj)
+            {
+                CTile* pTile = dynamic_cast<CTile*>(pObj);
+                if (pTile)
+                {
+                    TILE_VISUAL_TYPE eVisualType = (TILE_VISUAL_TYPE)objData.iTileVisualType;
+                    pTile->SetVisualType(eVisualType);
+
+                    // 타일 매니저를 통해 적절한 텍스처와 속성 설정
+                    CTileMgr::GetInst()->SetupTileProperties(pTile, eVisualType);
+                }
+            }
         }
         break;
 
         case GROUP_TYPE::ITEM:
         {
-            // 아이템 타입에 따라 생성 (추후 확장)
+            // 아이템 타입에 따라 생성
             OBJECT_TYPE itemType = (OBJECT_TYPE)objData.iSubType;
             pObj = CObjectFactory::CreateObject(itemType, objData.vPos);
         }
@@ -1254,7 +1451,7 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
 
         case GROUP_TYPE::SPECIAL:
         {
-            // 특수 오브젝트 타입에 따라 생성 (추후 확장)
+            // 특수 오브젝트 타입에 따라 생성
             OBJECT_TYPE specialType = (OBJECT_TYPE)objData.iSubType;
             pObj = CObjectFactory::CreateObject(specialType, objData.vPos);
         }
@@ -1276,7 +1473,10 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
 
     // 성공 메시지
     wchar_t szMsg[256];
-    swprintf_s(szMsg, L"Level Loaded: %s (%d objects)", levelData.strLevelName.c_str(), (int)objCount);
+    swprintf_s(szMsg, L"Level Loaded: %s (%d objects, Background: %s)",
+        levelData.strLevelName.c_str(),
+        (int)objCount,
+        GetBackgroundName(m_eCurrentBgType));
     SetWindowText(CCore::GetInst()->GetMainHwnd(), szMsg);
 }
 
@@ -1288,4 +1488,140 @@ void CScene_Tool::QuickSave()
 void CScene_Tool::QuickLoad()
 {
     LoadLevel(L"quicksave");
+}
+
+void CScene_Tool::InitializeBackgroundSystem()
+{
+    // 사용 가능한 배경 타입들 초기화
+    m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::GREEN_HILL);
+    m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::RAINBOW_CASTLE);
+
+    // 기본 배경 설정
+    m_eCurrentBgType = BACKGROUND_TYPE::GREEN_HILL;
+    m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
+}
+
+void CScene_Tool::ChangeBackground(BACKGROUND_TYPE _eBgType)
+{
+    m_eCurrentBgType = _eBgType;
+    m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(_eBgType);
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Background changed to: %s", GetBackgroundName(_eBgType));
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+void CScene_Tool::NextBackground()
+{
+    if (m_vecBackgroundTypes.empty()) return;
+
+    // 현재 배경의 인덱스 찾기
+    int currentIndex = 0;
+    for (size_t i = 0; i < m_vecBackgroundTypes.size(); ++i)
+    {
+        if (m_vecBackgroundTypes[i] == m_eCurrentBgType)
+        {
+            currentIndex = (int)i;
+            break;
+        }
+    }
+
+    // 다음 배경으로 변경
+    int nextIndex = (currentIndex + 1) % m_vecBackgroundTypes.size();
+    ChangeBackground(m_vecBackgroundTypes[nextIndex]);
+}
+
+void CScene_Tool::PrevBackground()
+{
+    if (m_vecBackgroundTypes.empty()) return;
+
+    // 현재 배경의 인덱스 찾기
+    int currentIndex = 0;
+    for (size_t i = 0; i < m_vecBackgroundTypes.size(); ++i)
+    {
+        if (m_vecBackgroundTypes[i] == m_eCurrentBgType)
+        {
+            currentIndex = (int)i;
+            break;
+        }
+    }
+
+    // 이전 배경으로 변경
+    int prevIndex = (currentIndex - 1 + m_vecBackgroundTypes.size()) % m_vecBackgroundTypes.size();
+    ChangeBackground(m_vecBackgroundTypes[prevIndex]);
+}
+
+const wchar_t* CScene_Tool::GetBackgroundName(BACKGROUND_TYPE _eType)
+{
+    return CBackgroundMgr::GetInst()->GetBackgroundName(_eType);
+}
+
+// 타일 시각 타입 관련 함수들
+void CScene_Tool::InitializeTileVisualSystem()
+{
+    // 사용 가능한 타일 시각 타입들 초기화
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::GRASS_PLATFORM);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::DIRT_BLOCK);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::STONE_BLOCK);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::GRASS_BLOCK);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::TREE);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::FLOWER);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::FENCE);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::SPIKE);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::WATER);
+
+    // 기본 타일 시각 타입 설정
+    m_eCurrentTileVisual = TILE_VISUAL_TYPE::GRASS_PLATFORM;
+    m_iTileVisualIndex = 0;
+}
+
+void CScene_Tool::NextTileVisual()
+{
+    if (m_vecTileVisualTypes.empty()) return;
+
+    m_iTileVisualIndex = (m_iTileVisualIndex + 1) % m_vecTileVisualTypes.size();
+    m_eCurrentTileVisual = m_vecTileVisualTypes[m_iTileVisualIndex];
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Tile Visual: %s (%d/%d)",
+        GetTileVisualName(m_eCurrentTileVisual),
+        m_iTileVisualIndex + 1,
+        (int)m_vecTileVisualTypes.size());
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+void CScene_Tool::PrevTileVisual()
+{
+    if (m_vecTileVisualTypes.empty()) return;
+
+    m_iTileVisualIndex = (m_iTileVisualIndex - 1 + m_vecTileVisualTypes.size()) % m_vecTileVisualTypes.size();
+    m_eCurrentTileVisual = m_vecTileVisualTypes[m_iTileVisualIndex];
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Tile Visual: %s (%d/%d)",
+        GetTileVisualName(m_eCurrentTileVisual),
+        m_iTileVisualIndex + 1,
+        (int)m_vecTileVisualTypes.size());
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+const wchar_t* CScene_Tool::GetTileVisualName(TILE_VISUAL_TYPE _eType)
+{
+    switch (_eType)
+    {
+    case TILE_VISUAL_TYPE::GRASS_PLATFORM:   return L"Grass Platform";
+    case TILE_VISUAL_TYPE::DIRT_BLOCK:       return L"Dirt Block";
+    case TILE_VISUAL_TYPE::STONE_BLOCK:      return L"Stone Block";
+    case TILE_VISUAL_TYPE::GRASS_BLOCK:      return L"Grass Block";
+    case TILE_VISUAL_TYPE::TREE:             return L"Tree";
+    case TILE_VISUAL_TYPE::FLOWER:           return L"Flower";
+    case TILE_VISUAL_TYPE::FENCE:            return L"Fence";
+    case TILE_VISUAL_TYPE::PIPE:             return L"Pipe";
+    case TILE_VISUAL_TYPE::SPIKE:            return L"Spike";
+    case TILE_VISUAL_TYPE::LAVA:             return L"Lava";
+    case TILE_VISUAL_TYPE::WATER:            return L"Water";
+    case TILE_VISUAL_TYPE::MOVING_PLATFORM:  return L"Moving Platform";
+    case TILE_VISUAL_TYPE::BRIDGE:           return L"Bridge";
+    default:                                 return L"Unknown";
+    }
 }

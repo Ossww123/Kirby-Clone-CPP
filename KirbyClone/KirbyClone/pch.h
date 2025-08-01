@@ -10,6 +10,7 @@ using std::vector;
 
 #include <string>
 using std::wstring;
+using std::to_string;
 
 #include <map>
 using std::map;

@@ -2,6 +2,8 @@
 #include "CScene.h"
 #include "CObjectFactory.h"
 
+class CBackground;
+
 class CScene_Tool : public CScene
 {
 private:
@@ -17,6 +19,16 @@ private:
     OBJECT_TYPE         m_eCurrentObjectType;   // 현재 선택된 오브젝트 타입
     int                 m_iCurrentSubType;      // 현재 카테고리 내 서브타입 인덱스
     vector<OBJECT_TYPE> m_vecCurrentCategory;   // 현재 카테고리의 오브젝트 타입들
+
+    // 배경 시스템 관련
+    CBackground* m_pCurrentBackground;   // 현재 배경
+    BACKGROUND_TYPE     m_eCurrentBgType;       // 현재 배경 타입
+    vector<BACKGROUND_TYPE> m_vecBackgroundTypes; // 사용 가능한 배경 타입들
+
+    // 타일 시각적 타입 관련
+    TILE_VISUAL_TYPE    m_eCurrentTileVisual;   // 현재 선택된 타일 시각 타입
+    vector<TILE_VISUAL_TYPE> m_vecTileVisualTypes; // 사용 가능한 타일 시각 타입들
+    int                 m_iTileVisualIndex;     // 타일 시각 타입 인덱스
 
     // 선택 도구 관련
     CObject* m_pSelectedObject;     // 선택된 오브젝트
@@ -55,6 +67,19 @@ private:
     void NextObjectInCategory();                // 카테고리 내 다음 오브젝트
     void PrevObjectInCategory();                // 카테고리 내 이전 오브젝트
     const wchar_t* GetCurrentObjectName();      // 현재 선택된 오브젝트 이름
+
+    // 배경 시스템 관련 함수
+    void InitializeBackgroundSystem();         // 배경 시스템 초기화
+    void ChangeBackground(BACKGROUND_TYPE _eBgType); // 배경 변경
+    void NextBackground();                      // 다음 배경
+    void PrevBackground();                      // 이전 배경
+    const wchar_t* GetBackgroundName(BACKGROUND_TYPE _eType); // 배경 이름 반환
+
+    // 타일 시각 타입 관련 함수
+    void InitializeTileVisualSystem();          // 타일 시각 시스템 초기화
+    void NextTileVisual();                      // 다음 타일 시각 타입
+    void PrevTileVisual();                      // 이전 타일 시각 타입
+    const wchar_t* GetTileVisualName(TILE_VISUAL_TYPE _eType); // 타일 시각 타입 이름
 
     // 저장/로딩 함수
     void SaveLevel(const wstring& _strFileName);    // 레벨 저장
