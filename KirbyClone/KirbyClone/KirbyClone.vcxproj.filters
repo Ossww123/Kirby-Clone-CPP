@@ -113,6 +113,9 @@
     <Filter Include="Engine\03. Manager\TileMgr">
       <UniqueIdentifier>{d9e36f13-3032-4a7e-bec4-4b72f032a46f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\09. Editor">
+      <UniqueIdentifier>{e9eec28a-b532-4483-9da2-594f2f0e188c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -227,6 +230,27 @@
     <ClInclude Include="CTileMgr.h">
       <Filter>Engine\03. Manager\TileMgr</Filter>
     </ClInclude>
+    <ClInclude Include="CEditorCameraController.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="CEditorCore.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="CEditorFileManager.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="CEditorInput.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="CEditorObjectManager.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="CEditorRenderer.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="CEditorUI.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -332,6 +356,27 @@
     </ClCompile>
     <ClCompile Include="CTileMgr.cpp">
       <Filter>Engine\03. Manager\TileMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorCameraController.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorCore.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorFileManager.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorInput.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorObjectManager.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorRenderer.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorUI.cpp">
+      <Filter>Engine\09. Editor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

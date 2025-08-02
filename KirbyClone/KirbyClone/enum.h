@@ -24,6 +24,9 @@ enum class KEY
     ALPHA_5, ALPHA_6, ALPHA_7, ALPHA_8,
     ALPHA_9, ALPHA_0,
 
+    ALT,      // Alt Ű
+    HOME,     // Home Ű
+
     SPACE,
     ENTER,
     ESC,

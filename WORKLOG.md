@@ -1558,3 +1558,4 @@ GetRigidBody()->SetFriction(5.f);
 - [x] 커비 IDLE 애니메이션 수정
 - [x] 좌우 상태에 따라 스프라이트 뒤집기
 - [x] WALK에서 IDLE로 돌아올 때 관성 추가
+- [x] Tool Scene의 기능을 여러 클래스로 분리

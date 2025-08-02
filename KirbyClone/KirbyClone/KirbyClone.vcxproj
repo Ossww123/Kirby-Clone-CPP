@@ -147,6 +147,13 @@
     <ClInclude Include="CCollider.h" />
     <ClInclude Include="CCollisionMgr.h" />
     <ClInclude Include="CCore.h" />
+    <ClInclude Include="CEditorCameraController.h" />
+    <ClInclude Include="CEditorCore.h" />
+    <ClInclude Include="CEditorFileManager.h" />
+    <ClInclude Include="CEditorInput.h" />
+    <ClInclude Include="CEditorObjectManager.h" />
+    <ClInclude Include="CEditorRenderer.h" />
+    <ClInclude Include="CEditorUI.h" />
     <ClInclude Include="CEventMgr.h" />
     <ClInclude Include="CGrid.h" />
     <ClInclude Include="CItem.h" />
@@ -187,6 +194,13 @@
     <ClCompile Include="CCollider.cpp" />
     <ClCompile Include="CCollisionMgr.cpp" />
     <ClCompile Include="CCore.cpp" />
+    <ClCompile Include="CEditorCameraController.cpp" />
+    <ClCompile Include="CEditorCore.cpp" />
+    <ClCompile Include="CEditorFileManager.cpp" />
+    <ClCompile Include="CEditorInput.cpp" />
+    <ClCompile Include="CEditorObjectManager.cpp" />
+    <ClCompile Include="CEditorRenderer.cpp" />
+    <ClCompile Include="CEditorUI.cpp" />
     <ClCompile Include="CEventMgr.cpp" />
     <ClCompile Include="CGrid.cpp" />
     <ClCompile Include="CItem.cpp" />
