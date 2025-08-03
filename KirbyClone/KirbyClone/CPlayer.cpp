@@ -516,14 +516,18 @@ void CPlayer::OnCollision(CCollider* _pOther)
         if (abs(playerBottom - tileTop) < 8.f && vPlayerPos.y < vTilePos.y)
         {
             // 미세한 위치 조정
-            if (playerBottom > tileTop + 2.f)
+            if (playerBottom > tileTop + 5.f)
             {
                 float correctedY = tileTop - vPlayerColliderScale.y / 2.f;
                 vPlayerPos.y = correctedY;
                 SetPos(vPlayerPos);
             }
 
-            m_pRigidBody->SetGround(true);
+            // Ground 상태가 아닐 때만 설정 (중복 설정 방지)
+            if (!m_pRigidBody->IsGround())
+            {
+                m_pRigidBody->SetGround(true);
+            }
 
             // 아래로 떨어지는 속도가 있다면 제거
             if (vVelocity.y > 0.f)
@@ -544,8 +548,9 @@ void CPlayer::OnCollisionExit(CCollider* _pOther)
         // 점프나 이동으로 타일에서 벗어날 때만 Ground 해제
         Vec2 vVelocity = m_pRigidBody->GetVelocity();
 
-        // 위쪽으로 빠르게 이동 중이거나 수평으로 이동해서 벗어났을 때
-        if (vVelocity.y < -30.f || abs(vVelocity.x) > 50.f)
+        // 위쪽으로 빠르게 이동 중일 때만 (점프) Ground 해제
+        // X축 속도 조건 제거 - 수평 이동 시에는 Ground 상태 유지
+        if (vVelocity.y < -50.f)  // Y축 속도만 체크, 임계값도 높임
         {
             m_pRigidBody->SetGround(false);
         }

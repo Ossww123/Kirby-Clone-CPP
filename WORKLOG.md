@@ -1571,3 +1571,4 @@ GetRigidBody()->SetFriction(5.f);
 - [X] CPlayer StateMachine 분리
 - [X] CPlayer InhaleSystem 분리
 - [X] CPlayer Movement 분리
+- [X] 착지 후 착지를 반복하던 현상 수정
