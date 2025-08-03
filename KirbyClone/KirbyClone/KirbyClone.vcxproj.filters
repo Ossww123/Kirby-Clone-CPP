@@ -116,6 +116,15 @@
     <Filter Include="Engine\09. Editor">
       <UniqueIdentifier>{e9eec28a-b532-4483-9da2-594f2f0e188c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerStateMachine">
+      <UniqueIdentifier>{541138de-2d88-4fdc-b3d7-d6624dc56c9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerInhaleSystem">
+      <UniqueIdentifier>{da51b639-3f5f-40e7-bb87-951caf5dd42e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerMovement">
+      <UniqueIdentifier>{7af0721e-7294-4503-9f12-8ef85b7f04a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -251,6 +260,15 @@
     <ClInclude Include="CEditorUI.h">
       <Filter>Engine\09. Editor</Filter>
     </ClInclude>
+    <ClInclude Include="CPlayerStateMachine.h">
+      <Filter>Engine\04. Object\Player\PlayerStateMachine</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayerInhaleSystem.h">
+      <Filter>Engine\04. Object\Player\PlayerInhaleSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayerMovement.h">
+      <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -377,6 +395,15 @@
     </ClCompile>
     <ClCompile Include="CEditorUI.cpp">
       <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerStateMachine.cpp">
+      <Filter>Engine\04. Object\Player\PlayerStateMachine</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerInhaleSystem.cpp">
+      <Filter>Engine\04. Object\Player\PlayerInhaleSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerMovement.cpp">
+      <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1566,3 +1566,8 @@ GetRigidBody()->SetFriction(5.f);
 
 - [x] CCamera의 update 함수를 여러 함수로 분리
 - [x] CSceneMgr의 ChangeScene 함수의 접근 제어자를 기존 public에서 private으로 변경, CEventMgr 을 Friend class 로 추가
+- [X] CPlayer 디버깅코드 제거
+- [X] Flip 애니메이션 단순화
+- [X] CPlayer StateMachine 분리
+- [X] CPlayer InhaleSystem 분리
+- [X] CPlayer Movement 분리

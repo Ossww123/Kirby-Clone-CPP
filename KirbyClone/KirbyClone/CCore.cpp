@@ -90,6 +90,7 @@ void CCore::update()
 
 void CCore::render()
 {
+	// 백버퍼(m_memDC) 전체를 흰색으로 클리어
 	Rectangle(m_memDC, -1, -1, m_ptResolution.x + 1, m_ptResolution.y + 1);
 
 	CSceneMgr::GetInst()->render(m_memDC);

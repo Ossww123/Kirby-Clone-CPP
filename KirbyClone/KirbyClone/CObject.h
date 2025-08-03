@@ -15,6 +15,7 @@ private:
 	CRigidBody* m_pRigidBody;
 	bool m_bAlive;
 	CTexture* m_pTex;
+	OBJECT_TYPE m_eObjectType;
 
 public:
 	void SetPos(Vec2 _vPos) { m_vPos = _vPos; }
@@ -26,6 +27,9 @@ public:
 
 	bool IsDead() { return !m_bAlive; }
 	void SetDead() { m_bAlive = false; }
+
+	void SetType(OBJECT_TYPE _eType) { m_eObjectType = _eType; }
+	OBJECT_TYPE GetType() const { return m_eObjectType; }
 
 	// 가상 함수로 선언 - 자식 클래스에서 재정의 가능
 	virtual void Update() = 0;  // 순수 가상 함수 - 자식이 반드시 구현
@@ -47,5 +51,6 @@ public:
 
 public:
 	CObject();
+	CObject(OBJECT_TYPE _eType);
 	virtual ~CObject();  // 가상 소멸자
 };

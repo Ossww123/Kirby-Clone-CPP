@@ -13,7 +13,8 @@
 #include "CTile.h"
 
 CMonster::CMonster()
-    : m_pAnimator(nullptr)
+    : CObject(OBJECT_TYPE::MONSTER_WADDLE_DEE)
+    , m_pAnimator(nullptr)
     , m_pRigidBody(nullptr)
     , m_eCurState(MONSTER_STATE::IDLE)
     , m_ePrevState(MONSTER_STATE::END)

@@ -48,6 +48,12 @@ public:
 		return Vec2(x / _f, y / _f);
 	}
 
+	// 단항 마이너스 연산자 (벡터 반대 방향)
+	Vec2 operator - () const
+	{
+		return Vec2(-x, -y);
+	}
+
 	Vec2& operator += (const Vec2& _other)
 	{
 		x += _other.x;
@@ -99,6 +105,72 @@ public:
 	float Length() const
 	{
 		return sqrt(x * x + y * y);
+	}
+
+	// 내적(Dot Product) 계산
+	float Dot(const Vec2& _other) const
+	{
+		return x * _other.x + y * _other.y;
+	}
+
+	// 외적(Cross Product) 계산 (2D에서는 스칼라 값 반환)
+	float Cross(const Vec2& _other) const
+	{
+		return x * _other.y - y * _other.x;
+	}
+
+	// 벡터 사이의 각도 계산 (라디안)
+	float Angle(const Vec2& _other) const
+	{
+		float dot = Dot(_other);
+		float lenProduct = Length() * _other.Length();
+
+		if (lenProduct == 0.f)
+			return 0.f;
+
+		float cosTheta = dot / lenProduct;
+		// cos 값을 [-1, 1] 범위로 클램핑
+		cosTheta = max(-1.f, min(1.f, cosTheta));
+
+		return acos(cosTheta);
+	}
+
+	// 벡터의 제곱 길이 (성능상 이점 - sqrt 연산 생략)
+	float LengthSq() const
+	{
+		return x * x + y * y;
+	}
+
+	// 거리 계산 (다른 점까지의 거리)
+	float Distance(const Vec2& _other) const
+	{
+		return (*this - _other).Length();
+	}
+
+	// 제곱 거리 계산 (성능상 이점)
+	float DistanceSq(const Vec2& _other) const
+	{
+		return (*this - _other).LengthSq();
+	}
+
+	// 정규화된 벡터 반환 (원본 수정 안함)
+	Vec2 GetNormalized() const
+	{
+		Vec2 result = *this;
+		result.Normalize();
+		return result;
+	}
+
+	// 벡터가 영벡터인지 확인
+	bool IsZero() const
+	{
+		return x == 0.f && y == 0.f;
+	}
+
+	// 선형 보간 (Linear Interpolation)
+	static Vec2 Lerp(const Vec2& _from, const Vec2& _to, float _t)
+	{
+		return _from + (_to - _from) * _t;
 	}
 
 	// 정규화 (단위 벡터로 만들기)

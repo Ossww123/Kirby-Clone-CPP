@@ -14,6 +14,19 @@ CObject::CObject()
 	, m_pRigidBody(nullptr)
 	, m_bAlive(true)
 	, m_pTex(nullptr)
+	, m_eObjectType(OBJECT_TYPE::END)
+{
+}
+
+CObject::CObject(OBJECT_TYPE _eType)
+	: m_vPos{}
+	, m_vScale{}
+	, m_pCollider(nullptr)
+	, m_pAnimator(nullptr)
+	, m_pRigidBody(nullptr)
+	, m_bAlive(true)
+	, m_pTex(nullptr)
+	, m_eObjectType(_eType)
 {
 }
 

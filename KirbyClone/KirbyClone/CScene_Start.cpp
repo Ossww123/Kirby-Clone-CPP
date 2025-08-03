@@ -29,9 +29,6 @@ void CScene_Start::Enter()
     pMonster->SetPos(Vec2(300.f, 300.f));
     pMonster->SetScale(Vec2(60.f, 60.f));
     AddObject(pMonster, GROUP_TYPE::MONSTER);  // GROUP_TYPE 추가
-
-    // 게임 시작 안내
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Kirby Clone - Press 1 to start STAGE 01!");
 }
 
 void CScene_Start::Exit()
