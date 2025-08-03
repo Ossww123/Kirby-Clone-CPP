@@ -1559,3 +1559,10 @@ GetRigidBody()->SetFriction(5.f);
 - [x] 좌우 상태에 따라 스프라이트 뒤집기
 - [x] WALK에서 IDLE로 돌아올 때 관성 추가
 - [x] Tool Scene의 기능을 여러 클래스로 분리
+
+## 2025-08-03
+
+### 완료
+
+- [x] CCamera의 update 함수를 여러 함수로 분리
+- [x] CSceneMgr의 ChangeScene 함수의 접근 제어자를 기존 public에서 private으로 변경, CEventMgr 을 Friend class 로 추가
