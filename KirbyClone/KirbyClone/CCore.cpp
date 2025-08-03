@@ -79,7 +79,7 @@ void CCore::update()
 {
 	CTimeMgr::GetInst()->update();
 	CKeyMgr::GetInst()->update();
-	CCamera::GetInst()->update();  // 씬 업데이트 전
+	CCamera::GetInst()->update();
 	CSceneMgr::GetInst()->update();
 	CCollisionMgr::GetInst()->update();
 

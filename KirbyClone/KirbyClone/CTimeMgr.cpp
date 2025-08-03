@@ -9,6 +9,7 @@ CTimeMgr::CTimeMgr()
 	, m_dDT(0.)
 	, m_dAcc(0.)
 	, m_iCallCount(0)
+	, m_iFPS(0)
 {
 
 }
