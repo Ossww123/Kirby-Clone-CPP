@@ -153,6 +153,7 @@
     <ClInclude Include="CEditorInput.h" />
     <ClInclude Include="CEditorObjectManager.h" />
     <ClInclude Include="CEditorRenderer.h" />
+    <ClInclude Include="CEditorToolbar.h" />
     <ClInclude Include="CEditorUI.h" />
     <ClInclude Include="CEventMgr.h" />
     <ClInclude Include="CGrid.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="CEditorInput.cpp" />
     <ClCompile Include="CEditorObjectManager.cpp" />
     <ClCompile Include="CEditorRenderer.cpp" />
+    <ClCompile Include="CEditorToolbar.cpp" />
     <ClCompile Include="CEditorUI.cpp" />
     <ClCompile Include="CEventMgr.cpp" />
     <ClCompile Include="CGrid.cpp" />

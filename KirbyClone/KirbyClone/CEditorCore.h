@@ -9,6 +9,7 @@ class CEditorFileManager;
 class CEditorObjectManager;
 class CEditorCameraController;
 class CScene;
+class CEditorToolbar;
 
 class CEditorCore
 {
@@ -20,6 +21,7 @@ private:
     CEditorFileManager* m_pFileManager;
     CEditorObjectManager* m_pObjectManager;
     CEditorCameraController* m_pCameraController;
+    CEditorToolbar* m_pToolbar;
 
     // 현재 작업 중인 씬 (CScene_Tool에서 받아옴)
     CScene* m_pWorkingScene;
@@ -77,6 +79,7 @@ public:
     CEditorFileManager* GetFileManager() { return m_pFileManager; }
     CEditorObjectManager* GetObjectManager() { return m_pObjectManager; }
     CEditorCameraController* GetCameraController() { return m_pCameraController; }
+    CEditorToolbar* GetToolbar() { return m_pToolbar; }
 
 public:
     CEditorCore();

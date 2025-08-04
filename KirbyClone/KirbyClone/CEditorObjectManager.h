@@ -43,6 +43,7 @@ public:
     void NextObjectInCategory();
     void PrevObjectInCategory();
     const wchar_t* GetCurrentObjectName();
+    void SetCurrentSubType(int index);
 
     // 배경 시스템 관리
     void InitializeBackgroundSystem();

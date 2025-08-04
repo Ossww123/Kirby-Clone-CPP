@@ -269,6 +269,9 @@
     <ClInclude Include="CPlayerMovement.h">
       <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
     </ClInclude>
+    <ClInclude Include="CEditorToolbar.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -404,6 +407,9 @@
     </ClCompile>
     <ClCompile Include="CPlayerMovement.cpp">
       <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
+    </ClCompile>
+    <ClCompile Include="CEditorToolbar.cpp">
+      <Filter>Engine\09. Editor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

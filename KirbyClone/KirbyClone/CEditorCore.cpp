@@ -8,6 +8,7 @@
 #include "CEditorFileManager.h"
 #include "CEditorObjectManager.h"
 #include "CEditorCameraController.h"
+#include "CEditorToolbar.h"
 
 #include "CBackground.h"
 #include "CObject.h"
@@ -23,6 +24,7 @@ CEditorCore::CEditorCore()
     , m_pFileManager(nullptr)
     , m_pObjectManager(nullptr)
     , m_pCameraController(nullptr)
+    , m_pToolbar(nullptr)
     , m_pWorkingScene(nullptr)
     , m_eCurrentMode(EDITOR_MODE::NONE)
     , m_bShowUI(true)
@@ -51,6 +53,7 @@ void CEditorCore::Initialize(CScene* _pScene)
     m_pFileManager = new CEditorFileManager();
     m_pObjectManager = new CEditorObjectManager();
     m_pCameraController = new CEditorCameraController();
+    m_pToolbar = new CEditorToolbar();
 
     // 하위 시스템들 초기화
     m_pUI->Initialize(this, _pScene);
@@ -59,6 +62,7 @@ void CEditorCore::Initialize(CScene* _pScene)
     m_pFileManager->Initialize(this, _pScene);
     m_pObjectManager->Initialize(this);
     m_pCameraController->Initialize(this);
+    m_pToolbar->Initialize(this);
 
     // 그리드 시스템 초기화
     CGrid::GetInst()->init();
@@ -68,8 +72,6 @@ void CEditorCore::Initialize(CScene* _pScene)
     m_bShowUI = true;
     m_pSelectedObject = nullptr;
     m_bDragging = false;
-
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level Editor - Initialized!");
 }
 
 void CEditorCore::Update()
@@ -81,6 +83,7 @@ void CEditorCore::Update()
     m_pCameraController->Update();      // 카메라 먼저
     m_pInput->Update();                 // 입력 처리
     m_pObjectManager->Update();         // 오브젝트 관리 (배경 업데이트 포함)
+    m_pToolbar->Update();               // 툴바 업데이트
 }
 
 void CEditorCore::Render(HDC _dc)
@@ -96,10 +99,19 @@ void CEditorCore::Render(HDC _dc)
     // 2. 그리드 렌더링
     CGrid::GetInst()->Render(_dc);
 
-    // 3. 에디터 전용 렌더링
+    // 3. **Scene의 모든 오브젝트 렌더링 추가!**
+    if (m_pWorkingScene)
+    {
+        m_pWorkingScene->CScene::Render(_dc);  // CScene::Render() 명시적 호출
+    }
+
+    // 4. 에디터 전용 렌더링 (미리보기, 선택 박스 등)
     m_pRenderer->Render(_dc);
 
-    // 4. UI 렌더링 (맨 위에)
+    // 5. 툴바 렌더링 (UI보다 먼저)
+    m_pToolbar->Render(_dc);
+
+    // 6. UI 렌더링 (맨 앞)
     if (m_bShowUI)
     {
         m_pUI->Render(_dc);
@@ -138,6 +150,11 @@ void CEditorCore::Shutdown()
     {
         delete m_pCameraController;
         m_pCameraController = nullptr;
+    }
+    if (m_pToolbar)
+    {
+        delete m_pToolbar;
+        m_pToolbar = nullptr;
     }
 
     // 선택 해제

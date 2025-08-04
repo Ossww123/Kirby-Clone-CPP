@@ -220,6 +220,20 @@ const wchar_t* CEditorObjectManager::GetCurrentObjectName()
     return CObjectFactory::GetObjectTypeName(m_eCurrentObjectType);
 }
 
+void CEditorObjectManager::SetCurrentSubType(int index)
+{
+    if (index >= 0 && index < (int)m_vecCurrentCategory.size())
+    {
+        m_iCurrentSubType = index;
+        m_eCurrentObjectType = m_vecCurrentCategory[index];
+
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"Selected: %s (%d/%d)",
+            GetCurrentObjectName(), m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+    }
+}
+
 void CEditorObjectManager::InitializeBackgroundSystem()
 {
     // 사용 가능한 배경 타입들 초기화

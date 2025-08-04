@@ -4,6 +4,8 @@
 #include "CEditorObjectManager.h"
 #include "CEditorFileManager.h"
 #include "CEditorCameraController.h"
+#include "CEditorToolbar.h"
+#include "CEditorUI.h"
 
 #include "CObject.h"
 #include "CEventMgr.h"
@@ -193,28 +195,62 @@ void CEditorInput::UpdateModeInput()
 
 void CEditorInput::UpdateMouseInput()
 {
-    // 마우스 위치 업데이트
+    // 1. 원본 스크린 좌표 얻기 (그리드 스냅 적용 전)
+    Vec2 vRawMousePos = CKeyMgr::GetInst()->GetMousePos();  // 스크린 좌표
+
+    // 2. 그리드 스냅이 적용된 월드 좌표 계산 및 저장
     UpdateMousePosition();
+    Vec2 vGridSnappedPos = m_pEditorCore->GetMousePos();
 
     // 마우스 클릭 처리
     if (KEY_TAP(KEY::MOUSE_LEFT))
     {
+        // 1순위: 툴바 이벤트 처리 (원본 스크린 좌표 사용)
+        if (m_pEditorCore->GetToolbar()->HandleMouseClick(vRawMousePos))
+        {
+            return; // 툴바에서 처리했으면 더 이상 진행하지 않음
+        }
+
+        // 2순위: 오브젝트 팔레트 클릭 처리 (원본 스크린 좌표 사용)
+        if (m_pEditorCore->GetUI()->HandlePaletteClick(vRawMousePos))
+        {
+            return; // 팔레트에서 처리했으면 더 이상 진행하지 않음
+        }
+
+        // 3순위: 기본 마우스 클릭 처리 (그리드 스냅된 좌표 사용)
         m_pEditorCore->SetMouseClick(true, 0.5f);
         HandleMouseClick();
     }
 
-    // 마우스 버튼을 떼면 드래그 종료
+    // 마우스 버튼을 떼면 드래그 종료 + 툴바 MouseUp 이벤트 처리
     if (KEY_AWAY(KEY::MOUSE_LEFT))
     {
+        // 툴바 MouseUp 이벤트도 원본 스크린 좌표 사용
+        m_pEditorCore->GetToolbar()->HandleMouseUp(vRawMousePos);
+
+        // 드래그 종료
         m_pEditorCore->SetDragging(false);
     }
 
-    // 드래그 중이면 선택된 오브젝트 이동 (그리드 스냅 적용)
+    // 마우스 이동 이벤트도 툴바에는 원본 스크린 좌표 전달
+    m_pEditorCore->GetToolbar()->HandleMouseMove(vRawMousePos);
+
+    // 마우스 휠 스크롤 처리 (팔레트 스크롤용)
+    if (m_pEditorCore->GetUI()->IsInPaletteArea(vRawMousePos))
+    {
+        // 마우스 휠 입력 처리 (Windows API 사용 시)
+        // 실제 구현은 프로젝트의 입력 시스템에 따라 달라질 수 있음
+        // 예: if (KEY_TAP(KEY::MOUSE_WHEEL_UP)) { ... }
+    }
+
+    // 드래그 중이면 선택된 오브젝트 이동 (그리드 스냅된 좌표 사용)
     if (m_pEditorCore->IsDragging() &&
         m_pEditorCore->GetSelectedObject() &&
-        m_pEditorCore->GetCurrentMode() == EDITOR_MODE::SELECT)
+        m_pEditorCore->GetCurrentMode() == EDITOR_MODE::SELECT &&
+        !m_pEditorCore->GetToolbar()->IsInToolbarArea(vRawMousePos) &&
+        !m_pEditorCore->GetUI()->IsInPaletteArea(vRawMousePos))  // 팔레트 영역도 제외
     {
-        m_pEditorCore->GetSelectedObject()->SetPos(m_pEditorCore->GetMousePos());
+        m_pEditorCore->GetSelectedObject()->SetPos(vGridSnappedPos);  // 오브젝트 이동은 스냅된 좌표
     }
 }
 

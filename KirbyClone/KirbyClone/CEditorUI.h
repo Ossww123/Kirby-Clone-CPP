@@ -15,6 +15,19 @@ private:
     int m_iUIMargin;
     int m_iLineHeight;
 
+    // 오브젝트 팔레트 관련
+    int m_iPaletteX;
+    int m_iPaletteY;
+    int m_iPaletteWidth;
+    int m_iPaletteHeight;
+    int m_iItemSize;
+    int m_iItemPadding;
+    int m_iItemsPerRow;
+
+    // 스크롤 관련
+    int m_iScrollOffset;
+    int m_iMaxScroll;
+
 public:
     void Initialize(CEditorCore* _pCore, CScene* _pScene);
     void Render(HDC _dc);
@@ -36,11 +49,30 @@ private:
     void RenderSeparatorLine(HDC _dc, int yPos);
     void RenderHighlightBox(HDC _dc, int x, int y, int width, int height);
 
+    // 팔레트 세부 렌더링
+    void RenderPaletteBackground(HDC _dc);
+    void RenderPaletteHeader(HDC _dc);
+    void RenderPaletteItems(HDC _dc);
+    void RenderPaletteItem(HDC _dc, int index, OBJECT_TYPE objType, int x, int y, bool selected);
+    void RenderObjectIcon(HDC _dc, OBJECT_TYPE objType, int x, int y, int size);
+
+
     // UI 유틸리티
     void DrawUIBackground(HDC _dc);
     void SetupTextStyle(HDC _dc, COLORREF color);
     void RenderText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color = RGB(255, 255, 255));
     void RenderBoldText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color = RGB(255, 255, 100));
+
+public:
+    // 오브젝트 팔레트 렌더링
+    void RenderObjectPalette(HDC _dc);
+    bool HandlePaletteClick(Vec2 vMousePos);
+    //void UpdatePaletteScroll(int deltaY);
+
+    // 팔레트 유틸리티
+    int GetPaletteItemAt(Vec2 vMousePos);
+    bool IsInPaletteArea(Vec2 vMousePos);
+    void CalculatePaletteLayout();
 
     // 폰트 관리
     HFONT CreateUIFont(int size = 14, bool bold = false);

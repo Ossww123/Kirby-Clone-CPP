@@ -1572,3 +1572,9 @@ GetRigidBody()->SetFriction(5.f);
 - [X] CPlayer InhaleSystem 분리
 - [X] CPlayer Movement 분리
 - [X] 착지 후 착지를 반복하던 현상 수정
+
+## 2025-08-04
+
+### 완료
+
+- [x] ToolScene에 UI 추가
