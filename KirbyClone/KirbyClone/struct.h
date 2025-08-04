@@ -259,21 +259,29 @@ struct tLevelObjectData
 	{}
 };
 
-// 레벨 전체 데이터 (배경 정보 추가)
+// 레벨 전체 데이터 (배경 정보 + 경계 정보 추가)
 struct tLevelData
 {
 	wstring                     strLevelName;       // 레벨 이름
 	Vec2                        vPlayerSpawn;       // 플레이어 스폰 위치
 	vector<tLevelObjectData>    vecObjects;         // 배치된 오브젝트들
 	int                         iVersion;           // 파일 버전
-	int                         iBackgroundType;    // 배경 타입 (새로 추가)
+	int                         iBackgroundType;    // 배경 타입
+
+	// === 새로 추가: 레벨 경계 정보 ===
+	Vec2                        vLevelBoundsMin;    // 레벨 최소 경계 (좌상단)
+	Vec2                        vLevelBoundsMax;    // 레벨 최대 경계 (우하단)
+	float                       fGameOverY;         // 낙사 지점 Y좌표
 
 	tLevelData()
 		: strLevelName{}
 		, vPlayerSpawn{}
 		, vecObjects{}
-		, iVersion(2)  // 버전을 2로 업데이트 (배경 정보 추가로 인해)
-		, iBackgroundType(0)  // 새로 추가 (기본값: GREEN_HILL)
+		, iVersion(3)  // 버전을 3으로 업데이트 (경계 정보 추가로 인함)
+		, iBackgroundType(0)
+		, vLevelBoundsMin(Vec2(0.f, -1000.f))        // 기본값: x=0 이상, y=-1000 이상
+		, vLevelBoundsMax(Vec2(4000.f, 1280.f))      // 기본값: x=4000 이하, y=1280 이하
+		, fGameOverY(1280.f)                         // 기본 낙사 지점
 	{}
 };
 

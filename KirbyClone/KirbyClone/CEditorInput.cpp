@@ -60,6 +60,14 @@ void CEditorInput::UpdateGeneralInput()
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Camera reset to origin (0, 0)");
     }
 
+    // Ctrl + B: 레벨 경계 설정 모드
+    if (KEY_TAP(KEY::B) && KEY_HOLD(KEY::CTRL))
+    {
+        // 현재 오브젝트들의 범위를 계산해서 적절한 경계 자동 설정
+        m_pEditorCore->GetCameraController()->AutoSetBoundsFromObjects();
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level bounds auto-calculated from objects");
+    }
+
     // ALT + 다른 키 조합들 (ALT 키를 modifier로 사용)
     if (KEY_HOLD(KEY::ALT))
     {

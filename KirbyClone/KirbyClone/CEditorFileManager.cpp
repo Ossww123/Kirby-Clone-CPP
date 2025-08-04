@@ -2,6 +2,7 @@
 #include "CEditorFileManager.h"
 #include "CEditorCore.h"
 #include "CEditorObjectManager.h"
+#include "CEditorCameraController.h"
 
 #include "CScene.h"
 #include "CObjectFactory.h"
@@ -100,6 +101,14 @@ void CEditorFileManager::SaveLevel(const wstring& _strFileName)
 
         // 배경 타입 정보
         fwrite(&levelData.iBackgroundType, sizeof(int), 1, pFile);
+
+        // === 새로 추가: 경계 정보 저장 (버전 3 이상) ===
+        if (levelData.iVersion >= 3)
+        {
+            fwrite(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
+            fwrite(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
+            fwrite(&levelData.fGameOverY, sizeof(float), 1, pFile);
+        }
 
         // 오브젝트 개수
         size_t objCount = levelData.vecObjects.size();
@@ -206,6 +215,21 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
             m_pEditorCore->GetObjectManager()->ChangeBackground(BACKGROUND_TYPE::GREEN_HILL);
         }
 
+        // === 새로 추가: 버전 3 이상에서 경계 정보 읽기 ===
+        if (levelData.iVersion >= 3)
+        {
+            fread(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
+            fread(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
+            fread(&levelData.fGameOverY, sizeof(float), 1, pFile);
+        }
+        else
+        {
+            // 구버전 파일의 경우 기본값 사용
+            levelData.vLevelBoundsMin = Vec2(0.f, -1000.f);
+            levelData.vLevelBoundsMax = Vec2(4000.f, 1280.f);
+            levelData.fGameOverY = 1280.f;
+        }
+
         // 플레이어 스폰 위치 설정
         m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(levelData.vPlayerSpawn);
 
@@ -236,6 +260,8 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
 
         fclose(pFile);
 
+        ApplyLevelBounds(levelData);
+
         // 성공 메시지
         ShowSuccessMessage(_strFileName + L" loaded successfully!", successCount);
     }
@@ -250,9 +276,19 @@ tLevelData CEditorFileManager::CreateLevelData(const wstring& _strLevelName)
 {
     tLevelData levelData;
     levelData.strLevelName = _strLevelName;
-    levelData.iVersion = 2; // 현재 버전
+    levelData.iVersion = 3; // 현재 버전
     levelData.iBackgroundType = (int)m_pEditorCore->GetObjectManager()->GetCurrentBackgroundType();
     levelData.vPlayerSpawn = m_pEditorCore->GetObjectManager()->GetPlayerSpawnPos();
+
+    // === 새로 추가: 현재 카메라 경계 정보 가져오기 ===
+    CEditorCameraController* pCameraController = m_pEditorCore->GetCameraController();
+    if (pCameraController && pCameraController->IsCameraBoundsEnabled())
+    {
+        // 현재 설정된 카메라 경계를 레벨 경계로 저장
+        levelData.vLevelBoundsMin = pCameraController->GetCameraBoundsMin();
+        levelData.vLevelBoundsMax = pCameraController->GetCameraBoundsMax();
+        levelData.fGameOverY = levelData.vLevelBoundsMax.y; // 하단 경계를 낙사 지점으로
+    }
 
     // 모든 오브젝트 데이터 수집 (플레이어 제외)
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
@@ -415,6 +451,24 @@ void CEditorFileManager::CreateDefaultLevel()
 
     // 플레이어 스폰 위치 설정
     m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(Vec2(640.f, 400.f));
+}
+
+void CEditorFileManager::ApplyLevelBounds(const tLevelData& _levelData)
+{
+    CEditorCameraController* pCameraController = m_pEditorCore->GetCameraController();
+    if (pCameraController)
+    {
+        // 로드된 레벨의 경계 정보 적용
+        pCameraController->SetCameraBounds(_levelData.vLevelBoundsMin, _levelData.vLevelBoundsMax);
+        pCameraController->EnableCameraBounds(true);
+
+        // 카메라를 레벨 경계 내 적절한 위치로 이동
+        Vec2 vSafePos = Vec2(
+            max(_levelData.vLevelBoundsMin.x, 0.f),
+            _levelData.fGameOverY
+        );
+        pCameraController->SetCameraPosition(vSafePos);
+    }
 }
 
 wstring CEditorFileManager::GetLevelDirectory()

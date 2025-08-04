@@ -46,6 +46,9 @@ public:
     void EnableCameraBounds(bool _bEnable) { m_bUseCameraBounds = _bEnable; }
     bool IsCameraBoundsEnabled() { return m_bUseCameraBounds; }
 
+    Vec2 GetCameraBoundsMin() const { return m_vCameraBoundsMin; }
+    Vec2 GetCameraBoundsMax() const { return m_vCameraBoundsMax; }
+
     // 카메라 상태
     bool IsCameraMoving() { return m_bCameraMoving; }
 
@@ -53,6 +56,7 @@ public:
     void ResetCameraToOrigin();
     void FocusOnPlayerSpawn();
     void FocusOnObjects();
+    void AutoSetBoundsFromObjects();
 
 private:
     void UpdateCameraMovement();

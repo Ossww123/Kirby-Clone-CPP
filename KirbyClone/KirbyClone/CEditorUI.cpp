@@ -3,6 +3,7 @@
 #include "CEditorCore.h"
 #include "CEditorObjectManager.h"
 #include "CEditorToolbar.h"
+#include "CEditorCameraController.h"
 
 #include "CCore.h"
 #include "CScene.h"
@@ -51,7 +52,7 @@ void CEditorUI::Render(HDC _dc)
     if (!m_pEditorCore->IsShowUI())
         return;
 
-    RenderMainUI(_dc);
+    //RenderMainUI(_dc);
     RenderObjectPalette(_dc);
 }
 
@@ -90,6 +91,7 @@ void CEditorUI::RenderMainUI(HDC _dc)
     RenderObjectInfo(_dc, yPos);
     RenderTileVisualSettings(_dc, yPos);
     RenderGridInfo(_dc, yPos);
+    RenderLevelBounds(_dc, yPos);
     RenderObjectCount(_dc, yPos);
     RenderControlInstructions(_dc, yPos);
     RenderBackgroundModeUI(_dc, yPos);
@@ -350,6 +352,33 @@ void CEditorUI::RenderBackgroundModeUI(HDC _dc, int& yPos)
         }
 
         RenderText(_dc, 20, yPos, L"Click or Q/E to change", RGB(200, 200, 255));
+    }
+}
+
+// CEditorUI.cpp¿¡ Ãß°¡
+void CEditorUI::RenderLevelBounds(HDC _dc, int& yPos)
+{
+    RenderBoldText(_dc, 20, yPos, L"Level Bounds:", RGB(255, 255, 100));
+    yPos += m_iLineHeight;
+
+    CEditorCameraController* pCamera = m_pEditorCore->GetCameraController();
+    if (pCamera && pCamera->IsCameraBoundsEnabled())
+    {
+        Vec2 vMin = pCamera->GetCameraBoundsMin();
+        Vec2 vMax = pCamera->GetCameraBoundsMax();
+
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"X: %.0f ~ %.0f", vMin.x, vMax.x);
+        RenderText(_dc, 20, yPos, szBuffer);
+        yPos += m_iLineHeight;
+
+        swprintf_s(szBuffer, L"Y: %.0f ~ %.0f", vMin.y, vMax.y);
+        RenderText(_dc, 20, yPos, szBuffer);
+        yPos += m_iLineHeight;
+
+        swprintf_s(szBuffer, L"GameOver Y: %.0f", vMax.y);
+        RenderText(_dc, 20, yPos, szBuffer, RGB(255, 100, 100));
+        yPos += m_iLineHeight + 5;
     }
 }
 

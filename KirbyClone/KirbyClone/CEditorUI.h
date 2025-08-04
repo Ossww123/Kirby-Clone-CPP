@@ -43,6 +43,7 @@ private:
     void RenderObjectCount(HDC _dc, int& yPos);
     void RenderControlInstructions(HDC _dc, int& yPos);
     void RenderBackgroundModeUI(HDC _dc, int& yPos);
+    void RenderLevelBounds(HDC _dc, int& yPos);
 
     // UI 구성 요소 렌더링
     void RenderUIHeader(HDC _dc, int& yPos);

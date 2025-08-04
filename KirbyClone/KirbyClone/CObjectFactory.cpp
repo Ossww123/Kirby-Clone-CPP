@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "CObjectFactory.h"
+#include "CTileMgr.h"
 
 #include "CObject.h"
 #include "CPlayer.h"
+#include "CCollider.h"
 #include "CMonster.h"
 #include "CItem.h"
 #include "CTile.h"
@@ -158,19 +160,32 @@ CObject* CObjectFactory::CreateTile(OBJECT_TYPE _eTileType, Vec2 _vPos)
     // 모든 타일은 기본적으로 64x64 (한 타일 크기)
     pTile->SetScale(Vec2(64.f, 64.f));
 
+    // 1. 콜라이더 추가 (충돌 처리용)
+    if (pTile->IsSolid() && !pTile->IsDecorative())
+    {
+        pTile->CreateCollider();
+        pTile->GetCollider()->SetScale(Vec2(64.f, 64.f));
+    }
+
+    // 2. 비주얼 타입 설정 및 텍스처 로드
+    TILE_VISUAL_TYPE visualType = TILE_VISUAL_TYPE::GRASS_PLATFORM;
+
     switch (_eTileType)
     {
     case OBJECT_TYPE::TILE_GROUND:
+        visualType = TILE_VISUAL_TYPE::GRASS_PLATFORM;
         pTile->SetSolid(true);
         pTile->SetHarmful(false);
         break;
 
     case OBJECT_TYPE::TILE_SPIKE:
+        visualType = TILE_VISUAL_TYPE::SPIKE;
         pTile->SetSolid(true);
         pTile->SetHarmful(true);
         break;
 
     case OBJECT_TYPE::TILE_WATER:
+        visualType = TILE_VISUAL_TYPE::WATER;
         pTile->SetSolid(false);
         pTile->SetHarmful(false);
         break;
@@ -181,7 +196,10 @@ CObject* CObjectFactory::CreateTile(OBJECT_TYPE _eTileType, Vec2 _vPos)
         break;
     }
 
-    SetupTileProperties(pTile, _eTileType);
+    // 3. 타일 설정 적용
+    pTile->SetVisualType(visualType);
+    CTileMgr::GetInst()->SetupTileProperties(pTile, visualType);
+
     return pTile;
 }
 

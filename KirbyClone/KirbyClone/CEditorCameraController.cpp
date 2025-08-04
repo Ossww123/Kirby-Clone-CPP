@@ -12,14 +12,14 @@
 
 CEditorCameraController::CEditorCameraController()
     : m_pEditorCore(nullptr)
-    , m_fCameraSpeed(500.f)
-    , m_fFastSpeed(1000.f)
-    , m_fSlowSpeed(200.f)
+    , m_fCameraSpeed(1000.f)
+    , m_fFastSpeed(1500.f)
+    , m_fSlowSpeed(700.f)
     , m_bCameraMoving(false)
     , m_vLastCameraPos{}
     , m_bUseCameraBounds(false)
     , m_vCameraBoundsMin(Vec2(-2000.f, -2000.f))
-    , m_vCameraBoundsMax(Vec2(4000.f, 2000.f))
+    , m_vCameraBoundsMax(Vec2(4000.f, 1280.f))
 {
 }
 
@@ -36,7 +36,14 @@ void CEditorCameraController::Initialize(CEditorCore* _pCore)
     m_bCameraMoving = false;
 
     // 기본 카메라 범위 설정 (필요시)
-    m_bUseCameraBounds = false;
+    m_bUseCameraBounds = true;
+    m_vCameraBoundsMin = Vec2(0.f, -1000.f);  // 위쪽 제한
+    m_vCameraBoundsMax = Vec2(4000.f, 1280.f);    // 낙사 지점까지만
+
+    // 초기 카메라 위치를 (0, 1280)으로 설정
+    CCamera::GetInst()->SetLookAt(Vec2(960.f, 960.f));
+    m_vLastCameraPos = Vec2(960.f, 960.f);
+    m_bCameraMoving = false;
 }
 
 void CEditorCameraController::Update()
@@ -49,8 +56,8 @@ void CEditorCameraController::ResetCameraPosition()
 {
     if (m_pEditorCore && m_pEditorCore->GetWorkingScene())
     {
-        // 카메라를 원점(0, 0)으로 이동
-        CCamera::GetInst()->SetLookAt(Vec2(0.f, 0.f));
+        // 카메라를 원점(0, 1280)으로 이동
+        CCamera::GetInst()->SetLookAt(Vec2(960.f, 960.f));
     }
 }
 
@@ -279,4 +286,39 @@ void CEditorCameraController::FocusOnObjects()
         FocusOnPlayerSpawn();
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"No objects found - focused on player spawn");
     }
+}
+
+void CEditorCameraController::AutoSetBoundsFromObjects()
+{
+    CScene* pScene = m_pEditorCore->GetWorkingScene();
+
+    Vec2 vMinPos = Vec2(0.f, -1000.f);  // 최소값은 고정
+    Vec2 vMaxPos = Vec2(1000.f, 1280.f); // 기본값
+
+    // 모든 오브젝트의 최대 범위 계산
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
+    {
+        if (i == (UINT)GROUP_TYPE::PLAYER) continue;
+
+        const vector<CObject*>& vecObj = pScene->GetGroupObject((GROUP_TYPE)i);
+        for (size_t j = 0; j < vecObj.size(); ++j)
+        {
+            if (vecObj[j] && !vecObj[j]->IsDead())
+            {
+                Vec2 vPos = vecObj[j]->GetPos();
+                Vec2 vScale = vecObj[j]->GetScale();
+
+                // 오브젝트의 우하단 경계 계산
+                float fRight = vPos.x + vScale.x / 2.f;
+                float fTop = vPos.y - vScale.y / 2.f;
+
+                if (fRight > vMaxPos.x) vMaxPos.x = fRight + 200.f; // 여유 공간 추가
+                if (fTop < vMinPos.y) vMinPos.y = fTop - 200.f;     // 여유 공간 추가
+            }
+        }
+    }
+
+    // 계산된 경계 적용
+    SetCameraBounds(vMinPos, vMaxPos);
+    EnableCameraBounds(true);
 }

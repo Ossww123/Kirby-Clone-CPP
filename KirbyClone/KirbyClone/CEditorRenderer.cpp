@@ -27,6 +27,10 @@ void CEditorRenderer::Render(HDC _dc)
 {
     // 렌더링 순서 (z-order)
 
+    // 0. 낙사 경고선 (배경 위에, 오브젝트 아래)
+    RenderGameOverLine(_dc);     // 수평 낙사선
+    RenderLeftBoundaryLine(_dc); // 수직 경계선
+
     // 1. 플레이어 스폰 포인트 (배경 위에)
     if (m_pEditorCore->GetObjectManager()->IsShowPlayerSpawn())
     {
@@ -248,6 +252,96 @@ void CEditorRenderer::RenderGridPreview(HDC _dc, Vec2 vRenderPos)
 
     // 그리드 셀 경계 표시
     DrawDottedRectangle(_dc, vRenderPos, Vec2(fGridSize, fGridSize), gridColor);
+}
+
+void CEditorRenderer::RenderGameOverLine(HDC _dc)
+{
+    const float GAME_OVER_Y = 1280.f;
+
+    Vec2 vResolution = CCore::GetInst()->GetResolution();
+    Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
+
+    // 화면 좌우 끝점 계산 (x=0 이상만)
+    float fScreenLeft = max(0.f, vCameraPos.x - vResolution.x / 2.f);  // x=0 이상으로 제한
+    float fScreenRight = vCameraPos.x + vResolution.x / 2.f;
+
+    Vec2 vLeftPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenLeft, GAME_OVER_Y));
+    Vec2 vRightPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenRight, GAME_OVER_Y));
+
+    // 경고선이 화면에 보이는지 체크
+    if (GAME_OVER_Y >= vCameraPos.y - vResolution.y / 2.f &&
+        GAME_OVER_Y <= vCameraPos.y + vResolution.y / 2.f)
+    {
+        // 빨간 점선으로 경고선 그리기
+        HPEN hWarningPen = CreatePen(PS_DOT, 3, RGB(255, 50, 50));
+        HPEN hOldPen = (HPEN)SelectObject(_dc, hWarningPen);
+
+        MoveToEx(_dc, (int)vLeftPoint.x, (int)vLeftPoint.y, nullptr);
+        LineTo(_dc, (int)vRightPoint.x, (int)vRightPoint.y);
+
+        // "GAME OVER LINE" 텍스트 표시
+        SetTextColor(_dc, RGB(255, 50, 50));
+        SetBkMode(_dc, TRANSPARENT);
+
+        HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
+        HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+
+        wchar_t szWarning[] = L"GAME OVER LINE (Y: 1280)";
+        TextOut(_dc, (int)vLeftPoint.x + 10, (int)vLeftPoint.y - 25, szWarning, (int)wcslen(szWarning));
+
+        SelectObject(_dc, hOldFont);
+        SelectObject(_dc, hOldPen);
+        DeleteObject(hFont);
+        DeleteObject(hWarningPen);
+    }
+}
+
+void CEditorRenderer::RenderLeftBoundaryLine(HDC _dc)
+{
+    const float LEFT_BOUNDARY_X = 0.f;
+
+    // 화면 전체 높이에 걸쳐 경계선 그리기
+    Vec2 vResolution = CCore::GetInst()->GetResolution();
+    Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
+
+    // 화면 상하 끝점 계산
+    float fScreenTop = vCameraPos.y - vResolution.y / 2.f;
+    float fScreenBottom = vCameraPos.y + vResolution.y / 2.f;
+
+    // 월드 좌표를 화면 좌표로 변환
+    Vec2 vTopPoint = CCamera::GetInst()->GetRenderPos(Vec2(LEFT_BOUNDARY_X, fScreenTop));
+    Vec2 vBottomPoint = CCamera::GetInst()->GetRenderPos(Vec2(LEFT_BOUNDARY_X, fScreenBottom));
+
+    // 경계선이 화면에 보이는지 체크
+    if (LEFT_BOUNDARY_X >= vCameraPos.x - vResolution.x / 2.f &&
+        LEFT_BOUNDARY_X <= vCameraPos.x + vResolution.x / 2.f)
+    {
+        // 빨간 점선으로 경계선 그리기
+        HPEN hBoundaryPen = CreatePen(PS_DOT, 2, RGB(255, 100, 100));
+        HPEN hOldPen = (HPEN)SelectObject(_dc, hBoundaryPen);
+
+        MoveToEx(_dc, (int)vTopPoint.x, (int)vTopPoint.y, nullptr);
+        LineTo(_dc, (int)vBottomPoint.x, (int)vBottomPoint.y);
+
+        // "LEFT BOUNDARY" 텍스트 표시 (세로로)
+        SetTextColor(_dc, RGB(255, 100, 100));
+        SetBkMode(_dc, TRANSPARENT);
+
+        HFONT hFont = CreateFont(14, 0, 900, 0, FW_BOLD, FALSE, FALSE, FALSE,  // 900 = 90도 회전
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
+        HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+
+        wchar_t szBoundary[] = L"LEFT BOUNDARY (X: 0)";
+        TextOut(_dc, (int)vTopPoint.x + 5, (int)vTopPoint.y + 50, szBoundary, (int)wcslen(szBoundary));
+
+        SelectObject(_dc, hOldFont);
+        SelectObject(_dc, hOldPen);
+        DeleteObject(hFont);
+        DeleteObject(hBoundaryPen);
+    }
 }
 
 COLORREF CEditorRenderer::GetModeColor()

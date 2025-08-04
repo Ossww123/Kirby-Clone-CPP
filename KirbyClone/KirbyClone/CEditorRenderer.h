@@ -26,6 +26,8 @@ private:
     void RenderDeletePreview(HDC _dc, CObject* pTargetObj);
     void RenderSelectionBox(HDC _dc, CObject* pObj);
     void RenderGridPreview(HDC _dc, Vec2 vRenderPos);
+    void RenderGameOverLine(HDC _dc);
+    void RenderLeftBoundaryLine(HDC _dc);
 
     // 색상 결정
     COLORREF GetModeColor();

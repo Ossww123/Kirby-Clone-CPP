@@ -35,6 +35,7 @@ private:
     // 씬 관리
     void ClearScene();
     void CreateDefaultLevel();
+    void ApplyLevelBounds(const tLevelData& _levelData);
 
     // 파일 경로 유틸리티
     wstring GetLevelDirectory();
