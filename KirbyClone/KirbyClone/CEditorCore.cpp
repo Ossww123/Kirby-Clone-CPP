@@ -166,6 +166,22 @@ void CEditorCore::ChangeMode(EDITOR_MODE _eMode)
 {
     m_eCurrentMode = _eMode;
 
+    switch (_eMode)
+    {
+    case EDITOR_MODE::PLACE_MONSTER:
+        m_pObjectManager->ChangeObjectCategory(L"Monster");
+        break;
+    case EDITOR_MODE::PLACE_ITEM:
+        m_pObjectManager->ChangeObjectCategory(L"Item");
+        break;
+    case EDITOR_MODE::PLACE_TILE:
+        m_pObjectManager->ChangeObjectCategory(L"Tile");
+        break;
+    case EDITOR_MODE::PLACE_SPECIAL:
+        m_pObjectManager->ChangeObjectCategory(L"Special");
+        break;
+    }
+
     // 모드 변경 시 선택 해제
     if (_eMode != EDITOR_MODE::SELECT)
     {

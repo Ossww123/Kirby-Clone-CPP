@@ -7,6 +7,7 @@ class CRigidBody;
 class CPlayerStateMachine;
 class CPlayerInhaleSystem;
 class CPlayerMovement;
+class CPlayerHealthSystem;
 
 class CPlayer : public CObject
 {
@@ -16,7 +17,8 @@ private:
     CRigidBody* m_pRigidBody;               // 리지드바디 컴포넌트
     CPlayerStateMachine* m_pStateMachine;   // 상태 관리 시스템
     CPlayerInhaleSystem* m_pInhaleSystem;   // 빨아들이기 시스템
-    CPlayerMovement* m_pMovement;           // 이동 시스템 (새로 추가)
+    CPlayerMovement* m_pMovement;           // 이동 시스템
+    CPlayerHealthSystem* m_pHealthSystem;   // 체력 시스템
 
 public:
     CPlayer();
@@ -62,6 +64,24 @@ public:
     float GetCurrentSpeed() const;
     void SetFacingDirection(bool _bRight);
     bool IsDecelerating() const;
+
+    // === 시스템 접근자 ===
+    CPlayerHealthSystem* GetHealthSystem() { return m_pHealthSystem; }
+
+    // === 체력 관련 래퍼 함수들 (기존 인터페이스 유지) ===
+    void TakeDamage(int _iDamage = 1, Vec2 _vKnockbackDir = Vec2(0.f, 0.f));
+    void Heal(int _iHeal = 1);
+    void SetHP(int _iHP);
+    int GetCurrentHP() const;
+    int GetMaxHP() const;
+    float GetHPRatio() const;
+    bool IsInvincible() const;
+    bool IsGameOver() const;
+    void SetGameOverY(float _fY);
+    void RestartStage();
+
+    // 렌더링 제어
+    bool ShouldRenderBlink() const;
 
 private:
     void RenderFlippedAnimation(HDC _dc, CAnimation* _pAnim, Vec2 _vRenderPos);

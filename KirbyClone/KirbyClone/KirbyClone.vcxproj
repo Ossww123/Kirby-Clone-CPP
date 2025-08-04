@@ -164,6 +164,7 @@
     <ClInclude Include="CObjectFactory.h" />
     <ClInclude Include="CPathMgr.h" />
     <ClInclude Include="CPlayer.h" />
+    <ClInclude Include="CPlayerHealthSystem.h" />
     <ClInclude Include="CPlayerInhaleSystem.h" />
     <ClInclude Include="CPlayerMovement.h" />
     <ClInclude Include="CPlayerStateMachine.h" />
@@ -215,6 +216,7 @@
     <ClCompile Include="CObjectFactory.cpp" />
     <ClCompile Include="CPathMgr.cpp" />
     <ClCompile Include="CPlayer.cpp" />
+    <ClCompile Include="CPlayerHealthSystem.cpp" />
     <ClCompile Include="CPlayerInhaleSystem.cpp" />
     <ClCompile Include="CPlayerMovement.cpp" />
     <ClCompile Include="CPlayerStateMachine.cpp" />

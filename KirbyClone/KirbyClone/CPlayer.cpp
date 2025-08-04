@@ -8,6 +8,7 @@
 #include "CPlayerStateMachine.h"
 #include "CPlayerInhaleSystem.h"
 #include "CPlayerMovement.h"
+#include "CPlayerHealthSystem.h"
 #include "CKeyMgr.h"
 #include "CTimeMgr.h"
 #include "CTile.h"
@@ -22,6 +23,7 @@ CPlayer::CPlayer()
     , m_pStateMachine(nullptr)
     , m_pInhaleSystem(nullptr)
     , m_pMovement(nullptr)
+    , m_pHealthSystem(nullptr)
 {
     // === 컴포넌트들 생성 (기존 방식) ===
     CreateAnimator();
@@ -45,11 +47,13 @@ CPlayer::CPlayer()
     m_pStateMachine = new CPlayerStateMachine(this);
     m_pInhaleSystem = new CPlayerInhaleSystem(this);
     m_pMovement = new CPlayerMovement(this);
+    m_pHealthSystem = new CPlayerHealthSystem(this);
 
     // === 시스템들 초기화 ===
     m_pStateMachine->Init(m_pAnimator, m_pRigidBody);
     m_pInhaleSystem->Init();
     m_pMovement->Init(m_pRigidBody);
+    m_pHealthSystem->Init();
 
     // === 애니메이션 생성 ===
     CreateAnimation();
@@ -78,10 +82,24 @@ CPlayer::~CPlayer()
         delete m_pMovement;
         m_pMovement = nullptr;
     }
+
+    if (m_pHealthSystem)
+    {
+        delete m_pHealthSystem;
+        m_pHealthSystem = nullptr;
+    }
 }
 
 void CPlayer::Update()
 {
+    // === 체력 시스템 업데이트 ===
+    if (m_pHealthSystem)
+        m_pHealthSystem->Update();
+
+    // 게임오버 상태라면 다른 업데이트 중지
+    if (m_pHealthSystem && m_pHealthSystem->IsGameOver())
+        return;
+
     // === 흡입 관련 입력 처리 ===
     UpdateInhale();
 
@@ -360,37 +378,55 @@ void CPlayer::CreateAnimation()
 
 void CPlayer::Render(HDC _dc)
 {
-    // 애니메이션 렌더링
-    if (nullptr != m_pAnimator)
+    // 게임오버가 아닐 때만 플레이어 렌더링
+    if (!m_pHealthSystem || !m_pHealthSystem->IsGameOver())
     {
-        CAnimation* pCurAnim = m_pAnimator->GetCurAnim();
-        if (pCurAnim)
+        // 무적 상태 깜빡임 체크
+        bool bShouldRender = true;
+        if (m_pHealthSystem && m_pHealthSystem->IsInvincible())
         {
-            Vec2 vPos = GetPos();
+            bShouldRender = m_pHealthSystem->ShouldRenderBlink();
+        }
 
-            if (!IsFacingRight())
+        if (bShouldRender)
+        {
+            // 기존 애니메이션 렌더링 코드 (방향에 따른 렌더링)
+            if (m_pAnimator)
             {
-                // 왼쪽을 보고 있을 때 - 스프라이트 뒤집기
-                Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
-                RenderFlippedAnimation(_dc, pCurAnim, vRenderPos);
+                CAnimation* pCurAnim = m_pAnimator->GetCurAnim();
+                if (pCurAnim)
+                {
+                    Vec2 vPos = GetPos();
+
+                    if (!IsFacingRight())
+                    {
+                        // 왼쪽을 보고 있을 때 - 스프라이트 뒤집기
+                        Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
+                        RenderFlippedAnimation(_dc, pCurAnim, vRenderPos);
+                    }
+                    else
+                    {
+                        // 오른쪽을 보고 있을 때 - 기본 렌더링
+                        pCurAnim->Render(_dc, vPos);
+                    }
+                }
             }
-            else
-            {
-                // 오른쪽을 보고 있을 때 - 기본 렌더링
-                pCurAnim->Render(_dc, vPos);
-            }
+
+            // 충돌체 렌더링 (디버그용)
+            if (GetCollider())
+                GetCollider()->Render(_dc);
         }
     }
 
-    // 흡입하기 중일 때 범위 표시
+    // === 흡입 효과 렌더링 (무적 상태와 관계없이 항상 표시) ===
     if (m_pInhaleSystem)
     {
         m_pInhaleSystem->RenderInhaleEffect(_dc);
     }
 
-    // 충돌체 렌더링 (디버그용)
-    if (nullptr != GetCollider())
-        GetCollider()->Render(_dc);
+    // 체력 시스템 UI 렌더링 (항상 표시)
+    if (m_pHealthSystem)
+        m_pHealthSystem->Render(_dc);
 }
 
 void CPlayer::RenderFlippedAnimation(HDC _dc, CAnimation* _pAnim, Vec2 _vRenderPos)
@@ -435,7 +471,7 @@ void CPlayer::OnCollisionEnter(CCollider* _pOther)
 {
     CObject* pOtherObj = _pOther->GetOwner();
 
-    // 타일과의 충돌 처리
+    // === 타일과의 충돌 처리 (기존 코드 유지) ===
     CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
     if (pTile && pTile->IsSolid())
     {
@@ -466,30 +502,52 @@ void CPlayer::OnCollisionEnter(CCollider* _pOther)
 
             SetWindowText(CCore::GetInst()->GetMainHwnd(), L"타일 위에 착지!");
         }
+        return; // 타일 처리 후 리턴
     }
 
-    // 몬스터와의 충돌 처리
+    // === 몬스터와의 충돌 처리 (체력 시스템 통합) ===
     CMonster* pMonster = dynamic_cast<CMonster*>(pOtherObj);
     if (pMonster)
     {
-        // 빨아들이기 중이고 범위 내에 있다면 자동으로 흡수
+        // 흡어들이기 중이고 범위 내에 있다면 자동으로 흡수
         if (IsInhaling())
         {
             Vec2 vDiff = GetPos() - pMonster->GetPos();
             if (vDiff.Length() < 60.f)
             {
                 SwallowTarget(pMonster);
+                SetWindowText(CCore::GetInst()->GetMainHwnd(), L"몬스터 흡수!");
                 return;
             }
         }
 
-        // 머금은 상태가 아니고 빨아들이기 중이 아니라면 데미지
-        if (!HasMouthful() && !IsInhaling())
+        // 입에 물고 있는 상태가 아니고 흡입 중이 아니라면 데미지 처리
+        if (!HasMouthful() && !IsInhaling() && m_pHealthSystem)
         {
-            SetWindowText(CCore::GetInst()->GetMainHwnd(), L"몬스터와 충돌! 데미지!");
-            // TODO: 실제 데미지 시스템 구현 시 여기에 추가
+            // 체력 시스템이 무적 상태가 아닐 때만 데미지
+            if (!m_pHealthSystem->IsInvincible())
+            {
+                // 넉백 방향 계산 (몬스터에서 플레이어 방향)
+                Vec2 vMonsterPos = pMonster->GetPos();
+                Vec2 vPlayerPos = GetPos();
+                Vec2 vKnockbackDir = vPlayerPos - vMonsterPos;
+                vKnockbackDir.Normalize();
+
+                // 체력 시스템을 통해 데미지 적용 (넉백 포함)
+                m_pHealthSystem->TakeDamage(1, vKnockbackDir);
+
+                SetWindowText(CCore::GetInst()->GetMainHwnd(), L"몬스터와 충돌! 데미지!");
+            }
+            else
+            {
+                SetWindowText(CCore::GetInst()->GetMainHwnd(), L"무적 상태! 데미지 무시");
+            }
         }
+        return;
     }
+
+    // === 기타 오브젝트와의 충돌 처리 ===
+    // TODO: 아이템, 파워업 등의 충돌 처리를 여기에 추가
 }
 
 void CPlayer::OnCollision(CCollider* _pOther)
@@ -680,4 +738,64 @@ void CPlayer::ReleaseMouthful()
 {
     if (m_pInhaleSystem)
         m_pInhaleSystem->ReleaseMouthful();
+}
+
+void CPlayer::TakeDamage(int _iDamage, Vec2 _vKnockbackDir)
+{
+    if (m_pHealthSystem)
+        m_pHealthSystem->TakeDamage(_iDamage, _vKnockbackDir);
+}
+
+void CPlayer::Heal(int _iHeal)
+{
+    if (m_pHealthSystem)
+        m_pHealthSystem->Heal(_iHeal);
+}
+
+void CPlayer::SetHP(int _iHP)
+{
+    if (m_pHealthSystem)
+        m_pHealthSystem->SetHP(_iHP);
+}
+
+int CPlayer::GetCurrentHP() const
+{
+    return m_pHealthSystem ? m_pHealthSystem->GetCurrentHP() : 0;
+}
+
+int CPlayer::GetMaxHP() const
+{
+    return m_pHealthSystem ? m_pHealthSystem->GetMaxHP() : 0;
+}
+
+float CPlayer::GetHPRatio() const
+{
+    return m_pHealthSystem ? m_pHealthSystem->GetHPRatio() : 0.f;
+}
+
+bool CPlayer::IsInvincible() const
+{
+    return m_pHealthSystem ? m_pHealthSystem->IsInvincible() : false;
+}
+
+bool CPlayer::IsGameOver() const
+{
+    return m_pHealthSystem ? m_pHealthSystem->IsGameOver() : false;
+}
+
+void CPlayer::SetGameOverY(float _fY)
+{
+    if (m_pHealthSystem)
+        m_pHealthSystem->SetGameOverY(_fY);
+}
+
+void CPlayer::RestartStage()
+{
+    if (m_pHealthSystem)
+        m_pHealthSystem->RestartStage();
+}
+
+bool CPlayer::ShouldRenderBlink() const
+{
+    return m_pHealthSystem ? m_pHealthSystem->ShouldRenderBlink() : false;
 }

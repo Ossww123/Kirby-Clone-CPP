@@ -1577,4 +1577,6 @@ GetRigidBody()->SetFriction(5.f);
 
 ### 완료
 
-- [x] ToolScene에 UI 추가
+- [X] ToolScene에 UI 추가
+- [X] 체력 시스템과 게임오버 추가
+- [X] 레벨 에디터에서 오브젝트 팔레트가 안 바뀌던 오류 수정
