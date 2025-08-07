@@ -128,6 +128,18 @@
     <Filter Include="Engine\04. Object\Player\PlayerHealthSystem">
       <UniqueIdentifier>{3b74f15f-0057-4e20-ab69-267ad695fdba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Stage\Stage02">
+      <UniqueIdentifier>{2e2eb7a7-344d-4be9-9d96-178e72fdb02c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Door">
+      <UniqueIdentifier>{b87cb695-2453-43a7-a4da-58ff5d6c7efb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource\StageImage">
+      <UniqueIdentifier>{1ad94b0b-dc52-41d7-8fee-1e598b88d528}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\StageMgr">
+      <UniqueIdentifier>{3f60bf91-0b84-4c08-be2a-4847ee6c66de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -278,6 +290,18 @@
     <ClInclude Include="CPlayerHealthSystem.h">
       <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
     </ClInclude>
+    <ClInclude Include="CScene_Stage02.h">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
+    </ClInclude>
+    <ClInclude Include="CDoor.h">
+      <Filter>Engine\04. Object\Door</Filter>
+    </ClInclude>
+    <ClInclude Include="CStageImage.h">
+      <Filter>Engine\06. Resource\StageImage</Filter>
+    </ClInclude>
+    <ClInclude Include="CStageMgr.h">
+      <Filter>Engine\03. Manager\StageMgr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -419,6 +443,18 @@
     </ClCompile>
     <ClCompile Include="CPlayerHealthSystem.cpp">
       <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CScene_Stage02.cpp">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
+    </ClCompile>
+    <ClCompile Include="CDoor.cpp">
+      <Filter>Engine\04. Object\Door</Filter>
+    </ClCompile>
+    <ClCompile Include="CStageImage.cpp">
+      <Filter>Engine\06. Resource\StageImage</Filter>
+    </ClCompile>
+    <ClCompile Include="CStageMgr.cpp">
+      <Filter>Engine\03. Manager\StageMgr</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

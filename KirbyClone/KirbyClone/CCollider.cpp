@@ -23,6 +23,40 @@ Vec2 CCollider::GetFinalPos()
     return vObjectPos + m_vOffsetPos;
 }
 
+void CCollider::AddCollidingCollider(CCollider* _pOther)
+{
+    // 이미 목록에 있는지 확인
+    for (CCollider* pCollider : m_vecCollidingColliders)
+    {
+        if (pCollider == _pOther)
+            return; // 이미 존재함
+    }
+
+    // 목록에 추가
+    m_vecCollidingColliders.push_back(_pOther);
+}
+
+void CCollider::RemoveCollidingCollider(CCollider* _pOther)
+{
+    // 벡터에서 해당 콜라이더 제거
+    auto iter = std::find(m_vecCollidingColliders.begin(), m_vecCollidingColliders.end(), _pOther);
+    if (iter != m_vecCollidingColliders.end())
+    {
+        m_vecCollidingColliders.erase(iter);
+    }
+}
+
+bool CCollider::IsCollidingWith(CCollider* _pOther) const
+{
+    // 현재 충돌 중인지 확인
+    for (CCollider* pCollider : m_vecCollidingColliders)
+    {
+        if (pCollider == _pOther)
+            return true;
+    }
+    return false;
+}
+
 void CCollider::FinalUpdate()
 {
     // 충돌체의 위치를 따라감

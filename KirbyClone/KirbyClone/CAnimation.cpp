@@ -77,19 +77,27 @@ void CAnimation::Render(HDC _dc, Vec2 _vPos)
     // 현재 프레임 정보 가져오기
     tAnimFrame& frame = m_vecFrame[m_iCurFrame];
 
-    // 마젠타 투명 처리를 위한 TransparentBlt 사용
-    // RGB(255, 0, 255) = 마젠타 색상을 투명으로 처리
-    TransparentBlt(_dc,
-        (int)(vRenderPos.x - frame.vSlice.x / 2.f),     // 대상 좌상단 X
-        (int)(vRenderPos.y - frame.vSlice.y / 2.f),     // 대상 좌상단 Y
-        (int)frame.vSlice.x,                            // 가로 크기
-        (int)frame.vSlice.y,                            // 세로 크기
-        m_pTex->GetDC(),                                // 소스 DC
-        (int)frame.vLT.x,                               // 소스 좌상단 X
-        (int)frame.vLT.y,                               // 소스 좌상단 Y
-        (int)frame.vSlice.x,                            // 소스 가로 크기
-        (int)frame.vSlice.y,                            // 소스 세로 크기
-        RGB(255, 0, 255));                              // 투명 처리할 색상 (마젠타)
+    // 알파 채널 지원 여부에 따라 적절한 렌더링 방식 선택
+    if (m_pTex->HasAlpha())
+    {
+        // 32비트 알파 채널 렌더링
+        m_pTex->RenderSpriteWithAlpha(_dc,
+            vRenderPos,
+            frame.vLT,          // 소스 시작 위치
+            frame.vSlice,       // 소스 크기
+            frame.vSlice,       // 대상 크기 (동일하게)
+            1.0f);              // 불투명도 100%
+    }
+    else
+    {
+        // 기존 마젠타 키 색상 방식 (24비트 호환)
+        m_pTex->RenderSpriteWithColorKey(_dc,
+            vRenderPos,
+            frame.vLT,          // 소스 시작 위치
+            frame.vSlice,       // 소스 크기
+            frame.vSlice,       // 대상 크기
+            RGB(255, 0, 255));  // 마젠타 투명색
+    }
 }
 
 void CAnimation::Reset()
@@ -97,6 +105,40 @@ void CAnimation::Reset()
     m_iCurFrame = 0;
     m_fAccTime = 0.f;
     m_bFinish = false;
+}
+
+void CAnimation::RenderWithAlpha(HDC _dc, Vec2 _vPos, float _fAlpha)
+{
+    if (nullptr == m_pTex || m_vecFrame.empty())
+        return;
+
+    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(_vPos);
+    tAnimFrame& frame = m_vecFrame[m_iCurFrame];
+
+    if (m_pTex->HasAlpha())
+    {
+        // 알파 채널 + 추가 투명도 적용
+        m_pTex->RenderSpriteWithAlpha(_dc,
+            vRenderPos,
+            frame.vLT,
+            frame.vSlice,
+            frame.vSlice,
+            _fAlpha);
+    }
+    else
+    {
+        // 알파 채널이 없으면 키 색상 방식으로만 가능
+        if (_fAlpha > 0.5f)  // 50% 이상이면 완전 불투명으로 표시
+        {
+            m_pTex->RenderSpriteWithColorKey(_dc,
+                vRenderPos,
+                frame.vLT,
+                frame.vSlice,
+                frame.vSlice,
+                RGB(255, 0, 255));
+        }
+        // 50% 미만이면 렌더링하지 않음 (키 색상 방식의 한계)
+    }
 }
 
 void CAnimation::AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration)

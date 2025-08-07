@@ -147,6 +147,7 @@
     <ClInclude Include="CCollider.h" />
     <ClInclude Include="CCollisionMgr.h" />
     <ClInclude Include="CCore.h" />
+    <ClInclude Include="CDoor.h" />
     <ClInclude Include="CEditorCameraController.h" />
     <ClInclude Include="CEditorCore.h" />
     <ClInclude Include="CEditorFileManager.h" />
@@ -174,9 +175,12 @@
     <ClInclude Include="CScene.h" />
     <ClInclude Include="CSceneMgr.h" />
     <ClInclude Include="CScene_Stage01.h" />
+    <ClInclude Include="CScene_Stage02.h" />
     <ClInclude Include="CScene_Start.h" />
     <ClInclude Include="CScene_Tool.h" />
     <ClInclude Include="CSpecialObject.h" />
+    <ClInclude Include="CStageImage.h" />
+    <ClInclude Include="CStageMgr.h" />
     <ClInclude Include="CTexture.h" />
     <ClInclude Include="CTile.h" />
     <ClInclude Include="CTileMgr.h" />
@@ -199,6 +203,7 @@
     <ClCompile Include="CCollider.cpp" />
     <ClCompile Include="CCollisionMgr.cpp" />
     <ClCompile Include="CCore.cpp" />
+    <ClCompile Include="CDoor.cpp" />
     <ClCompile Include="CEditorCameraController.cpp" />
     <ClCompile Include="CEditorCore.cpp" />
     <ClCompile Include="CEditorFileManager.cpp" />
@@ -226,9 +231,12 @@
     <ClCompile Include="CScene.cpp" />
     <ClCompile Include="CSceneMgr.cpp" />
     <ClCompile Include="CScene_Stage01.cpp" />
+    <ClCompile Include="CScene_Stage02.cpp" />
     <ClCompile Include="CScene_Start.cpp" />
     <ClCompile Include="CScene_Tool.cpp" />
     <ClCompile Include="CSpecialObject.cpp" />
+    <ClCompile Include="CStageImage.cpp" />
+    <ClCompile Include="CStageMgr.cpp" />
     <ClCompile Include="CTexture.cpp" />
     <ClCompile Include="CTile.cpp" />
     <ClCompile Include="CTileMgr.cpp" />

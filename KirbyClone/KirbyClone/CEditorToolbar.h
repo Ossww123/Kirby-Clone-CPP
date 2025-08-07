@@ -33,12 +33,19 @@ enum class TOOLBAR_BUTTON_ID
     MODE_MONSTER,
     MODE_ITEM,
     MODE_TILE,
+    MODE_SPECIAL,
     MODE_BACKGROUND,
     SEPARATOR_2,
     GRID_TOGGLE,
     SNAP_TOGGLE,
     UI_TOGGLE,
     SEPARATOR_3,
+    MAP_SIZE_LABEL,    // 맵 크기 라벨
+    MAP_SIZE_SMALL,    // 작은 맵 (1920x1080)
+    MAP_SIZE_MEDIUM,   // 중간 맵 (3840x2160)
+    MAP_SIZE_LARGE,    // 큰 맵 (7680x4320)
+    MAP_SIZE_CUSTOM,   // 사용자 정의
+    SEPARATOR_4,
     QUICK_SAVE,
     QUICK_LOAD,
     END
@@ -66,6 +73,10 @@ private:
     tToolbarButton* m_pHoveredButton;
     float m_fTooltipTimer;
 
+    // 맵 크기 관련
+    Vec2 m_vCurrentMapSize;
+    Vec2 m_vDefaultMapSize;
+
 public:
     void Initialize(CEditorCore* _pCore);
     void Update();
@@ -79,10 +90,16 @@ public:
     // 툴바 영역 체크
     bool IsInToolbarArea(Vec2 vMousePos);
 
+    // 맵 크기 관련 메서드
+    void SetMapSize(Vec2 vSize);
+    Vec2 GetMapSize() const { return m_vCurrentMapSize; }
+    void ShowCustomMapSizeDialog();
+
 private:
     // 버튼 관리
     void CreateButtons();
     void UpdateButtonStates();
+    void UpdateMapSizeButtons();
     tToolbarButton* GetButtonAt(Vec2 vMousePos);
 
     // 버튼 액션 처리
@@ -93,11 +110,13 @@ private:
     void RenderSeparator(HDC _dc, int x, int y);
     void RenderTooltip(HDC _dc);
     void RenderToolbarBackground(HDC _dc);
+    void RenderMapSizeLabel(HDC _dc, const tToolbarButton& button);
 
     // 유틸리티
     COLORREF GetButtonColor(const tToolbarButton& button);
     wstring GetModeButtonText(EDITOR_MODE mode);
     bool IsModeButton(TOOLBAR_BUTTON_ID buttonID);
+    bool IsMapSizeButton(TOOLBAR_BUTTON_ID buttonID);
 
 public:
     CEditorToolbar();

@@ -38,6 +38,8 @@ private:
     bool                m_bDragging;
     Vec2                m_vDragStartPos;
 
+    Vec2 m_vMapSize;
+
 public:
     void Initialize(CScene* _pScene);
     void Update();
@@ -80,6 +82,13 @@ public:
     CEditorObjectManager* GetObjectManager() { return m_pObjectManager; }
     CEditorCameraController* GetCameraController() { return m_pCameraController; }
     CEditorToolbar* GetToolbar() { return m_pToolbar; }
+
+    // 맵 크기 관련
+    void SetMapSize(Vec2 vSize);
+    Vec2 GetMapSize() const { return m_vMapSize; }
+
+    // 맵 경계 표시 (옵션)
+    void RenderMapBounds(HDC _dc);
 
 public:
     CEditorCore();

@@ -313,3 +313,42 @@ struct tTileInfo
 		, strTexturePath(_strPath)
 	{}
 };
+
+// 문 전환 데이터 구조체
+struct tDoorTransition
+{
+	SCENE_TYPE eTargetScene;    // 목표 씬
+	Vec2 vTargetPos;            // 목표 위치
+	wstring strTargetDoorID;    // 목표 문 ID
+	bool bIsValid;              // 유효한 데이터인지
+
+	tDoorTransition()
+		: eTargetScene(SCENE_TYPE::STAGE_01)
+		, vTargetPos(Vec2(100.f, 400.f))
+		, strTargetDoorID(L"")
+		, bIsValid(false)
+	{
+	}
+};
+
+// 레벨 데이터에 문 정보 추가용 확장 구조체
+struct tLevelObjectDataEx : public tLevelObjectData
+{
+	// 문 전용 확장 데이터
+	SCENE_TYPE eTargetScene;    // 문의 목표 씬
+	Vec2 vTargetPos;            // 문의 목표 위치
+	wstring strDoorID;          // 문 고유 ID
+	wstring strTargetDoorID;    // 연결된 문 ID
+	bool bIsLocked;             // 잠김 상태
+	float fInteractionRange;    // 상호작용 범위
+
+	tLevelObjectDataEx() : tLevelObjectData()
+		, eTargetScene(SCENE_TYPE::STAGE_01)
+		, vTargetPos(Vec2(100.f, 400.f))
+		, strDoorID(L"")
+		, strTargetDoorID(L"")
+		, bIsLocked(false)
+		, fInteractionRange(80.f)
+	{
+	}
+};

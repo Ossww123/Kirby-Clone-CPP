@@ -16,6 +16,7 @@
 #include "CCore.h"
 #include "CTimeMgr.h"
 #include "CGrid.h"
+#include "CCamera.h"
 
 CEditorCore::CEditorCore()
     : m_pUI(nullptr)
@@ -72,6 +73,13 @@ void CEditorCore::Initialize(CScene* _pScene)
     m_bShowUI = true;
     m_pSelectedObject = nullptr;
     m_bDragging = false;
+    SetMapSize(Vec2(3840.f, 2160.f));
+
+    // 툴바 초기화 후 맵 크기 동기화
+    if (m_pToolbar)
+    {
+        m_pToolbar->SetMapSize(m_vMapSize);
+    }
 }
 
 void CEditorCore::Update()
@@ -98,6 +106,7 @@ void CEditorCore::Render(HDC _dc)
 
     // 2. 그리드 렌더링
     CGrid::GetInst()->Render(_dc);
+    RenderMapBounds(_dc);
 
     // 3. **Scene의 모든 오브젝트 렌더링 추가!**
     if (m_pWorkingScene)
@@ -251,4 +260,65 @@ void CEditorCore::DeselectObject()
     m_pSelectedObject = nullptr;
     m_bDragging = false;
     SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Object deselected");
+}
+
+
+void CEditorCore::SetMapSize(Vec2 vSize)
+{
+    m_vMapSize = vSize;
+
+    // 카메라 경계 설정
+    if (m_pCameraController)
+    {
+        Vec2 vMin = Vec2(0.f, 0.f);
+        Vec2 vMax = vSize;
+        m_pCameraController->SetCameraBounds(vMin, vMax);
+        m_pCameraController->EnableCameraBounds(true);
+    }
+
+    // 그리드에 맵 크기 알림
+    if (CGrid::GetInst())
+    {
+        // CGrid에 맵 크기 설정 메서드가 있다면
+        // CGrid::GetInst()->SetMapBounds(Vec2(0.f, 0.f), vSize);
+    }
+}
+
+void CEditorCore::RenderMapBounds(HDC _dc)
+{
+    if (!m_pWorkingScene) return;
+
+    // 카메라 변환 적용
+    Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
+    Vec2 vResolution = CCore::GetInst()->GetResolution();
+    Vec2 vOffset = vResolution / 2.f - vCameraPos;
+
+    // 맵 경계선 그리기
+    HPEN hPen = CreatePen(PS_DASH, 2, RGB(255, 0, 0));  // 빨간 점선
+    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
+
+    // 맵 경계 사각형
+    int left = (int)(0 + vOffset.x);
+    int top = (int)(0 + vOffset.y);
+    int right = (int)(m_vMapSize.x + vOffset.x);
+    int bottom = (int)(m_vMapSize.y + vOffset.y);
+
+    // 경계선 그리기
+    MoveToEx(_dc, left, top, nullptr);
+    LineTo(_dc, right, top);        // 상단
+    LineTo(_dc, right, bottom);     // 우측
+    LineTo(_dc, left, bottom);      // 하단
+    LineTo(_dc, left, top);         // 좌측
+
+    SelectObject(_dc, hOldPen);
+    DeleteObject(hPen);
+
+    // 맵 크기 텍스트 표시
+    SetBkMode(_dc, TRANSPARENT);
+    SetTextColor(_dc, RGB(255, 0, 0));
+
+    wchar_t szMapSize[128];
+    swprintf_s(szMapSize, L"Map Size: %.0fx%.0f", m_vMapSize.x, m_vMapSize.y);
+
+    TextOut(_dc, left + 10, top + 10, szMapSize, (int)wcslen(szMapSize));
 }

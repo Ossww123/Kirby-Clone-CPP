@@ -3,6 +3,7 @@
 #include "CEditorCore.h"
 #include "CEditorObjectManager.h"
 #include "CEditorCameraController.h"
+#include "CEditorToolbar.h"
 
 #include "CScene.h"
 #include "CObjectFactory.h"
@@ -175,16 +176,19 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
         {
             fclose(pFile);
             ShowErrorMessage(L"Unsupported level version!");
+            CreateDefaultLevel();
             return;
         }
 
         // 레벨 이름
         size_t nameLen;
         fread(&nameLen, sizeof(size_t), 1, pFile);
-        if (nameLen > 256) // 보안 검사
+
+        if (nameLen > 1000) // 비정상적인 길이 체크
         {
             fclose(pFile);
-            ShowErrorMessage(L"Invalid level file format!");
+            ShowErrorMessage(L"Corrupted level file!");
+            CreateDefaultLevel();
             return;
         }
 
@@ -197,25 +201,10 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
         // 플레이어 스폰 위치
         fread(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-        // 배경 타입 정보 (버전 2 이상에서만)
-        if (levelData.iVersion >= 2)
-        {
-            fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
+        // 배경 타입 정보
+        fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
 
-            // 배경 변경 적용
-            BACKGROUND_TYPE eBgType = (BACKGROUND_TYPE)levelData.iBackgroundType;
-            if (eBgType >= BACKGROUND_TYPE::GREEN_HILL && eBgType < BACKGROUND_TYPE::END)
-            {
-                m_pEditorCore->GetObjectManager()->ChangeBackground(eBgType);
-            }
-        }
-        else
-        {
-            // 구버전 파일의 경우 기본 배경 사용
-            m_pEditorCore->GetObjectManager()->ChangeBackground(BACKGROUND_TYPE::GREEN_HILL);
-        }
-
-        // === 새로 추가: 버전 3 이상에서 경계 정보 읽기 ===
+        // === 새로 추가: 경계 정보 읽기 (버전 3 이상) ===
         if (levelData.iVersion >= 3)
         {
             fread(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
@@ -224,22 +213,21 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
         }
         else
         {
-            // 구버전 파일의 경우 기본값 사용
+            // 구버전 파일의 경우 기본값 설정
             levelData.vLevelBoundsMin = Vec2(0.f, -1000.f);
             levelData.vLevelBoundsMax = Vec2(4000.f, 1280.f);
             levelData.fGameOverY = 1280.f;
         }
 
-        // 플레이어 스폰 위치 설정
-        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(levelData.vPlayerSpawn);
-
         // 오브젝트 개수
         size_t objCount;
         fread(&objCount, sizeof(size_t), 1, pFile);
-        if (objCount > 10000) // 보안 검사
+
+        if (objCount > 10000) // 비정상적인 개수 체크
         {
             fclose(pFile);
-            ShowErrorMessage(L"Invalid object count in level file!");
+            ShowErrorMessage(L"Corrupted level file - too many objects!");
+            CreateDefaultLevel();
             return;
         }
 
@@ -260,6 +248,17 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
 
         fclose(pFile);
 
+        // 플레이어 스폰 위치 설정
+        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(levelData.vPlayerSpawn);
+
+        // 배경 설정 적용
+        if (levelData.iBackgroundType >= 0 && levelData.iBackgroundType < (int)BACKGROUND_TYPE::END)
+        {
+            // 배경 타입 설정 (에디터 오브젝트 매니저를 통해)
+            m_pEditorCore->GetObjectManager()->SetCurrentBackgroundType((BACKGROUND_TYPE)levelData.iBackgroundType);
+        }
+
+        // 레벨 경계 적용
         ApplyLevelBounds(levelData);
 
         // 성공 메시지
@@ -269,6 +268,7 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
     {
         fclose(pFile);
         ShowErrorMessage(L"Error occurred while loading!");
+        CreateDefaultLevel();
     }
 }
 
@@ -391,8 +391,20 @@ tLevelObjectData CEditorFileManager::CreateObjectData(CObject* _pObj, GROUP_TYPE
     // 몬스터의 경우 몬스터 타입 정보 저장
     else if (objData.eGroupType == GROUP_TYPE::MONSTER)
     {
-        // 현재는 모든 몬스터가 WADDLE_DEE이므로 기본값 사용
-        objData.iSubType = (int)OBJECT_TYPE::MONSTER_WADDLE_DEE;
+        // 몬스터 타입별 구분 로직 필요시 추가
+        objData.iSubType = (int)OBJECT_TYPE::MONSTER_WADDLE_DEE; // 기본 몬스터 타입
+    }
+    // 아이템의 경우 아이템 타입 정보 저장
+    else if (objData.eGroupType == GROUP_TYPE::ITEM)
+    {
+        // 아이템 타입별 구분 로직 필요시 추가
+        objData.iSubType = (int)OBJECT_TYPE::ITEM_STAR; // 기본 아이템 타입
+    }
+    // 특수 오브젝트의 경우
+    else if (objData.eGroupType == GROUP_TYPE::SPECIAL)
+    {
+        // 특수 오브젝트 타입별 구분 로직 필요시 추가
+        objData.iSubType = (int)OBJECT_TYPE::OBJECT_DOOR; // 기본 특수 타입
     }
 
     return objData;
@@ -400,57 +412,42 @@ tLevelObjectData CEditorFileManager::CreateObjectData(CObject* _pObj, GROUP_TYPE
 
 void CEditorFileManager::ClearScene()
 {
-    // 기존 오브젝트들 삭제 (플레이어 제외)
+    // 플레이어를 제외한 모든 오브젝트 삭제
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
         if (i == (UINT)GROUP_TYPE::PLAYER) continue;
 
-        vector<CObject*>& vecObj = const_cast<vector<CObject*>&>(m_pScene->GetGroupObject((GROUP_TYPE)i));
-        for (CObject* pObj : vecObj)
+        const vector<CObject*>& vecObj = m_pScene->GetGroupObject((GROUP_TYPE)i);
+        for (size_t j = 0; j < vecObj.size(); ++j)
         {
-            if (pObj)
+            if (vecObj[j])
             {
-                delete pObj;
+                vecObj[j]->SetDead();
             }
         }
-        vecObj.clear();
     }
-
     // 선택 해제
     m_pEditorCore->DeselectObject();
 }
 
 void CEditorFileManager::CreateDefaultLevel()
 {
-    // 기본 지면 타일들 생성 (플랫폼)
-    for (int x = 0; x < 10; ++x)
-    {
-        CObject* pTile = CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND,
-            Vec2(100.f + x * 64.f, 500.f));
-
-        if (pTile)
-        {
-            CTile* pTileComponent = dynamic_cast<CTile*>(pTile);
-            if (pTileComponent)
-            {
-                pTileComponent->SetVisualType(TILE_VISUAL_TYPE::GRASS_PLATFORM);
-                CTileMgr::GetInst()->SetupTileProperties(pTileComponent, TILE_VISUAL_TYPE::GRASS_PLATFORM);
-            }
-            m_pScene->AddObject(pTile, GROUP_TYPE::TILE);
-        }
-    }
-
-    // 기본 몬스터 몇 마리 배치
-    CObject* pMonster1 = CObjectFactory::CreateObject(OBJECT_TYPE::MONSTER_WADDLE_DEE,
-        Vec2(300.f, 400.f));
-    if (pMonster1) m_pScene->AddObject(pMonster1, GROUP_TYPE::MONSTER);
-
-    CObject* pMonster2 = CObjectFactory::CreateObject(OBJECT_TYPE::MONSTER_WADDLE_DEE,
-        Vec2(500.f, 400.f));
-    if (pMonster2) m_pScene->AddObject(pMonster2, GROUP_TYPE::MONSTER);
-
-    // 플레이어 스폰 위치 설정
+    // 기본 레벨 생성 (빈 레벨)
+    ClearScene();
+    
+    // 플레이어 스폰 위치 초기화
     m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(Vec2(640.f, 400.f));
+    
+    // 기본 배경 설정
+    m_pEditorCore->GetObjectManager()->SetCurrentBackgroundType(BACKGROUND_TYPE::GREEN_HILL);
+    
+    // 기본 카메라 경계 설정
+    CEditorCameraController* pCameraController = m_pEditorCore->GetCameraController();
+    if (pCameraController)
+    {
+        pCameraController->SetCameraBounds(Vec2(0.f, -1000.f), Vec2(4000.f, 1280.f));
+        pCameraController->EnableCameraBounds(true);
+    }
 }
 
 void CEditorFileManager::ApplyLevelBounds(const tLevelData& _levelData)
@@ -464,10 +461,17 @@ void CEditorFileManager::ApplyLevelBounds(const tLevelData& _levelData)
 
         // 카메라를 레벨 경계 내 적절한 위치로 이동
         Vec2 vSafePos = Vec2(
-            max(_levelData.vLevelBoundsMin.x, 0.f),
-            _levelData.fGameOverY
+            max(_levelData.vLevelBoundsMin.x + 960.f, 960.f), // 화면 중앙 고려
+            min(_levelData.vLevelBoundsMax.y - 540.f, 960.f)  // 화면 중앙 고려
         );
         pCameraController->SetCameraPosition(vSafePos);
+    }
+
+    // 툴바에 맵 크기 정보 업데이트
+    if (m_pEditorCore->GetToolbar())
+    {
+        Vec2 vMapSize = _levelData.vLevelBoundsMax - _levelData.vLevelBoundsMin;
+        m_pEditorCore->GetToolbar()->SetMapSize(vMapSize);
     }
 }
 
@@ -582,7 +586,7 @@ bool CEditorFileManager::ValidateLevelFile(const wstring& _strFilePath)
 
 bool CEditorFileManager::IsValidVersion(int _iVersion)
 {
-    return _iVersion >= 1 && _iVersion <= 2;
+    return _iVersion >= 1 && _iVersion <= 3;
 }
 
 void CEditorFileManager::ShowErrorMessage(const wstring& _strMessage)

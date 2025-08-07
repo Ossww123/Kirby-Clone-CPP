@@ -16,6 +16,9 @@ public:
     CTexture* LoadTexture(const wstring& _strKey, const wstring& _strRelativePath);
     CTexture* FindTexture(const wstring& _strKey);
 
+    void AddTexture(const wstring& _strKey, CTexture* _pTexture);
+    CTexture* LoadTextureWithAlpha(const wstring& _strKey, const wstring& _strRelativePath);
+
 private:
     void CreateDefaultTexture();       // 기본 텍스처 생성
 };

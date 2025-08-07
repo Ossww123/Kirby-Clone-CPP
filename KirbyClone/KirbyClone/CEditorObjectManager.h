@@ -51,6 +51,7 @@ public:
     void NextBackground();
     void PrevBackground();
     const wchar_t* GetBackgroundName(BACKGROUND_TYPE _eType);
+    void SetCurrentBackgroundType(BACKGROUND_TYPE _eCurrentBgType) { m_eCurrentBgType = _eCurrentBgType; }
 
     // 타일 시각적 타입 관리
     void InitializeTileVisualSystem();

@@ -7,7 +7,6 @@
 #include "CTile.h"
 #include "CItem.h"
 #include "CSpecialObject.h"
-#include "CDoor.h"
 #include "CObjectFactory.h"
 
 #include "CKeyMgr.h"
@@ -30,7 +29,7 @@ CScene_Stage02::~CScene_Stage02()
 
 void CScene_Stage02::Enter()
 {
-    // 기본 플레이어 생성 (레벨 로더에서 위치가 덮어씌워질 수 있음)
+    // 기본 플레이어 생성 (레벨 로드에서 위치가 덮어씌워질 수 있음)
     CObject* pPlayer = new CPlayer;
     pPlayer->SetPos(Vec2(640.f, 400.f));
     pPlayer->SetScale(Vec2(100.f, 100.f));
@@ -74,7 +73,7 @@ void CScene_Stage02::Update()
 
     // 스테이지별 특수 로직 (필요시 추가)
 
-    // ESC키로 Tool Scene으로 복귀 (디버그용)
+    // ESC키로 Tool Scene으로 복귀 (디버깅용)
     if (KEY_TAP(KEY::ESC))
     {
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::TOOL);
@@ -85,6 +84,13 @@ void CScene_Stage02::Update()
     if (KEY_TAP(KEY::ENTER))
     {
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
+        CEventMgr::GetInst()->AddEvent(event);
+    }
+
+    // Backspace키로 STAGE_01로 복귀
+    if (KEY_TAP(KEY::BACK))
+    {
+        tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::STAGE_01);
         CEventMgr::GetInst()->AddEvent(event);
     }
 }
@@ -103,9 +109,12 @@ void CScene_Stage02::Render(HDC _dc)
 
 void CScene_Stage02::InitializeBackgroundSystem()
 {
-    // 기본 배경 설정 (Stage02는 다른 스타일 사용)
-    m_eCurrentBgType = BACKGROUND_TYPE::CASTLE_INTERIOR;  // 성 내부 배경
+    // STAGE02는 다른 배경 사용 (예: 동굴이나 성)
+    m_eCurrentBgType = BACKGROUND_TYPE::GREEN_HILL; // 일단 기본 배경
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
+
+    // 추후 STAGE02 전용 배경 추가시 변경
+    // m_eCurrentBgType = BACKGROUND_TYPE::CAVE; 등으로 변경 가능
 }
 
 void CScene_Stage02::ChangeBackground(BACKGROUND_TYPE _eBgType)
@@ -116,8 +125,8 @@ void CScene_Stage02::ChangeBackground(BACKGROUND_TYPE _eBgType)
 
 void CScene_Stage02::InitializeStage()
 {
-    // 스테이지별 초기 설정
-    // 예: 배경음악, 환경 설정, 특수 이벤트 등
+    // STAGE02만의 특별한 초기 설정
+    // 예: 특별한 물리 법칙, 특수 이벤트 등
 
     // 현재는 기본 설정만
 }
@@ -133,7 +142,7 @@ void CScene_Stage02::LoadStageLevel(const wstring& _strFileName)
     if (!pFile)
     {
         // 레벨 파일이 없으면 기본 레벨 생성
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level file not found! Using default level.");
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"STAGE02 Level file not found! Using default level.");
         CreateDefaultLevel();
         return;
     }
@@ -144,60 +153,50 @@ void CScene_Stage02::LoadStageLevel(const wstring& _strFileName)
     // 버전 확인
     fread(&levelData.iVersion, sizeof(int), 1, pFile);
 
-    if (levelData.iVersion < 1 || levelData.iVersion > 2)
+    if (levelData.iVersion < 1 || levelData.iVersion > 3)
     {
         fclose(pFile);
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Unsupported level version! Using default level.");
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Unsupported STAGE02 level version! Using default level.");
         CreateDefaultLevel();
         return;
     }
 
-    // 레벨 이름 읽기
-    int nameLen;
-    fread(&nameLen, sizeof(int), 1, pFile);
-    wchar_t* tempName = new wchar_t[nameLen + 1];
-    fread(tempName, sizeof(wchar_t), nameLen, pFile);
-    tempName[nameLen] = L'\0';
-    levelData.strLevelName = tempName;
-    delete[] tempName;
+    // 레벨 이름
+    size_t nameLen;
+    fread(&nameLen, sizeof(size_t), 1, pFile);
+    wchar_t* szName = new wchar_t[nameLen + 1];
+    fread(szName, sizeof(wchar_t), nameLen, pFile);
+    szName[nameLen] = L'\0';
+    levelData.strLevelName = szName;
+    delete[] szName;
 
-    // 오브젝트 개수 읽기
-    int objCount;
-    fread(&objCount, sizeof(int), 1, pFile);
+    // 플레이어 스폰 위치
+    fread(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-    // 오브젝트 데이터 읽기 및 생성
-    for (int i = 0; i < objCount; ++i)
+    // 배경 타입 정보 (버전 2 이상에서만)
+    if (levelData.iVersion >= 2)
+    {
+        fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
+    }
+
+    // === 추가: 버전 3의 경계 정보 읽기 ===
+    if (levelData.iVersion >= 3)
+    {
+        fread(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
+        fread(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
+        fread(&levelData.fGameOverY, sizeof(float), 1, pFile);
+    }
+
+    // 오브젝트 개수
+    size_t objCount;
+    fread(&objCount, sizeof(size_t), 1, pFile);
+
+    // 각 오브젝트 생성
+    for (size_t i = 0; i < objCount; ++i)
     {
         tLevelObjectData objData;
-        fread(&objData.vPos, sizeof(Vec2), 1, pFile);
-        fread(&objData.vScale, sizeof(Vec2), 1, pFile);
-        fread(&objData.eGroupType, sizeof(GROUP_TYPE), 1, pFile);
-        fread(&objData.iSubType, sizeof(int), 1, pFile);
+        fread(&objData, sizeof(tLevelObjectData), 1, pFile);
 
-        // 버전 2에서 추가된 필드들
-        if (levelData.iVersion >= 2)
-        {
-            fread(&objData.iTileVisualType, sizeof(int), 1, pFile);
-
-            // 문 오브젝트인 경우 연결 정보 읽기
-            if (objData.eGroupType == GROUP_TYPE::SPECIAL &&
-                objData.iSubType == (int)OBJECT_TYPE::OBJECT_DOOR)
-            {
-                fread(&objData.doorData.eTargetScene, sizeof(SCENE_TYPE), 1, pFile);
-                fread(&objData.doorData.vTargetPos, sizeof(Vec2), 1, pFile);
-                fread(&objData.doorData.strTargetDoorID, sizeof(wchar_t), 32, pFile);
-            }
-        }
-        else
-        {
-            objData.iTileVisualType = 0;
-            // 기본 문 연결 설정
-            objData.doorData.eTargetScene = SCENE_TYPE::STAGE01;
-            objData.doorData.vTargetPos = Vec2(100.f, 400.f);
-            wcscpy_s(objData.doorData.strTargetDoorID, L"");
-        }
-
-        // 오브젝트 생성 및 추가
         CObject* pObj = CreateObjectFromData(objData);
         if (pObj)
         {
@@ -209,7 +208,7 @@ void CScene_Stage02::LoadStageLevel(const wstring& _strFileName)
 
     // 성공 메시지
     wchar_t szMsg[256];
-    swprintf_s(szMsg, L"Stage02 Loaded: %s (%d objects)", levelData.strLevelName.c_str(), (int)objCount);
+    swprintf_s(szMsg, L"STAGE02 Loaded: %s (%d objects)", levelData.strLevelName.c_str(), (int)objCount);
     SetWindowText(CCore::GetInst()->GetMainHwnd(), szMsg);
 }
 
@@ -233,8 +232,8 @@ CObject* CScene_Stage02::CreateObjectFromData(const tLevelObjectData& _objData)
         OBJECT_TYPE tileType = (OBJECT_TYPE)_objData.iSubType;
         pObj = CObjectFactory::CreateObject(tileType, _objData.vPos);
 
-        // 타일 시각 타입 적용 (새로 추가)
-        if (pObj && _objData.iTileVisualType > 0)
+        // 타일 시각 타입 적용
+        if (pObj && _objData.iTileVisualType >= 0)
         {
             CTile* pTile = dynamic_cast<CTile*>(pObj);
             if (pTile)
@@ -242,7 +241,7 @@ CObject* CScene_Stage02::CreateObjectFromData(const tLevelObjectData& _objData)
                 TILE_VISUAL_TYPE eVisualType = (TILE_VISUAL_TYPE)_objData.iTileVisualType;
                 pTile->SetVisualType(eVisualType);
 
-                // 타일 매니저를 통해 적절한 텍스처나 속성 설정
+                // 타일 매니저를 통해 적절한 텍스처와 속성 설정
                 CTileMgr::GetInst()->SetupTileProperties(pTile, eVisualType);
             }
         }
@@ -261,25 +260,7 @@ CObject* CScene_Stage02::CreateObjectFromData(const tLevelObjectData& _objData)
     {
         // 특수 오브젝트 타입에 따라 생성
         OBJECT_TYPE specialType = (OBJECT_TYPE)_objData.iSubType;
-
-        if (specialType == OBJECT_TYPE::OBJECT_DOOR)
-        {
-            // 문 오브젝트는 CDoor 클래스 사용
-            CDoor* pDoor = new CDoor;
-            pDoor->SetPos(_objData.vPos);
-            pDoor->SetScale(_objData.vScale);
-
-            // 문 연결 정보 설정
-            pDoor->SetTargetScene(_objData.doorData.eTargetScene);
-            pDoor->SetTargetPosition(_objData.doorData.vTargetPos);
-            pDoor->SetTargetDoorID(_objData.doorData.strTargetDoorID);
-
-            pObj = pDoor;
-        }
-        else
-        {
-            pObj = CObjectFactory::CreateObject(specialType, _objData.vPos);
-        }
+        pObj = CObjectFactory::CreateObject(specialType, _objData.vPos);
     }
     break;
 
@@ -298,33 +279,37 @@ CObject* CScene_Stage02::CreateObjectFromData(const tLevelObjectData& _objData)
 
 void CScene_Stage02::CreateDefaultLevel()
 {
-    // 레벨 파일이 없을 때 기본 레벨 생성
+    // STAGE02 기본 레벨 생성 (레벨 에디터로 제대로 만들기 전까지 임시용)
 
-    // 기본 지면 타일들 생성 (플랫폼)
-    for (int x = 0; x < 12; ++x)
+    // 첫 번째 플랫폼
+    for (int x = 0; x < 8; ++x)
     {
         CObject* pTile = CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND,
             Vec2(100.f + x * 64.f, 500.f));
         AddObject(pTile, GROUP_TYPE::TILE);
     }
 
-    // Stage01로 돌아가는 문 생성
-    CDoor* pDoor = new CDoor;
-    pDoor->SetPos(Vec2(200.f, 400.f));
-    pDoor->SetScale(Vec2(64.f, 128.f));
-    pDoor->SetTargetScene(SCENE_TYPE::STAGE01);
-    pDoor->SetTargetPosition(Vec2(600.f, 400.f)); // Stage01의 문 근처
-    pDoor->SetTargetDoorID(L"door_to_stage02");
-    AddObject(pDoor, GROUP_TYPE::SPECIAL);
+    // 두 번째 플랫폼 (위쪽)
+    for (int x = 0; x < 6; ++x)
+    {
+        CObject* pTile = CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND,
+            Vec2(300.f + x * 64.f, 350.f));
+        AddObject(pTile, GROUP_TYPE::TILE);
+    }
 
-    // 기본 몬스터 몇 마리 배치
+    // 몬스터들 배치
     CObject* pMonster1 = CObjectFactory::CreateObject(OBJECT_TYPE::MONSTER_WADDLE_DEE,
         Vec2(400.f, 400.f));
     AddObject(pMonster1, GROUP_TYPE::MONSTER);
 
     CObject* pMonster2 = CObjectFactory::CreateObject(OBJECT_TYPE::MONSTER_GORDOS,
-        Vec2(600.f, 400.f));
+        Vec2(600.f, 250.f));
     AddObject(pMonster2, GROUP_TYPE::MONSTER);
 
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Default Stage02 level created!");
+    // 아이템 배치
+    CObject* pItem = CObjectFactory::CreateObject(OBJECT_TYPE::ITEM_STAR,
+        Vec2(500.f, 300.f));
+    AddObject(pItem, GROUP_TYPE::ITEM);
+
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"STAGE02 Default level created!");
 }

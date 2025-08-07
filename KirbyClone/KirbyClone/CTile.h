@@ -49,6 +49,7 @@ private:
     void RenderWaterEffect(HDC _dc, Vec2 vRenderPos, Vec2 vScale);
     void RenderTreeDetails(HDC _dc, Vec2 vRenderPos, Vec2 vScale);
     void RenderFlowerDetails(HDC _dc, Vec2 vRenderPos, Vec2 vScale);
+    void RenderWithAlpha(HDC _dc, float _fAlpha);
 
 public:
     CTile();

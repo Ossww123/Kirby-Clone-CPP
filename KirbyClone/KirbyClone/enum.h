@@ -26,6 +26,7 @@ enum class KEY
 
     ALT,      // Alt 키
     HOME,     // Home 키
+    BACK,     // Backspace 키
 
     SPACE,
     ENTER,
@@ -63,7 +64,7 @@ enum class SCENE_TYPE
     TOOL,
     START,
     STAGE_01,
-    // STAGE_02,
+    STAGE_02,
 
     END,
 };
@@ -117,7 +118,8 @@ enum class EDITOR_MODE
     NONE,           // 기본 모드
     PLACE_MONSTER,  // 몬스터 배치 모드
     PLACE_ITEM,     // 아이템 배치 모드
-    PLACE_TILE,     // 타일 배치 모드
+    PLACE_TILE,         // 기존: 타일 배치 → 변경될 예정: 충돌체 배치
+    PLACE_STAGE,        // 새로 추가: 스테이지 이미지 선택
     PLACE_SPECIAL,  // 특수 오브젝트 배치 모드
     SELECT,         // 선택 모드
     ERASE,          // 삭제 모드
@@ -191,6 +193,16 @@ enum class TILE_VISUAL_TYPE
     // 플랫폼
     MOVING_PLATFORM,       // 움직이는 플랫폼
     BRIDGE,                // 다리
+
+    END
+};
+
+// 스테이지 이미지 타입
+enum class STAGE_IMAGE_TYPE
+{
+    STAGE_01,           // 첫 번째 스테이지 (Green Hill 스타일)
+    STAGE_02,           // 두 번째 스테이지 (Castle 스타일)
+    CUSTOM,             // 사용자 커스텀 스테이지
 
     END
 };

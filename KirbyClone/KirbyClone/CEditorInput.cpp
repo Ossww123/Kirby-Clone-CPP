@@ -8,6 +8,7 @@
 #include "CEditorUI.h"
 
 #include "CObject.h"
+#include "CDoor.h"
 #include "CEventMgr.h"
 #include "CKeyMgr.h"
 #include "CGrid.h"

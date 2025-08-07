@@ -146,7 +146,7 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
     // 버전 확인
     fread(&levelData.iVersion, sizeof(int), 1, pFile);
 
-    if (levelData.iVersion < 1 || levelData.iVersion > 2)
+    if (levelData.iVersion < 1 || levelData.iVersion > 3)
     {
         fclose(pFile);
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Unsupported level version! Using default level.");
@@ -166,24 +166,18 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
     // 플레이어 스폰 위치
     fread(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-    // 플레이어 위치 설정
-    const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);
-    if (!vecPlayer.empty())
-    {
-        vecPlayer[0]->SetPos(levelData.vPlayerSpawn);
-    }
-
     // 배경 타입 정보 (버전 2 이상에서만)
     if (levelData.iVersion >= 2)
     {
         fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
+    }
 
-        // 배경 변경 적용
-        BACKGROUND_TYPE eBgType = (BACKGROUND_TYPE)levelData.iBackgroundType;
-        if (eBgType >= BACKGROUND_TYPE::GREEN_HILL && eBgType < BACKGROUND_TYPE::END)
-        {
-            ChangeBackground(eBgType);
-        }
+    // === 추가: 버전 3의 경계 정보 읽기 ===
+    if (levelData.iVersion >= 3)
+    {
+        fread(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
+        fread(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
+        fread(&levelData.fGameOverY, sizeof(float), 1, pFile);
     }
 
     // 오브젝트 개수
@@ -232,7 +226,7 @@ CObject* CScene_Stage01::CreateObjectFromData(const tLevelObjectData& _objData)
         pObj = CObjectFactory::CreateObject(tileType, _objData.vPos);
 
         // 타일 시각 타입 적용 (새로 추가)
-        if (pObj && _objData.iTileVisualType > 0)
+        if (pObj && _objData.iTileVisualType >= 0)
         {
             CTile* pTile = dynamic_cast<CTile*>(pObj);
             if (pTile)

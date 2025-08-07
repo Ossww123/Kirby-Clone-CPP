@@ -1,32 +1,35 @@
 #include "pch.h"
 #include "CDoor.h"
 
-#include "CPlayer.h"
+#include "CCollider.h"
 #include "CKeyMgr.h"
 #include "CEventMgr.h"
-#include "CCore.h"
+#include "CTimeMgr.h"
 #include "CCamera.h"
-#include "CCollider.h"
-#include "CSceneMgr.h"
+#include "CCore.h"
 
 CDoor::CDoor()
-    : m_eTargetScene(SCENE_TYPE::STAGE01)
+    : CSpecialObject()
+    , m_eTargetScene(SCENE_TYPE::STAGE_01)
     , m_vTargetPosition(Vec2(100.f, 400.f))
+    , m_strDoorID(L"")
     , m_strTargetDoorID(L"")
-    , m_strDoorID(L"door_default")
-    , m_bPlayerNearby(false)
-    , m_bIsLocked(false)
+    , m_bPlayerNear(false)
+    , m_bCanInteract(false)
     , m_fInteractionRange(80.f)
     , m_fAnimTimer(0.f)
-    , m_bShowPrompt(false)
 {
-    // 문 오브젝트 기본 설정
+    // 문 타입으로 설정
+    SetSpecialType(OBJECT_TYPE::OBJECT_DOOR);
+    SetType(OBJECT_TYPE::OBJECT_DOOR);
+
+    // 기본 문 크기 설정
     SetScale(Vec2(64.f, 128.f));
 
-    // 콜라이더 생성 및 설정
+    // 충돌체 생성
     CreateCollider();
+    GetCollider()->SetScale(Vec2(64.f, 128.f));
     GetCollider()->SetOffsetPos(Vec2(0.f, 0.f));
-    GetCollider()->SetScale(Vec2(60.f, 120.f));
 }
 
 CDoor::~CDoor()
@@ -35,34 +38,120 @@ CDoor::~CDoor()
 
 void CDoor::Update()
 {
+    // 부모 클래스 업데이트 먼저 호출
+    CSpecialObject::Update();
+
     // 애니메이션 타이머 업데이트
-    m_fAnimTimer += fDT;
+    m_fAnimTimer += CTimeMgr::GetInst()->GetfDT();
 
     // 플레이어와의 상호작용 체크
     CheckPlayerInteraction();
 
-    // 프롬프트 표시 상태 업데이트
-    m_bShowPrompt = m_bPlayerNearby && !m_bIsLocked;
+    // 상호작용 가능할 때 키 입력 체크
+    if (m_bCanInteract)
+    {
+        if (KEY_TAP(KEY::UP) || KEY_TAP(KEY::W))
+        {
+            ProcessDoorTransition();
+        }
+    }
 }
 
 void CDoor::Render(HDC _dc)
 {
-    // 문 기본 렌더링
+    // 문 시각적 표현 렌더링
+    RenderDoorVisual(_dc);
+
+    // 콜라이더 렌더링 추가 (초록색 사각형)
+    if (GetCollider())
+    {
+        GetCollider()->Render(_dc);
+    }
+
+    // 상호작용 UI 렌더링
+    if (m_bCanInteract)
+    {
+        RenderInteractionUI(_dc);
+    }
+
+    // 문 ID 표시 (디버그용)
+    if (!m_strDoorID.empty())
+    {
+        Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
+        SetTextColor(_dc, RGB(255, 255, 255));
+        SetBkMode(_dc, TRANSPARENT);
+
+        RECT textRect;
+        textRect.left = (int)(vRenderPos.x - 40);
+        textRect.top = (int)(vRenderPos.y - GetScale().y / 2 - 25);
+        textRect.right = (int)(vRenderPos.x + 40);
+        textRect.bottom = (int)(vRenderPos.y - GetScale().y / 2 - 5);
+
+        DrawText(_dc, m_strDoorID.c_str(), -1, &textRect, DT_CENTER | DT_VCENTER);
+    }
+}
+
+void CDoor::OnCollisionEnter(CCollider* _pOther)
+{
+    CObject* pObj = _pOther->GetOwner();
+
+    // 플레이어인지 확인
+    if (pObj && pObj->GetType() == OBJECT_TYPE::PLAYER)
+    {
+        m_bPlayerNear = true;
+    }
+}
+
+void CDoor::OnCollisionExit(CCollider* _pOther)
+{
+    CObject* pObj = _pOther->GetOwner();
+
+    // 플레이어인지 확인
+    if (pObj && pObj->GetType() == OBJECT_TYPE::PLAYER)
+    {
+        m_bPlayerNear = false;
+        m_bCanInteract = false;
+    }
+}
+
+void CDoor::CheckPlayerInteraction()
+{
+    m_bCanInteract = m_bPlayerNear;
+}
+
+void CDoor::ProcessDoorTransition()
+{
+    // 씬 전환 이벤트 발생
+    tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)m_eTargetScene);
+    CEventMgr::GetInst()->AddEvent(event);
+
+    // TODO: 플레이어 위치 설정을 위한 추가 작업 필요
+    // 현재는 각 씬의 Enter()에서 기본 위치로 설정됨
+
+    // 문 사용 사운드 재생 (추후 추가)
+    // CSoundMgr::GetInst()->PlaySFX(L"door_open");
+}
+
+void CDoor::RenderDoorVisual(HDC _dc)
+{
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
     Vec2 vScale = GetScale();
 
-    // 문 모양 그리기 (임시 - 추후 스프라이트로 교체)
+    // 기본 문 모양 그리기 (임시 - 추후 스프라이트로 교체)
     HBRUSH hBrush;
-    if (m_bIsLocked)
+    HBRUSH hOldBrush;
+
+    if (m_bCanInteract)
     {
-        hBrush = CreateSolidBrush(RGB(139, 69, 19)); // 갈색 (잠긴 문)
+        // 상호작용 가능할 때 밝게 표시
+        hBrush = CreateSolidBrush(RGB(160, 82, 45)); // 밝은 갈색
     }
     else
     {
-        hBrush = CreateSolidBrush(RGB(160, 82, 45)); // 밝은 갈색 (열린 문)
+        hBrush = CreateSolidBrush(RGB(101, 67, 33)); // 기본 갈색
     }
 
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+    hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
 
     Rectangle(_dc,
         (int)(vRenderPos.x - vScale.x / 2),
@@ -70,9 +159,12 @@ void CDoor::Render(HDC _dc)
         (int)(vRenderPos.x + vScale.x / 2),
         (int)(vRenderPos.y + vScale.y / 2));
 
+    SelectObject(_dc, hOldBrush);
+    DeleteObject(hBrush);
+
     // 문 손잡이 그리기
-    HBRUSH hHandleBrush = CreateSolidBrush(RGB(255, 215, 0)); // 금색
-    SelectObject(_dc, hHandleBrush);
+    HBRUSH hKnobBrush = CreateSolidBrush(RGB(255, 215, 0)); // 금색
+    hOldBrush = (HBRUSH)SelectObject(_dc, hKnobBrush);
 
     Ellipse(_dc,
         (int)(vRenderPos.x + vScale.x / 4 - 8),
@@ -81,149 +173,41 @@ void CDoor::Render(HDC _dc)
         (int)(vRenderPos.y + 8));
 
     SelectObject(_dc, hOldBrush);
-    DeleteObject(hBrush);
-    DeleteObject(hHandleBrush);
-
-    // 시각 효과 렌더링
-    RenderDoorEffect(_dc);
-
-    // 프롬프트 렌더링
-    if (m_bShowPrompt)
-    {
-        RenderPrompt(_dc);
-    }
+    DeleteObject(hKnobBrush);
 }
 
-void CDoor::OnCollisionEnter(CCollider* _pOther)
-{
-    CObject* pOtherObj = _pOther->GetObj();
-    if (pOtherObj->GetName() == L"Player")
-    {
-        m_bPlayerNearby = true;
-    }
-}
-
-void CDoor::OnCollision(CCollider* _pOther)
-{
-    CObject* pOtherObj = _pOther->GetObj();
-    if (pOtherObj->GetName() == L"Player")
-    {
-        m_bPlayerNearby = true;
-
-        // 위쪽 화살표 키 입력 시 문 입장
-        if (KEY_TAP(KEY::UP) && !m_bIsLocked)
-        {
-            ProcessDoorEnter();
-        }
-    }
-}
-
-void CDoor::OnCollisionExit(CCollider* _pOther)
-{
-    CObject* pOtherObj = _pOther->GetObj();
-    if (pOtherObj->GetName() == L"Player")
-    {
-        m_bPlayerNearby = false;
-    }
-}
-
-void CDoor::CheckPlayerInteraction()
-{
-    // 콜라이더로 이미 체크되므로 여기서는 추가 로직만
-    // 예: 거리 기반 상호작용 범위 세밀 조정 등
-}
-
-void CDoor::ProcessDoorEnter()
-{
-    if (m_bIsLocked)
-        return;
-
-    // 씬 전환 이벤트 생성
-    tEvent sceneChangeEvent;
-    sceneChangeEvent.eEvent = EVENT_TYPE::SCENE_CHANGE;
-    sceneChangeEvent.lParam = 0;
-    sceneChangeEvent.wParam = (DWORD_PTR)m_eTargetScene;
-
-    CEventMgr::GetInst()->AddEvent(sceneChangeEvent);
-
-    // 플레이어 위치 이동 이벤트 생성 (씬 전환 후 실행됨)
-    tEvent playerMoveEvent;
-    playerMoveEvent.eEvent = EVENT_TYPE::PLAYER_TELEPORT;
-    playerMoveEvent.lParam = (DWORD_PTR)&m_vTargetPosition;
-    playerMoveEvent.wParam = (DWORD_PTR)m_strTargetDoorID.c_str();
-
-    CEventMgr::GetInst()->AddEvent(playerMoveEvent);
-
-    // 문 입장 효과음 재생 (사운드 시스템 구현 시)
-    // CSoundMgr::GetInst()->PlaySFX(L"door_enter.wav");
-}
-
-void CDoor::RenderPrompt(HDC _dc)
+void CDoor::RenderInteractionUI(HDC _dc)
 {
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
-    Vec2 vScale = GetScale();
 
-    // 프롬프트 위치 (문 위쪽)
-    Vec2 vPromptPos = Vec2(vRenderPos.x, vRenderPos.y - vScale.y / 2 - 30.f);
-
-    // 배경 박스 그리기
-    HBRUSH hBgBrush = CreateSolidBrush(RGB(0, 0, 0));
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBgBrush);
-
-    Rectangle(_dc,
-        (int)(vPromptPos.x - 60),
-        (int)(vPromptPos.y - 15),
-        (int)(vPromptPos.x + 60),
-        (int)(vPromptPos.y + 15));
-
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hBgBrush);
-
-    // 텍스트 그리기
-    SetTextColor(_dc, RGB(255, 255, 255));
+    // 상호작용 안내 텍스트
+    SetTextColor(_dc, RGB(255, 255, 0));
     SetBkMode(_dc, TRANSPARENT);
 
     RECT textRect;
-    textRect.left = (int)(vPromptPos.x - 55);
-    textRect.top = (int)(vPromptPos.y - 10);
-    textRect.right = (int)(vPromptPos.x + 55);
-    textRect.bottom = (int)(vPromptPos.y + 10);
+    textRect.left = (int)(vRenderPos.x - 50);
+    textRect.top = (int)(vRenderPos.y - GetScale().y / 2 - 50);
+    textRect.right = (int)(vRenderPos.x + 50);
+    textRect.bottom = (int)(vRenderPos.y - GetScale().y / 2 - 30);
 
-    DrawText(_dc, L"↑ 키로 입장", -1, &textRect, DT_CENTER | DT_VCENTER);
-}
+    // 깜빡이는 효과
+    float fBlinkSpeed = 3.0f;
+    if (sin(m_fAnimTimer * fBlinkSpeed) > 0.0f)
+    {
+        DrawText(_dc, L"↑ ENTER", -1, &textRect, DT_CENTER | DT_VCENTER);
+    }
 
-void CDoor::RenderDoorEffect(HDC _dc)
-{
-    if (!m_bPlayerNearby)
-        return;
+    // 목표 씬 정보 표시 (디버그용)
+    if (!m_strTargetDoorID.empty())
+    {
+        SetTextColor(_dc, RGB(0, 255, 255));
+        RECT targetRect;
+        targetRect.left = (int)(vRenderPos.x - 60);
+        targetRect.top = (int)(vRenderPos.y + GetScale().y / 2 + 5);
+        targetRect.right = (int)(vRenderPos.x + 60);
+        targetRect.bottom = (int)(vRenderPos.y + GetScale().y / 2 + 25);
 
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
-    Vec2 vScale = GetScale();
-
-    // 반짝이는 효과 (사인파 이용)
-    float fAlpha = (sin(m_fAnimTimer * 3.f) + 1.f) * 0.5f;
-    int iAlpha = (int)(fAlpha * 128 + 64); // 64~192 범위
-
-    // 테두리 발광 효과
-    HPEN hGlowPen = CreatePen(PS_SOLID, 3, RGB(255, 255, iAlpha));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hGlowPen);
-
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, GetStockObject(NULL_BRUSH));
-
-    Rectangle(_dc,
-        (int)(vRenderPos.x - vScale.x / 2 - 2),
-        (int)(vRenderPos.y - vScale.y / 2 - 2),
-        (int)(vRenderPos.x + vScale.x / 2 + 2),
-        (int)(vRenderPos.y + vScale.y / 2 + 2));
-
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hGlowPen);
-}
-
-void CDoor::SetEditorData(SCENE_TYPE _eScene, Vec2 _vPos, const wstring& _strTargetID)
-{
-    m_eTargetScene = _eScene;
-    m_vTargetPosition = _vPos;
-    m_strTargetDoorID = _strTargetID;
+        wstring strTargetInfo = L"→ " + m_strTargetDoorID;
+        DrawText(_dc, strTargetInfo.c_str(), -1, &targetRect, DT_CENTER | DT_VCENTER);
+    }
 }

@@ -85,6 +85,9 @@ public:
 
 private:
     void RenderFlippedAnimation(HDC _dc, CAnimation* _pAnim, Vec2 _vRenderPos);
+    void RenderWithAlpha(HDC _dc, float _fAlpha = 1.0f);      // 투명도 조절 렌더링
+    void RenderInvincible(HDC _dc);                           // 무적 상태 렌더링 (깜빡임)
+
 
     // === 흡입 관련 업데이트 ===
     void UpdateInhale();

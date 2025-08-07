@@ -20,6 +20,7 @@ int g_arrVK[(int)KEY::LAST] =
 
     VK_MENU,    // ALT 키 (VK_MENU가 Alt 키의 가상 키 코드)
     VK_HOME,    // HOME 키
+    VK_BACK,
 
     VK_SPACE,
     VK_RETURN,

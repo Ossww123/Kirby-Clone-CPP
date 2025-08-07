@@ -43,23 +43,21 @@ void CTile::Render(HDC _dc)
     // 1. 전용 텍스처가 있으면 텍스처로 렌더링
     if (m_pTileTexture)
     {
-        UINT width = m_pTileTexture->GetWidth();
-        UINT height = m_pTileTexture->GetHeight();
-
-        // 마젠타 투명 처리를 위한 TransparentBlt 사용
-        TransparentBlt(_dc,
-            (int)(vRenderPos.x - vScale.x / 2.f),
-            (int)(vRenderPos.y - vScale.y / 2.f),
-            (int)vScale.x,
-            (int)vScale.y,
-            m_pTileTexture->GetDC(),
-            0, 0,
-            width, height,
-            RGB(255, 0, 255)); // 마젠타 투명 처리
+        // 알파 채널 지원 여부에 따라 적절한 렌더링 방식 선택
+        if (m_pTileTexture->HasAlpha())
+        {
+            // 32비트 알파 채널 렌더링
+            m_pTileTexture->RenderWithAlpha(_dc, vRenderPos, vScale);
+        }
+        else
+        {
+            // 기존 마젠타 키 색상 방식 (24비트 호환)
+            m_pTileTexture->RenderWithColorKey(_dc, vRenderPos, vScale, RGB(255, 0, 255));
+        }
     }
     else
     {
-        // 2. 텍스처가 없으면 기존 방식으로 색상 렌더링
+        // 2. 텍스처가 없으면 기존 색상 렌더링 (변경 없음)
         HBRUSH hBrush = nullptr;
         COLORREF tileColor = RGB(100, 100, 100); // 기본 회색
 
@@ -275,6 +273,23 @@ void CTile::RenderFlowerDetails(HDC _dc, Vec2 vRenderPos, Vec2 vScale)
 
     SelectObject(_dc, hOldBrush);
     DeleteObject(hCenterBrush);
+}
+
+void CTile::RenderWithAlpha(HDC _dc, float _fAlpha)
+{
+    if (m_pTileTexture && m_pTileTexture->HasAlpha())
+    {
+        Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
+        Vec2 vScale = GetScale();
+
+        // 알파 채널이 있는 텍스처만 투명도 조절 가능
+        m_pTileTexture->RenderWithAlpha(_dc, vRenderPos, vScale, _fAlpha);
+    }
+    else
+    {
+        // 알파 채널이 없으면 기본 렌더링
+        Render(_dc);
+    }
 }
 
 void CTile::SetupTileByVisualType(TILE_VISUAL_TYPE _eVisualType)

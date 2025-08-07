@@ -8,6 +8,8 @@
 #include "CTimeMgr.h"
 #include "CEditorFileManager.h"
 #include "CEditorObjectManager.h"
+#include "CBackground.h"
+#include "CStageMgr.h"
 
 CScene_Tool::CScene_Tool()
     : m_pEditorCore(nullptr)
@@ -25,6 +27,8 @@ CScene_Tool::~CScene_Tool()
 
 void CScene_Tool::Enter()
 {
+    CCamera::GetInst()->SetLookAt(Vec2(960.f, 960.f));
+
     // 에디터 코어 시스템 생성 및 초기화
     m_pEditorCore = new CEditorCore();
     m_pEditorCore->Initialize(this);
@@ -47,27 +51,37 @@ void CScene_Tool::Exit()
 
 void CScene_Tool::Update()
 {
-    // 1. 에디터 시스템 업데이트 (입력, 카메라, 오브젝트 관리 등)
+    // 기존 업데이트 로직
+    CScene::Update();
+
+    // 스테이지 매니저 업데이트 (새로 추가)
+    CStageMgr::GetInst()->Update();
+
+    // 에디터 코어 업데이트 (기존)
     if (m_pEditorCore)
     {
         m_pEditorCore->Update();
     }
-
-    // 2. 기본 Scene 업데이트 (모든 오브젝트 업데이트)
-    CScene::Update();
 }
 
 void CScene_Tool::Render(HDC _dc)
 {
-    // 에디터 렌더링은 EditorCore에서 통합 처리
+    // 1. 배경 렌더링 (기존)
+    if (m_pEditorCore->GetObjectManager()->GetCurrentBackground())
+    {
+        m_pEditorCore->GetObjectManager()->GetCurrentBackground()->Render(_dc);
+    }
+
+    // 2. 스테이지 이미지 렌더링 (새로 추가)
+    CStageMgr::GetInst()->Render(_dc);
+
+    // 3. 모든 게임 오브젝트 렌더링 (기존)
+    CScene::Render(_dc);
+
+    // 4. 에디터 관련 렌더링 (기존)
     if (m_pEditorCore)
     {
         m_pEditorCore->Render(_dc);
-    }
-    else
-    {
-        // 에디터 시스템이 없을 경우 기본 Scene 렌더링만
-        CScene::Render(_dc);
     }
 }
 

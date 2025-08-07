@@ -3,6 +3,7 @@
 #include "CEditorCore.h"
 #include "CEditorFileManager.h"
 #include "CEditorObjectManager.h"
+#include "CEditorCameraController.h"
 
 #include "CGrid.h"
 #include "CCore.h"
@@ -19,6 +20,8 @@ CEditorToolbar::CEditorToolbar()
     , m_bMouseDown(false)
     , m_pHoveredButton(nullptr)
     , m_fTooltipTimer(0.f)
+    , m_vCurrentMapSize(3840.f, 2160.f)  // 기본 중간 크기
+    , m_vDefaultMapSize(3840.f, 2160.f)
 {
 }
 
@@ -57,9 +60,17 @@ void CEditorToolbar::Render(HDC _dc)
     {
         if (button.iButtonID != (int)TOOLBAR_BUTTON_ID::SEPARATOR_1 &&
             button.iButtonID != (int)TOOLBAR_BUTTON_ID::SEPARATOR_2 &&
-            button.iButtonID != (int)TOOLBAR_BUTTON_ID::SEPARATOR_3)
+            button.iButtonID != (int)TOOLBAR_BUTTON_ID::SEPARATOR_3 &&
+            button.iButtonID != (int)TOOLBAR_BUTTON_ID::SEPARATOR_4)
         {
-            RenderButton(_dc, button);
+            if (button.iButtonID == (int)TOOLBAR_BUTTON_ID::MAP_SIZE_LABEL)
+            {
+                RenderMapSizeLabel(_dc, button);
+            }
+            else
+            {
+                RenderButton(_dc, button);
+            }
         }
         else
         {
@@ -146,6 +157,84 @@ bool CEditorToolbar::IsInToolbarArea(Vec2 vMousePos)
     return vMousePos.y >= 0 && vMousePos.y <= m_iToolbarHeight;
 }
 
+void CEditorToolbar::SetMapSize(Vec2 vSize)
+{
+    m_vCurrentMapSize = vSize;
+
+    // 에디터 코어에 맵 크기 설정 전달
+    if (m_pEditorCore && m_pEditorCore->GetCameraController())
+    {
+        // 카메라 경계 설정
+        Vec2 vMin = Vec2(0.f, 0.f);
+        Vec2 vMax = vSize;
+        m_pEditorCore->GetCameraController()->SetCameraBounds(vMin, vMax);
+        m_pEditorCore->GetCameraController()->EnableCameraBounds(true);
+    }
+
+    UpdateMapSizeButtons();
+}
+
+// 맵 크기 버튼 상태 업데이트
+void CEditorToolbar::UpdateMapSizeButtons()
+{
+    for (auto& button : m_vecButtons)
+    {
+        if (IsMapSizeButton((TOOLBAR_BUTTON_ID)button.iButtonID))
+        {
+            bool isActive = false;
+
+            switch ((TOOLBAR_BUTTON_ID)button.iButtonID)
+            {
+            case TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL:
+                isActive = (m_vCurrentMapSize.x == 1920.f && m_vCurrentMapSize.y == 1080.f);
+                break;
+            case TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM:
+                isActive = (m_vCurrentMapSize.x == 3840.f && m_vCurrentMapSize.y == 2160.f);
+                break;
+            case TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE:
+                isActive = (m_vCurrentMapSize.x == 7680.f && m_vCurrentMapSize.y == 4320.f);
+                break;
+            case TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM:
+                isActive = !(m_vCurrentMapSize.x == 1920.f && m_vCurrentMapSize.y == 1080.f) &&
+                    !(m_vCurrentMapSize.x == 3840.f && m_vCurrentMapSize.y == 2160.f) &&
+                    !(m_vCurrentMapSize.x == 7680.f && m_vCurrentMapSize.y == 4320.f);
+                break;
+            }
+
+            if (isActive)
+            {
+                button.colorNormal = RGB(100, 150, 100);
+                button.colorHover = RGB(120, 170, 120);
+            }
+            else
+            {
+                button.colorNormal = RGB(70, 70, 70);
+                button.colorHover = RGB(90, 90, 90);
+            }
+        }
+    }
+}
+
+// 사용자 정의 맵 크기 다이얼로그 표시
+void CEditorToolbar::ShowCustomMapSizeDialog()
+{
+    // 간단한 입력 다이얼로그 구현
+    wchar_t szMessage[256];
+    swprintf_s(szMessage, L"현재 맵 크기: %.0f x %.0f\n\n사용자 정의 크기를 설정하시겠습니까?\n(예시: 4800x2700)",
+        m_vCurrentMapSize.x, m_vCurrentMapSize.y);
+
+    int result = MessageBox(CCore::GetInst()->GetMainHwnd(), szMessage, L"사용자 정의 맵 크기", MB_OKCANCEL);
+
+    if (result == IDOK)
+    {
+        // 실제로는 입력 다이얼로그에서 값을 받아와야 함
+        // 여기서는 예시로 4800x2700 설정
+        SetMapSize(Vec2(4800.f, 2700.f));
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Custom map size applied (4800x2700)");
+    }
+}
+
+
 void CEditorToolbar::CreateButtons()
 {
     m_vecButtons.clear();
@@ -177,6 +266,9 @@ void CEditorToolbar::CreateButtons()
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_TILE, currentX, buttonY, 50, m_iButtonHeight, L"Tile", L"타일 배치 모드 (T)");
     currentX += 50 + m_iButtonMargin;
 
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_SPECIAL, currentX, buttonY, 65, m_iButtonHeight, L"Special", L"특수 오브젝트 배치 모드 (S)");
+    currentX += 65 + m_iButtonMargin;
+
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_BACKGROUND, currentX, buttonY, 80, m_iButtonHeight, L"Background", L"배경 모드 (B)");
     currentX += 80 + m_iButtonMargin;
 
@@ -203,11 +295,33 @@ void CEditorToolbar::CreateButtons()
     currentX += 40 + m_iButtonMargin;
 
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::QUICK_LOAD, currentX, buttonY, 40, m_iButtonHeight, L"Q.L", L"빠른 로드 (F9)");
+    currentX += 40 + m_iButtonMargin;
+
+    // 구분선 4
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_4, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
+    currentX += m_iSeparatorWidth + m_iButtonMargin;
+
+    // 맵 크기 라벨
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LABEL, currentX, buttonY, 60, m_iButtonHeight, L"Map Size:", L"맵 크기 설정");
+    currentX += 60 + m_iButtonMargin;
+
+    // 맵 크기 버튼들
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL, currentX, buttonY, 50, m_iButtonHeight, L"Small", L"작은 맵 (1920x1080)");
+    currentX += 50 + m_iButtonMargin;
+
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM, currentX, buttonY, 60, m_iButtonHeight, L"Medium", L"중간 맵 (3840x2160)");
+    currentX += 60 + m_iButtonMargin;
+
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE, currentX, buttonY, 50, m_iButtonHeight, L"Large", L"큰 맵 (7680x4320)");
+    currentX += 50 + m_iButtonMargin;
+
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM, currentX, buttonY, 60, m_iButtonHeight, L"Custom", L"사용자 정의 크기");
+    currentX += 60 + m_iButtonMargin;
 }
 
 void CEditorToolbar::UpdateButtonStates()
 {
-    // 현재 모드에 따라 모드 버튼들의 색상 변경
+    // 현재 모드에 따른 모드 버튼들의 색상 변경
     EDITOR_MODE currentMode = m_pEditorCore->GetCurrentMode();
 
     for (auto& button : m_vecButtons)
@@ -227,6 +341,9 @@ void CEditorToolbar::UpdateButtonStates()
                 break;
             case TOOLBAR_BUTTON_ID::MODE_TILE:
                 isActive = (currentMode == EDITOR_MODE::PLACE_TILE);
+                break;
+            case TOOLBAR_BUTTON_ID::MODE_SPECIAL:
+                isActive = (currentMode == EDITOR_MODE::PLACE_SPECIAL);
                 break;
             case TOOLBAR_BUTTON_ID::MODE_BACKGROUND:
                 isActive = (currentMode == EDITOR_MODE::BACKGROUND);
@@ -288,6 +405,9 @@ void CEditorToolbar::UpdateButtonStates()
             }
         }
     }
+
+    // 맵 크기 버튼 상태 업데이트
+    UpdateMapSizeButtons();
 }
 
 tToolbarButton* CEditorToolbar::GetButtonAt(Vec2 vMousePos)
@@ -332,6 +452,10 @@ void CEditorToolbar::ExecuteButtonAction(TOOLBAR_BUTTON_ID buttonID)
         m_pEditorCore->ChangeMode(EDITOR_MODE::PLACE_TILE);
         break;
 
+    case TOOLBAR_BUTTON_ID::MODE_SPECIAL:
+        m_pEditorCore->ChangeMode(EDITOR_MODE::PLACE_SPECIAL);
+        break;
+
     case TOOLBAR_BUTTON_ID::MODE_BACKGROUND:
         m_pEditorCore->ChangeMode(EDITOR_MODE::BACKGROUND);
         break;
@@ -363,6 +487,26 @@ void CEditorToolbar::ExecuteButtonAction(TOOLBAR_BUTTON_ID buttonID)
 
     case TOOLBAR_BUTTON_ID::QUICK_LOAD:
         m_pEditorCore->GetFileManager()->QuickLoad();
+        break;
+
+        // 맵 크기 관련 버튼들
+    case TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL:
+        SetMapSize(Vec2(1920.f, 1080.f));
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Map size set to Small (1920x1080)");
+        break;
+
+    case TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM:
+        SetMapSize(Vec2(3840.f, 2160.f));
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Map size set to Medium (3840x2160)");
+        break;
+
+    case TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE:
+        SetMapSize(Vec2(7680.f, 4320.f));
+        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Map size set to Large (7680x4320)");
+        break;
+
+    case TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM:
+        ShowCustomMapSizeDialog();
         break;
     }
 }
@@ -494,6 +638,30 @@ void CEditorToolbar::RenderToolbarBackground(HDC _dc)
     DeleteObject(hPen);
 }
 
+void CEditorToolbar::RenderMapSizeLabel(HDC _dc, const tToolbarButton& button)
+{
+    // 라벨은 버튼과 다르게 렌더링 (배경 없음)
+    SetBkMode(_dc, TRANSPARENT);
+    SetTextColor(_dc, RGB(200, 200, 200));
+
+    HFONT hFont = CreateFont(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
+    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+
+    // 텍스트 중앙 정렬
+    SIZE textSize;
+    GetTextExtentPoint32(_dc, button.strText.c_str(), (int)button.strText.length(), &textSize);
+
+    int textX = button.iX + (button.iWidth - textSize.cx) / 2;
+    int textY = button.iY + (button.iHeight - textSize.cy) / 2;
+
+    TextOut(_dc, textX, textY, button.strText.c_str(), (int)button.strText.length());
+
+    SelectObject(_dc, hOldFont);
+    DeleteObject(hFont);
+}
+
 COLORREF CEditorToolbar::GetButtonColor(const tToolbarButton& button)
 {
     if (!button.bEnabled)
@@ -513,6 +681,7 @@ wstring CEditorToolbar::GetModeButtonText(EDITOR_MODE mode)
     case EDITOR_MODE::PLACE_MONSTER: return L"Monster";
     case EDITOR_MODE::PLACE_ITEM: return L"Item";
     case EDITOR_MODE::PLACE_TILE: return L"Tile";
+    case EDITOR_MODE::PLACE_SPECIAL: return L"Special";
     case EDITOR_MODE::BACKGROUND: return L"Background";
     default: return L"Unknown";
     }
@@ -523,5 +692,14 @@ bool CEditorToolbar::IsModeButton(TOOLBAR_BUTTON_ID buttonID)
     return buttonID == TOOLBAR_BUTTON_ID::MODE_MONSTER ||
         buttonID == TOOLBAR_BUTTON_ID::MODE_ITEM ||
         buttonID == TOOLBAR_BUTTON_ID::MODE_TILE ||
+        buttonID == TOOLBAR_BUTTON_ID::MODE_SPECIAL ||
         buttonID == TOOLBAR_BUTTON_ID::MODE_BACKGROUND;
+}
+
+bool CEditorToolbar::IsMapSizeButton(TOOLBAR_BUTTON_ID buttonID)
+{
+    return buttonID == TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL ||
+        buttonID == TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM ||
+        buttonID == TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE ||
+        buttonID == TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM;
 }

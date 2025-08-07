@@ -25,6 +25,8 @@ CPlayer::CPlayer()
     , m_pMovement(nullptr)
     , m_pHealthSystem(nullptr)
 {
+    SetType(OBJECT_TYPE::PLAYER);
+
     // === 컴포넌트들 생성 (기존 방식) ===
     CreateAnimator();
     m_pAnimator = GetAnimator();
@@ -407,7 +409,15 @@ void CPlayer::Render(HDC _dc)
                     else
                     {
                         // 오른쪽을 보고 있을 때 - 기본 렌더링
-                        pCurAnim->Render(_dc, vPos);
+                        // 알파 채널 지원 확인 후 적절한 렌더링 (여기만 수정!)
+                        if (pCurAnim->GetTexture() && pCurAnim->GetTexture()->HasAlpha())
+                        {
+                            pCurAnim->RenderWithAlpha(_dc, vPos, 1.0f);
+                        }
+                        else
+                        {
+                            pCurAnim->Render(_dc, vPos);
+                        }
                     }
                 }
             }
@@ -452,19 +462,121 @@ void CPlayer::RenderFlippedAnimation(HDC _dc, CAnimation* _pAnim, Vec2 _vRenderP
         (int)frame.vSlice.x, (int)frame.vSlice.y,
         SRCCOPY);
 
-    // 투명 처리해서 화면에 그리기
-    TransparentBlt(_dc,
-        (int)(_vRenderPos.x - frame.vSlice.x / 2.f),
-        (int)(_vRenderPos.y - frame.vSlice.y / 2.f),
-        (int)frame.vSlice.x, (int)frame.vSlice.y,
-        hTempDC, 0, 0,
-        (int)frame.vSlice.x, (int)frame.vSlice.y,
-        RGB(255, 0, 255));
+    // 알파 채널 지원 여부에 따라 적절한 렌더링 방식 선택
+    if (pTex->HasAlpha())
+    {
+        // 원본 텍스처가 알파 채널을 지원하더라도, 
+        // 임시 비트맵(좌우 반전용)은 32비트가 아니므로 키 색상 방식 사용
+        TransparentBlt(_dc,
+            (int)(_vRenderPos.x - frame.vSlice.x / 2.f),
+            (int)(_vRenderPos.y - frame.vSlice.y / 2.f),
+            (int)frame.vSlice.x, (int)frame.vSlice.y,
+            hTempDC, 0, 0,
+            (int)frame.vSlice.x, (int)frame.vSlice.y,
+            RGB(255, 0, 255));
+    }
+    else
+    {
+        // 기존 마젠타 키 색상 방식 (24비트 호환)
+        TransparentBlt(_dc,
+            (int)(_vRenderPos.x - frame.vSlice.x / 2.f),
+            (int)(_vRenderPos.y - frame.vSlice.y / 2.f),
+            (int)frame.vSlice.x, (int)frame.vSlice.y,
+            hTempDC, 0, 0,
+            (int)frame.vSlice.x, (int)frame.vSlice.y,
+            RGB(255, 0, 255));
+    }
 
     // 정리
     SelectObject(hTempDC, hOldBitmap);
     DeleteObject(hTempBitmap);
     DeleteDC(hTempDC);
+}
+
+void CPlayer::RenderWithAlpha(HDC _dc, float _fAlpha)
+{
+    if (m_pAnimator && m_pAnimator->GetCurAnim())
+    {
+        // 현재 애니메이션의 텍스처가 알파 채널을 지원하는지 확인
+        CAnimation* pCurrentAnim = m_pAnimator->GetCurAnim();
+        CTexture* pCurrentTex = pCurrentAnim->GetTexture();
+
+        if (pCurrentTex && pCurrentTex->HasAlpha())
+        {
+            // 투명도를 적용한 애니메이션 렌더링
+            Vec2 vPos = GetPos();
+
+            if (!IsFacingRight())
+            {
+                // 왼쪽을 보고 있을 때는 좌우 반전이 필요하므로 일반 렌더링 사용
+                // (좌우 반전 + 알파 블렌딩은 복잡하므로 일단 기본 렌더링)
+                Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
+                RenderFlippedAnimation(_dc, pCurrentAnim, vRenderPos);
+            }
+            else
+            {
+                // 오른쪽을 보고 있을 때는 알파 렌더링 사용
+                pCurrentAnim->RenderWithAlpha(_dc, vPos, _fAlpha);
+            }
+        }
+        else
+        {
+            // 알파 채널이 없으면 기본 렌더링
+            if (m_pAnimator)
+            {
+                m_pAnimator->Render(_dc);
+            }
+        }
+    }
+    else
+    {
+        // 애니메이터가 없으면 기본 오브젝트 렌더링
+        CObject::Render(_dc);
+    }
+}
+
+void CPlayer::RenderInvincible(HDC _dc)
+{
+    // 무적 상태 확인
+    bool bShouldRender = true;
+    if (m_pHealthSystem && m_pHealthSystem->IsInvincible())
+    {
+        bShouldRender = m_pHealthSystem->ShouldRenderBlink();
+    }
+
+    if (bShouldRender)
+    {
+        // 기존 애니메이션 렌더링 코드 (방향에 따른 렌더링)
+        if (m_pAnimator)
+        {
+            CAnimation* pCurAnim = m_pAnimator->GetCurAnim();
+            if (pCurAnim)
+            {
+                Vec2 vPos = GetPos();
+
+                if (!IsFacingRight())
+                {
+                    // 왼쪽을 보고 있을 때 - 스프라이트 뒤집기
+                    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
+                    RenderFlippedAnimation(_dc, pCurAnim, vRenderPos);
+                }
+                else
+                {
+                    // 오른쪽을 보고 있을 때 - 기본 렌더링
+                    // 알파 채널 지원 확인 후 적절한 렌더링
+                    if (pCurAnim->GetTexture() && pCurAnim->GetTexture()->HasAlpha())
+                    {
+                        pCurAnim->RenderWithAlpha(_dc, vPos, 1.0f);
+                    }
+                    else
+                    {
+                        pCurAnim->Render(_dc, vPos);
+                    }
+                }
+            }
+        }
+    }
+    // bShouldRender가 false면 렌더링하지 않음 (깜빡임 효과)
 }
 
 void CPlayer::OnCollisionEnter(CCollider* _pOther)

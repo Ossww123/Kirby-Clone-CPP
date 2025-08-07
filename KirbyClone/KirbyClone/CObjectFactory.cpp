@@ -9,6 +9,7 @@
 #include "CItem.h"
 #include "CTile.h"
 #include "CSpecialObject.h"
+#include "CDoor.h"
 
 CObject* CObjectFactory::CreateObject(OBJECT_TYPE _eType, Vec2 _vPos)
 {
@@ -61,9 +62,9 @@ CObject* CObjectFactory::CreateObject(OBJECT_TYPE _eType, Vec2 _vPos)
 
     if (pObject)
     {
-        // 공통 설정
         pObject->SetPos(_vPos);
-        pObject->SetScale(GetDefaultScale(_eType));
+        Vec2 vDefaultScale = GetDefaultScale(_eType);
+        pObject->SetScale(vDefaultScale);
     }
 
     return pObject;
@@ -205,25 +206,47 @@ CObject* CObjectFactory::CreateTile(OBJECT_TYPE _eTileType, Vec2 _vPos)
 
 CObject* CObjectFactory::CreateSpecialObject(OBJECT_TYPE _eObjectType, Vec2 _vPos)
 {
-    CSpecialObject* pObject = new CSpecialObject;
-    pObject->SetSpecialType(_eObjectType);
+    CSpecialObject* pObject = nullptr;
 
     switch (_eObjectType)
     {
     case OBJECT_TYPE::OBJECT_DOOR:
-        pObject->SetScale(Vec2(64.f, 128.f)); // 세로로 긴 문
-        pObject->SetActive(true);
+    {
+        CDoor* pDoor = new CDoor;
+        pDoor->SetPos(_vPos);
+
+        // 기본 문 설정
+        pDoor->SetTargetScene(SCENE_TYPE::STAGE_02);
+        pDoor->SetTargetPosition(Vec2(100.f, 400.f));
+        pDoor->SetDoorID(L"DefaultDoor");
+
+        pObject = pDoor;
+    }
         break;
 
     case OBJECT_TYPE::OBJECT_SWITCH:
-        pObject->SetScale(Vec2(48.f, 32.f)); // 작은 스위치
-        pObject->SetActive(false);
-        break;
+    {
+        // TODO: CSwitch 클래스 구현 후 생성
+        CSpecialObject* pSwitch = new CSpecialObject;
+        pSwitch->SetSpecialType(OBJECT_TYPE::OBJECT_SWITCH);
+        pSwitch->SetScale(Vec2(48.f, 32.f));
+        pSwitch->SetActive(false);
+        pSwitch->SetInteractable(true);
+        pObject = pSwitch;
+    }
+    break;
 
     case OBJECT_TYPE::OBJECT_MIRROR:
-        pObject->SetScale(Vec2(96.f, 128.f)); // 큰 거울
-        pObject->SetActive(true);
-        break;
+    {
+        // TODO: CMirror 클래스 구현 후 생성  
+        CSpecialObject* pMirror = new CSpecialObject;
+        pMirror->SetSpecialType(OBJECT_TYPE::OBJECT_MIRROR);
+        pMirror->SetScale(Vec2(96.f, 128.f));
+        pMirror->SetActive(true);
+        pMirror->SetInteractable(false);
+        pObject = pMirror;
+    }
+    break;
 
     default:
         pObject->SetScale(Vec2(64.f, 64.f));

@@ -3,36 +3,37 @@
 
 class CSpecialObject : public CObject
 {
-private:
-    OBJECT_TYPE m_eSpecialType;
-    bool m_bActive;         // 활성화 여부
-    float m_fTimer;         // 타이머 (필요시)
+protected:
+    OBJECT_TYPE     m_eSpecialType;         // 특수 오브젝트 타입
+    bool            m_bIsActive;            // 활성화 상태
+    bool            m_bIsInteractable;      // 상호작용 가능 여부
+    float           m_fInteractionRange;    // 상호작용 가능 범위
+
+    // 공통 애니메이션
+    float           m_fAnimTimer;           // 애니메이션 타이머
+    int             m_iAnimFrame;           // 현재 애니메이션 프레임
 
 public:
-    virtual void Update() override
-    {
-        // TODO: 특수 오브젝트별 동작 구현
-        // 문 열기/닫기, 스위치 토글, 거울 반사 등
-    }
+    virtual void Update() override;
+    virtual void Render(HDC _dc) override;
 
+    // 상호작용 처리 (자식 클래스에서 구현)
+    virtual void OnInteract(CObject* _pActor) {}
+    virtual bool CanInteract(CObject* _pActor) { return m_bIsActive && m_bIsInteractable; }
+
+    // Setter
     void SetSpecialType(OBJECT_TYPE _eType) { m_eSpecialType = _eType; }
-    void SetActive(bool _bActive) { m_bActive = _bActive; }
+    void SetActive(bool _bActive) { m_bIsActive = _bActive; }
+    void SetInteractable(bool _bInteractable) { m_bIsInteractable = _bInteractable; }
+    void SetInteractionRange(float _fRange) { m_fInteractionRange = _fRange; }
 
-    OBJECT_TYPE GetSpecialType() { return m_eSpecialType; }
-    bool IsActive() { return m_bActive; }
-
-    virtual void OnCollisionEnter(CCollider* _pOther) override
-    {
-        // TODO: 플레이어와 상호작용 처리
-    }
+    // Getter
+    OBJECT_TYPE GetSpecialType() const { return m_eSpecialType; }
+    bool IsActive() const { return m_bIsActive; }
+    bool IsInteractable() const { return m_bIsInteractable; }
+    float GetInteractionRange() const { return m_fInteractionRange; }
 
 public:
-    CSpecialObject()
-        : m_eSpecialType(OBJECT_TYPE::OBJECT_DOOR)
-        , m_bActive(true)
-        , m_fTimer(0.f)
-    {
-        // 기본 특수 오브젝트 설정
-    }
-    ~CSpecialObject() {}
+    CSpecialObject();
+    virtual ~CSpecialObject();
 };

@@ -12,6 +12,9 @@ private:
     UINT        m_iID;          // 충돌체 고유 ID
     static UINT g_iNextID;      // 다음 ID 생성용
 
+    // 현재 충돌 중인 콜라이더들의 목록
+    vector<CCollider*> m_vecCollidingColliders;
+
 public:
     void SetOffsetPos(Vec2 _vPos) { m_vOffsetPos = _vPos; }
     void SetScale(Vec2 _vScale) { m_vScale = _vScale; }
@@ -22,6 +25,13 @@ public:
 
     CObject* GetOwner() { return m_pOwner; }
     UINT GetID() { return m_iID; }
+
+    // 충돌 목록 관리 함수들
+    const vector<CCollider*>& GetCollidingColliders() const { return m_vecCollidingColliders; }
+    void AddCollidingCollider(CCollider* _pOther);
+    void RemoveCollidingCollider(CCollider* _pOther);
+    void ClearCollidingColliders() { m_vecCollidingColliders.clear(); }
+    bool IsCollidingWith(CCollider* _pOther) const;
 
 public:
     void FinalUpdate();
