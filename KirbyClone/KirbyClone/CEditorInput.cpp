@@ -7,10 +7,13 @@
 #include "CEditorToolbar.h"
 #include "CEditorUI.h"
 
+#include "CStageImage.h"
 #include "CObject.h"
 #include "CDoor.h"
 #include "CEventMgr.h"
 #include "CKeyMgr.h"
+#include "CStageMgr.h"
+#include "CPathMgr.h"
 #include "CGrid.h"
 #include "CCamera.h"
 #include "CCore.h"
@@ -155,7 +158,7 @@ void CEditorInput::UpdateModeInput()
     // ESC - 기본 모드로
     if (KEY_TAP(KEY::ESC))
     {
-        m_pEditorCore->ChangeMode(EDITOR_MODE::NONE);
+        m_pEditorCore->ChangeMode(EDITOR_MODE::NORMAL);
         return;
     }
 
@@ -196,6 +199,10 @@ void CEditorInput::UpdateModeInput()
     {
         m_pEditorCore->ChangeMode(EDITOR_MODE::BACKGROUND);
     }
+    else if (KEY_TAP(KEY::ALPHA_9))
+    {
+        m_pEditorCore->ChangeMode(EDITOR_MODE::PLACE_STAGE);
+    }
     else if (KEY_TAP(KEY::R))
     {
         m_pEditorCore->ChangeMode(EDITOR_MODE::PLAYER_SPAWN);
@@ -227,7 +234,6 @@ void CEditorInput::UpdateMouseInput()
         }
 
         // 3순위: 기본 마우스 클릭 처리 (그리드 스냅된 좌표 사용)
-        m_pEditorCore->SetMouseClick(true, 0.5f);
         HandleMouseClick();
     }
 
@@ -369,8 +375,11 @@ void CEditorInput::HandleMouseClick()
         m_pEditorCore->GetObjectManager()->NextBackground();
     }
     break;
-
-    case EDITOR_MODE::NONE:
+    case EDITOR_MODE::PLACE_STAGE:
+        // Stage Image 모드에서는 클릭으로 스테이지 이미지 변경
+        HandleStageImageClick();
+        break;
+    case EDITOR_MODE::NORMAL:
     case EDITOR_MODE::CAMERA_MOVE:
     default:
         // 기본 모드에서는 클릭 위치만 표시
@@ -394,6 +403,9 @@ void CEditorInput::HandleModeSpecificInput()
         break;
     case EDITOR_MODE::PLACE_TILE:
         HandleTileModeInput();
+        break;
+    case EDITOR_MODE::PLACE_STAGE:  // 새로 추가
+        HandleStageImageModeInput();
         break;
     }
 }
@@ -421,5 +433,231 @@ void CEditorInput::HandleTileModeInput()
     else if (KEY_TAP(KEY::E))
     {
         m_pEditorCore->GetObjectManager()->NextTileVisual();
+    }
+}
+
+void CEditorInput::HandleStageImageClick()
+{
+    // 현재 스테이지 타입 가져오기
+    STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
+
+    // 사용 가능한 스테이지 타입들 가져오기
+    vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst()->GetAvailableStageImageTypes();
+
+    if (availableTypes.empty())
+        return;
+
+    // 현재 타입의 인덱스 찾기
+    int currentIndex = 0;
+    for (size_t i = 0; i < availableTypes.size(); ++i)
+    {
+        if (availableTypes[i] == currentType)
+        {
+            currentIndex = (int)i;
+            break;
+        }
+    }
+
+    // 다음 스테이지 타입으로 변경
+    currentIndex = (currentIndex + 1) % (int)availableTypes.size();
+    STAGE_IMAGE_TYPE nextType = availableTypes[currentIndex];
+
+    // 스테이지 이미지 변경
+    CStageMgr::GetInst()->SetCurrentStageImage(nextType);
+
+    // 상태 표시
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Stage Image changed to: %s",
+        CStageMgr::GetInst()->GetStageImageName(nextType));
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+void CEditorInput::HandleStageImageModeInput()
+{
+    // Q/E 키로 스테이지 이미지 변경
+    if (KEY_TAP(KEY::Q))
+    {
+        PrevStageImage();
+    }
+    else if (KEY_TAP(KEY::E))
+    {
+        NextStageImage();
+    }
+
+    // C 키로 커스텀 스테이지 이미지 로드
+    if (KEY_TAP(KEY::C))
+    {
+        LoadCustomStageImage();
+    }
+
+    // R 키로 스테이지 이미지를 좌하단으로 재배치
+    if (KEY_TAP(KEY::R))
+    {
+        CStageImage* pCurrent = CStageMgr::GetInst()->GetCurrentStageImage();
+        if (pCurrent)
+        {
+            pCurrent->SetImageToBottomLeft();
+            SetWindowText(CCore::GetInst()->GetMainHwnd(),
+                L"Stage image repositioned to bottom-left (0,0)");
+        }
+    }
+
+    // T 키로 스테이지 이미지 정보 디버깅
+    if (KEY_TAP(KEY::F))
+    {
+        CStageImage* pCurrent = CStageMgr::GetInst()->GetCurrentStageImage();
+        if (pCurrent)
+        {
+            Vec2 offset = pCurrent->GetRenderOffset();
+            Vec2 size = pCurrent->GetImageSize();
+            wchar_t szDebug[512];
+            swprintf_s(szDebug, L"DEBUG - Stage: %s | Texture: %s | Offset: (%.0f,%.0f) | Size: (%.0f,%.0f)",
+                CStageMgr::GetInst()->GetStageImageName(pCurrent->GetStageType()),
+                pCurrent->GetStageTexture() ? L"OK" : L"NULL",
+                offset.x, offset.y, size.x, size.y);
+            SetWindowText(CCore::GetInst()->GetMainHwnd(), szDebug);
+        }
+        else
+        {
+            SetWindowText(CCore::GetInst()->GetMainHwnd(), L"DEBUG - No current stage image!");
+        }
+    }
+}
+
+void CEditorInput::ResetStageImageToBottomLeft()
+{
+    CStageImage* pCurrentStage = CStageMgr::GetInst()->GetCurrentStageImage();
+    if (pCurrentStage)
+    {
+        pCurrentStage->SetImageToBottomLeft();
+
+        // 상태 표시
+        SetWindowText(CCore::GetInst()->GetMainHwnd(),
+            L"Stage image repositioned to bottom-left (0,0)");
+    }
+}
+
+// 이전 스테이지 이미지로 변경
+void CEditorInput::PrevStageImage()
+{
+    STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
+    vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst()->GetAvailableStageImageTypes();
+
+    if (availableTypes.size() <= 1)
+        return;
+
+    // 현재 타입의 인덱스 찾기
+    int currentIndex = 0;
+    for (size_t i = 0; i < availableTypes.size(); ++i)
+    {
+        if (availableTypes[i] == currentType)
+        {
+            currentIndex = (int)i;
+            break;
+        }
+    }
+
+    // 이전 스테이지 타입으로 변경
+    currentIndex = (currentIndex - 1 + (int)availableTypes.size()) % (int)availableTypes.size();
+    STAGE_IMAGE_TYPE prevType = availableTypes[currentIndex];
+
+    CStageMgr::GetInst()->SetCurrentStageImage(prevType);
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Stage Image: %s",
+        CStageMgr::GetInst()->GetStageImageName(prevType));
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+// 다음 스테이지 이미지로 변경
+void CEditorInput::NextStageImage()
+{
+    STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
+    vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst()->GetAvailableStageImageTypes();
+
+    if (availableTypes.size() <= 1)
+        return;
+
+    // 현재 타입의 인덱스 찾기
+    int currentIndex = 0;
+    for (size_t i = 0; i < availableTypes.size(); ++i)
+    {
+        if (availableTypes[i] == currentType)
+        {
+            currentIndex = (int)i;
+            break;
+        }
+    }
+
+    // 다음 스테이지 타입으로 변경
+    currentIndex = (currentIndex + 1) % (int)availableTypes.size();
+    STAGE_IMAGE_TYPE nextType = availableTypes[currentIndex];
+
+    CStageMgr::GetInst()->SetCurrentStageImage(nextType);
+
+    wchar_t szBuffer[256];
+    swprintf_s(szBuffer, L"Stage Image: %s",
+        CStageMgr::GetInst()->GetStageImageName(nextType));
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+}
+
+// 커스텀 스테이지 이미지 로드
+void CEditorInput::LoadCustomStageImage()
+{
+    // 파일 다이얼로그 열기
+    OPENFILENAME ofn;
+    wchar_t szFile[260] = { 0 };
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = CCore::GetInst()->GetMainHwnd();
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = L"BMP Files\0*.bmp\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileName(&ofn))
+    {
+        // 상대 경로로 변환 (content 폴더 기준)
+        wstring strFullPath = szFile;
+        wstring strContentPath = CPathMgr::GetInst()->GetContentPath();
+
+        wstring strRelativePath;
+        if (strFullPath.find(strContentPath) == 0)
+        {
+            // content 폴더 내부의 파일인 경우
+            strRelativePath = strFullPath.substr(strContentPath.length());
+        }
+        else
+        {
+            // 외부 파일인 경우 파일명만 사용
+            size_t pos = strFullPath.find_last_of(L"\\");
+            if (pos != wstring::npos)
+            {
+                strRelativePath = L"stage\\" + strFullPath.substr(pos + 1);
+            }
+            else
+            {
+                strRelativePath = L"stage\\" + strFullPath;
+            }
+        }
+
+        // 커스텀 스테이지 이미지 로드
+        if (CStageMgr::GetInst()->LoadCustomStageImage(strRelativePath))
+        {
+            wchar_t szBuffer[256];
+            swprintf_s(szBuffer, L"Custom stage image loaded: %s", strRelativePath.c_str());
+            SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+        }
+        else
+        {
+            MessageBox(CCore::GetInst()->GetMainHwnd(),
+                L"Failed to load custom stage image!\nPlease check if it's a valid 24-bit BMP file.",
+                L"Load Error", MB_OK | MB_ICONERROR);
+        }
     }
 }

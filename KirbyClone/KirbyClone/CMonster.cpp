@@ -25,6 +25,7 @@ CMonster::CMonster()
     , m_bHitWall(false)
     , m_fGroundCheckDist(32.f)
     , m_fWallCheckDist(32.f)
+    , m_eMonsterType(OBJECT_TYPE::MONSTER_WADDLE_DEE)  // 새로 추가
 {
     // 충돌체 생성 - 56x56으로 설정
     CreateCollider();
@@ -57,19 +58,288 @@ CMonster::~CMonster()
     m_pRigidBody = nullptr;
 }
 
+void CMonster::SetMonsterType(OBJECT_TYPE _eType)
+{
+    m_eMonsterType = _eType;
+    SetType(_eType);
+
+    // 몬스터 타입별 기본 설정
+    switch (_eType)
+    {
+    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
+        m_fSpeed = 80.f;
+        break;
+    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
+        m_fSpeed = 60.f;
+        break;
+    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
+        m_fSpeed = 100.f;
+        m_pRigidBody->SetUseGravity(false);  // 날아다님
+        break;
+    case OBJECT_TYPE::MONSTER_GORDOS:
+        m_fSpeed = 120.f;
+        m_pRigidBody->SetUseGravity(false);  // 날아다님
+        break;
+    case OBJECT_TYPE::MONSTER_HOT_HEAD:
+        m_fSpeed = 90.f;
+        break;
+    case OBJECT_TYPE::MONSTER_SPARKY:
+        m_fSpeed = 70.f;
+        break;
+    }
+
+    // 애니메이션 재생성
+    CreateAnimation();
+}
+
 void CMonster::CreateAnimation()
 {
-    // 웨이들디 스프라이트 로드
-    CTexture* pTex = CResMgr::GetInst()->LoadTexture(L"WaddleDeeSprite", L"texture\\enemy\\waddle_dee.bmp");
+    // 통합 enemies.bmp 스프라이트 시트 로드
+    CTexture* pTex = CResMgr::GetInst()->LoadTexture(L"EnemiesSprite", L"texture\\enemy\\enemies.bmp");
 
-    // IDLE 애니메이션 (첫 번째 프레임만 사용)
-    m_pAnimator->CreateAnimation(L"IDLE", pTex, Vec2(24, 24), Vec2(80, 76), Vec2(96, 0), 0.5f, 1, true);
+    // 기본 프레임 크기와 간격 (1~6행: 32x32, 간격 32)
+    Vec2 frameSize = Vec2(32.f, 32.f);
+    Vec2 frameOffset = Vec2(32.f, 32.f);  // 간격도 32
+    float frameDuration = 0.15f;
 
-    // WALK 애니메이션 (걷기 애니메이션)
-    m_pAnimator->CreateAnimation(L"WALK", pTex, Vec2(24, 24), Vec2(80, 76), Vec2(96, 0), 0.15f, 8, true);
+    switch (m_eMonsterType)
+    {
+    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
+        CreateWaddleDeeAnimations(pTex, frameSize, frameOffset, frameDuration);
+        break;
+    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
+        CreateWaddleDooAnimations(pTex, frameSize, frameOffset, frameDuration);
+        break;
+    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
+        CreateBrontoBurtAnimations(pTex, frameSize, frameOffset, frameDuration);
+        break;
+    case OBJECT_TYPE::MONSTER_GORDOS:
+        CreateGordosAnimations(pTex, frameSize, frameOffset, frameDuration);
+        break;
+    case OBJECT_TYPE::MONSTER_HOT_HEAD:
+        CreateHotHeadAnimations(pTex, frameSize, frameOffset, frameDuration);
+        break;
+    case OBJECT_TYPE::MONSTER_SPARKY:
+        CreateSparkyAnimations(pTex, frameSize, frameOffset, frameDuration);
+        break;
+    }
 
-    // 초기 애니메이션 재생
-    m_pAnimator->Play(L"IDLE", true);
+    // 기본 애니메이션 재생
+    m_pAnimator->Play(L"WALK", true);
+}
+
+void CMonster::CreateWaddleDeeAnimations(CTexture* pTex, Vec2 frameSize, Vec2 frameOffset, float frameDuration)
+{
+    // 첫 번째 행: 웨이들 디 - 시작 위치 (8, 8)
+    Vec2 startPos = Vec2(8.f, 8.f);
+
+    // WALK 상태 (1~8열)
+    m_pAnimator->CreateAnimation(L"WALK", pTex,
+        startPos,                   // 시작 위치 (8, 8)
+        frameSize,                  // 프레임 크기 32x32
+        frameOffset,                // 다음 프레임 오프셋 (32, 0)
+        frameDuration, 8, true);
+
+    // DAMAGE 상태 (9~12열)
+    m_pAnimator->CreateAnimation(L"DAMAGE", pTex,
+        Vec2(startPos.x + frameOffset.x * 8, startPos.y),  // 9번째 열 위치
+        frameSize,
+        frameOffset,
+        frameDuration, 4, false);
+
+    // IDLE은 WALK의 첫 프레임 사용
+    m_pAnimator->CreateAnimation(L"IDLE", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        0.5f, 1, true);
+}
+
+void CMonster::CreateWaddleDooAnimations(CTexture* pTex, Vec2 frameSize, Vec2 frameOffset, float frameDuration)
+{
+    // 두 번째 행: 웨이들 두 - 시작 위치 (8, 8 + 32)
+    Vec2 startPos = Vec2(8.f, 8.f + 32.f);
+
+    // WALK 상태 (1~8열)
+    m_pAnimator->CreateAnimation(L"WALK", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        frameDuration, 8, true);
+
+    // DAMAGE 상태 (9~12열)
+    m_pAnimator->CreateAnimation(L"DAMAGE", pTex,
+        Vec2(startPos.x + frameOffset.x * 8, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 4, false);
+
+    // ATTACK_READY 상태 (13~14열)
+    m_pAnimator->CreateAnimation(L"ATTACK_READY", pTex,
+        Vec2(startPos.x + frameOffset.x * 12, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 2, true);
+
+    // ATTACK 상태 (15~17열)
+    m_pAnimator->CreateAnimation(L"ATTACK", pTex,
+        Vec2(startPos.x + frameOffset.x * 14, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 3, false);
+
+    // IDLE
+    m_pAnimator->CreateAnimation(L"IDLE", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        0.5f, 1, true);
+}
+
+void CMonster::CreateBrontoBurtAnimations(CTexture* pTex, Vec2 frameSize, Vec2 frameOffset, float frameDuration)
+{
+    // 세 번째 행: 브론토 버트 - 시작 위치 (8, 8 + 64)
+    Vec2 startPos = Vec2(8.f, 8.f + 64.f);
+
+    // FLY/WALK 상태 (1~4열)
+    m_pAnimator->CreateAnimation(L"FLY", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        frameDuration, 4, true);
+
+    m_pAnimator->CreateAnimation(L"WALK", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        frameDuration, 4, true);
+
+    // DAMAGE 상태 (5~8열)
+    m_pAnimator->CreateAnimation(L"DAMAGE", pTex,
+        Vec2(startPos.x + frameOffset.x * 4, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 4, false);
+
+    // IDLE
+    m_pAnimator->CreateAnimation(L"IDLE", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        0.5f, 1, true);
+}
+
+void CMonster::CreateGordosAnimations(CTexture* pTex, Vec2 frameSize, Vec2 frameOffset, float frameDuration)
+{
+    // 네 번째 행: 고르도 - 시작 위치 (8, 8 + 96)
+    Vec2 startPos = Vec2(8.f, 8.f + 96.f);
+
+    // FLY/WALK 상태 (1~4열)
+    m_pAnimator->CreateAnimation(L"FLY", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        frameDuration, 4, true);
+
+    m_pAnimator->CreateAnimation(L"WALK", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        frameDuration, 4, true);
+
+    // IDLE
+    m_pAnimator->CreateAnimation(L"IDLE", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        0.5f, 1, true);
+}
+
+void CMonster::CreateHotHeadAnimations(CTexture* pTex, Vec2 frameSize, Vec2 frameOffset, float frameDuration)
+{
+    // 다섯 번째 행: 핫 헤드 - 시작 위치 (8, 8 + 128)
+    Vec2 startPos = Vec2(8.f, 8.f + 128.f);
+
+    // WALK 상태 (1~8열)
+    m_pAnimator->CreateAnimation(L"WALK", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        frameDuration, 8, true);
+
+    // DAMAGE 상태 (9~12열)
+    m_pAnimator->CreateAnimation(L"DAMAGE", pTex,
+        Vec2(startPos.x + frameOffset.x * 8, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 4, false);
+
+    // ATTACK_READY 상태 (13열)
+    m_pAnimator->CreateAnimation(L"ATTACK_READY", pTex,
+        Vec2(startPos.x + frameOffset.x * 12, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 1, true);
+
+    // ATTACK 상태 (14~15열)
+    m_pAnimator->CreateAnimation(L"ATTACK", pTex,
+        Vec2(startPos.x + frameOffset.x * 13, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 2, false);
+
+    // IDLE
+    m_pAnimator->CreateAnimation(L"IDLE", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        0.5f, 1, true);
+}
+
+void CMonster::CreateSparkyAnimations(CTexture* pTex, Vec2 frameSize, Vec2 frameOffset, float frameDuration)
+{
+    // 여섯 번째 행: 스파키 - 시작 위치 (8, 8 + 160)
+    Vec2 startPos = Vec2(8.f, 8.f + 160.f);
+
+    // WALK 상태 (1~5열)
+    m_pAnimator->CreateAnimation(L"WALK", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        frameDuration, 5, true);
+
+    // DAMAGE 상태 (9~12열)
+    m_pAnimator->CreateAnimation(L"DAMAGE", pTex,
+        Vec2(startPos.x + frameOffset.x * 8, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 4, false);
+
+    // ATTACK_READY 상태 (13~14열)
+    m_pAnimator->CreateAnimation(L"ATTACK_READY", pTex,
+        Vec2(startPos.x + frameOffset.x * 12, startPos.y),
+        frameSize,
+        frameOffset,
+        frameDuration, 2, true);
+
+    // ATTACK 상태 - 일곱 번째 행의 큰 스프라이트 사용
+    // 일곱 번째 행: (8, 200), 크기 64x64, 간격 64
+    Vec2 bigFrameSize = Vec2(64.f, 64.f);
+    Vec2 bigFrameOffset = Vec2(64.f, 64.f);
+    Vec2 attackStartPos = Vec2(8.f, 200.f);
+
+    m_pAnimator->CreateAnimation(L"ATTACK", pTex,
+        attackStartPos,
+        bigFrameSize,
+        bigFrameOffset,
+        frameDuration, 3, false);  // 스파키 공격 프레임 수 추정
+
+    // IDLE
+    m_pAnimator->CreateAnimation(L"IDLE", pTex,
+        startPos,
+        frameSize,
+        frameOffset,
+        0.5f, 1, true);
 }
 
 void CMonster::Update()
@@ -91,20 +361,28 @@ void CMonster::Update()
 
 void CMonster::UpdateState()
 {
-    MONSTER_STATE eNewState = m_eCurState;
-
     switch (m_eCurState)
     {
     case MONSTER_STATE::IDLE:
         UpdateIdle();
         break;
-
     case MONSTER_STATE::WALK:
         UpdateWalk();
         break;
-
+    case MONSTER_STATE::FLY:
+        UpdateFly();
+        break;
     case MONSTER_STATE::TURN:
         UpdateTurn();
+        break;
+    case MONSTER_STATE::DAMAGE:
+        UpdateDamage();
+        break;
+    case MONSTER_STATE::ATTACK_READY:
+        UpdateAttackReady();
+        break;
+    case MONSTER_STATE::ATTACK:
+        UpdateAttack();
         break;
     }
 }
@@ -114,13 +392,21 @@ void CMonster::UpdateIdle()
     // 일정 시간 정지 후 걷기 시작
     if (m_fStateTimer >= m_fIdleTime)
     {
-        ChangeState(MONSTER_STATE::WALK);
+        if (m_eMonsterType == OBJECT_TYPE::MONSTER_BRONTO_BURT ||
+            m_eMonsterType == OBJECT_TYPE::MONSTER_GORDOS)
+        {
+            ChangeState(MONSTER_STATE::FLY);
+        }
+        else
+        {
+            ChangeState(MONSTER_STATE::WALK);
+        }
     }
 }
 
 void CMonster::UpdateWalk()
 {
-    // 전방에 벽이 있거나 바닥이 없으면 방향 전환
+    // 앞방에 벽이 있거나 바닥이 없으면 방향 전환
     if (CheckWallAhead() || !CheckGroundAhead())
     {
         ChangeState(MONSTER_STATE::TURN);
@@ -131,13 +417,36 @@ void CMonster::UpdateWalk()
     m_pRigidBody->SetVelocityX(m_fSpeed * m_iDir);
 }
 
+void CMonster::UpdateFly()
+{
+    // 비행형 몬스터 (브론토 버트, 고르도)
+    // 간단한 좌우 이동
+    m_pRigidBody->SetVelocityX(m_fSpeed * m_iDir);
+
+    // 화면 경계나 일정 시간 후 방향 전환
+    if (m_fStateTimer >= 3.0f)
+    {
+        TurnAround();
+        m_fStateTimer = 0.f;
+    }
+}
+
 void CMonster::UpdateTurn()
 {
     // 방향 전환 시간 (0.2초)
     if (m_fStateTimer >= 0.2f)
     {
         TurnAround();
-        ChangeState(MONSTER_STATE::WALK);
+
+        if (m_eMonsterType == OBJECT_TYPE::MONSTER_BRONTO_BURT ||
+            m_eMonsterType == OBJECT_TYPE::MONSTER_GORDOS)
+        {
+            ChangeState(MONSTER_STATE::FLY);
+        }
+        else
+        {
+            ChangeState(MONSTER_STATE::WALK);
+        }
     }
     else
     {
@@ -146,12 +455,43 @@ void CMonster::UpdateTurn()
     }
 }
 
+void CMonster::UpdateDamage()
+{
+    // 데미지 상태 일정 시간 유지
+    if (m_fStateTimer >= 0.5f)
+    {
+        ChangeState(MONSTER_STATE::WALK);
+    }
+}
+
+void CMonster::UpdateAttackReady()
+{
+    // 공격 준비 상태 (웨이들 두, 핫 헤드, 스파키)
+    if (m_fStateTimer >= 1.0f)
+    {
+        ChangeState(MONSTER_STATE::ATTACK);
+    }
+}
+
+void CMonster::UpdateAttack()
+{
+    // 공격 애니메이션 종료 후 걷기 상태로
+    if (m_fStateTimer >= 1.0f)
+    {
+        ChangeState(MONSTER_STATE::WALK);
+    }
+}
+
 void CMonster::UpdateMove()
 {
-    // 바닥에 있을 때만 이동 로직 적용
-    if (m_pRigidBody && m_pRigidBody->IsGround())
+    // 바닥에 있을 때만 이동 로직 적용 (비행형 제외)
+    if (m_eMonsterType != OBJECT_TYPE::MONSTER_BRONTO_BURT &&
+        m_eMonsterType != OBJECT_TYPE::MONSTER_GORDOS)
     {
-        // 상태별 이동은 UpdateState에서 처리됨
+        if (m_pRigidBody && m_pRigidBody->IsGround())
+        {
+            // 상태별 이동은 UpdateState에서 처리됨
+        }
     }
 }
 
@@ -161,8 +501,8 @@ void CMonster::ChangeState(MONSTER_STATE _eState)
     m_eCurState = _eState;
     m_fStateTimer = 0.f;
 
-    // 상태에 맞는 애니메이션 재생
-    switch (m_eCurState)
+    // 상태별 애니메이션 재생
+    switch (_eState)
     {
     case MONSTER_STATE::IDLE:
         m_pAnimator->Play(L"IDLE", true);
@@ -170,173 +510,42 @@ void CMonster::ChangeState(MONSTER_STATE _eState)
     case MONSTER_STATE::WALK:
         m_pAnimator->Play(L"WALK", true);
         break;
+    case MONSTER_STATE::FLY:
+        m_pAnimator->Play(L"FLY", true);
+        break;
     case MONSTER_STATE::TURN:
-        m_pAnimator->Play(L"IDLE", true);
+        m_pAnimator->Play(L"WALK", true);
+        break;
+    case MONSTER_STATE::DAMAGE:
+        m_pAnimator->Play(L"DAMAGE", false);
+        break;
+    case MONSTER_STATE::ATTACK_READY:
+        m_pAnimator->Play(L"ATTACK_READY", true);
+        break;
+    case MONSTER_STATE::ATTACK:
+        m_pAnimator->Play(L"ATTACK", false);
         break;
     }
 }
 
-bool CMonster::CheckWallAhead()
+void CMonster::TakeDamage()
 {
-    // 현재 위치에서 이동 방향으로 일정 거리만큼 떨어진 지점에서 타일 체크
-    Vec2 vPos = GetPos();
-    Vec2 vCheckPos = vPos;
-    vCheckPos.x += m_fWallCheckDist * m_iDir;
-
-    // 현재 씬의 타일들과 충돌 체크
-    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-    const vector<CObject*>& vecTiles = pCurScene->GetGroupObject(GROUP_TYPE::TILE);
-
-    for (size_t i = 0; i < vecTiles.size(); ++i)
-    {
-        CTile* pTile = dynamic_cast<CTile*>(vecTiles[i]);
-        if (pTile && pTile->IsSolid())
-        {
-            Vec2 vTilePos = pTile->GetPos();
-            Vec2 vTileScale = pTile->GetScale();
-
-            // 간단한 AABB 충돌 체크
-            if (vCheckPos.x >= vTilePos.x - vTileScale.x / 2.f &&
-                vCheckPos.x <= vTilePos.x + vTileScale.x / 2.f &&
-                vCheckPos.y >= vTilePos.y - vTileScale.y / 2.f &&
-                vCheckPos.y <= vTilePos.y + vTileScale.y / 2.f)
-            {
-                return true; // 벽 발견
-            }
-        }
-    }
-
-    return false; // 벽 없음
-}
-
-bool CMonster::CheckGroundAhead()
-{
-    // 전방 바닥 체크 (절벽 방지)
-    Vec2 vPos = GetPos();
-    Vec2 vCheckPos = vPos;
-    vCheckPos.x += m_fGroundCheckDist * m_iDir;
-    vCheckPos.y += 32.f; // 발 아래쪽 체크
-
-    // 현재 씬의 타일들과 충돌 체크
-    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-    const vector<CObject*>& vecTiles = pCurScene->GetGroupObject(GROUP_TYPE::TILE);
-
-    for (size_t i = 0; i < vecTiles.size(); ++i)
-    {
-        CTile* pTile = dynamic_cast<CTile*>(vecTiles[i]);
-        if (pTile && pTile->IsSolid())
-        {
-            Vec2 vTilePos = pTile->GetPos();
-            Vec2 vTileScale = pTile->GetScale();
-
-            // 바닥 타일이 있는지 체크
-            if (vCheckPos.x >= vTilePos.x - vTileScale.x / 2.f &&
-                vCheckPos.x <= vTilePos.x + vTileScale.x / 2.f &&
-                vCheckPos.y >= vTilePos.y - vTileScale.y / 2.f &&
-                vCheckPos.y <= vTilePos.y + vTileScale.y / 2.f)
-            {
-                return true; // 바닥 발견
-            }
-        }
-    }
-
-    return false; // 바닥 없음 (절벽)
+    ChangeState(MONSTER_STATE::DAMAGE);
 }
 
 void CMonster::TurnAround()
 {
-    m_iDir *= -1; // 방향 반전
+    m_iDir *= -1;
 }
 
-void CMonster::Render(HDC _dc)
+bool CMonster::CheckWallAhead()
 {
-    // 애니메이션 렌더링
-    if (nullptr != m_pAnimator)
-    {
-        m_pAnimator->Render(_dc);
-    }
-
-    // 충돌체가 있으면 충돌체도 렌더링 (디버그용)
-    if (nullptr != GetCollider())
-        GetCollider()->Render(_dc);
+    // 간단한 벽 체크 (실제 구현 필요)
+    return false;
 }
 
-void CMonster::OnCollisionEnter(CCollider* _pOther)
+bool CMonster::CheckGroundAhead()
 {
-    CObject* pOtherObj = _pOther->GetOwner();
-
-    // 타일과의 충돌 처리 (플레이어와 동일한 로직)
-    CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
-    if (pTile && pTile->IsSolid())
-    {
-        Vec2 vMonsterPos = GetPos();
-        Vec2 vTilePos = pTile->GetPos();
-        Vec2 vVelocity = m_pRigidBody->GetVelocity();
-
-        // 충돌체 크기
-        Vec2 vMonsterColliderScale = GetCollider()->GetScale();
-        Vec2 vTileColliderScale = pTile->GetCollider()->GetScale();
-
-        // 몬스터가 타일 위에서 아래로 떨어지고 있을 때만 착지
-        if (vVelocity.y >= 0.f && vMonsterPos.y < vTilePos.y)
-        {
-            float tileTop = vTilePos.y - vTileColliderScale.y / 2.f;
-            float monsterHalfHeight = vMonsterColliderScale.y / 2.f;
-
-            float newY = tileTop - monsterHalfHeight;
-            vMonsterPos.y = newY;
-            SetPos(vMonsterPos);
-
-            m_pRigidBody->SetVelocityY(0.f);
-            m_pRigidBody->SetGround(true);
-        }
-    }
-}
-
-void CMonster::OnCollision(CCollider* _pOther)
-{
-    // 타일과의 지속적인 충돌 처리
-    CObject* pOtherObj = _pOther->GetOwner();
-
-    CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
-    if (pTile && pTile->IsSolid())
-    {
-        // 바닥 상태 유지 로직 (플레이어와 동일)
-        Vec2 vMonsterPos = GetPos();
-        Vec2 vTilePos = pTile->GetPos();
-
-        Vec2 vMonsterColliderScale = GetCollider()->GetScale();
-        Vec2 vTileColliderScale = pTile->GetCollider()->GetScale();
-
-        float tileTop = vTilePos.y - vTileColliderScale.y / 2.f;
-        float monsterBottom = vMonsterPos.y + vMonsterColliderScale.y / 2.f;
-
-        if (abs(monsterBottom - tileTop) < 8.f && vMonsterPos.y < vTilePos.y)
-        {
-            m_pRigidBody->SetGround(true);
-
-            Vec2 vVelocity = m_pRigidBody->GetVelocity();
-            if (vVelocity.y > 0.f)
-            {
-                m_pRigidBody->SetVelocityY(0.f);
-            }
-        }
-    }
-}
-
-void CMonster::OnCollisionExit(CCollider* _pOther)
-{
-    CObject* pOtherObj = _pOther->GetOwner();
-
-    CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
-    if (pTile && pTile->IsSolid())
-    {
-        // 플레이어와 동일한 로직
-        Vec2 vVelocity = m_pRigidBody->GetVelocity();
-
-        if (vVelocity.y < -30.f || abs(vVelocity.x) > 50.f)
-        {
-            m_pRigidBody->SetGround(false);
-        }
-    }
+    // 간단한 바닥 체크 (실제 구현 필요)
+    return true;
 }

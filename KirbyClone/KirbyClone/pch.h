@@ -16,6 +16,9 @@ using std::to_wstring;
 using std::map;
 using std::make_pair;
 
+#include <algorithm>
+#include <cwctype> 
+
 #include "define.h"
 #include "enum.h"
 #include "struct.h"

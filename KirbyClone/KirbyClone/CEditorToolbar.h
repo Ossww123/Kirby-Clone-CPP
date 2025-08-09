@@ -62,6 +62,11 @@ private:
     int m_iButtonMargin;
     int m_iSeparatorWidth;
 
+    // 정보 표시 영역
+    int m_iInfoAreaX;
+    int m_iInfoAreaWidth;
+
+
     // 버튼 목록
     vector<tToolbarButton> m_vecButtons;
 
@@ -111,6 +116,7 @@ private:
     void RenderTooltip(HDC _dc);
     void RenderToolbarBackground(HDC _dc);
     void RenderMapSizeLabel(HDC _dc, const tToolbarButton& button);
+    void RenderInfoArea(HDC _dc);
 
     // 유틸리티
     COLORREF GetButtonColor(const tToolbarButton& button);

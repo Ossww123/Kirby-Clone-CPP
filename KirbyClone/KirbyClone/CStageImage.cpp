@@ -28,9 +28,10 @@ void CStageImage::Update()
 void CStageImage::Render(HDC _dc)
 {
     if (nullptr == m_pStageTexture)
+    {
         return;
+    }
 
-    Vec2 vResolution = CCore::GetInst()->GetResolution();
     UINT imageWidth = m_pStageTexture->GetWidth();
     UINT imageHeight = m_pStageTexture->GetHeight();
 
@@ -43,89 +44,22 @@ void CStageImage::Render(HDC _dc)
         vRenderPos = CCamera::GetInst()->GetRenderPos(m_vRenderOffset);
     }
 
-    // 알파 채널 지원 여부에 따라 적절한 렌더링 방식 선택
+    // 24비트 BMP + 마젠타 컬러키 방식으로 렌더링
     if (m_vImageSize.x > 0 && m_vImageSize.y > 0)
     {
         // 지정된 크기로 렌더링
-        if (m_pStageTexture->HasAlpha())
-        {
-            // 32비트 알파 채널 렌더링
-            m_pStageTexture->RenderWithAlpha(_dc,
-                (int)vRenderPos.x, (int)vRenderPos.y,
-                (int)m_vImageSize.x, (int)m_vImageSize.y);
-        }
-        else
-        {
-            // 기존 방식 (불투명 렌더링)
-            StretchBlt(_dc,
-                (int)vRenderPos.x, (int)vRenderPos.y,
-                (int)m_vImageSize.x, (int)m_vImageSize.y,
-                m_pStageTexture->GetDC(),
-                0, 0,
-                imageWidth, imageHeight,
-                SRCCOPY);
-        }
+        m_pStageTexture->RenderWithColorKey(_dc,
+            (int)vRenderPos.x, (int)vRenderPos.y,
+            (int)m_vImageSize.x, (int)m_vImageSize.y,
+            RGB(255, 0, 255)); // 마젠타 컬러키
     }
     else
     {
         // 원본 크기로 렌더링
-        if (m_pStageTexture->HasAlpha())
-        {
-            // 32비트 알파 채널 렌더링
-            m_pStageTexture->RenderWithAlpha(_dc,
-                (int)vRenderPos.x, (int)vRenderPos.y,
-                imageWidth, imageHeight);
-        }
-        else
-        {
-            // 기존 방식 (불투명 렌더링)
-            BitBlt(_dc,
-                (int)vRenderPos.x, (int)vRenderPos.y,
-                imageWidth, imageHeight,
-                m_pStageTexture->GetDC(),
-                0, 0,
-                SRCCOPY);
-        }
-    }
-}
-
-void CStageImage::RenderWithAlpha(HDC _dc, float _fAlpha)
-{
-    if (nullptr == m_pStageTexture)
-        return;
-
-    if (!m_pStageTexture->HasAlpha())
-    {
-        // 알파 채널이 없으면 기본 렌더링
-        Render(_dc);
-        return;
-    }
-
-    Vec2 vRenderPos = m_vRenderOffset;
-
-    if (m_bScrollWithCamera)
-    {
-        vRenderPos = CCamera::GetInst()->GetRenderPos(m_vRenderOffset);
-    }
-
-    UINT imageWidth = m_pStageTexture->GetWidth();
-    UINT imageHeight = m_pStageTexture->GetHeight();
-
-    if (m_vImageSize.x > 0 && m_vImageSize.y > 0)
-    {
-        // 지정된 크기로 알파 렌더링
-        m_pStageTexture->RenderWithAlpha(_dc,
-            (int)vRenderPos.x, (int)vRenderPos.y,
-            (int)m_vImageSize.x, (int)m_vImageSize.y,
-            _fAlpha);
-    }
-    else
-    {
-        // 원본 크기로 알파 렌더링
-        m_pStageTexture->RenderWithAlpha(_dc,
+        m_pStageTexture->RenderWithColorKey(_dc,
             (int)vRenderPos.x, (int)vRenderPos.y,
             imageWidth, imageHeight,
-            _fAlpha);
+            RGB(255, 0, 255)); // 마젠타 컬러키
     }
 }
 
@@ -133,32 +67,38 @@ void CStageImage::SetupStageImage(STAGE_IMAGE_TYPE _eType)
 {
     m_eStageType = _eType;
 
+    // 스테이지별 기본 설정
     switch (_eType)
     {
     case STAGE_IMAGE_TYPE::STAGE_01:
-        m_bScrollWithCamera = true;
-        m_vRenderOffset = Vec2(0.f, 0.f);
+        // Green Hill Stage 설정
+        SetImageToBottomLeft();
+        SetScrollWithCamera(true);
         break;
 
     case STAGE_IMAGE_TYPE::STAGE_02:
-        m_bScrollWithCamera = true;
-        m_vRenderOffset = Vec2(0.f, 0.f);
-        break;
-
-    case STAGE_IMAGE_TYPE::CUSTOM:
-        m_bScrollWithCamera = true;
-        m_vRenderOffset = Vec2(0.f, 0.f);
+        // Castle Stage 설정
+        SetImageToBottomLeft();
+        SetScrollWithCamera(true);
         break;
 
     default:
-        m_bScrollWithCamera = true;
-        m_vRenderOffset = Vec2(0.f, 0.f);
+        // 기본 설정
+        SetImageToBottomLeft();
+        SetScrollWithCamera(true);
         break;
     }
+}
 
-    // 텍스처가 로드된 후에 이미지 크기 자동 설정
-    if (m_pStageTexture)
-    {
-        m_vImageSize = Vec2((float)m_pStageTexture->GetWidth(), (float)m_pStageTexture->GetHeight());
-    }
+void CStageImage::SetImageToBottomLeft()
+{
+    if (!m_pStageTexture)
+        return;
+
+    // 텍스처를 화면 왼쪽 하단에 배치
+    Vec2 vResolution = CCore::GetInst()->GetResolution();
+    UINT imageHeight = m_pStageTexture->GetHeight();
+
+    // 이미지를 화면 하단에 맞춰 배치 (y좌표는 화면 하단 - 이미지 높이)
+    m_vRenderOffset = Vec2(0.f, vResolution.y - imageHeight);
 }

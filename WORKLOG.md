@@ -1597,8 +1597,38 @@ GetRigidBody()->SetFriction(5.f);
 
 - [X] 스프라이트 작업
 
-## 2025-08-05
+## 2025-08-07
 
 ### 완료
 
 - [X] 기존 마젠타 방식에서 알파채널을 이용하는 방식으로 변경
+- [X] 오류가 많아 다시 마젠타 방식으로 변경
+
+## 2025-08-08
+
+### 완료
+
+- [X] 스프라이트 작게 하고 4배 스케일 적용
+- [X] 툴씬과 게임 씬 해상도 분리
+- [X] 툴씬 좌표계 변경
+
+## 2025-08-09
+
+### 완료
+
+- [X] CCore 클래스 리팩토링
+  - 헤더의 멤버들 순서 정리
+  - ChangeResolution 함수 책임 분리
+  - 코드 블럭 정리
+  - ChangeREsolution 접근제어자 변경
+- [X] CSceneMgr 클래스 리팩토링
+  - 헤더의 멤버들 순서 정리
+  - update에서 핫 키 기능 책임 분리
+  - O(N)의 GetCurSceneType함수 O(1)로 최적화
+  - 안정성 검사 조건문 추가
+  - Getter 함수에 const 키워드 추가
+- [X] CScene, CScene_Tool 리팩토링
+  - 컨벤션에 맞게 수정
+- [X] CEditorCore 렌더링
+  - CScene_Tool에 있던 중복 렌더링 삭제
+- [X] CStageMgr 리팩토링

@@ -51,5 +51,6 @@ void CScene::DeleteAllObject()
 
 void CScene::AddObject(CObject* _pObj, GROUP_TYPE _eType)
 {
+    // 벡터에 추가
     m_arrObj[(UINT)_eType].push_back(_pObj);
 }

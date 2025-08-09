@@ -7,9 +7,9 @@ class CTexture;
 class CAnimator
 {
 private:
-    CObject*                    m_pOwner;       // 소유자 오브젝트
+    CObject* m_pOwner;       // 소유자 오브젝트
     map<wstring, CAnimation*>   m_mapAnim;      // 애니메이션 맵
-    CAnimation*                 m_pCurAnim;     // 현재 재생중인 애니메이션
+    CAnimation* m_pCurAnim;     // 현재 재생중인 애니메이션
     bool                        m_bRepeat;      // 반복 재생 여부
 
 public:
@@ -25,6 +25,7 @@ public:
     CAnimation* GetCurAnim() { return m_pCurAnim; }
 
     void AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim);
+    void RenderScaled(HDC _dc, float _fScale);
 
 public:
     CAnimator();

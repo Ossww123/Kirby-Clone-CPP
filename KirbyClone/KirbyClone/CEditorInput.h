@@ -28,7 +28,14 @@ private:
     void HandleModeSpecificInput();
     void HandleBackgroundModeInput();
     void HandleTileModeInput();
+    void HandleStageImageClick();
+    void HandleStageImageModeInput();
 
+    void ResetStageImageToBottomLeft();
+
+    void PrevStageImage();
+    void NextStageImage();
+    void LoadCustomStageImage();
 public:
     CEditorInput();
     ~CEditorInput();

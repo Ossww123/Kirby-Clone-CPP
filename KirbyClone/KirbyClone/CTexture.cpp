@@ -34,11 +34,30 @@ HRESULT CTexture::LoadWithAlpha(const wstring& _strFilePath)
 
     if (ext == L".bmp")
     {
-        // BMP 파일의 경우 비트 수에 따라 결정
-        return Load32BitBMP(_strFilePath);
+        // BMP 파일의 경우 단계적으로 로딩 시도
+
+        // 1단계: 32비트 방식으로 시도
+        HRESULT hr32 = Load32BitBMP(_strFilePath);
+        if (SUCCEEDED(hr32))
+        {
+            return S_OK;
+        }
+
+        // 2단계: 32비트 실패시 24비트 방식으로 시도
+        HRESULT hr24 = Load24BitBMP(_strFilePath);
+        if (SUCCEEDED(hr24))
+        {
+            return S_OK;
+        }
+
+        // 3단계: 둘 다 실패시 에러
+        wchar_t szError[512];
+        swprintf_s(szError, L"BMP 파일 로딩 완전 실패\n경로: %s\n\n32비트 시도: 실패\n24비트 시도: 실패\n\n파일이 유효한 BMP인지 확인해주세요.", _strFilePath.c_str());
+        MessageBox(nullptr, szError, L"BMP 로딩 실패", MB_OK | MB_ICONERROR);
+        return E_FAIL;
     }
 
-    // 다른 형식은 일단 24비트로 폴백
+    // 다른 형식은 24비트로 시도
     return Load24BitBMP(_strFilePath);
 }
 
@@ -72,19 +91,45 @@ HRESULT CTexture::Load24BitBMP(const wstring& _strFilePath)
 
 HRESULT CTexture::Load32BitBMP(const wstring& _strFilePath)
 {
-    // 32비트 BMP 로드 (알파 채널 포함)
-    m_hBit = (HBITMAP)LoadImage(nullptr, _strFilePath.c_str(), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
+    // 파일 존재 여부 먼저 확인
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind = FindFirstFile(_strFilePath.c_str(), &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        wchar_t szBuffer[512] = {};
+        swprintf_s(szBuffer, L"32비트 BMP 로딩 실패 - 파일을 찾을 수 없음\n경로: %s", _strFilePath.c_str());
+        MessageBox(nullptr, szBuffer, L"파일 없음", MB_OK);
+        return E_FAIL;
+    }
+    FindClose(hFind);
+
+    // LoadImage로 비트맵 로드 시도
+    m_hBit = (HBITMAP)LoadImage(nullptr, _strFilePath.c_str(), IMAGE_BITMAP, 0, 0,
+        LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 
     if (nullptr == m_hBit)
     {
-        wchar_t szBuffer[256] = {};
-        swprintf_s(szBuffer, L"32비트 비트맵 로드 실패\n경로: %s", _strFilePath.c_str());
-        MessageBox(nullptr, szBuffer, L"텍스처 로드 실패", MB_OK);
+        // LoadImage 실패 원인 확인
+        DWORD dwError = GetLastError();
+        wchar_t szBuffer[512] = {};
+        swprintf_s(szBuffer, L"32비트 BMP LoadImage 실패\n경로: %s\n오류 코드: %d\n\n가능한 원인:\n- 파일이 실제로 32비트가 아님\n- 파일이 손상됨\n- 비표준 BMP 형식",
+            _strFilePath.c_str(), dwError);
+        MessageBox(nullptr, szBuffer, L"LoadImage 실패", MB_OK);
         return E_FAIL;
     }
 
     // 비트맵 정보 얻기
     GetObject(m_hBit, sizeof(BITMAP), &m_tInfo);
+
+    // 실제 비트 수 확인 및 디버깅 정보 출력
+    wchar_t szDebugInfo[512];
+    swprintf_s(szDebugInfo, L"BMP 파일 로드 성공!\n\n파일: %s\n크기: %d x %d\n비트 수: %d\n평면 수: %d\n바이트/라인: %d",
+        _strFilePath.c_str(),
+        m_tInfo.bmWidth, m_tInfo.bmHeight,
+        m_tInfo.bmBitsPixel, m_tInfo.bmPlanes, m_tInfo.bmWidthBytes);
+
+    // 디버깅 정보 표시 (임시)
+    MessageBox(nullptr, szDebugInfo, L"BMP 로딩 디버그", MB_OK);
 
     // 32비트인지 확인
     if (m_tInfo.bmBitsPixel == 32)
@@ -102,6 +147,10 @@ HRESULT CTexture::Load32BitBMP(const wstring& _strFilePath)
     else
     {
         // 32비트가 아니면 24비트 방식으로 폴백
+        wchar_t szBuffer[256];
+        swprintf_s(szBuffer, L"파일이 32비트가 아닙니다 (실제: %d비트)\n24비트 방식으로 처리합니다.", m_tInfo.bmBitsPixel);
+        MessageBox(nullptr, szBuffer, L"비트 수 불일치", MB_OK);
+
         m_bHasAlpha = false;
         m_dc = CreateCompatibleDC(CCore::GetInst()->GetMainDC());
         HBITMAP hPrevBit = (HBITMAP)SelectObject(m_dc, m_hBit);

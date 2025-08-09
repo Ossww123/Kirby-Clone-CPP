@@ -236,81 +236,88 @@ struct tAnimFrame
 // 레벨 오브젝트 데이터 (타일 시각 타입 정보 추가)
 struct tLevelObjectData
 {
-	GROUP_TYPE  eGroupType;     // 오브젝트 그룹 타입
-	Vec2        vPos;           // 위치
-	Vec2        vScale;         // 크기
-	int         iSubType;       // 서브 타입 (기존 몬스터 종류 구분용)
-	int         iTileVisualType; // 타일 시각 타입 (새로 추가)
+	// 기본 필드들...
+	GROUP_TYPE eGroupType;
+	Vec2 vPos;
+	Vec2 vScale;
+	int iSubType;
+	int iTileVisualType;        // 기존 (호환성용)
+
+	// 새로 추가할 필드
+	int iCollisionType;         // COLLISION_TYPE을 int로 저장
 
 	tLevelObjectData()
-		: eGroupType(GROUP_TYPE::DEFAULT)
-		, vPos{}
-		, vScale{}
+		: eGroupType(GROUP_TYPE::END)
+		, vPos(Vec2(0.f, 0.f))
+		, vScale(Vec2(64.f, 64.f))
 		, iSubType(0)
-		, iTileVisualType(0)  // 새로 추가
-	{}
-
-	tLevelObjectData(GROUP_TYPE _eType, Vec2 _vPos, Vec2 _vScale, int _iSubType = 0, int _iTileVisualType = 0)
-		: eGroupType(_eType)
-		, vPos(_vPos)
-		, vScale(_vScale)
-		, iSubType(_iSubType)
-		, iTileVisualType(_iTileVisualType)  // 새로 추가
+		, iTileVisualType(-1)
+		, iCollisionType(-1)    // 새로 추가
 	{}
 };
 
 // 레벨 전체 데이터 (배경 정보 + 경계 정보 추가)
 struct tLevelData
 {
-	wstring                     strLevelName;       // 레벨 이름
-	Vec2                        vPlayerSpawn;       // 플레이어 스폰 위치
-	vector<tLevelObjectData>    vecObjects;         // 배치된 오브젝트들
-	int                         iVersion;           // 파일 버전
-	int                         iBackgroundType;    // 배경 타입
+	// 기본 필드들...
+	wstring strLevelName;
+	int iVersion;
+	Vec2 vPlayerSpawn;
+	vector<tLevelObjectData> vecObjects;
 
-	// === 새로 추가: 레벨 경계 정보 ===
-	Vec2                        vLevelBoundsMin;    // 레벨 최소 경계 (좌상단)
-	Vec2                        vLevelBoundsMax;    // 레벨 최대 경계 (우하단)
-	float                       fGameOverY;         // 낙사 지점 Y좌표
+	// 배경 시스템 (수정된 부분)
+	int iBackgroundType;                // BACKGROUND_TYPE을 int로 저장
 
+	// 경계 시스템
+	Vec2 vLevelBoundsMin;
+	Vec2 vLevelBoundsMax;
+	float fGameOverY;
+
+	// 스테이지 이미지 시스템 
+	wstring strStageImagePath;
+	STAGE_IMAGE_TYPE eStageType;
+
+	// 기본 생성자 업데이트 필요
 	tLevelData()
-		: strLevelName{}
-		, vPlayerSpawn{}
-		, vecObjects{}
-		, iVersion(3)  // 버전을 3으로 업데이트 (경계 정보 추가로 인함)
-		, iBackgroundType(0)
-		, vLevelBoundsMin(Vec2(0.f, -1000.f))        // 기본값: x=0 이상, y=-1000 이상
-		, vLevelBoundsMax(Vec2(4000.f, 1280.f))      // 기본값: x=4000 이하, y=1280 이하
-		, fGameOverY(1280.f)                         // 기본 낙사 지점
+		: strLevelName(L"Untitled")
+		, iVersion(4)
+		, vPlayerSpawn(Vec2(640.f, 400.f))
+		, iBackgroundType(0)                    // BACKGROUND_TYPE::BACKGROUND1
+		, vLevelBoundsMin(Vec2(0.f, 0.f))
+		, vLevelBoundsMax(Vec2(3840.f, 2160.f))
+		, fGameOverY(2200.f)
+		, strStageImagePath(L"")
+		, eStageType(STAGE_IMAGE_TYPE::STAGE_01)
 	{}
 };
 
-// 타일 정보 구조체
-struct tTileInfo
+// 충돌체 속성을 나타내는 구조체
+struct tCollisionInfo
 {
-	TILE_VISUAL_TYPE eType;
-	Vec2 vDefaultSize;      // 기본 크기
-	bool bKeepAspectRatio;  // 비율 유지 여부
-	bool bDecorative;       // 장식용 여부 (충돌 없음)
-	bool bHarmful;          // 데미지 여부
-	wstring strTexturePath; // 텍스처 경로
+	COLLISION_TYPE eType;        // 충돌체 타입
+	COLORREF displayColor;       // 에디터에서 표시할 색깔
+	bool bIsSolid;              // 단단한 충돌 (통과 불가)
+	bool bIsHarmful;            // 데미지를 주는가
+	bool bIsOneWay;             // 일방통행인가 (위에서만 충돌)
+	bool bIsVisible;            // 게임에서 보이는가
+	wstring strName;            // 표시명
+	wstring strDescription;     // 설명
 
-	tTileInfo()
-		: eType(TILE_VISUAL_TYPE::GRASS_PLATFORM)
-		, vDefaultSize(Vec2(64.f, 64.f))
-		, bKeepAspectRatio(true)
-		, bDecorative(false)
-		, bHarmful(false)
-		, strTexturePath(L"")
+	tCollisionInfo()
+		: eType(COLLISION_TYPE::SOLID_GROUND)
+		, displayColor(RGB(0, 0, 255))
+		, bIsSolid(true)
+		, bIsHarmful(false)
+		, bIsOneWay(false)
+		, bIsVisible(false)
+		, strName(L"Solid Ground")
+		, strDescription(L"Basic solid collision")
 	{}
 
-	tTileInfo(TILE_VISUAL_TYPE _eType, Vec2 _vSize, bool _bDeco = false, bool _bHarm = false, const wstring& _strPath = L"")
-		: eType(_eType)
-		, vDefaultSize(_vSize)
-		, bKeepAspectRatio(true)
-		, bDecorative(_bDeco)
-		, bHarmful(_bHarm)
-		, strTexturePath(_strPath)
+	tCollisionInfo(COLLISION_TYPE _type, COLORREF _color, bool _solid, bool _harmful, bool _oneway, bool _visible,
+		const wstring& _name, const wstring& _desc)
+		: eType(_type), displayColor(_color), bIsSolid(_solid), bIsHarmful(_harmful)
+		, bIsOneWay(_oneway), bIsVisible(_visible), strName(_name), strDescription(_desc)
 	{}
 };
 
@@ -351,4 +358,29 @@ struct tLevelObjectDataEx : public tLevelObjectData
 		, fInteractionRange(80.f)
 	{
 	}
+};
+
+struct tTileInfo
+{
+	TILE_VISUAL_TYPE eType;      // 타일 시각적 타입
+	Vec2 vDefaultSize;           // 기본 크기
+	bool bDecorative;            // 장식용 타일인가
+	bool bHarmful;               // 위험한 타일인가
+	wstring strTexturePath;      // 텍스처 경로 (더 이상 사용 안함)
+
+	tTileInfo()
+		: eType(TILE_VISUAL_TYPE::GRASS_PLATFORM)
+		, vDefaultSize(Vec2(64.f, 64.f))
+		, bDecorative(false)
+		, bHarmful(false)
+		, strTexturePath(L"")
+	{}
+
+	tTileInfo(TILE_VISUAL_TYPE _eType, Vec2 _vSize, bool _bDecorative, bool _bHarmful, const wstring& _strPath)
+		: eType(_eType)
+		, vDefaultSize(_vSize)
+		, bDecorative(_bDecorative)
+		, bHarmful(_bHarmful)
+		, strTexturePath(_strPath)
+	{}
 };

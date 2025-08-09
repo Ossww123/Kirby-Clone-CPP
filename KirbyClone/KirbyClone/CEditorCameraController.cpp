@@ -35,14 +35,15 @@ void CEditorCameraController::Initialize(CEditorCore* _pCore)
     m_vLastCameraPos = CCamera::GetInst()->GetLookAt();
     m_bCameraMoving = false;
 
-    // 기본 카메라 범위 설정 (필요시)
+    // 기본 카메라 범위 설정 (실제 좌표계)
     m_bUseCameraBounds = true;
-    m_vCameraBoundsMin = Vec2(0.f, -1000.f);  // 위쪽 제한
-    m_vCameraBoundsMax = Vec2(4000.f, 1280.f);    // 낙사 지점까지만
+    m_vCameraBoundsMin = Vec2(0.f, 0.f);
+    m_vCameraBoundsMax = Vec2(3840.f, 2160.f);
 
-    // 초기 카메라 위치를 (0, 1280)으로 설정
-    CCamera::GetInst()->SetLookAt(Vec2(960.f, 960.f));
-    m_vLastCameraPos = Vec2(960.f, 960.f);
+    // 초기 카메라 위치를 UI상 (0,0)으로 = 실제 (0, height)
+    Vec2 vInitialPos = Vec2(0.f, 2160.f);  // UI상 (0,0) 위치
+    CCamera::GetInst()->SetLookAt(vInitialPos);
+    m_vLastCameraPos = vInitialPos;
     m_bCameraMoving = false;
 }
 
@@ -56,8 +57,10 @@ void CEditorCameraController::ResetCameraPosition()
 {
     if (m_pEditorCore && m_pEditorCore->GetWorkingScene())
     {
-        // 카메라를 원점(0, 1280)으로 이동
-        CCamera::GetInst()->SetLookAt(Vec2(960.f, 960.f));
+        // 카메라를 UI상 (0,0)으로 이동 = 실제 (0, height)
+        Vec2 vMapSize = m_pEditorCore->GetMapSize();
+        Vec2 vUIZeroPos = Vec2(0.f, vMapSize.y);
+        CCamera::GetInst()->SetLookAt(vUIZeroPos);
     }
 }
 

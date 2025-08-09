@@ -17,7 +17,7 @@ CEditorObjectManager::CEditorObjectManager()
     , m_iCurrentSubType(0)
     , m_vecCurrentCategory{}
     , m_pCurrentBackground(nullptr)
-    , m_eCurrentBgType(BACKGROUND_TYPE::GREEN_HILL)
+    , m_eCurrentBgType(BACKGROUND_TYPE::BACKGROUND1)
     , m_vecBackgroundTypes{}
     , m_eCurrentTileVisual(TILE_VISUAL_TYPE::GRASS_PLATFORM)
     , m_vecTileVisualTypes{}
@@ -237,11 +237,12 @@ void CEditorObjectManager::SetCurrentSubType(int index)
 void CEditorObjectManager::InitializeBackgroundSystem()
 {
     // 사용 가능한 배경 타입들 초기화
-    m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::GREEN_HILL);
-    m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::RAINBOW_CASTLE);
+    m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::BACKGROUND1);
+    m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::BACKGROUND2);
+    m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::BACKGROUND3);
 
     // 기본 배경 설정
-    m_eCurrentBgType = BACKGROUND_TYPE::GREEN_HILL;
+    m_eCurrentBgType = BACKGROUND_TYPE::BACKGROUND1;
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
 }
 
@@ -398,7 +399,7 @@ void CEditorObjectManager::ResetToDefault()
     m_bShowPlayerSpawn = true;
 
     // 기본 배경으로 변경
-    ChangeBackground(BACKGROUND_TYPE::GREEN_HILL);
+    ChangeBackground(BACKGROUND_TYPE::BACKGROUND1);
 
     // 기본 타일 비주얼로 설정
     m_eCurrentTileVisual = TILE_VISUAL_TYPE::GRASS_PLATFORM;

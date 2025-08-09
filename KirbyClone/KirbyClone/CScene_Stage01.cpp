@@ -104,8 +104,8 @@ void CScene_Stage01::Render(HDC _dc)
 // 배경 시스템 초기화 함수 추가
 void CScene_Stage01::InitializeBackgroundSystem()
 {
-    // 기본 배경 설정
-    m_eCurrentBgType = BACKGROUND_TYPE::GREEN_HILL;
+    // 기본 배경 설정 (Stage01은 Background1 사용)
+    m_eCurrentBgType = BACKGROUND_TYPE::BACKGROUND1;
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
 }
 

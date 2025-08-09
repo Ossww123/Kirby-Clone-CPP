@@ -30,6 +30,15 @@ public:
     static vector<OBJECT_TYPE> GetObjectTypesByCategory(const wstring& _strCategory);
     static vector<wstring> GetAvailableCategories();
 
+    // 새로 추가: 충돌체 시스템 관련 변환 함수들
+    static COLLISION_TYPE ConvertObjectTypeToCollisionType(OBJECT_TYPE _eObjectType);
+    static OBJECT_TYPE ConvertCollisionTypeToObjectType(COLLISION_TYPE _eCollisionType);
+
+    // 새로 추가: 충돌체 타입 관련 유틸리티
+    static const wchar_t* GetCollisionTypeName(COLLISION_TYPE _eType);
+    static COLORREF GetCollisionTypeColor(COLLISION_TYPE _eType);
+    static vector<COLLISION_TYPE> GetAvailableCollisionTypes();
+
 private:
     // 내부 헬퍼 함수들
     static void SetupMonsterAI(CObject* _pMonster, OBJECT_TYPE _eType);

@@ -11,6 +11,10 @@
 #include "CCore.h"
 #include "CTile.h"
 #include "CTileMgr.h"
+#include "CStageMgr.h"        // 새로 추가
+#include "CBackgroundMgr.h"   // 새로 추가
+#include "CStageImage.h"
+#include "CTexture.h"
 
 #include <commdlg.h>
 
@@ -89,8 +93,9 @@ void CEditorFileManager::SaveLevel(const wstring& _strFileName)
 
     try
     {
-        // 버전 정보
-        fwrite(&levelData.iVersion, sizeof(int), 1, pFile);
+        // 버전 정보 (v4로 업데이트 - 스테이지 이미지 시스템 추가)
+        int version = 4;
+        fwrite(&version, sizeof(int), 1, pFile);
 
         // 레벨 이름 길이 및 이름
         size_t nameLen = levelData.strLevelName.length();
@@ -100,22 +105,32 @@ void CEditorFileManager::SaveLevel(const wstring& _strFileName)
         // 플레이어 스폰 위치
         fwrite(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-        // 배경 타입 정보
+        // 배경 타입 정보 (기존 호환성 유지)
         fwrite(&levelData.iBackgroundType, sizeof(int), 1, pFile);
 
-        // === 새로 추가: 경계 정보 저장 (버전 3 이상) ===
-        if (levelData.iVersion >= 3)
+        // 경계 정보 저장
+        fwrite(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
+        fwrite(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
+        fwrite(&levelData.fGameOverY, sizeof(float), 1, pFile);
+
+        // === 새로 추가: 스테이지 이미지 시스템 정보 ===
+        // 스테이지 이미지 타입
+        int stageImageType = (int)levelData.eStageType;
+        fwrite(&stageImageType, sizeof(int), 1, pFile);
+
+        // 스테이지 이미지 경로 길이 및 경로
+        size_t stagePathLen = levelData.strStageImagePath.length();
+        fwrite(&stagePathLen, sizeof(size_t), 1, pFile);
+        if (stagePathLen > 0)
         {
-            fwrite(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
-            fwrite(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
-            fwrite(&levelData.fGameOverY, sizeof(float), 1, pFile);
+            fwrite(levelData.strStageImagePath.c_str(), sizeof(wchar_t), stagePathLen, pFile);
         }
 
-        // 오브젝트 개수
+        // 객체 개수
         size_t objCount = levelData.vecObjects.size();
         fwrite(&objCount, sizeof(size_t), 1, pFile);
 
-        // 각 오브젝트 데이터
+        // 각 객체 데이터 (업데이트된 구조체 사용)
         for (const auto& objData : levelData.vecObjects)
         {
             fwrite(&objData, sizeof(tLevelObjectData), 1, pFile);
@@ -164,7 +179,7 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
 
     try
     {
-        // 기존 오브젝트들 삭제
+        // 기존 객체들 삭제
         ClearScene();
 
         // 파일에서 데이터 읽기
@@ -176,99 +191,78 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
         {
             fclose(pFile);
             ShowErrorMessage(L"Unsupported level version!");
-            CreateDefaultLevel();
             return;
         }
 
-        // 레벨 이름
+        // 레벨 이름 길이 및 이름 읽기
         size_t nameLen;
         fread(&nameLen, sizeof(size_t), 1, pFile);
-
-        if (nameLen > 1000) // 비정상적인 길이 체크
+        if (nameLen > 0 && nameLen < 1000) // 안전성 검사
         {
-            fclose(pFile);
-            ShowErrorMessage(L"Corrupted level file!");
-            CreateDefaultLevel();
-            return;
+            levelData.strLevelName.resize(nameLen);
+            fread(&levelData.strLevelName[0], sizeof(wchar_t), nameLen, pFile);
         }
-
-        wchar_t* szName = new wchar_t[nameLen + 1];
-        fread(szName, sizeof(wchar_t), nameLen, pFile);
-        szName[nameLen] = L'\0';
-        levelData.strLevelName = szName;
-        delete[] szName;
 
         // 플레이어 스폰 위치
         fread(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-        // 배경 타입 정보
+        // 배경 타입
         fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
 
-        // === 새로 추가: 경계 정보 읽기 (버전 3 이상) ===
-        if (levelData.iVersion >= 3)
+        // 경계 정보
+        fread(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
+        fread(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
+        fread(&levelData.fGameOverY, sizeof(float), 1, pFile);
+
+        // 버전 4 이상에서만 스테이지 이미지 정보 읽기
+        if (levelData.iVersion >= 4)
         {
-            fread(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
-            fread(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
-            fread(&levelData.fGameOverY, sizeof(float), 1, pFile);
+            // 스테이지 이미지 타입
+            int stageImageType;
+            fread(&stageImageType, sizeof(int), 1, pFile);
+            levelData.eStageType = (STAGE_IMAGE_TYPE)stageImageType;
+
+            // 스테이지 이미지 경로
+            size_t stagePathLen;
+            fread(&stagePathLen, sizeof(size_t), 1, pFile);
+            if (stagePathLen > 0 && stagePathLen < 1000) // 안전성 검사
+            {
+                levelData.strStageImagePath.resize(stagePathLen);
+                fread(&levelData.strStageImagePath[0], sizeof(wchar_t), stagePathLen, pFile);
+            }
         }
         else
         {
-            // 구버전 파일의 경우 기본값 설정
-            levelData.vLevelBoundsMin = Vec2(0.f, -1000.f);
-            levelData.vLevelBoundsMax = Vec2(4000.f, 1280.f);
-            levelData.fGameOverY = 1280.f;
+            // 구버전에서는 기본값 설정
+            levelData.eStageType = STAGE_IMAGE_TYPE::STAGE_01;
+            levelData.strStageImagePath = L"";
         }
 
-        // 오브젝트 개수
+        // 객체 개수
         size_t objCount;
         fread(&objCount, sizeof(size_t), 1, pFile);
 
-        if (objCount > 10000) // 비정상적인 개수 체크
-        {
-            fclose(pFile);
-            ShowErrorMessage(L"Corrupted level file - too many objects!");
-            CreateDefaultLevel();
-            return;
-        }
-
-        // 각 오브젝트 생성
-        int successCount = 0;
+        // 객체 데이터 읽기
+        levelData.vecObjects.reserve(objCount);
         for (size_t i = 0; i < objCount; ++i)
         {
             tLevelObjectData objData;
             fread(&objData, sizeof(tLevelObjectData), 1, pFile);
-
-            CObject* pObj = CreateObjectFromData(objData);
-            if (pObj)
-            {
-                m_pScene->AddObject(pObj, objData.eGroupType);
-                successCount++;
-            }
+            levelData.vecObjects.push_back(objData);
         }
 
         fclose(pFile);
 
-        // 플레이어 스폰 위치 설정
-        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(levelData.vPlayerSpawn);
-
-        // 배경 설정 적용
-        if (levelData.iBackgroundType >= 0 && levelData.iBackgroundType < (int)BACKGROUND_TYPE::END)
-        {
-            // 배경 타입 설정 (에디터 오브젝트 매니저를 통해)
-            m_pEditorCore->GetObjectManager()->SetCurrentBackgroundType((BACKGROUND_TYPE)levelData.iBackgroundType);
-        }
-
-        // 레벨 경계 적용
-        ApplyLevelBounds(levelData);
+        // 로드된 데이터 적용
+        ApplyLoadedLevelData(levelData);
 
         // 성공 메시지
-        ShowSuccessMessage(_strFileName + L" loaded successfully!", successCount);
+        ShowSuccessMessage(_strFileName + L" loaded successfully!", (int)objCount);
     }
     catch (...)
     {
         fclose(pFile);
         ShowErrorMessage(L"Error occurred while loading!");
-        CreateDefaultLevel();
     }
 }
 
@@ -276,35 +270,45 @@ tLevelData CEditorFileManager::CreateLevelData(const wstring& _strLevelName)
 {
     tLevelData levelData;
     levelData.strLevelName = _strLevelName;
-    levelData.iVersion = 3; // 현재 버전
-    levelData.iBackgroundType = (int)m_pEditorCore->GetObjectManager()->GetCurrentBackgroundType();
-    levelData.vPlayerSpawn = m_pEditorCore->GetObjectManager()->GetPlayerSpawnPos();
+    levelData.iVersion = 4; // 스테이지 이미지 시스템 지원 버전
 
-    // === 새로 추가: 현재 카메라 경계 정보 가져오기 ===
-    CEditorCameraController* pCameraController = m_pEditorCore->GetCameraController();
-    if (pCameraController && pCameraController->IsCameraBoundsEnabled())
+    // 플레이어 스폰 위치
+    if (m_pEditorCore->GetObjectManager())
     {
-        // 현재 설정된 카메라 경계를 레벨 경계로 저장
-        levelData.vLevelBoundsMin = pCameraController->GetCameraBoundsMin();
-        levelData.vLevelBoundsMax = pCameraController->GetCameraBoundsMax();
-        levelData.fGameOverY = levelData.vLevelBoundsMax.y; // 하단 경계를 낙사 지점으로
+        levelData.vPlayerSpawn = m_pEditorCore->GetObjectManager()->GetPlayerSpawnPosition();
     }
 
-    // 모든 오브젝트 데이터 수집 (플레이어 제외)
-    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
+    // 배경 정보 (기존 호환성)
+    if (m_pEditorCore->GetObjectManager())
     {
-        if (i == (UINT)GROUP_TYPE::PLAYER) continue; // 플레이어는 제외
+        levelData.iBackgroundType = (int)m_pEditorCore->GetObjectManager()->GetCurrentBackgroundType();
+    }
 
-        const vector<CObject*>& vecObj = m_pScene->GetGroupObject((GROUP_TYPE)i);
-        for (size_t j = 0; j < vecObj.size(); ++j)
+    // 경계 정보
+    levelData.vLevelBoundsMin = Vec2(0.f, 0.f);        // 기본값
+    levelData.vLevelBoundsMax = Vec2(3840.f, 2160.f);  // 기본값
+    levelData.fGameOverY = 2200.f;                      // 기본값
+
+    // === 새로 추가: 스테이지 이미지 정보 ===
+    levelData.eStageType = CStageMgr::GetInst()->GetCurrentStageType();
+
+    // 현재 스테이지 이미지가 커스텀인 경우 경로 저장
+    if (levelData.eStageType == STAGE_IMAGE_TYPE::CUSTOM)
+    {
+        CStageImage* pCurrentStage = CStageMgr::GetInst()->GetCurrentStageImage();
+        if (pCurrentStage && pCurrentStage->GetStageTexture())
         {
-            if (vecObj[j] && !vecObj[j]->IsDead()) // 유효하고 살아있는 오브젝트만
-            {
-                tLevelObjectData objData = CreateObjectData(vecObj[j], (GROUP_TYPE)i);
-                levelData.vecObjects.push_back(objData);
-            }
+            levelData.strStageImagePath = pCurrentStage->GetStageTexture()->GetRelativePath();
         }
     }
+    else
+    {
+        // 기본 스테이지들은 경로 저장 불필요
+        levelData.strStageImagePath = L"";
+    }
+
+    // 모든 그룹의 객체들 수집
+    CollectSceneObjects(levelData);
 
     return levelData;
 }
@@ -327,17 +331,50 @@ CObject* CEditorFileManager::CreateObjectFromData(const tLevelObjectData& _objDa
         OBJECT_TYPE tileType = (OBJECT_TYPE)_objData.iSubType;
         pObj = CObjectFactory::CreateObject(tileType, _objData.vPos);
 
-        // 타일 시각 타입 적용
+        // 타일 시각 타입 및 충돌체 타입 적용
         if (pObj)
         {
             CTile* pTile = dynamic_cast<CTile*>(pObj);
             if (pTile)
             {
-                TILE_VISUAL_TYPE eVisualType = (TILE_VISUAL_TYPE)_objData.iTileVisualType;
-                pTile->SetVisualType(eVisualType);
+                // 시각적 타입 설정 (호환성용)
+                if (_objData.iTileVisualType >= 0)
+                {
+                    TILE_VISUAL_TYPE eVisualType = (TILE_VISUAL_TYPE)_objData.iTileVisualType;
+                    pTile->SetVisualType(eVisualType);
+                }
 
-                // 타일 매니저를 통해 적절한 텍스처와 속성 설정
-                CTileMgr::GetInst()->SetupTileProperties(pTile, eVisualType);
+                // 충돌체 타입 설정 (새로운 시스템)
+                if (_objData.iCollisionType >= 0)
+                {
+                    COLLISION_TYPE eCollisionType = (COLLISION_TYPE)_objData.iCollisionType;
+                    pTile->SetCollisionType(eCollisionType);
+                }
+                else
+                {
+                    // 이전 버전 호환성: 시각적 타입에서 충돌체 타입 유추
+                    COLLISION_TYPE eCollisionType = COLLISION_TYPE::SOLID_GROUND;
+                    if (_objData.iTileVisualType >= 0)
+                    {
+                        TILE_VISUAL_TYPE eVisualType = (TILE_VISUAL_TYPE)_objData.iTileVisualType;
+                        switch (eVisualType)
+                        {
+                        case TILE_VISUAL_TYPE::SPIKE:
+                            eCollisionType = COLLISION_TYPE::SPIKE;
+                            break;
+                        case TILE_VISUAL_TYPE::WATER:
+                            eCollisionType = COLLISION_TYPE::WATER;
+                            break;
+                        case TILE_VISUAL_TYPE::LAVA:
+                            eCollisionType = COLLISION_TYPE::LAVA;
+                            break;
+                        default:
+                            eCollisionType = COLLISION_TYPE::SOLID_GROUND;
+                            break;
+                        }
+                    }
+                    pTile->SetCollisionType(eCollisionType);
+                }
             }
         }
     }
@@ -410,6 +447,75 @@ tLevelObjectData CEditorFileManager::CreateObjectData(CObject* _pObj, GROUP_TYPE
     return objData;
 }
 
+void CEditorFileManager::CollectSceneObjects(tLevelData& _levelData)
+{
+    if (!m_pScene)
+        return;
+
+    // 각 그룹별로 객체들 수집
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
+    {
+        GROUP_TYPE eGroupType = (GROUP_TYPE)i;
+
+        // 플레이어 그룹은 제외 (스폰 위치만 저장)
+        if (eGroupType == GROUP_TYPE::PLAYER)
+            continue;
+
+        const vector<CObject*>& vecObj = m_pScene->GetGroupObject(eGroupType);
+
+        for (CObject* pObj : vecObj)
+        {
+            if (pObj)
+            {
+                tLevelObjectData objData = CreateObjectData(pObj, eGroupType);
+                _levelData.vecObjects.push_back(objData);
+            }
+        }
+    }
+}
+
+void CEditorFileManager::ApplyLoadedLevelData(const tLevelData& _levelData)
+{
+    // 플레이어 스폰 위치 설정
+    if (m_pEditorCore->GetObjectManager())
+    {
+        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(_levelData.vPlayerSpawn);
+    }
+
+    // 배경 설정 (기존 호환성)
+    if (m_pEditorCore->GetObjectManager())
+    {
+        BACKGROUND_TYPE bgType = (BACKGROUND_TYPE)_levelData.iBackgroundType;
+        m_pEditorCore->GetObjectManager()->ChangeBackground(bgType);
+    }
+
+    // === 새로 추가: 스테이지 이미지 시스템 적용 ===
+    if (_levelData.eStageType == STAGE_IMAGE_TYPE::CUSTOM && !_levelData.strStageImagePath.empty())
+    {
+        // 커스텀 스테이지 이미지 로드
+        CStageMgr::GetInst()->LoadCustomStageImage(_levelData.strStageImagePath);
+    }
+    else
+    {
+        // 기본 스테이지 이미지 설정
+        CStageMgr::GetInst()->SetCurrentStageImage(_levelData.eStageType);
+    }
+
+    // 객체들 생성
+    for (const auto& objData : _levelData.vecObjects)
+    {
+        CObject* pObj = CreateObjectFromData(objData);
+        if (pObj)
+        {
+            GROUP_TYPE eGroup = objData.eGroupType;
+            m_pScene->AddObject(pObj, eGroup);
+        }
+    }
+
+    // 경계 정보 적용
+    ApplyLevelBounds(_levelData);
+}
+
 void CEditorFileManager::ClearScene()
 {
     // 플레이어를 제외한 모든 오브젝트 삭제
@@ -439,7 +545,7 @@ void CEditorFileManager::CreateDefaultLevel()
     m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(Vec2(640.f, 400.f));
     
     // 기본 배경 설정
-    m_pEditorCore->GetObjectManager()->SetCurrentBackgroundType(BACKGROUND_TYPE::GREEN_HILL);
+    m_pEditorCore->GetObjectManager()->SetCurrentBackgroundType(BACKGROUND_TYPE::BACKGROUND1);
     
     // 기본 카메라 경계 설정
     CEditorCameraController* pCameraController = m_pEditorCore->GetCameraController();
@@ -586,7 +692,7 @@ bool CEditorFileManager::ValidateLevelFile(const wstring& _strFilePath)
 
 bool CEditorFileManager::IsValidVersion(int _iVersion)
 {
-    return _iVersion >= 1 && _iVersion <= 3;
+    return _iVersion >= 1 && _iVersion <= 4;
 }
 
 void CEditorFileManager::ShowErrorMessage(const wstring& _strMessage)

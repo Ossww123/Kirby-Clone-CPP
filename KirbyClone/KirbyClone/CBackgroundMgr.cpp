@@ -35,8 +35,9 @@ CBackground* CBackgroundMgr::CreateBackground(BACKGROUND_TYPE _eType, const wstr
 
     switch (_eType)
     {
-    case BACKGROUND_TYPE::GREEN_HILL:      strKey += L"GreenHill"; break;
-    case BACKGROUND_TYPE::RAINBOW_CASTLE:  strKey += L"RainbowCastle"; break;
+    case BACKGROUND_TYPE::BACKGROUND1:     strKey += L"Background1"; break;
+    case BACKGROUND_TYPE::BACKGROUND2:     strKey += L"Background2"; break;
+    case BACKGROUND_TYPE::BACKGROUND3:     strKey += L"Background3"; break;
     default:                               strKey += L"Unknown"; break;
     }
 
@@ -73,8 +74,9 @@ const wchar_t* CBackgroundMgr::GetBackgroundName(BACKGROUND_TYPE _eType)
 {
     switch (_eType)
     {
-    case BACKGROUND_TYPE::GREEN_HILL:      return L"Green Hill";
-    case BACKGROUND_TYPE::RAINBOW_CASTLE:  return L"Rainbow Castle";
+    case BACKGROUND_TYPE::BACKGROUND1:     return L"Background 1";
+    case BACKGROUND_TYPE::BACKGROUND2:     return L"Background 2";
+    case BACKGROUND_TYPE::BACKGROUND3:     return L"Background 3";
     default:                               return L"Unknown";
     }
 }
@@ -83,15 +85,17 @@ vector<BACKGROUND_TYPE> CBackgroundMgr::GetAvailableBackgroundTypes()
 {
     vector<BACKGROUND_TYPE> result;
 
-    result.push_back(BACKGROUND_TYPE::GREEN_HILL);
-    result.push_back(BACKGROUND_TYPE::RAINBOW_CASTLE);
+    result.push_back(BACKGROUND_TYPE::BACKGROUND1);
+    result.push_back(BACKGROUND_TYPE::BACKGROUND2);
+    result.push_back(BACKGROUND_TYPE::BACKGROUND3);
 
     return result;
 }
 
 void CBackgroundMgr::CreateDefaultBackgrounds()
 {
-    // 기본 배경들 생성
-    CreateBackground(BACKGROUND_TYPE::GREEN_HILL, L"background\\green_hill.bmp");
-    CreateBackground(BACKGROUND_TYPE::RAINBOW_CASTLE, L"background\\rainbow_castle.bmp");
+    // 새로운 배경들 생성
+    CreateBackground(BACKGROUND_TYPE::BACKGROUND1, L"background\\background1.bmp");
+    CreateBackground(BACKGROUND_TYPE::BACKGROUND2, L"background\\background2.bmp");
+    CreateBackground(BACKGROUND_TYPE::BACKGROUND3, L"background\\background3.bmp");
 }

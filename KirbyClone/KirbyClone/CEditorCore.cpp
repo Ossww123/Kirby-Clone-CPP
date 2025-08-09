@@ -1,15 +1,5 @@
 #include "pch.h"
 #include "CEditorCore.h"
-
-// 하위 시스템 include
-#include "CEditorUI.h"
-#include "CEditorInput.h"
-#include "CEditorRenderer.h"
-#include "CEditorFileManager.h"
-#include "CEditorObjectManager.h"
-#include "CEditorCameraController.h"
-#include "CEditorToolbar.h"
-
 #include "CBackground.h"
 #include "CObject.h"
 #include "CScene.h"
@@ -17,6 +7,16 @@
 #include "CTimeMgr.h"
 #include "CGrid.h"
 #include "CCamera.h"
+#include "CStageMgr.h"
+
+// 하위 시스템
+#include "CEditorUI.h"
+#include "CEditorInput.h"
+#include "CEditorRenderer.h"
+#include "CEditorFileManager.h"
+#include "CEditorObjectManager.h"
+#include "CEditorCameraController.h"
+#include "CEditorToolbar.h"
 
 CEditorCore::CEditorCore()
     : m_pUI(nullptr)
@@ -27,11 +27,9 @@ CEditorCore::CEditorCore()
     , m_pCameraController(nullptr)
     , m_pToolbar(nullptr)
     , m_pWorkingScene(nullptr)
-    , m_eCurrentMode(EDITOR_MODE::NONE)
+    , m_eCurrentMode(EDITOR_MODE::NORMAL)
     , m_bShowUI(true)
     , m_vMousePos{}
-    , m_bMouseClick(false)
-    , m_fClickTime(0.f)
     , m_pSelectedObject(nullptr)
     , m_bDragging(false)
     , m_vDragStartPos{}
@@ -69,11 +67,11 @@ void CEditorCore::Initialize(CScene* _pScene)
     CGrid::GetInst()->init();
 
     // 기본 설정
-    m_eCurrentMode = EDITOR_MODE::NONE;
+    m_eCurrentMode = EDITOR_MODE::NORMAL;
     m_bShowUI = true;
     m_pSelectedObject = nullptr;
     m_bDragging = false;
-    SetMapSize(Vec2(3840.f, 2160.f));
+    SetMapSize(Vec2(3840.f, 640.f));
 
     // 툴바 초기화 후 맵 크기 동기화
     if (m_pToolbar)
@@ -84,10 +82,16 @@ void CEditorCore::Initialize(CScene* _pScene)
 
 void CEditorCore::Update()
 {
-    // 클릭 시간 업데이트
-    UpdateClickTime(CTimeMgr::GetInst()->GetfDT());
+    // Scene의 기본 오브젝트들 업데이트
+    if (m_pWorkingScene)
+    {
+        m_pWorkingScene->CScene::Update();
+    }
 
-    // 하위 시스템들 업데이트 (순서 중요!)
+    // 스테이지 매니저 업데이트
+    CStageMgr::GetInst()->Update();
+
+    // 하위 시스템들 업데이트 (순서 중요)
     m_pCameraController->Update();      // 카메라 먼저
     m_pInput->Update();                 // 입력 처리
     m_pObjectManager->Update();         // 오브젝트 관리 (배경 업데이트 포함)
@@ -96,31 +100,34 @@ void CEditorCore::Update()
 
 void CEditorCore::Render(HDC _dc)
 {
-    // 하위 시스템들 렌더링 (순서 중요!)
+    // 모든 렌더링을 에디터에서 처리 (순서 중요)
 
-    // 1. 배경 렌더링 (ObjectManager에서 처리)
+    // 배경 렌더링 (맨 뒤)
     if (m_pObjectManager->GetCurrentBackground())
     {
         m_pObjectManager->GetCurrentBackground()->Render(_dc);
     }
 
-    // 2. 그리드 렌더링
+    // 스테이지 이미지 렌더링 (배경과 게임 객체 사이)
+    CStageMgr::GetInst()->Render(_dc);
+
+    // Scene의 모든 게임 오브젝트 렌더링 (타일, 몬스터, 아이템 등)
+    if (m_pWorkingScene)
+    {
+        m_pWorkingScene->CScene::Render(_dc);
+    }
+
+    // 그리드 렌더링 (게임 오브젝트 위에)
     CGrid::GetInst()->Render(_dc);
     RenderMapBounds(_dc);
 
-    // 3. **Scene의 모든 오브젝트 렌더링 추가!**
-    if (m_pWorkingScene)
-    {
-        m_pWorkingScene->CScene::Render(_dc);  // CScene::Render() 명시적 호출
-    }
-
-    // 4. 에디터 전용 렌더링 (미리보기, 선택 박스 등)
+    // 에디터 전용 렌더링 (미리보기, 선택 박스 등)
     m_pRenderer->Render(_dc);
 
-    // 5. 툴바 렌더링 (UI보다 먼저)
+    // 툴바 렌더링 (UI보다 먼저)
     m_pToolbar->Render(_dc);
 
-    // 6. UI 렌더링 (맨 앞)
+    // UI 렌더링 (맨 앞)
     if (m_bShowUI)
     {
         m_pUI->Render(_dc);
@@ -189,6 +196,9 @@ void CEditorCore::ChangeMode(EDITOR_MODE _eMode)
     case EDITOR_MODE::PLACE_SPECIAL:
         m_pObjectManager->ChangeObjectCategory(L"Special");
         break;
+    case EDITOR_MODE::PLACE_STAGE:
+        // Stage Image 모드에서는 별도 카테고리 필요 없음
+        break;
     }
 
     // 모드 변경 시 선택 해제
@@ -196,22 +206,18 @@ void CEditorCore::ChangeMode(EDITOR_MODE _eMode)
     {
         DeselectObject();
     }
-
-    // 모드 변경 시 윈도우 타이틀 업데이트
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Level Editor - Mode: %s", GetModeString());
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
-const wchar_t* CEditorCore::GetModeString()
+const wchar_t* CEditorCore::GetModeString() const
 {
     switch (m_eCurrentMode)
     {
-    case EDITOR_MODE::NONE:         return L"Normal";
+    case EDITOR_MODE::NORMAL:         return L"Normal";
     case EDITOR_MODE::PLACE_MONSTER: return L"Place Monster";
     case EDITOR_MODE::PLACE_ITEM:   return L"Place Item";
     case EDITOR_MODE::PLACE_TILE:   return L"Place Tile";
     case EDITOR_MODE::PLACE_SPECIAL: return L"Place Special";
+    case EDITOR_MODE::PLACE_STAGE:  return L"Stage Image";
     case EDITOR_MODE::SELECT:       return L"Select";
     case EDITOR_MODE::ERASE:        return L"Erase";
     case EDITOR_MODE::CAMERA_MOVE:  return L"Camera Move";
@@ -221,47 +227,11 @@ const wchar_t* CEditorCore::GetModeString()
     }
 }
 
-void CEditorCore::SetMouseClick(bool _bClick, float _fTime)
-{
-    m_bMouseClick = _bClick;
-    if (_bClick)
-    {
-        m_fClickTime = _fTime;
-    }
-}
-
-void CEditorCore::UpdateClickTime(float _fDT)
-{
-    if (m_fClickTime > 0.f)
-    {
-        m_fClickTime -= _fDT;
-        if (m_fClickTime <= 0.f)
-        {
-            m_bMouseClick = false;
-        }
-    }
-}
-
-void CEditorCore::SetSelectedObject(CObject* _pObj)
-{
-    m_pSelectedObject = _pObj;
-
-    if (_pObj)
-    {
-        Vec2 vPos = _pObj->GetPos();
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Selected object at (%.0f, %.0f)", vPos.x, vPos.y);
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
-    }
-}
-
 void CEditorCore::DeselectObject()
 {
     m_pSelectedObject = nullptr;
     m_bDragging = false;
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Object deselected");
 }
-
 
 void CEditorCore::SetMapSize(Vec2 vSize)
 {
@@ -293,22 +263,22 @@ void CEditorCore::RenderMapBounds(HDC _dc)
     Vec2 vResolution = CCore::GetInst()->GetResolution();
     Vec2 vOffset = vResolution / 2.f - vCameraPos;
 
-    // 맵 경계선 그리기
-    HPEN hPen = CreatePen(PS_DASH, 2, RGB(255, 0, 0));  // 빨간 점선
+    // 실제 좌표계로 맵 경계선 그리기
+    HPEN hPen = CreatePen(PS_DASH, 2, RGB(255, 0, 0));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
-    // 맵 경계 사각형
+    // 맵 경계 사각형: (0,0) ~ (width, height)
     int left = (int)(0 + vOffset.x);
-    int top = (int)(0 + vOffset.y);
     int right = (int)(m_vMapSize.x + vOffset.x);
+    int top = (int)(0 + vOffset.y);
     int bottom = (int)(m_vMapSize.y + vOffset.y);
 
     // 경계선 그리기
     MoveToEx(_dc, left, top, nullptr);
-    LineTo(_dc, right, top);        // 상단
-    LineTo(_dc, right, bottom);     // 우측
-    LineTo(_dc, left, bottom);      // 하단
-    LineTo(_dc, left, top);         // 좌측
+    LineTo(_dc, right, top);
+    LineTo(_dc, right, bottom);
+    LineTo(_dc, left, bottom);
+    LineTo(_dc, left, top);
 
     SelectObject(_dc, hOldPen);
     DeleteObject(hPen);

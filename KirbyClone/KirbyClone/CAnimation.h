@@ -35,6 +35,7 @@ public:
     void RenderWithAlpha(HDC _dc, Vec2 _vPos, float _fAlpha = 1.0f);
     void AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration);  // 개별 프레임 추가
     void ClearFrames();                                            // 모든 프레임 제거
+    void RenderScaled(HDC _dc, Vec2 _vPos, float _fScale);
 
 public:
     CAnimation();

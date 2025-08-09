@@ -45,6 +45,8 @@ public:
     void OnCollision(CCollider* _pOther);       // 충돌 중
     void OnCollisionExit(CCollider* _pOther);   // 충돌 끝
 
+    void RenderScaled(HDC _dc, float _fScale);
+
 public:
     CCollider();
     ~CCollider();

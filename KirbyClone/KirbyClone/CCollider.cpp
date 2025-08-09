@@ -2,6 +2,7 @@
 #include "CCollider.h"
 #include "CObject.h"
 #include "CCamera.h"
+#include "CKeyMgr.h"
 
 UINT CCollider::g_iNextID = 0;
 
@@ -118,4 +119,30 @@ void CCollider::OnCollision(CCollider* _pOther)
 void CCollider::OnCollisionExit(CCollider* _pOther)
 {
     m_pOwner->OnCollisionExit(_pOther);
+}
+
+void CCollider::RenderScaled(HDC _dc, float _fScale)
+{
+    // 디버그 모드에서만 충돌체 표시
+    if (!KEY_HOLD(KEY::TAB))
+        return;
+
+    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetFinalPos());
+    Vec2 vScaledSize = m_vScale * _fScale;
+
+    HPEN hRedPen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
+    HPEN hOldPen = (HPEN)SelectObject(_dc, hRedPen);
+    HBRUSH myBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, myBrush);
+
+    // 스케일이 적용된 충돌체 사각형 그리기
+    Rectangle(_dc,
+        (int)(vRenderPos.x - vScaledSize.x / 2.f),
+        (int)(vRenderPos.y - vScaledSize.y / 2.f),
+        (int)(vRenderPos.x + vScaledSize.x / 2.f),
+        (int)(vRenderPos.y + vScaledSize.y / 2.f));
+
+    SelectObject(_dc, hOldPen);
+    SelectObject(_dc, hOldBrush);
+    DeleteObject(hRedPen);
 }

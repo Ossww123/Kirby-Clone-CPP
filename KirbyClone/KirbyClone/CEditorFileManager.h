@@ -32,6 +32,9 @@ private:
     CObject* CreateObjectFromData(const tLevelObjectData& _objData);
     tLevelObjectData CreateObjectData(CObject* _pObj, GROUP_TYPE _eGroupType);
 
+    void CollectSceneObjects(tLevelData& _levelData);      // 씬의 모든 객체 수집
+    void ApplyLoadedLevelData(const tLevelData& _levelData); // 로드된 데이터 적용
+
     // 씬 관리
     void ClearScene();
     void CreateDefaultLevel();

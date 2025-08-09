@@ -1,31 +1,36 @@
 #pragma once
+
 #include "CScene.h"
 
-// Editor 관련 클래스들
+// 전방 선언
 class CEditorCore;
 
 class CScene_Tool : public CScene
 {
-private:
-    CEditorCore* m_pEditorCore;  // 에디터 핵심 시스템
+public:
+    CScene_Tool();
+    virtual ~CScene_Tool();
 
 public:
-    virtual void Enter() override;
-    virtual void Exit() override;
-    virtual void Update() override;
-    virtual void Render(HDC _dc) override;
+    // === 생명주기 함수 ===
+    void Enter() override;
+    void Exit() override;
+    void Update() override;
+    void Render(HDC _dc) override;
 
-    // 에디터 접근자
-    CEditorCore* GetEditorCore() { return m_pEditorCore; }
-
-    // 기본 Scene 기능은 유지
+public:
+    // === 레벨 파일 관리 ===
     void LoadLevel(const wstring& _strFileName);
     void SaveLevel(const wstring& _strFileName);
     void ClearLevel();
 
+    // === 에디터 시스템 접근자 ===
+    CEditorCore* GetEditorCore() const { return m_pEditorCore; }
+
+    // === 씬 객체 관리 ===
     void ClearAllObjects() { DeleteAllObject(); }
 
-public:
-    CScene_Tool();
-    virtual ~CScene_Tool();
+private:
+    // === 멤버 변수 ===
+    CEditorCore* m_pEditorCore;  // 에디터 핵심 시스템
 };

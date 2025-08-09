@@ -15,7 +15,7 @@ private:
     int m_iUIMargin;
     int m_iLineHeight;
 
-    // 오브젝트 팔레트 관련
+    // 객체 팔레트 관련
     int m_iPaletteX;
     int m_iPaletteY;
     int m_iPaletteWidth;
@@ -57,6 +57,13 @@ private:
     void RenderPaletteItem(HDC _dc, int index, OBJECT_TYPE objType, int x, int y, bool selected);
     void RenderObjectIcon(HDC _dc, OBJECT_TYPE objType, int x, int y, int size);
 
+    // 새로 추가: 충돌체 관련 렌더링 함수들
+    void RenderCollisionIcon(HDC _dc, COLLISION_TYPE collisionType, int centerX, int centerY);
+    void RenderCollisionPalette(HDC _dc);                    // 충돌체 전용 팔레트 (선택사항)
+    void RenderStageImagePalette(HDC _dc);                   // 스테이지 이미지 팔레트 (선택사항)
+    void RenderCollisionTooltip(HDC _dc, OBJECT_TYPE objType, int mouseX, int mouseY);
+    void RenderStageImageItem(HDC _dc, STAGE_IMAGE_TYPE stageType, int x, int y, bool selected);
+    void RenderStageImageIcon(HDC _dc, STAGE_IMAGE_TYPE stageType, int centerX, int centerY);
 
     // UI 유틸리티
     void DrawUIBackground(HDC _dc);
@@ -65,9 +72,10 @@ private:
     void RenderBoldText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color = RGB(255, 255, 100));
 
 public:
-    // 오브젝트 팔레트 렌더링
+    // 객체 팔레트 렌더링
     void RenderObjectPalette(HDC _dc);
     bool HandlePaletteClick(Vec2 vMousePos);
+    bool HandleStageImagePaletteClick(Vec2 vMousePos);
     //void UpdatePaletteScroll(int deltaY);
 
     // 팔레트 유틸리티

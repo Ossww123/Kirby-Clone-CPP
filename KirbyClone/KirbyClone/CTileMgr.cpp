@@ -24,6 +24,7 @@ void CTileMgr::init()
 
 void CTileMgr::CreateDefaultTileInfos()
 {
+    /*
     // 기본 지형 타일들 (64x64 표준 크기)
     RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::GRASS_PLATFORM, Vec2(64.f, 64.f), false, false, L"tiles\\grass_platform.bmp"));
     RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::DIRT_BLOCK, Vec2(64.f, 64.f), false, false, L"tiles\\dirt_block.bmp"));
@@ -50,11 +51,43 @@ void CTileMgr::CreateDefaultTileInfos()
     // 플랫폼들
     RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::MOVING_PLATFORM, Vec2(128.f, 32.f), false, false, L"tiles\\moving_platform.bmp"));
     RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::BRIDGE, Vec2(96.f, 24.f), false, false, L"tiles\\bridge.bmp"));
+    */
+
+    // 기본 충돌체 타일들 (64x64 표준 크기) - 텍스처 경로는 빈 문자열로 설정
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::GRASS_PLATFORM, Vec2(64.f, 64.f), false, false, L""));
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::DIRT_BLOCK, Vec2(64.f, 64.f), false, false, L""));
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::STONE_BLOCK, Vec2(64.f, 64.f), false, false, L""));
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::GRASS_BLOCK, Vec2(64.f, 64.f), false, false, L""));
+
+    // 큰 장식용 타일들 (나무는 더 클 수 있음) - 충돌체 전용이므로 크기만 유지
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::TREE, Vec2(96.f, 128.f), true, false, L""));
+
+    // 작은 장식용 타일들
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::FLOWER, Vec2(32.f, 32.f), true, false, L""));
+
+    // 울타리 (가로로 긴 형태 가능)
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::FENCE, Vec2(64.f, 48.f), false, false, L""));
+
+    // 파이프 (세로로 긴 형태)
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::PIPE, Vec2(64.f, 96.f), false, false, L""));
+
+    // 위험 요소들
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::SPIKE, Vec2(64.f, 32.f), false, true, L""));
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::WATER, Vec2(64.f, 64.f), false, false, L""));
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::LAVA, Vec2(64.f, 64.f), false, true, L""));
+
+    // 플랫폼들
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::MOVING_PLATFORM, Vec2(128.f, 32.f), false, false, L""));
+    RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::BRIDGE, Vec2(96.f, 24.f), false, false, L""));
 }
 
 void CTileMgr::CreateDefaultTileTextures()
 {
-    // 모든 등록된 타일 정보를 기반으로 텍스처 로드
+    // 더 이상 타일 텍스처를 로드하지 않음 - 충돌체 전용 시스템
+    // 이 함수는 호환성을 위해 유지하지만 아무것도 하지 않음
+
+    // 모든 등록된 타일 정보를 기반으로 텍스처 로드 (비활성화됨)
+    /*
     for (auto& pair : m_mapTileInfo)
     {
         const tTileInfo& info = pair.second;
@@ -63,6 +96,7 @@ void CTileMgr::CreateDefaultTileTextures()
             LoadTileTexture(info.eType, info.strTexturePath);
         }
     }
+    */
 }
 
 void CTileMgr::RegisterTileInfo(const tTileInfo& _tileInfo)
@@ -96,6 +130,9 @@ CTexture* CTileMgr::LoadTileTexture(TILE_VISUAL_TYPE _eVisualType, const wstring
     {
         return pTex;
     }
+
+    // 더 이상 타일 텍스처를 사용하지 않으므로 로딩하지 않음
+    return nullptr;
 
     // 타일 타입별 고유 키 생성 - 더 안전한 방법
     wstring strKey = L"Tile_";
@@ -186,52 +223,76 @@ void CTileMgr::SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType)
     if (!_pTile)
         return;
 
-    tTileInfo* pInfo = GetTileInfo(_eVisualType);
-    if (!pInfo)
+    // 더 이상 텍스처 관련 처리는 하지 않음 - 충돌체 전용 시스템으로 변경
+
+    // 기본 크기 설정 (모든 충돌체는 64x64)
+    _pTile->SetScale(Vec2(64.f, 64.f));
+
+    // 시각적 타입 설정 (호환성용으로만 유지)
+    _pTile->SetVisualType(_eVisualType);
+
+    // *** 텍스처 설정 제거 - 더 이상 사용하지 않음 ***
+    // CTexture* pTexture = FindTileTexture(_eVisualType);
+    // if (pTexture)
+    // {
+    //     _pTile->SetTileTexture(pTexture);
+    // }
+
+    // 시각적 타입에 따른 기본 충돌체 속성 설정
+    switch (_eVisualType)
     {
-        // 정보가 없으면 기본 설정
-        _pTile->SetScale(Vec2(64.f, 64.f));
+    case TILE_VISUAL_TYPE::GRASS_PLATFORM:
+        _pTile->SetCollisionType(COLLISION_TYPE::SOLID_GROUND);
         _pTile->SetDecorative(false);
         _pTile->SetHarmful(false);
         _pTile->SetSolid(true);
-        return;
+        break;
+
+    case TILE_VISUAL_TYPE::SPIKE:
+        _pTile->SetCollisionType(COLLISION_TYPE::SPIKE);
+        _pTile->SetDecorative(false);
+        _pTile->SetHarmful(true);
+        _pTile->SetSolid(true);
+        break;
+
+    case TILE_VISUAL_TYPE::WATER:
+        _pTile->SetCollisionType(COLLISION_TYPE::WATER);
+        _pTile->SetDecorative(false);
+        _pTile->SetHarmful(false);
+        _pTile->SetSolid(false);
+        break;
+
+    case TILE_VISUAL_TYPE::LAVA:
+        _pTile->SetCollisionType(COLLISION_TYPE::LAVA);
+        _pTile->SetDecorative(false);
+        _pTile->SetHarmful(true);
+        _pTile->SetSolid(false);
+        break;
+
+    default:
+        // 기본값은 일반 땅 블록
+        _pTile->SetCollisionType(COLLISION_TYPE::SOLID_GROUND);
+        _pTile->SetDecorative(false);
+        _pTile->SetHarmful(false);
+        _pTile->SetSolid(true);
+        break;
     }
-
-    // 기본 크기 설정
-    _pTile->SetScale(pInfo->vDefaultSize);
-
-    // 시각적 타입 설정
-    _pTile->SetVisualType(_eVisualType);
-
-    // 텍스처 설정
-    CTexture* pTexture = FindTileTexture(_eVisualType);
-    if (pTexture)
-    {
-        _pTile->SetTileTexture(pTexture);
-    }
-
-    // 속성 설정
-    _pTile->SetDecorative(pInfo->bDecorative);
-    _pTile->SetHarmful(pInfo->bHarmful);
-    _pTile->SetSolid(!pInfo->bDecorative); // 장식용이 아니면 충돌 가능
 
     // 충돌체 설정
-    if (!pInfo->bDecorative)
+    if (_pTile->IsSolid() || _pTile->IsHarmful())
     {
-        // 장식용이 아닌 경우에만 콜라이더 생성/설정
+        // 충돌이 필요한 타입이면 콜라이더 생성
         if (!_pTile->GetCollider())
         {
             _pTile->CreateCollider();
         }
-        _pTile->GetCollider()->SetScale(pInfo->vDefaultSize);
-    }
-    else
-    {
-        // 장식용인 경우 기존 콜라이더가 있다면 제거는 하지 않고 비활성화
-        // (CTile 클래스에서 Decorative 상태에 따라 충돌 처리를 제어)
+        if (_pTile->GetCollider())
+        {
+            _pTile->GetCollider()->SetScale(Vec2(64.f, 64.f));
+        }
     }
 
-    // 기능적 타일 타입 설정 (시각 타입에 따른 기본 매핑)
+    // 기능적 타일 타입 설정 (호환성용)
     OBJECT_TYPE eFunctionalType = OBJECT_TYPE::TILE_GROUND; // 기본값
 
     switch (_eVisualType)
@@ -240,8 +301,10 @@ void CTileMgr::SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType)
         eFunctionalType = OBJECT_TYPE::TILE_SPIKE;
         break;
     case TILE_VISUAL_TYPE::WATER:
-    case TILE_VISUAL_TYPE::LAVA:
         eFunctionalType = OBJECT_TYPE::TILE_WATER;
+        break;
+    case TILE_VISUAL_TYPE::LAVA:
+        eFunctionalType = OBJECT_TYPE::TILE_LAVA;
         break;
     default:
         eFunctionalType = OBJECT_TYPE::TILE_GROUND;

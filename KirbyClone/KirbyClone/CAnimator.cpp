@@ -2,6 +2,7 @@
 #include "CAnimator.h"
 #include "CAnimation.h"
 #include "CObject.h"
+#include "CCore.h"  // 새로 추가: GetPixelScale() 사용
 
 CAnimator::CAnimator()
     : m_pOwner(nullptr)
@@ -70,7 +71,7 @@ void CAnimator::Update()
     {
         m_pCurAnim->Update();
 
-        // 애니메이션이 끝났고 반복이 아니라면
+        // 애니메이션이 끝나고 반복이 아니라면
         if (m_pCurAnim->IsFinish() && !m_bRepeat)
         {
             m_pCurAnim = nullptr;
@@ -80,10 +81,13 @@ void CAnimator::Update()
 
 void CAnimator::Render(HDC _dc)
 {
-    if (nullptr != m_pCurAnim)
+    if (nullptr != m_pCurAnim && nullptr != m_pOwner)
     {
         Vec2 vPos = m_pOwner->GetPos();
-        m_pCurAnim->Render(_dc, vPos);
+        float fScale = CCore::GetPixelScale(); // 4배 스케일 적용
+
+        // 스케일이 적용된 렌더링 호출
+        m_pCurAnim->RenderScaled(_dc, vPos, fScale);
     }
 }
 
@@ -111,4 +115,13 @@ void CAnimator::AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim)
 
     // 새 애니메이션 추가
     m_mapAnim.insert(make_pair(_strName, _pAnim));
+}
+
+void CAnimator::RenderScaled(HDC _dc, float _fScale)
+{
+    if (nullptr != m_pCurAnim && nullptr != m_pOwner)
+    {
+        Vec2 vPos = m_pOwner->GetPos();  // m_pOwner는 CAnimator의 멤버
+        m_pCurAnim->RenderScaled(_dc, vPos, _fScale);
+    }
 }

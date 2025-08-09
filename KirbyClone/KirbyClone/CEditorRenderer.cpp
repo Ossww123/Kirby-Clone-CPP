@@ -3,6 +3,7 @@
 #include "CEditorCore.h"
 #include "CEditorObjectManager.h"
 
+#include "CKeyMgr.h"
 #include "CCamera.h"
 #include "CCore.h"
 #include "CGrid.h"
@@ -56,7 +57,7 @@ void CEditorRenderer::RenderMouse(HDC _dc)
     RenderMouseCursor(_dc, vRenderPos, cursorColor);
 
     // 클릭했을 때 원 그리기
-    if (m_pEditorCore->IsMouseClick())
+    if (KEY_HOLD(KEY::MOUSE_LEFT))
     {
         HPEN hClickPen = CreatePen(PS_SOLID, 3, cursorColor);
         HPEN hOldClickPen = (HPEN)SelectObject(_dc, hClickPen);
@@ -256,31 +257,36 @@ void CEditorRenderer::RenderGridPreview(HDC _dc, Vec2 vRenderPos)
 
 void CEditorRenderer::RenderGameOverLine(HDC _dc)
 {
-    const float GAME_OVER_Y = 1280.f;
+    // 현재 맵 크기 가져오기
+    Vec2 vMapSize = m_pEditorCore->GetMapSize();
+    const float TILE_SIZE = 64.f;  // 기본 타일 크기
+    const float DEATH_LINE_Y = vMapSize.y + (TILE_SIZE * 1.5f);  // 맵 하단에서 1.5타일 아래
 
+    // 화면 전체 너비에 걸쳐 낙사선 그리기
     Vec2 vResolution = CCore::GetInst()->GetResolution();
     Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
 
-    // 화면 좌우 끝점 계산 (x=0 이상만)
-    float fScreenLeft = max(0.f, vCameraPos.x - vResolution.x / 2.f);  // x=0 이상으로 제한
+    // 화면 좌우 끝점 계산
+    float fScreenLeft = vCameraPos.x - vResolution.x / 2.f;
     float fScreenRight = vCameraPos.x + vResolution.x / 2.f;
 
-    Vec2 vLeftPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenLeft, GAME_OVER_Y));
-    Vec2 vRightPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenRight, GAME_OVER_Y));
+    // 월드 좌표를 화면 좌표로 변환
+    Vec2 vLeftPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenLeft, DEATH_LINE_Y));
+    Vec2 vRightPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenRight, DEATH_LINE_Y));
 
-    // 경고선이 화면에 보이는지 체크
-    if (GAME_OVER_Y >= vCameraPos.y - vResolution.y / 2.f &&
-        GAME_OVER_Y <= vCameraPos.y + vResolution.y / 2.f)
+    // 낙사선이 화면에 보이는지 체크
+    if (DEATH_LINE_Y >= vCameraPos.y - vResolution.y / 2.f &&
+        DEATH_LINE_Y <= vCameraPos.y + vResolution.y / 2.f)
     {
-        // 빨간 점선으로 경고선 그리기
-        HPEN hWarningPen = CreatePen(PS_DOT, 3, RGB(255, 50, 50));
+        // 빨간 실선으로 낙사선 그리기
+        HPEN hWarningPen = CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
         HPEN hOldPen = (HPEN)SelectObject(_dc, hWarningPen);
 
         MoveToEx(_dc, (int)vLeftPoint.x, (int)vLeftPoint.y, nullptr);
         LineTo(_dc, (int)vRightPoint.x, (int)vRightPoint.y);
 
-        // "GAME OVER LINE" 텍스트 표시
-        SetTextColor(_dc, RGB(255, 50, 50));
+        // "DEATH LINE" 텍스트 표시
+        SetTextColor(_dc, RGB(255, 0, 0));
         SetBkMode(_dc, TRANSPARENT);
 
         HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
@@ -288,7 +294,7 @@ void CEditorRenderer::RenderGameOverLine(HDC _dc)
             DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
         HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
 
-        wchar_t szWarning[] = L"GAME OVER LINE (Y: 1280)";
+        wchar_t szWarning[] = L"GAMEOVER LINE (1.5 tiles below map)";
         TextOut(_dc, (int)vLeftPoint.x + 10, (int)vLeftPoint.y - 25, szWarning, (int)wcslen(szWarning));
 
         SelectObject(_dc, hOldFont);
@@ -352,6 +358,7 @@ COLORREF CEditorRenderer::GetModeColor()
     case EDITOR_MODE::PLACE_ITEM:       return RGB(255, 255, 100); // 노란색
     case EDITOR_MODE::PLACE_TILE:       return RGB(100, 100, 255); // 파란색
     case EDITOR_MODE::PLACE_SPECIAL:    return RGB(255, 100, 255); // 자주색
+    case EDITOR_MODE::PLACE_STAGE:      return RGB(100, 255, 255); // 시아니색 (새로 추가)
     case EDITOR_MODE::SELECT:           return RGB(100, 200, 255); // 하늘색
     case EDITOR_MODE::ERASE:            return RGB(255, 100, 100); // 빨간색
     case EDITOR_MODE::BACKGROUND:       return RGB(100, 255, 100); // 녹색
@@ -369,6 +376,7 @@ COLORREF CEditorRenderer::GetPreviewColor()
     case EDITOR_MODE::PLACE_ITEM:       return RGB(255, 255, 150); // 연한 노란색
     case EDITOR_MODE::PLACE_TILE:       return RGB(150, 150, 255); // 연한 파란색
     case EDITOR_MODE::PLACE_SPECIAL:    return RGB(255, 150, 255); // 연한 자주색
+    case EDITOR_MODE::PLACE_STAGE:      return RGB(150, 255, 255); // 연한 시아니색 (새로 추가)
     default:                            return RGB(200, 200, 200); // 회색
     }
 }

@@ -16,6 +16,8 @@ CEditorToolbar::CEditorToolbar()
     , m_iButtonHeight(30)
     , m_iButtonMargin(5)
     , m_iSeparatorWidth(10)
+    , m_iInfoAreaX(0)
+    , m_iInfoAreaWidth(0)
     , m_vMousePos(0.f, 0.f)
     , m_bMouseDown(false)
     , m_pHoveredButton(nullptr)
@@ -77,6 +79,9 @@ void CEditorToolbar::Render(HDC _dc)
             RenderSeparator(_dc, button.iX, button.iY);
         }
     }
+
+    // 맵 크기 및 카메라 좌표 정보 표시 추가
+    RenderInfoArea(_dc);
 
     // 툴팁 렌더링 (마우스가 버튼 위에 1초 이상 있을 때)
     if (m_pHoveredButton && m_fTooltipTimer > 1.0f)
@@ -161,14 +166,24 @@ void CEditorToolbar::SetMapSize(Vec2 vSize)
 {
     m_vCurrentMapSize = vSize;
 
-    // 에디터 코어에 맵 크기 설정 전달
+    // 에디터 코어에도 맵 크기 설정 (중요!)
+    if (m_pEditorCore)
+    {
+        m_pEditorCore->SetMapSize(vSize);
+    }
+
     if (m_pEditorCore && m_pEditorCore->GetCameraController())
     {
-        // 카메라 경계 설정
+        // 실제 카메라 범위: (0,0) ~ (width, height) - 기존 좌표계 그대로
         Vec2 vMin = Vec2(0.f, 0.f);
-        Vec2 vMax = vSize;
+        Vec2 vMax = Vec2(vSize.x, vSize.y);
+
         m_pEditorCore->GetCameraController()->SetCameraBounds(vMin, vMax);
         m_pEditorCore->GetCameraController()->EnableCameraBounds(true);
+
+        // 카메라를 UI상 (0,0) 위치로 이동 = 실제 (0, height)
+        Vec2 vUIZeroPos = Vec2(0.f, vSize.y);
+        m_pEditorCore->GetCameraController()->SetCameraPosition(vUIZeroPos);
     }
 
     UpdateMapSizeButtons();
@@ -218,20 +233,57 @@ void CEditorToolbar::UpdateMapSizeButtons()
 // 사용자 정의 맵 크기 다이얼로그 표시
 void CEditorToolbar::ShowCustomMapSizeDialog()
 {
-    // 간단한 입력 다이얼로그 구현
-    wchar_t szMessage[256];
-    swprintf_s(szMessage, L"현재 맵 크기: %.0f x %.0f\n\n사용자 정의 크기를 설정하시겠습니까?\n(예시: 4800x2700)",
+    wchar_t szMessage[512];
+    swprintf_s(szMessage,
+        L"현재 맵 크기: %.0f x %.0f\n\n"
+        L"메모장에 '너비,높이' 형식으로 입력 후 복사하세요\n"
+        L"예시: 1920,1080\n"
+        L"최소 크기: 960x640 (게임 해상도)\n\n"
+        L"복사했으면 확인을 누르세요.",
         m_vCurrentMapSize.x, m_vCurrentMapSize.y);
 
-    int result = MessageBox(CCore::GetInst()->GetMainHwnd(), szMessage, L"사용자 정의 맵 크기", MB_OKCANCEL);
+    if (MessageBox(CCore::GetInst()->GetMainHwnd(), szMessage, L"커스텀 맵 크기", MB_OKCANCEL) != IDOK)
+        return;
 
-    if (result == IDOK)
+    // 클립보드에서 읽기
+    wchar_t szInput[128] = L"";
+    if (OpenClipboard(CCore::GetInst()->GetMainHwnd()))
     {
-        // 실제로는 입력 다이얼로그에서 값을 받아와야 함
-        // 여기서는 예시로 4800x2700 설정
-        SetMapSize(Vec2(4800.f, 2700.f));
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Custom map size applied (4800x2700)");
+        HANDLE hData = GetClipboardData(CF_UNICODETEXT);
+        if (hData)
+        {
+            wchar_t* pText = (wchar_t*)GlobalLock(hData);
+            if (pText)
+            {
+                wcsncpy_s(szInput, 128, pText, _TRUNCATE);
+                GlobalUnlock(hData);
+            }
+        }
+        CloseClipboard();
     }
+
+    // 쉼표로 분리
+    wchar_t* pComma = wcschr(szInput, L',');
+    if (!pComma)
+    {
+        MessageBox(CCore::GetInst()->GetMainHwnd(), L"형식 오류: '너비,높이' 형식으로 입력하세요", L"오류", MB_OK);
+        return;
+    }
+
+    *pComma = L'\0';
+    float width = (float)_wtof(szInput);
+    float height = (float)_wtof(pComma + 1);
+
+    // 최소값 제한: 960x640 (게임 해상도)
+    if (width < 960 || width > 20000 || height < 640 || height > 20000)
+    {
+        MessageBox(CCore::GetInst()->GetMainHwnd(),
+            L"크기 범위 오류:\n너비: 960-20000\n높이: 640-20000\n(최소: 960x640)",
+            L"오류", MB_OK);
+        return;
+    }
+
+    SetMapSize(Vec2(width, height));
 }
 
 
@@ -242,7 +294,7 @@ void CEditorToolbar::CreateButtons()
     int currentX = m_iButtonMargin;
     int buttonY = (m_iToolbarHeight - m_iButtonHeight) / 2;
 
-    // 파일 관련 버튼
+    // 파일 관련 버튼들 (기존과 동일)
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::NEW_LEVEL, currentX, buttonY, 60, m_iButtonHeight, L"New", L"새 레벨 생성");
     currentX += 60 + m_iButtonMargin;
 
@@ -256,7 +308,7 @@ void CEditorToolbar::CreateButtons()
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_1, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
     currentX += m_iSeparatorWidth + m_iButtonMargin;
 
-    // 모드 버튼들
+    // 모드 버튼들 (기존과 동일)
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_MONSTER, currentX, buttonY, 70, m_iButtonHeight, L"Monster", L"몬스터 배치 모드 (M)");
     currentX += 70 + m_iButtonMargin;
 
@@ -290,6 +342,26 @@ void CEditorToolbar::CreateButtons()
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_3, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
     currentX += m_iSeparatorWidth + m_iButtonMargin;
 
+    // 맵 크기 레이블 및 버튼들
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LABEL, currentX, buttonY, 60, m_iButtonHeight, L"Map Size:", L"");
+    currentX += 60 + m_iButtonMargin;
+
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL, currentX, buttonY, 45, m_iButtonHeight, L"Small", L"작은 맵 (1920x1080)");
+    currentX += 45 + m_iButtonMargin;
+
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM, currentX, buttonY, 50, m_iButtonHeight, L"Medium", L"중간 맵 (3840x2160)");
+    currentX += 50 + m_iButtonMargin;
+
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE, currentX, buttonY, 45, m_iButtonHeight, L"Large", L"큰 맵 (7680x4320)");
+    currentX += 45 + m_iButtonMargin;
+
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM, currentX, buttonY, 55, m_iButtonHeight, L"Custom", L"사용자 정의 맵 크기");
+    currentX += 55 + m_iButtonMargin;
+
+    // 구분선 4
+    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_4, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
+    currentX += m_iSeparatorWidth + m_iButtonMargin;
+
     // 빠른 저장/로드
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::QUICK_SAVE, currentX, buttonY, 40, m_iButtonHeight, L"Q.S", L"빠른 저장 (F5)");
     currentX += 40 + m_iButtonMargin;
@@ -297,26 +369,9 @@ void CEditorToolbar::CreateButtons()
     m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::QUICK_LOAD, currentX, buttonY, 40, m_iButtonHeight, L"Q.L", L"빠른 로드 (F9)");
     currentX += 40 + m_iButtonMargin;
 
-    // 구분선 4
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_4, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
-    currentX += m_iSeparatorWidth + m_iButtonMargin;
-
-    // 맵 크기 라벨
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LABEL, currentX, buttonY, 60, m_iButtonHeight, L"Map Size:", L"맵 크기 설정");
-    currentX += 60 + m_iButtonMargin;
-
-    // 맵 크기 버튼들
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL, currentX, buttonY, 50, m_iButtonHeight, L"Small", L"작은 맵 (1920x1080)");
-    currentX += 50 + m_iButtonMargin;
-
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM, currentX, buttonY, 60, m_iButtonHeight, L"Medium", L"중간 맵 (3840x2160)");
-    currentX += 60 + m_iButtonMargin;
-
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE, currentX, buttonY, 50, m_iButtonHeight, L"Large", L"큰 맵 (7680x4320)");
-    currentX += 50 + m_iButtonMargin;
-
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM, currentX, buttonY, 60, m_iButtonHeight, L"Custom", L"사용자 정의 크기");
-    currentX += 60 + m_iButtonMargin;
+    // 정보 표시 영역 설정 (버튼들 끝에서 시작)
+    m_iInfoAreaX = currentX + 20;  // 버튼 끝에서 20픽셀 간격
+    m_iInfoAreaWidth = 300;        // 정보 표시 영역 너비
 }
 
 void CEditorToolbar::UpdateButtonStates()
@@ -657,6 +712,43 @@ void CEditorToolbar::RenderMapSizeLabel(HDC _dc, const tToolbarButton& button)
     int textY = button.iY + (button.iHeight - textSize.cy) / 2;
 
     TextOut(_dc, textX, textY, button.strText.c_str(), (int)button.strText.length());
+
+    SelectObject(_dc, hOldFont);
+    DeleteObject(hFont);
+}
+
+void CEditorToolbar::RenderInfoArea(HDC _dc)
+{
+    // 카메라 좌표 가져오기 (실제 좌표)
+    Vec2 vCameraPos(0.f, 0.f);
+    if (m_pEditorCore && m_pEditorCore->GetCameraController())
+    {
+        vCameraPos = m_pEditorCore->GetCameraController()->GetCameraPosition();
+    }
+
+    // UI용 좌표 변환: 실제 Y를 UI Y로 변환
+    float uiY = m_vCurrentMapSize.y - vCameraPos.y;
+
+    // 정보 텍스트 생성 (UI 좌표로 표시)
+    wchar_t szMapInfo[128];
+    wchar_t szCameraInfo[128];
+
+    swprintf_s(szMapInfo, L"Map: %.0fx%.0f", m_vCurrentMapSize.x, m_vCurrentMapSize.y);
+    swprintf_s(szCameraInfo, L"Cam: (%.0f, %.0f)", vCameraPos.x, uiY);
+
+    // 텍스트 스타일 설정
+    SetBkMode(_dc, TRANSPARENT);
+    SetTextColor(_dc, RGB(200, 200, 200));
+
+    HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
+    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+
+    int yPos = (m_iToolbarHeight - 24) / 2;
+
+    TextOut(_dc, m_iInfoAreaX, yPos, szMapInfo, (int)wcslen(szMapInfo));
+    TextOut(_dc, m_iInfoAreaX, yPos + 12, szCameraInfo, (int)wcslen(szCameraInfo));
 
     SelectObject(_dc, hOldFont);
     DeleteObject(hFont);

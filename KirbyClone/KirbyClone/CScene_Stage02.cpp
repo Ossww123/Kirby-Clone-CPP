@@ -109,12 +109,9 @@ void CScene_Stage02::Render(HDC _dc)
 
 void CScene_Stage02::InitializeBackgroundSystem()
 {
-    // STAGE02는 다른 배경 사용 (예: 동굴이나 성)
-    m_eCurrentBgType = BACKGROUND_TYPE::GREEN_HILL; // 일단 기본 배경
+    // Stage02는 Background2 사용
+    m_eCurrentBgType = BACKGROUND_TYPE::BACKGROUND2;
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
-
-    // 추후 STAGE02 전용 배경 추가시 변경
-    // m_eCurrentBgType = BACKGROUND_TYPE::CAVE; 등으로 변경 가능
 }
 
 void CScene_Stage02::ChangeBackground(BACKGROUND_TYPE _eBgType)

@@ -158,3 +158,45 @@ void CAnimation::ClearFrames()
     m_fAccTime = 0.f;
     m_bFinish = false;
 }
+
+void CAnimation::RenderScaled(HDC _dc, Vec2 _vPos, float _fScale)
+{
+    if (nullptr == m_pTex || m_vecFrame.empty())
+        return;
+
+    // 카메라 좌표로 변환
+    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(_vPos);
+
+    // 현재 프레임 정보 가져오기
+    tAnimFrame& frame = m_vecFrame[m_iCurFrame];
+
+    // 대상 크기 계산 (원본 크기 * 스케일)
+    Vec2 vDestSize = frame.vSlice * _fScale;
+
+    // 알파 채널 지원 여부에 따라 적절한 렌더링 방식 선택
+    if (m_pTex->HasAlpha())
+    {
+        // 32비트 알파 채널 렌더링 (스케일 적용)
+        m_pTex->RenderSpriteWithAlpha(_dc,
+            vRenderPos,
+            frame.vLT,          // 소스 시작 위치
+            frame.vSlice,       // 소스 크기
+            vDestSize,          // 대상 크기 (스케일 적용)
+            1.0f);              // 불투명도 100%
+    }
+    else
+    {
+        // 기본 마젠타 키 색상 방식 (24비트 이하) - 확대 렌더링
+        TransparentBlt(_dc,
+            (int)(vRenderPos.x - vDestSize.x / 2.f),
+            (int)(vRenderPos.y - vDestSize.y / 2.f),
+            (int)vDestSize.x,
+            (int)vDestSize.y,
+            m_pTex->GetDC(),
+            (int)frame.vLT.x,
+            (int)frame.vLT.y,
+            (int)frame.vSlice.x,
+            (int)frame.vSlice.y,
+            RGB(255, 0, 255)); // 마젠타 컬러키
+    }
+}
