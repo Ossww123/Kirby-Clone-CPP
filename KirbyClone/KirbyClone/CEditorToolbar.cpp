@@ -179,7 +179,6 @@ void CEditorToolbar::SetMapSize(Vec2 vSize)
         Vec2 vMax = Vec2(vSize.x, vSize.y);
 
         m_pEditorCore->GetCameraController()->SetCameraBounds(vMin, vMax);
-        m_pEditorCore->GetCameraController()->EnableCameraBounds(true);
 
         // 카메라를 UI상 (0,0) 위치로 이동 = 실제 (0, height)
         Vec2 vUIZeroPos = Vec2(0.f, vSize.y);

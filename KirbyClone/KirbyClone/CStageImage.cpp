@@ -7,7 +7,6 @@
 CStageImage::CStageImage()
     : m_pStageTexture(nullptr)
     , m_eStageType(STAGE_IMAGE_TYPE::STAGE_01)
-    , m_vImageSize(Vec2(0.f, 0.f))
     , m_vRenderOffset(Vec2(0.f, 0.f))
     , m_bScrollWithCamera(true)
 {
@@ -27,40 +26,29 @@ void CStageImage::Update()
 
 void CStageImage::Render(HDC _dc)
 {
-    if (nullptr == m_pStageTexture)
-    {
-        return;
-    }
+    if (nullptr == m_pStageTexture) { return; }
 
-    UINT imageWidth = m_pStageTexture->GetWidth();
-    UINT imageHeight = m_pStageTexture->GetHeight();
+    // 기본 정보 가져오기
+    UINT originalWidth = m_pStageTexture->GetWidth();
+    UINT originalHeight = m_pStageTexture->GetHeight();
+
+    // 4배 스케일 적용
+    float pixelScale = CCore::GetInst()->GetPixelScale();
+    UINT scaledWidth = (UINT)(originalWidth * pixelScale);
+    UINT scaledHeight = (UINT)(originalHeight * pixelScale);
 
     // 렌더링 위치 계산
     Vec2 vRenderPos = m_vRenderOffset;
-
     if (m_bScrollWithCamera)
     {
-        // 카메라 위치를 고려한 렌더링 (스테이지는 보통 월드 좌표계 기준)
         vRenderPos = CCamera::GetInst()->GetRenderPos(m_vRenderOffset);
     }
 
-    // 24비트 BMP + 마젠타 컬러키 방식으로 렌더링
-    if (m_vImageSize.x > 0 && m_vImageSize.y > 0)
-    {
-        // 지정된 크기로 렌더링
-        m_pStageTexture->RenderWithColorKey(_dc,
-            (int)vRenderPos.x, (int)vRenderPos.y,
-            (int)m_vImageSize.x, (int)m_vImageSize.y,
-            RGB(255, 0, 255)); // 마젠타 컬러키
-    }
-    else
-    {
-        // 원본 크기로 렌더링
-        m_pStageTexture->RenderWithColorKey(_dc,
-            (int)vRenderPos.x, (int)vRenderPos.y,
-            imageWidth, imageHeight,
-            RGB(255, 0, 255)); // 마젠타 컬러키
-    }
+    // 스케일링된 크기로 렌더링
+    m_pStageTexture->RenderWithColorKey(_dc,
+        (int)vRenderPos.x, (int)vRenderPos.y,
+        scaledWidth, scaledHeight,
+        RGB(255, 0, 255));
 }
 
 void CStageImage::SetupStageImage(STAGE_IMAGE_TYPE _eType)
@@ -95,10 +83,15 @@ void CStageImage::SetImageToBottomLeft()
     if (!m_pStageTexture)
         return;
 
-    // 텍스처를 화면 왼쪽 하단에 배치
-    Vec2 vResolution = CCore::GetInst()->GetResolution();
-    UINT imageHeight = m_pStageTexture->GetHeight();
+    // 4배 스케일된 크기 계산
+    float pixelScale = CCore::GetInst()->GetPixelScale();
+    UINT originalHeight = m_pStageTexture->GetHeight();
+    UINT scaledHeight = (UINT)(originalHeight * pixelScale);
 
-    // 이미지를 화면 하단에 맞춰 배치 (y좌표는 화면 하단 - 이미지 높이)
-    m_vRenderOffset = Vec2(0.f, vResolution.y - imageHeight);
+    // 해상도 정보 가져오기
+    Vec2 vResolution = CCore::GetInst()->GetResolution();
+
+    // 스케일된 크기를 기준으로 화면 하단에 배치
+    // y좌표는 화면 하단 - 스케일된 이미지 높이
+    m_vRenderOffset = Vec2(0.f, vResolution.y - scaledHeight);
 }

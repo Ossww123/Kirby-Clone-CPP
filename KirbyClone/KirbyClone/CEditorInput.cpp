@@ -51,28 +51,15 @@ void CEditorInput::UpdateGeneralInput()
     {
         bool bShowUI = m_pEditorCore->IsShowUI();
         m_pEditorCore->SetShowUI(!bShowUI);
-
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Level Editor - UI %s", bShowUI ? L"OFF" : L"ON");
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
     }
 
-    // HOME 키: 카메라를 원점(0, 0)으로 이동
+    // HOME 키: 카메라를 원점으로 이동
     if (KEY_TAP(KEY::HOME))
     {
         m_pEditorCore->GetCameraController()->ResetCameraPosition();
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Camera reset to origin (0, 0)");
     }
 
-    // Ctrl + B: 레벨 경계 설정 모드
-    if (KEY_TAP(KEY::B) && KEY_HOLD(KEY::CTRL))
-    {
-        // 현재 오브젝트들의 범위를 계산해서 적절한 경계 자동 설정
-        m_pEditorCore->GetCameraController()->AutoSetBoundsFromObjects();
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level bounds auto-calculated from objects");
-    }
-
-    // ALT + 다른 키 조합들 (ALT 키를 modifier로 사용)
+    // ALT + 다른 키 조합들
     if (KEY_HOLD(KEY::ALT))
     {
         // ALT + C: 모든 오브젝트 삭제
@@ -85,26 +72,47 @@ void CEditorInput::UpdateGeneralInput()
         {
             m_pEditorCore->GetObjectManager()->ResetToDefault();
         }
-        // ALT + I: 오브젝트 개수 정보 표시
-        else if (KEY_TAP(KEY::I))
-        {
-            int objectCount = m_pEditorCore->GetObjectManager()->GetTotalObjectCount();
-            wchar_t szBuffer[256];
-            swprintf_s(szBuffer, L"Total Objects: %d", objectCount);
-            SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
-        }
         // ALT + P: 플레이어 스폰 표시 토글
         else if (KEY_TAP(KEY::P))
         {
             bool bShow = m_pEditorCore->GetObjectManager()->IsShowPlayerSpawn();
             m_pEditorCore->GetObjectManager()->SetShowPlayerSpawn(!bShow);
-
-            wchar_t szBuffer[256];
-            swprintf_s(szBuffer, L"Player Spawn Display: %s", bShow ? L"OFF" : L"ON");
-            SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
         }
     }
 }
+
+void CEditorInput::UpdateFileInput()
+{
+    // 파일 관련 입력 (Ctrl 조합키들)
+    if (KEY_HOLD(KEY::CTRL))
+    {
+        if (KEY_TAP(KEY::S))
+        {
+            m_pEditorCore->GetFileManager()->SaveAsDialog();
+        }
+        else if (KEY_TAP(KEY::O))
+        {
+            m_pEditorCore->GetFileManager()->OpenDialog();
+        }
+        else if (KEY_TAP(KEY::T))
+        {
+            // 게임 모드로 전환 (기존 CScene_Tool 코드에서 가져옴)
+            tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
+            CEventMgr::GetInst()->AddEvent(event);
+        }
+    }
+
+    // 빠른 저장/로드 (Ctrl 없이)
+    if (KEY_TAP(KEY::F))
+    {
+        m_pEditorCore->GetFileManager()->QuickSave();
+    }
+    else if (KEY_TAP(KEY::L))
+    {
+        m_pEditorCore->GetFileManager()->QuickLoad();
+    }
+}
+
 
 void CEditorInput::UpdateGridInput()
 {
@@ -113,10 +121,6 @@ void CEditorInput::UpdateGridInput()
     {
         bool bShowGrid = CGrid::GetInst()->IsShowGrid();
         CGrid::GetInst()->SetShowGrid(!bShowGrid);
-
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Grid %s", bShowGrid ? L"OFF" : L"ON");
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
     }
 
     // 그리드 스냅 토글 (Ctrl + G)
@@ -124,32 +128,24 @@ void CEditorInput::UpdateGridInput()
     {
         bool bSnapToGrid = CGrid::GetInst()->IsSnapToGrid();
         CGrid::GetInst()->SetSnapToGrid(!bSnapToGrid);
-
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Grid Snap %s", bSnapToGrid ? L"OFF" : L"ON");
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
     }
 
     // 그리드 크기 조절 (1, 2, 3, 4 키)
     if (KEY_TAP(KEY::ALPHA_1))
     {
-        CGrid::GetInst()->SetGridSizePreset(1);
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 32px");
+        CGrid::GetInst()->SetGridSizePreset(1);  // 32px
     }
     else if (KEY_TAP(KEY::ALPHA_2))
     {
-        CGrid::GetInst()->SetGridSizePreset(2);
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 64px");
+        CGrid::GetInst()->SetGridSizePreset(2);  // 64px
     }
     else if (KEY_TAP(KEY::ALPHA_3))
     {
-        CGrid::GetInst()->SetGridSizePreset(3);
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 128px");
+        CGrid::GetInst()->SetGridSizePreset(3);  // 128px
     }
     else if (KEY_TAP(KEY::ALPHA_4))
     {
-        CGrid::GetInst()->SetGridSizePreset(4);
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Grid Size: 256px");
+        CGrid::GetInst()->SetGridSizePreset(4);  // 256px
     }
 }
 
@@ -211,61 +207,71 @@ void CEditorInput::UpdateModeInput()
 
 void CEditorInput::UpdateMouseInput()
 {
-    // 1. 원본 스크린 좌표 얻기 (그리드 스냅 적용 전)
-    Vec2 vRawMousePos = CKeyMgr::GetInst()->GetMousePos();  // 스크린 좌표
+    // 원본 스크린 좌표 얻기 (그리드 스냅 적용 전)
+    Vec2 vRawMousePos = CKeyMgr::GetInst()->GetMousePos();
 
-    // 2. 그리드 스냅이 적용된 월드 좌표 계산 및 저장
+    // 그리드 스냅이 적용된 월드 좌표 계산 및 저장
     UpdateMousePosition();
-    Vec2 vGridSnappedPos = m_pEditorCore->GetMousePos();
 
     // 마우스 클릭 처리
     if (KEY_TAP(KEY::MOUSE_LEFT))
     {
-        // 1순위: 툴바 이벤트 처리 (원본 스크린 좌표 사용)
-        if (m_pEditorCore->GetToolbar()->HandleMouseClick(vRawMousePos))
+        // 툴바 이벤트 처리 우선 (원본 스크린 좌표 사용)
+        if (m_pEditorCore->GetToolbar() &&
+            m_pEditorCore->GetToolbar()->HandleMouseClick(vRawMousePos))
         {
             return; // 툴바에서 처리했으면 더 이상 진행하지 않음
         }
 
-        // 2순위: 오브젝트 팔레트 클릭 처리 (원본 스크린 좌표 사용)
-        if (m_pEditorCore->GetUI()->HandlePaletteClick(vRawMousePos))
+        // UI 팔레트 클릭 처리 (원본 스크린 좌표 사용)
+        if (m_pEditorCore->GetUI() &&
+            m_pEditorCore->GetUI()->HandlePaletteClick(vRawMousePos))
         {
             return; // 팔레트에서 처리했으면 더 이상 진행하지 않음
         }
 
-        // 3순위: 기본 마우스 클릭 처리 (그리드 스냅된 좌표 사용)
+        // 기본 마우스 클릭 처리 (그리드 스냅된 좌표 사용)
         HandleMouseClick();
     }
 
-    // 마우스 버튼을 떼면 드래그 종료 + 툴바 MouseUp 이벤트 처리
+    // 마우스 버튼을 떼면 드래그 종료
     if (KEY_AWAY(KEY::MOUSE_LEFT))
     {
-        // 툴바 MouseUp 이벤트도 원본 스크린 좌표 사용
-        m_pEditorCore->GetToolbar()->HandleMouseUp(vRawMousePos);
+        // 툴바 MouseUp 이벤트 처리
+        if (m_pEditorCore->GetToolbar())
+        {
+            m_pEditorCore->GetToolbar()->HandleMouseUp(vRawMousePos);
+        }
 
         // 드래그 종료
-        m_pEditorCore->SetDragging(false);
+        if (m_pEditorCore->IsDragging())
+        {
+            m_pEditorCore->SetDragging(false);
+        }
     }
 
-    // 마우스 이동 이벤트도 툴바에는 원본 스크린 좌표 전달
-    m_pEditorCore->GetToolbar()->HandleMouseMove(vRawMousePos);
-
-    // 마우스 휠 스크롤 처리 (팔레트 스크롤용)
-    if (m_pEditorCore->GetUI()->IsInPaletteArea(vRawMousePos))
+    // 마우스 이동 이벤트 전달
+    if (m_pEditorCore->GetToolbar())
     {
-        // 마우스 휠 입력 처리 (Windows API 사용 시)
-        // 실제 구현은 프로젝트의 입력 시스템에 따라 달라질 수 있음
-        // 예: if (KEY_TAP(KEY::MOUSE_WHEEL_UP)) { ... }
+        m_pEditorCore->GetToolbar()->HandleMouseMove(vRawMousePos);
     }
 
-    // 드래그 중이면 선택된 오브젝트 이동 (그리드 스냅된 좌표 사용)
+    // 드래그 중이면 선택된 오브젝트 이동
     if (m_pEditorCore->IsDragging() &&
         m_pEditorCore->GetSelectedObject() &&
-        m_pEditorCore->GetCurrentMode() == EDITOR_MODE::SELECT &&
-        !m_pEditorCore->GetToolbar()->IsInToolbarArea(vRawMousePos) &&
-        !m_pEditorCore->GetUI()->IsInPaletteArea(vRawMousePos))  // 팔레트 영역도 제외
+        m_pEditorCore->GetCurrentMode() == EDITOR_MODE::SELECT)
     {
-        m_pEditorCore->GetSelectedObject()->SetPos(vGridSnappedPos);  // 오브젝트 이동은 스냅된 좌표
+        // 툴바나 UI 영역이 아닐 때만 오브젝트 이동
+        bool bInToolbar = m_pEditorCore->GetToolbar() &&
+            m_pEditorCore->GetToolbar()->IsInToolbarArea(vRawMousePos);
+        bool bInPalette = m_pEditorCore->GetUI() &&
+            m_pEditorCore->GetUI()->IsInPaletteArea(vRawMousePos);
+
+        if (!bInToolbar && !bInPalette)
+        {
+            Vec2 vGridSnappedPos = m_pEditorCore->GetMousePos();
+            m_pEditorCore->GetSelectedObject()->SetPos(vGridSnappedPos);
+        }
     }
 }
 
@@ -281,52 +287,6 @@ void CEditorInput::UpdateObjectSelection()
     {
         m_pEditorCore->GetObjectManager()->PrevObjectInCategory();
     }
-}
-
-void CEditorInput::UpdateFileInput()
-{
-    // 파일 관련 입력 (Ctrl 조합키들)
-    if (KEY_HOLD(KEY::CTRL))
-    {
-        if (KEY_TAP(KEY::S))
-        {
-            m_pEditorCore->GetFileManager()->SaveAsDialog();
-        }
-        else if (KEY_TAP(KEY::O))
-        {
-            m_pEditorCore->GetFileManager()->OpenDialog();
-        }
-        else if (KEY_TAP(KEY::T))
-        {
-            // 게임 모드로 전환 (기존 CScene_Tool 코드에서 가져옴)
-            tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
-            CEventMgr::GetInst()->AddEvent(event);
-        }
-    }
-
-    // 빠른 저장/로드 (Ctrl 없이)
-    if (KEY_TAP(KEY::F))
-    {
-        m_pEditorCore->GetFileManager()->QuickSave();
-    }
-    else if (KEY_TAP(KEY::L))
-    {
-        m_pEditorCore->GetFileManager()->QuickLoad();
-    }
-}
-
-void CEditorInput::UpdateMousePosition()
-{
-    // CKeyMgr에서 마우스 월드 좌표 가져오기
-    Vec2 vMousePos = CKeyMgr::GetInst()->GetMouseWorldPos();
-
-    // 그리드 스냅 적용
-    if (CGrid::GetInst()->IsSnapToGrid())
-    {
-        vMousePos = CGrid::GetInst()->SnapToGrid(vMousePos);
-    }
-
-    m_pEditorCore->SetMousePos(vMousePos);
 }
 
 void CEditorInput::HandleMouseClick()
@@ -383,14 +343,25 @@ void CEditorInput::HandleMouseClick()
     case EDITOR_MODE::CAMERA_MOVE:
     default:
         // 기본 모드에서는 클릭 위치만 표시
-    {
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Clicked at: (%.0f, %.0f)", vMousePos.x, vMousePos.y);
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
-    }
     break;
     }
 }
+
+
+void CEditorInput::UpdateMousePosition()
+{
+    // CKeyMgr에서 마우스 월드 좌표 가져오기
+    Vec2 vMousePos = CKeyMgr::GetInst()->GetMouseWorldPos();
+
+    // 그리드 스냅 적용
+    if (CGrid::GetInst()->IsSnapToGrid())
+    {
+        vMousePos = CGrid::GetInst()->SnapToGrid(vMousePos);
+    }
+
+    m_pEditorCore->SetMousePos(vMousePos);
+}
+
 
 void CEditorInput::HandleModeSpecificInput()
 {
@@ -404,7 +375,7 @@ void CEditorInput::HandleModeSpecificInput()
     case EDITOR_MODE::PLACE_TILE:
         HandleTileModeInput();
         break;
-    case EDITOR_MODE::PLACE_STAGE:  // 새로 추가
+    case EDITOR_MODE::PLACE_STAGE:
         HandleStageImageModeInput();
         break;
     }
@@ -436,6 +407,36 @@ void CEditorInput::HandleTileModeInput()
     }
 }
 
+
+void CEditorInput::HandleStageImageModeInput()
+{
+    // Q/E 키로 스테이지 이미지 변경
+    if (KEY_TAP(KEY::Q))
+    {
+        PrevStageImage();
+    }
+    else if (KEY_TAP(KEY::E))
+    {
+        NextStageImage();
+    }
+
+    // C 키로 커스텀 스테이지 이미지 로드
+    if (KEY_TAP(KEY::C))
+    {
+        LoadCustomStageImage();
+    }
+
+    // R 키로 스테이지 이미지를 좌하단으로 재배치
+    if (KEY_TAP(KEY::R))
+    {
+        CStageImage* pCurrent = CStageMgr::GetInst()->GetCurrentStageImage();
+        if (pCurrent)
+        {
+            pCurrent->SetImageToBottomLeft();
+        }
+    }
+}
+
 void CEditorInput::HandleStageImageClick()
 {
     // 현재 스테이지 타입 가져오기
@@ -464,65 +465,8 @@ void CEditorInput::HandleStageImageClick()
 
     // 스테이지 이미지 변경
     CStageMgr::GetInst()->SetCurrentStageImage(nextType);
-
-    // 상태 표시
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Stage Image changed to: %s",
-        CStageMgr::GetInst()->GetStageImageName(nextType));
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
-void CEditorInput::HandleStageImageModeInput()
-{
-    // Q/E 키로 스테이지 이미지 변경
-    if (KEY_TAP(KEY::Q))
-    {
-        PrevStageImage();
-    }
-    else if (KEY_TAP(KEY::E))
-    {
-        NextStageImage();
-    }
-
-    // C 키로 커스텀 스테이지 이미지 로드
-    if (KEY_TAP(KEY::C))
-    {
-        LoadCustomStageImage();
-    }
-
-    // R 키로 스테이지 이미지를 좌하단으로 재배치
-    if (KEY_TAP(KEY::R))
-    {
-        CStageImage* pCurrent = CStageMgr::GetInst()->GetCurrentStageImage();
-        if (pCurrent)
-        {
-            pCurrent->SetImageToBottomLeft();
-            SetWindowText(CCore::GetInst()->GetMainHwnd(),
-                L"Stage image repositioned to bottom-left (0,0)");
-        }
-    }
-
-    // T 키로 스테이지 이미지 정보 디버깅
-    if (KEY_TAP(KEY::F))
-    {
-        CStageImage* pCurrent = CStageMgr::GetInst()->GetCurrentStageImage();
-        if (pCurrent)
-        {
-            Vec2 offset = pCurrent->GetRenderOffset();
-            Vec2 size = pCurrent->GetImageSize();
-            wchar_t szDebug[512];
-            swprintf_s(szDebug, L"DEBUG - Stage: %s | Texture: %s | Offset: (%.0f,%.0f) | Size: (%.0f,%.0f)",
-                CStageMgr::GetInst()->GetStageImageName(pCurrent->GetStageType()),
-                pCurrent->GetStageTexture() ? L"OK" : L"NULL",
-                offset.x, offset.y, size.x, size.y);
-            SetWindowText(CCore::GetInst()->GetMainHwnd(), szDebug);
-        }
-        else
-        {
-            SetWindowText(CCore::GetInst()->GetMainHwnd(), L"DEBUG - No current stage image!");
-        }
-    }
-}
 
 void CEditorInput::ResetStageImageToBottomLeft()
 {
@@ -530,10 +474,6 @@ void CEditorInput::ResetStageImageToBottomLeft()
     if (pCurrentStage)
     {
         pCurrentStage->SetImageToBottomLeft();
-
-        // 상태 표시
-        SetWindowText(CCore::GetInst()->GetMainHwnd(),
-            L"Stage image repositioned to bottom-left (0,0)");
     }
 }
 
@@ -562,11 +502,6 @@ void CEditorInput::PrevStageImage()
     STAGE_IMAGE_TYPE prevType = availableTypes[currentIndex];
 
     CStageMgr::GetInst()->SetCurrentStageImage(prevType);
-
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Stage Image: %s",
-        CStageMgr::GetInst()->GetStageImageName(prevType));
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
 // 다음 스테이지 이미지로 변경
@@ -594,11 +529,6 @@ void CEditorInput::NextStageImage()
     STAGE_IMAGE_TYPE nextType = availableTypes[currentIndex];
 
     CStageMgr::GetInst()->SetCurrentStageImage(nextType);
-
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Stage Image: %s",
-        CStageMgr::GetInst()->GetStageImageName(nextType));
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
 // 커스텀 스테이지 이미지 로드
@@ -646,18 +576,8 @@ void CEditorInput::LoadCustomStageImage()
             }
         }
 
-        // 커스텀 스테이지 이미지 로드
-        if (CStageMgr::GetInst()->LoadCustomStageImage(strRelativePath))
-        {
-            wchar_t szBuffer[256];
-            swprintf_s(szBuffer, L"Custom stage image loaded: %s", strRelativePath.c_str());
-            SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
-        }
-        else
-        {
-            MessageBox(CCore::GetInst()->GetMainHwnd(),
-                L"Failed to load custom stage image!\nPlease check if it's a valid 24-bit BMP file.",
-                L"Load Error", MB_OK | MB_ICONERROR);
-        }
+        // 커스텀 스테이지 이미지 생성
+        CStageMgr::GetInst()->CreateStageImage(STAGE_IMAGE_TYPE::CUSTOM, strRelativePath);
+        CStageMgr::GetInst()->SetCurrentStageImage(STAGE_IMAGE_TYPE::CUSTOM);
     }
 }

@@ -4,67 +4,78 @@ class CEditorCore;
 
 class CEditorCameraController
 {
-private:
-    CEditorCore* m_pEditorCore;
-
-    // 카메라 설정
-    float m_fCameraSpeed;           // 기본 이동 속도
-    float m_fFastSpeed;             // 빠른 이동 속도 (Shift 누를 때)
-    float m_fSlowSpeed;             // 느린 이동 속도 (Ctrl 누를 때)
-
-    // 카메라 상태
-    bool m_bCameraMoving;           // 현재 카메라가 움직이고 있는지
-    Vec2 m_vLastCameraPos;          // 이전 프레임 카메라 위치
-
-    // 카메라 제한
-    bool m_bUseCameraBounds;        // 카메라 이동 범위 제한 사용
-    Vec2 m_vCameraBoundsMin;        // 카메라 최소 위치
-    Vec2 m_vCameraBoundsMax;        // 카메라 최대 위치
+public:
+    // === 생명주기 함수 ===
+    CEditorCameraController();
+    ~CEditorCameraController();
 
 public:
+    // === 핵심 생명주기 함수 ===
     void Initialize(CEditorCore* _pCore);
     void Update();
 
-    // 카메라 제어
+private:
+    // === 카메라 움직임 내부 처리 ===
+    void UpdateCameraMovement();
+    void UpdateCameraState();
+    void ProcessKeyboardInput(Vec2& _vMoveDir, bool& _bInputDetected);
+    void ProcessSpecialKeys();
+
+public:
+    // === 카메라 속도 제어 ===
     void SetCameraSpeed(float _fSpeed) { m_fCameraSpeed = _fSpeed; }
     void SetFastSpeed(float _fSpeed) { m_fFastSpeed = _fSpeed; }
     void SetSlowSpeed(float _fSpeed) { m_fSlowSpeed = _fSpeed; }
-    void ResetCameraPosition();
 
-    float GetCameraSpeed() { return m_fCameraSpeed; }
-    float GetFastSpeed() { return m_fFastSpeed; }
-    float GetSlowSpeed() { return m_fSlowSpeed; }
+private:
+    // === 속도 계산 내부 함수 ===
+    float GetCurrentSpeed();
 
-    // 카메라 위치 제어
+public:
+    // === 카메라 위치 제어 ===
     void SetCameraPosition(Vec2 _vPos);
     void MoveCameraBy(Vec2 _vOffset);
     void CenterCameraOn(Vec2 _vTarget);
-    Vec2 GetCameraPosition();
+    void ResetCameraPosition();
+    void ResetCameraToOrigin();
 
-    // 카메라 범위 제한
+public:
+    // === 카메라 범위 제한 ===
     void SetCameraBounds(Vec2 _vMin, Vec2 _vMax);
-    void EnableCameraBounds(bool _bEnable) { m_bUseCameraBounds = _bEnable; }
-    bool IsCameraBoundsEnabled() { return m_bUseCameraBounds; }
+
+private:
+    // === 범위 제한 내부 처리 ===
+    void ApplyCameraBounds(Vec2& _vCameraPos);
+
+public:
+    // === Getter 함수들 ===
+    float GetCameraSpeed() const { return m_fCameraSpeed; }
+    float GetFastSpeed() const { return m_fFastSpeed; }
+    float GetSlowSpeed() const { return m_fSlowSpeed; }
+
+    Vec2 GetCameraPosition() const;
 
     Vec2 GetCameraBoundsMin() const { return m_vCameraBoundsMin; }
     Vec2 GetCameraBoundsMax() const { return m_vCameraBoundsMax; }
 
-    // 카메라 상태
-    bool IsCameraMoving() { return m_bCameraMoving; }
-
-    // 편의 기능
-    void ResetCameraToOrigin();
-    void FocusOnPlayerSpawn();
-    void FocusOnObjects();
-    void AutoSetBoundsFromObjects();
+    bool IsCameraMoving() const { return m_bCameraMoving; }
 
 private:
-    void UpdateCameraMovement();
-    void UpdateCameraState();
-    void ApplyCameraBounds(Vec2& _vCameraPos);
-    float GetCurrentSpeed();
+    // === 멤버 변수들 ===
 
-public:
-    CEditorCameraController();
-    ~CEditorCameraController();
+    // === 에디터 코어 참조 ===
+    CEditorCore* m_pEditorCore;     // 에디터 코어 참조
+
+    // === 카메라 설정 ===
+    float       m_fCameraSpeed;     // 기본 이동 속도
+    float       m_fFastSpeed;       // 빠른 이동 속도 (Shift 누를 때)
+    float       m_fSlowSpeed;       // 느린 이동 속도 (Ctrl 누를 때)
+
+    // === 카메라 상태 ===
+    bool        m_bCameraMoving;    // 현재 카메라가 움직이고 있는지
+    Vec2        m_vLastCameraPos;   // 이전 프레임 카메라 위치
+
+    // === 카메라 제한 ===
+    Vec2        m_vCameraBoundsMin; // 카메라 최소 위치
+    Vec2        m_vCameraBoundsMax; // 카메라 최대 위치
 };

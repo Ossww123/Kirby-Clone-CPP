@@ -492,8 +492,6 @@ void CEditorFileManager::ApplyLoadedLevelData(const tLevelData& _levelData)
     // === 새로 추가: 스테이지 이미지 시스템 적용 ===
     if (_levelData.eStageType == STAGE_IMAGE_TYPE::CUSTOM && !_levelData.strStageImagePath.empty())
     {
-        // 커스텀 스테이지 이미지 로드
-        CStageMgr::GetInst()->LoadCustomStageImage(_levelData.strStageImagePath);
     }
     else
     {
@@ -552,7 +550,6 @@ void CEditorFileManager::CreateDefaultLevel()
     if (pCameraController)
     {
         pCameraController->SetCameraBounds(Vec2(0.f, -1000.f), Vec2(4000.f, 1280.f));
-        pCameraController->EnableCameraBounds(true);
     }
 }
 
@@ -563,7 +560,6 @@ void CEditorFileManager::ApplyLevelBounds(const tLevelData& _levelData)
     {
         // 로드된 레벨의 경계 정보 적용
         pCameraController->SetCameraBounds(_levelData.vLevelBoundsMin, _levelData.vLevelBoundsMax);
-        pCameraController->EnableCameraBounds(true);
 
         // 카메라를 레벨 경계 내 적절한 위치로 이동
         Vec2 vSafePos = Vec2(

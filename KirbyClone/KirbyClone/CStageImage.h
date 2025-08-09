@@ -34,9 +34,6 @@ public:
 
 public:
     // === 이미지 속성 관리 ===
-    void SetImageSize(Vec2 _vSize) { m_vImageSize = _vSize; }
-    Vec2 GetImageSize() const { return m_vImageSize; }
-
     void SetRenderOffset(Vec2 _vOffset) { m_vRenderOffset = _vOffset; }
     Vec2 GetRenderOffset() const { return m_vRenderOffset; }
 
@@ -47,7 +44,6 @@ private:
     // === 멤버 변수들 ===
     CTexture* m_pStageTexture;    // 스테이지 전체 이미지 텍스처
     STAGE_IMAGE_TYPE m_eStageType;       // 스테이지 이미지 타입
-    Vec2             m_vImageSize;       // 이미지 크기
     Vec2             m_vRenderOffset;    // 렌더링 오프셋 (필요시)
     bool             m_bScrollWithCamera; // 카메라와 함께 스크롤 여부
 };

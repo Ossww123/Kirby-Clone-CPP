@@ -120,8 +120,8 @@ const wchar_t* CStageMgr::GetStageImageName(STAGE_IMAGE_TYPE _eType) const
 {
     switch (_eType)
     {
-    case STAGE_IMAGE_TYPE::STAGE_01:      return L"Green Hill Stage";
-    case STAGE_IMAGE_TYPE::STAGE_02:      return L"Castle Stage";
+    case STAGE_IMAGE_TYPE::STAGE_01:      return L"Stage01";
+    case STAGE_IMAGE_TYPE::STAGE_02:      return L"Stage02";
     case STAGE_IMAGE_TYPE::CUSTOM:        return L"Custom Stage";
     default:                              return L"Unknown Stage";
     }

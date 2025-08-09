@@ -243,7 +243,6 @@ void CEditorCore::SetMapSize(Vec2 vSize)
         Vec2 vMin = Vec2(0.f, 0.f);
         Vec2 vMax = vSize;
         m_pCameraController->SetCameraBounds(vMin, vMax);
-        m_pCameraController->EnableCameraBounds(true);
     }
 
     // 그리드에 맵 크기 알림

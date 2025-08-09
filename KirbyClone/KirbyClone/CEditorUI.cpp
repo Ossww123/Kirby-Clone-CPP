@@ -365,7 +365,7 @@ void CEditorUI::RenderLevelBounds(HDC _dc, int& yPos)
     yPos += m_iLineHeight;
 
     CEditorCameraController* pCamera = m_pEditorCore->GetCameraController();
-    if (pCamera && pCamera->IsCameraBoundsEnabled())
+    if (pCamera)
     {
         Vec2 vMin = pCamera->GetCameraBoundsMin();
         Vec2 vMax = pCamera->GetCameraBoundsMax();
