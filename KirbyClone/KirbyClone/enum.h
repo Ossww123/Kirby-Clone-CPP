@@ -129,8 +129,7 @@ enum class EDITOR_MODE
     // 객체 배치 모드들
     PLACE_MONSTER,      // 몬스터 배치
     PLACE_ITEM,         // 아이템 배치
-    PLACE_TILE,
-    PLACE_COLLISION,    // 충돌체 배치 (기존 PLACE_TILE에서 이름 변경)
+    PLACE_TILE,         // 충돌체 배치
     PLACE_SPECIAL,      // 특수 객체 배치
 
     // 환경 설정 모드들
@@ -139,7 +138,6 @@ enum class EDITOR_MODE
 
     // 기타 모드들
     PLAYER_SPAWN,       // 플레이어 스폰 포인트 설정
-    CAMERA_MOVE,        // 카메라 이동
 
     END
 };

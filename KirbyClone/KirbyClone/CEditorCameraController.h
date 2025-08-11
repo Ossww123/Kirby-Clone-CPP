@@ -19,7 +19,6 @@ private:
     void UpdateCameraMovement();
     void UpdateCameraState();
     void ProcessKeyboardInput(Vec2& _vMoveDir, bool& _bInputDetected);
-    void ProcessSpecialKeys();
 
 public:
     // === 카메라 속도 제어 ===

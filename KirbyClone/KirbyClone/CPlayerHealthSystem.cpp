@@ -1,6 +1,6 @@
-// CPlayerHealthSystem.cpp
 #include "pch.h"
 #include "CPlayerHealthSystem.h"
+#include "CPlayerInhaleSystem.h"
 #include "CPlayer.h"
 #include "CRigidBody.h"
 #include "CTimeMgr.h"
@@ -186,7 +186,8 @@ void CPlayerHealthSystem::RestartStage()
         if (m_pOwner->GetInhaleSystem())
         {
             m_pOwner->StopInhale();
-            m_pOwner->ReleaseMouthful();
+            if (m_pOwner->GetInhaleSystem())
+                m_pOwner->GetInhaleSystem()->ReleaseMouthful();
         }
     }
 }

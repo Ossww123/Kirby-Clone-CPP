@@ -140,6 +140,9 @@
     <Filter Include="Engine\03. Manager\StageMgr">
       <UniqueIdentifier>{3f60bf91-0b84-4c08-be2a-4847ee6c66de}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerCollisionSystem">
+      <UniqueIdentifier>{32bb63a9-4b8f-4b06-9057-f6405f4b534c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -302,6 +305,9 @@
     <ClInclude Include="CStageMgr.h">
       <Filter>Engine\03. Manager\StageMgr</Filter>
     </ClInclude>
+    <ClInclude Include="CPlayerCollisionSystem.h">
+      <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -455,6 +461,9 @@
     </ClCompile>
     <ClCompile Include="CStageMgr.cpp">
       <Filter>Engine\03. Manager\StageMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerCollisionSystem.cpp">
+      <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

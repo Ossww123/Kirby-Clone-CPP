@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "CPlayerStateMachine.h"
+#include "CPlayerInhaleSystem.h"
+#include "CPlayerMovement.h"
 #include "CPlayer.h"
 #include "CAnimator.h"
 #include "CRigidBody.h"
@@ -136,10 +138,14 @@ void CPlayerStateMachine::UpdateMovementState()
     }
 
     // 땅에 있는 경우 이동 상태 결정
-    bool isActuallyMoving = m_pOwner->IsActuallyMoving();
-    bool isDecelerating = m_pOwner->IsDecelerating();
+    CPlayerMovement* pMovement = m_pOwner->GetMovement();
+    if (!pMovement)
+        return;
+
+    bool isActuallyMoving = pMovement->IsActuallyMoving();
+    bool isDecelerating = pMovement->IsDecelerating();
     bool hasMouthful = m_pOwner->HasMouthful();
-    bool isRunMode = m_pOwner->IsRunMode();
+    bool isRunMode = pMovement->IsRunMode();
 
     if (isActuallyMoving || isDecelerating)
     {
@@ -171,12 +177,17 @@ void CPlayerStateMachine::UpdateInhaleState()
     if (!m_pOwner)
         return;
 
-    float inhaleTime = m_pOwner->GetInhaleTime();
+    CPlayerInhaleSystem* pInhaleSystem = m_pOwner->GetInhaleSystem();
+    if (!pInhaleSystem)
+        return;
+
+    float inhaleTime = pInhaleSystem->GetInhaleTime();
 
     if (!m_pOwner->IsInhaling())
     {
         // 흡입이 끝났으면 상태 변경
-        if (!m_pOwner->GetInhaleTargets().empty())
+        const vector<CObject*>& vecTargets = pInhaleSystem->GetInhaleTargets();
+        if (!vecTargets.empty())
         {
             ChangeState(PLAYER_STATE::SWALLOW);
         }
@@ -246,7 +257,8 @@ void CPlayerStateMachine::UpdateSpecialState()
             // 삼키기 완료 후 입에 물고 있는 상태로
             if (m_pOwner)
             {
-                m_pOwner->SetMouthful(true);
+                if (m_pOwner->GetInhaleSystem())
+                    m_pOwner->GetInhaleSystem()->SetMouthful(false);
                 ChangeState(PLAYER_STATE::MOUTHFUL_IDLE);
             }
             break;

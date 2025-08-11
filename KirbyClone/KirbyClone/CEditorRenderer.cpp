@@ -94,7 +94,7 @@ void CEditorRenderer::RenderPreview(HDC _dc)
     // 삭제 모드에서 삭제 대상 표시
     else if (eMode == EDITOR_MODE::ERASE)
     {
-        CObject* pTargetObj = m_pEditorCore->GetObjectManager()->FindObjectAtPosition(m_pEditorCore->GetMousePos());
+        CObject* pTargetObj = m_pEditorCore->GetObjectManager()->FindObjectAtPos(m_pEditorCore->GetMousePos());
         if (pTargetObj)
         {
             RenderDeletePreview(_dc, pTargetObj);
@@ -358,12 +358,11 @@ COLORREF CEditorRenderer::GetModeColor()
     case EDITOR_MODE::PLACE_ITEM:       return RGB(255, 255, 100); // 노란색
     case EDITOR_MODE::PLACE_TILE:       return RGB(100, 100, 255); // 파란색
     case EDITOR_MODE::PLACE_SPECIAL:    return RGB(255, 100, 255); // 자주색
-    case EDITOR_MODE::PLACE_STAGE:      return RGB(100, 255, 255); // 시아니색 (새로 추가)
+    case EDITOR_MODE::PLACE_STAGE:      return RGB(100, 255, 255); // 시아니색
     case EDITOR_MODE::SELECT:           return RGB(100, 200, 255); // 하늘색
     case EDITOR_MODE::ERASE:            return RGB(255, 100, 100); // 빨간색
     case EDITOR_MODE::BACKGROUND:       return RGB(100, 255, 100); // 녹색
     case EDITOR_MODE::PLAYER_SPAWN:     return RGB(0, 255, 0);     // 초록색
-    case EDITOR_MODE::CAMERA_MOVE:      return RGB(255, 255, 100); // 노란색
     default:                            return RGB(255, 255, 255); // 흰색
     }
 }

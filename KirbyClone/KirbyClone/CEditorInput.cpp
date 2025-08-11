@@ -94,37 +94,20 @@ void CEditorInput::UpdateFileInput()
         {
             m_pEditorCore->GetFileManager()->OpenDialog();
         }
-        else if (KEY_TAP(KEY::T))
-        {
-            // 게임 모드로 전환 (기존 CScene_Tool 코드에서 가져옴)
-            tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
-            CEventMgr::GetInst()->AddEvent(event);
-        }
-    }
-
-    // 빠른 저장/로드 (Ctrl 없이)
-    if (KEY_TAP(KEY::F))
-    {
-        m_pEditorCore->GetFileManager()->QuickSave();
-    }
-    else if (KEY_TAP(KEY::L))
-    {
-        m_pEditorCore->GetFileManager()->QuickLoad();
     }
 }
-
 
 void CEditorInput::UpdateGridInput()
 {
     // 그리드 표시 토글 (G 키)
-    if (KEY_TAP(KEY::G))
+    if (KEY_HOLD(KEY::CTRL) && KEY_TAP(KEY::G))
     {
         bool bShowGrid = CGrid::GetInst()->IsShowGrid();
         CGrid::GetInst()->SetShowGrid(!bShowGrid);
     }
 
     // 그리드 스냅 토글 (Ctrl + G)
-    if (KEY_HOLD(KEY::CTRL) && KEY_TAP(KEY::G))
+    if (KEY_HOLD(KEY::ALT) && KEY_TAP(KEY::G))
     {
         bool bSnapToGrid = CGrid::GetInst()->IsSnapToGrid();
         CGrid::GetInst()->SetSnapToGrid(!bSnapToGrid);
@@ -304,13 +287,13 @@ void CEditorInput::HandleMouseClick()
         break;
 
     case EDITOR_MODE::PLAYER_SPAWN:
-        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(vMousePos);
+        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPos(vMousePos);
         break;
 
     case EDITOR_MODE::SELECT:
     {
         // 클릭한 위치에서 오브젝트 찾기
-        CObject* pClickedObj = m_pEditorCore->GetObjectManager()->FindObjectAtPosition(vMousePos);
+        CObject* pClickedObj = m_pEditorCore->GetObjectManager()->FindObjectAtPos(vMousePos);
         if (pClickedObj)
         {
             m_pEditorCore->SetSelectedObject(pClickedObj);
@@ -326,7 +309,7 @@ void CEditorInput::HandleMouseClick()
     break;
 
     case EDITOR_MODE::ERASE:
-        m_pEditorCore->GetObjectManager()->DeleteObjectAtPosition(vMousePos);
+        m_pEditorCore->GetObjectManager()->DeleteObjectAtPos(vMousePos);
         break;
 
     case EDITOR_MODE::BACKGROUND:
@@ -340,13 +323,11 @@ void CEditorInput::HandleMouseClick()
         HandleStageImageClick();
         break;
     case EDITOR_MODE::NORMAL:
-    case EDITOR_MODE::CAMERA_MOVE:
     default:
         // 기본 모드에서는 클릭 위치만 표시
     break;
     }
 }
-
 
 void CEditorInput::UpdateMousePosition()
 {
@@ -361,7 +342,6 @@ void CEditorInput::UpdateMousePosition()
 
     m_pEditorCore->SetMousePos(vMousePos);
 }
-
 
 void CEditorInput::HandleModeSpecificInput()
 {
@@ -406,7 +386,6 @@ void CEditorInput::HandleTileModeInput()
         m_pEditorCore->GetObjectManager()->NextTileVisual();
     }
 }
-
 
 void CEditorInput::HandleStageImageModeInput()
 {
@@ -467,7 +446,6 @@ void CEditorInput::HandleStageImageClick()
     CStageMgr::GetInst()->SetCurrentStageImage(nextType);
 }
 
-
 void CEditorInput::ResetStageImageToBottomLeft()
 {
     CStageImage* pCurrentStage = CStageMgr::GetInst()->GetCurrentStageImage();
@@ -477,7 +455,6 @@ void CEditorInput::ResetStageImageToBottomLeft()
     }
 }
 
-// 이전 스테이지 이미지로 변경
 void CEditorInput::PrevStageImage()
 {
     STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
@@ -504,7 +481,6 @@ void CEditorInput::PrevStageImage()
     CStageMgr::GetInst()->SetCurrentStageImage(prevType);
 }
 
-// 다음 스테이지 이미지로 변경
 void CEditorInput::NextStageImage()
 {
     STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
@@ -531,7 +507,6 @@ void CEditorInput::NextStageImage()
     CStageMgr::GetInst()->SetCurrentStageImage(nextType);
 }
 
-// 커스텀 스테이지 이미지 로드
 void CEditorInput::LoadCustomStageImage()
 {
     // 파일 다이얼로그 열기

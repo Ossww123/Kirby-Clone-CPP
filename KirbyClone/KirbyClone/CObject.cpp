@@ -35,6 +35,7 @@ CObject::CObject(OBJECT_TYPE _eType)
 
 CObject::~CObject()
 {
+    // 컴포넌트들 안전하게 해제
 	if (nullptr != m_pCollider)
 	{
 		delete m_pCollider;
@@ -56,69 +57,17 @@ CObject::~CObject()
 
 void CObject::Render(HDC _dc)
 {
+    // 렌더링 위치 계산
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_vPos);
 
-    // 현재 씬이 툴 씬이 아닌 경우에만 4배 스케일 적용
-    SCENE_TYPE currentScene = CSceneMgr::GetInst()->GetCurSceneType();
-    float fScale = (currentScene == SCENE_TYPE::TOOL) ? 1.0f : CCore::GetPixelScale();
+    // 스케일 팩터 결정
+    float fScale = GetRenderScale();
 
-    // 애니메이터가 있으면 애니메이션으로 렌더링
-    if (nullptr != m_pAnimator)
-    {
-        if (fScale > 1.0f)
-        {
-            // 4배 확대 렌더링 (게임 씬)
-            // CAnimator의 RenderScaled 함수 사용
-            m_pAnimator->RenderScaled(_dc, fScale);
-        }
-        else
-        {
-            // 원본 크기 렌더링 (툴 씬)
-            m_pAnimator->Render(_dc);
-        }
-    }
-    // 텍스처가 있으면 텍스처로 렌더링
-    else if (nullptr != m_pTex)
-    {
-        UINT width = m_pTex->GetWidth();
-        UINT height = m_pTex->GetHeight();
+    // 메인 렌더링 수행
+    RenderMain(_dc, vRenderPos, fScale);
 
-        if (fScale > 1.0f)
-        {
-            // 4배 확대 렌더링 (게임 씬)
-            StretchBlt(_dc,
-                (int)(vRenderPos.x - (width * fScale) / 2.f),
-                (int)(vRenderPos.y - (height * fScale) / 2.f),
-                (int)(width * fScale),
-                (int)(height * fScale),
-                m_pTex->GetDC(),
-                0, 0, width, height, SRCCOPY);
-        }
-        else
-        {
-            // 원본 크기 렌더링 (툴 씬)
-            BitBlt(_dc,
-                (int)(vRenderPos.x - width / 2.f),
-                (int)(vRenderPos.y - height / 2.f),
-                width, height,
-                m_pTex->GetDC(),
-                0, 0, SRCCOPY);
-        }
-    }
-    else
-    {
-        // 기본 사각형 렌더링
-        Vec2 vScaledSize = m_vScale * fScale;
-        Rectangle(_dc,
-            (int)(vRenderPos.x - vScaledSize.x / 2.f),
-            (int)(vRenderPos.y - vScaledSize.y / 2.f),
-            (int)(vRenderPos.x + vScaledSize.x / 2.f),
-            (int)(vRenderPos.y + vScaledSize.y / 2.f));
-    }
-
-    // 충돌체 렌더링
-    if (nullptr != m_pCollider)
-        m_pCollider->Render(_dc);
+    // 콜라이더 렌더링
+    RenderCollider(_dc);
 }
 
 void CObject::CreateCollider()
@@ -137,4 +86,77 @@ void CObject::CreateRigidBody()
 {
 	m_pRigidBody = new CRigidBody;
 	m_pRigidBody->m_pOwner = this;
+}
+
+float CObject::GetRenderScale() const
+{
+    return 0.0f;
+}
+
+void CObject::RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale)
+{
+    // 우선순위: 애니메이터 → 텍스처 → 기본 사각형
+    if (nullptr != m_pAnimator)
+    {
+        RenderWithAnimator(_dc, _fScale);
+    }
+    else if (nullptr != m_pTex)
+    {
+        RenderWithTexture(_dc, _vRenderPos, _fScale);
+    }
+    else
+    {
+        RenderDefaultShape(_dc, _vRenderPos, _fScale);
+    }
+}
+
+void CObject::RenderWithAnimator(HDC _dc, float _fScale)
+{
+    // 애니메이터의 스케일 렌더링 기능 활용
+    m_pAnimator->RenderScaled(_dc, _fScale);
+}
+
+void CObject::RenderWithTexture(HDC _dc, const Vec2& _vRenderPos, float _fScale)
+{
+    // 텍스처 정보 가져오기
+    UINT width = m_pTex->GetWidth();
+    UINT height = m_pTex->GetHeight();
+
+    // 스케일된 크기 계산
+    int scaledWidth = (int)(width * _fScale);
+    int scaledHeight = (int)(height * _fScale);
+
+    // 렌더링 위치 계산 (중앙 기준)
+    int renderX = (int)(_vRenderPos.x - scaledWidth / 2.f);
+    int renderY = (int)(_vRenderPos.y - scaledHeight / 2.f);
+
+    // 스케일된 텍스처 렌더링
+    StretchBlt(_dc,
+        renderX, renderY,
+        scaledWidth, scaledHeight,
+        m_pTex->GetDC(),
+        0, 0, width, height,
+        SRCCOPY);
+}
+
+void CObject::RenderDefaultShape(HDC _dc, const Vec2& _vRenderPos, float _fScale)
+{
+    // 스케일된 크기 계산
+    Vec2 vScaledSize = m_vScale * _fScale;
+
+    // 기본 사각형 렌더링
+    Rectangle(_dc,
+        (int)(_vRenderPos.x - vScaledSize.x / 2.f),
+        (int)(_vRenderPos.y - vScaledSize.y / 2.f),
+        (int)(_vRenderPos.x + vScaledSize.x / 2.f),
+        (int)(_vRenderPos.y + vScaledSize.y / 2.f));
+}
+
+
+void CObject::RenderCollider(HDC _dc)
+{
+    if (nullptr != m_pCollider)
+    {
+        m_pCollider->Render(_dc);
+    }
 }

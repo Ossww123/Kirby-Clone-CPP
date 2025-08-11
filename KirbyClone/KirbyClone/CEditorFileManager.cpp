@@ -275,7 +275,7 @@ tLevelData CEditorFileManager::CreateLevelData(const wstring& _strLevelName)
     // 플레이어 스폰 위치
     if (m_pEditorCore->GetObjectManager())
     {
-        levelData.vPlayerSpawn = m_pEditorCore->GetObjectManager()->GetPlayerSpawnPosition();
+        levelData.vPlayerSpawn = m_pEditorCore->GetObjectManager()->GetPlayerSpawnPos();
     }
 
     // 배경 정보 (기존 호환성)
@@ -479,7 +479,7 @@ void CEditorFileManager::ApplyLoadedLevelData(const tLevelData& _levelData)
     // 플레이어 스폰 위치 설정
     if (m_pEditorCore->GetObjectManager())
     {
-        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(_levelData.vPlayerSpawn);
+        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPos(_levelData.vPlayerSpawn);
     }
 
     // 배경 설정 (기존 호환성)
@@ -540,7 +540,7 @@ void CEditorFileManager::CreateDefaultLevel()
     ClearScene();
     
     // 플레이어 스폰 위치 초기화
-    m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(Vec2(640.f, 400.f));
+    m_pEditorCore->GetObjectManager()->SetPlayerSpawnPos(Vec2(640.f, 400.f));
     
     // 기본 배경 설정
     m_pEditorCore->GetObjectManager()->SetCurrentBackgroundType(BACKGROUND_TYPE::BACKGROUND1);

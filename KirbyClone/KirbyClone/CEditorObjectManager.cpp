@@ -70,7 +70,6 @@ void CEditorObjectManager::PlaceObject(Vec2 _vPos)
 
     if (!pObject)
     {
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Failed to create object!");
         return;
     }
 
@@ -90,30 +89,15 @@ void CEditorObjectManager::PlaceObject(Vec2 _vPos)
     // 적절한 그룹에 추가
     GROUP_TYPE eGroup = CObjectFactory::GetObjectGroup(m_eCurrentObjectType);
     m_pEditorCore->GetWorkingScene()->AddObject(pObject, eGroup);
-
-    // 성공 메시지
-    wchar_t szBuffer[256];
-    const wchar_t* szObjectName = CObjectFactory::GetObjectTypeName(m_eCurrentObjectType);
-    if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_TILE)
-    {
-        swprintf_s(szBuffer, L"%s (%s) placed at (%.0f, %.0f)!",
-            szObjectName, GetTileVisualName(m_eCurrentTileVisual), _vPos.x, _vPos.y);
-    }
-    else
-    {
-        swprintf_s(szBuffer, L"%s placed at (%.0f, %.0f)!", szObjectName, _vPos.x, _vPos.y);
-    }
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
-void CEditorObjectManager::DeleteObjectAtPosition(Vec2 _vPos)
+void CEditorObjectManager::DeleteObjectAtPos(Vec2 _vPos)
 {
     // 클릭한 위치에서 오브젝트 찾기
-    CObject* pTargetObj = FindObjectAtPosition(_vPos);
+    CObject* pTargetObj = FindObjectAtPos(_vPos);
 
     if (!pTargetObj)
     {
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"No object to delete");
         return;
     }
 
@@ -134,16 +118,12 @@ void CEditorObjectManager::DeleteObjectAtPosition(Vec2 _vPos)
         {
             delete pTargetObj;  // 메모리 해제
             vecObj.erase(iter); // 벡터에서 제거
-
-            wchar_t szBuffer[256];
-            swprintf_s(szBuffer, L"Object deleted successfully! Remaining: %d", (int)vecObj.size());
-            SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
             return;
         }
     }
 }
 
-CObject* CEditorObjectManager::FindObjectAtPosition(Vec2 _vPos)
+CObject* CEditorObjectManager::FindObjectAtPos(Vec2 _vPos)
 {
     // 모든 그룹에서 오브젝트 검색 (플레이어 제외)
     CScene* pScene = m_pEditorCore->GetWorkingScene();
@@ -181,11 +161,6 @@ void CEditorObjectManager::ChangeObjectCategory(const wstring& _strCategory)
     {
         m_iCurrentSubType = 0;
         m_eCurrentObjectType = m_vecCurrentCategory[0];
-
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Category: %s - Object: %s",
-            _strCategory.c_str(), GetCurrentObjectName());
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
     }
 }
 
@@ -195,11 +170,6 @@ void CEditorObjectManager::NextObjectInCategory()
 
     m_iCurrentSubType = (m_iCurrentSubType + 1) % m_vecCurrentCategory.size();
     m_eCurrentObjectType = m_vecCurrentCategory[m_iCurrentSubType];
-
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Selected: %s (%d/%d)",
-        GetCurrentObjectName(), m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
 void CEditorObjectManager::PrevObjectInCategory()
@@ -208,14 +178,9 @@ void CEditorObjectManager::PrevObjectInCategory()
 
     m_iCurrentSubType = (m_iCurrentSubType - 1 + m_vecCurrentCategory.size()) % m_vecCurrentCategory.size();
     m_eCurrentObjectType = m_vecCurrentCategory[m_iCurrentSubType];
-
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Selected: %s (%d/%d)",
-        GetCurrentObjectName(), m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
-const wchar_t* CEditorObjectManager::GetCurrentObjectName()
+const wchar_t* CEditorObjectManager::GetCurrentObjectName() const
 {
     return CObjectFactory::GetObjectTypeName(m_eCurrentObjectType);
 }
@@ -226,11 +191,6 @@ void CEditorObjectManager::SetCurrentSubType(int index)
     {
         m_iCurrentSubType = index;
         m_eCurrentObjectType = m_vecCurrentCategory[index];
-
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Selected: %s (%d/%d)",
-            GetCurrentObjectName(), m_iCurrentSubType + 1, (int)m_vecCurrentCategory.size());
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
     }
 }
 
@@ -250,10 +210,6 @@ void CEditorObjectManager::ChangeBackground(BACKGROUND_TYPE _eBgType)
 {
     m_eCurrentBgType = _eBgType;
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(_eBgType);
-
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Background changed to: %s", GetBackgroundName(_eBgType));
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
 void CEditorObjectManager::NextBackground()
@@ -296,7 +252,7 @@ void CEditorObjectManager::PrevBackground()
     ChangeBackground(m_vecBackgroundTypes[prevIndex]);
 }
 
-const wchar_t* CEditorObjectManager::GetBackgroundName(BACKGROUND_TYPE _eType)
+const wchar_t* CEditorObjectManager::GetBackgroundName(BACKGROUND_TYPE _eType) const
 {
     return CBackgroundMgr::GetInst()->GetBackgroundName(_eType);
 }
@@ -325,13 +281,6 @@ void CEditorObjectManager::NextTileVisual()
 
     m_iTileVisualIndex = (m_iTileVisualIndex + 1) % m_vecTileVisualTypes.size();
     m_eCurrentTileVisual = m_vecTileVisualTypes[m_iTileVisualIndex];
-
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Tile Visual: %s (%d/%d)",
-        GetTileVisualName(m_eCurrentTileVisual),
-        m_iTileVisualIndex + 1,
-        (int)m_vecTileVisualTypes.size());
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
 void CEditorObjectManager::PrevTileVisual()
@@ -340,16 +289,9 @@ void CEditorObjectManager::PrevTileVisual()
 
     m_iTileVisualIndex = (m_iTileVisualIndex - 1 + m_vecTileVisualTypes.size()) % m_vecTileVisualTypes.size();
     m_eCurrentTileVisual = m_vecTileVisualTypes[m_iTileVisualIndex];
-
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Tile Visual: %s (%d/%d)",
-        GetTileVisualName(m_eCurrentTileVisual),
-        m_iTileVisualIndex + 1,
-        (int)m_vecTileVisualTypes.size());
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
 }
 
-const wchar_t* CEditorObjectManager::GetTileVisualName(TILE_VISUAL_TYPE _eType)
+const wchar_t* CEditorObjectManager::GetTileVisualName(TILE_VISUAL_TYPE _eType) const
 {
     switch (_eType)
     {
@@ -380,8 +322,6 @@ void CEditorObjectManager::ClearAllObjects()
 
         // 선택된 오브젝트도 해제
         m_pEditorCore->DeselectObject();
-
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), L"All objects cleared!");
     }
 }
 
@@ -404,11 +344,9 @@ void CEditorObjectManager::ResetToDefault()
     // 기본 타일 비주얼로 설정
     m_eCurrentTileVisual = TILE_VISUAL_TYPE::GRASS_PLATFORM;
     m_iTileVisualIndex = 0;
-
-    SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Reset to default settings!");
 }
 
-int CEditorObjectManager::GetTotalObjectCount()
+int CEditorObjectManager::GetTotalObjectCount() const
 {
     int totalCount = 0;
 

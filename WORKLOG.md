@@ -1640,4 +1640,18 @@ GetRigidBody()->SetFriction(5.f);
 - [X] CCStageMgr 리팩토링 완료
 - [X] CStageImage 리팩토링 완료 (4배 스케일링 적용)
 - [X] CEditorCameraController 리팩토링 완료 (헤더 구조, 주석 정리, 디버깅 코드 제거, 불필요한 기능 제거)
-- 
+  
+## 2025-08-11
+
+### 완료
+
+- [X] CObject 코드 리팩토링
+- [X] CAnimator, CAnimation 코드 리팩토링
+  - 알파 채널 이미지 처리 기능 제거
+
+## 2025-08-12
+
+### 완료
+
+- [X] CPlayer 코드 리팩토링
+  - CPlayerColliderManager 추가

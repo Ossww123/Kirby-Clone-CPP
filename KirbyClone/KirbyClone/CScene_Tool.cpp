@@ -92,7 +92,7 @@ void CScene_Tool::ClearLevel()
     // 플레이어 스폰 위치 초기화
     if (m_pEditorCore && m_pEditorCore->GetObjectManager())
     {
-        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPosition(Vec2(320.f, 320.f));
+        m_pEditorCore->GetObjectManager()->SetPlayerSpawnPos(Vec2(320.f, 320.f));
     }
 
     // 윈도우 타이틀 업데이트

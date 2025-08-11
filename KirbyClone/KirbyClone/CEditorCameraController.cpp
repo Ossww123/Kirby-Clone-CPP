@@ -91,9 +91,6 @@ void CEditorCameraController::UpdateCameraMovement()
     {
         m_bCameraMoving = false;
     }
-
-    // 특수 키 처리
-    ProcessSpecialKeys();
 }
 
 void CEditorCameraController::UpdateCameraState()
@@ -138,15 +135,6 @@ void CEditorCameraController::ProcessKeyboardInput(Vec2& _vMoveDir, bool& _bInpu
     if (_vMoveDir.x != 0.f && _vMoveDir.y != 0.f)
     {
         _vMoveDir.Normalize();
-    }
-}
-
-void CEditorCameraController::ProcessSpecialKeys()
-{
-    // HOME 키: 화면 중앙으로 리셋
-    if (KEY_TAP(KEY::HOME))
-    {
-        ResetCameraToOrigin();
     }
 }
 

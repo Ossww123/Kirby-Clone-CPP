@@ -220,7 +220,6 @@ const wchar_t* CEditorCore::GetModeString() const
     case EDITOR_MODE::PLACE_STAGE:  return L"Stage Image";
     case EDITOR_MODE::SELECT:       return L"Select";
     case EDITOR_MODE::ERASE:        return L"Erase";
-    case EDITOR_MODE::CAMERA_MOVE:  return L"Camera Move";
     case EDITOR_MODE::BACKGROUND:   return L"Background";
     case EDITOR_MODE::PLAYER_SPAWN: return L"Player Spawn";
     default:                        return L"Unknown";
