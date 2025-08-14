@@ -222,22 +222,25 @@ enum class STAGE_IMAGE_TYPE
 
 enum class TILE_VISUAL_TYPE
 {
-    GRASS_PLATFORM,        
-    DIRT_BLOCK,            
-    STONE_BLOCK,           
-    GRASS_BLOCK,           
+    TRANSPARENT_BLOCK,      // 투명 충돌 블록 (기본)
 
-    TREE,                  
-    FLOWER,                
-    FENCE,                 
-    PIPE,                  
-
-    SPIKE,                 
-    LAVA,                  
-    WATER,                 
-
-    MOVING_PLATFORM,       
-    BRIDGE,                
+    // === 향후 구현 예정 (주석처리) ===
+    // GRASS_PLATFORM,        
+    // DIRT_BLOCK,            
+    // STONE_BLOCK,           
+    // GRASS_BLOCK,           
+    // 
+    // TREE,                  
+    // FLOWER,                
+    // FENCE,                 
+    // PIPE,                  
+    // 
+    // SPIKE,                 
+    // LAVA,                  
+    // WATER,                 
+    // 
+    // MOVING_PLATFORM,       
+    // BRIDGE,                
 
     END
 };

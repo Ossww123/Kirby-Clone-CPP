@@ -11,24 +11,20 @@
 CDoor::CDoor()
     : CSpecialObject()
     , m_eTargetScene(SCENE_TYPE::STAGE_01)
-    , m_vTargetPosition(Vec2(100.f, 400.f))
-    , m_strDoorID(L"")
-    , m_strTargetDoorID(L"")
+    , m_vTargetPosition(Vec2(256.f, 384.f))
     , m_bPlayerNear(false)
     , m_bCanInteract(false)
-    , m_fInteractionRange(80.f)
-    , m_fAnimTimer(0.f)
 {
     // 문 타입으로 설정
     SetSpecialType(OBJECT_TYPE::OBJECT_DOOR);
     SetType(OBJECT_TYPE::OBJECT_DOOR);
 
     // 기본 문 크기 설정
-    SetScale(Vec2(64.f, 128.f));
+    SetScale(Vec2(64.f, 64.f));
 
     // 충돌체 생성
     CreateCollider();
-    GetCollider()->SetScale(Vec2(64.f, 128.f));
+    GetCollider()->SetScale(Vec2(64.f, 64.f));
     GetCollider()->SetOffsetPos(Vec2(0.f, 0.f));
 }
 
@@ -38,12 +34,6 @@ CDoor::~CDoor()
 
 void CDoor::Update()
 {
-    // 부모 클래스 업데이트 먼저 호출
-    CSpecialObject::Update();
-
-    // 애니메이션 타이머 업데이트
-    m_fAnimTimer += CTimeMgr::GetInst()->GetfDT();
-
     // 플레이어와의 상호작용 체크
     CheckPlayerInteraction();
 
@@ -72,22 +62,6 @@ void CDoor::Render(HDC _dc)
     if (m_bCanInteract)
     {
         RenderInteractionUI(_dc);
-    }
-
-    // 문 ID 표시 (디버그용)
-    if (!m_strDoorID.empty())
-    {
-        Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
-        SetTextColor(_dc, RGB(255, 255, 255));
-        SetBkMode(_dc, TRANSPARENT);
-
-        RECT textRect;
-        textRect.left = (int)(vRenderPos.x - 40);
-        textRect.top = (int)(vRenderPos.y - GetScale().y / 2 - 25);
-        textRect.right = (int)(vRenderPos.x + 40);
-        textRect.bottom = (int)(vRenderPos.y - GetScale().y / 2 - 5);
-
-        DrawText(_dc, m_strDoorID.c_str(), -1, &textRect, DT_CENTER | DT_VCENTER);
     }
 }
 
@@ -189,25 +163,4 @@ void CDoor::RenderInteractionUI(HDC _dc)
     textRect.top = (int)(vRenderPos.y - GetScale().y / 2 - 50);
     textRect.right = (int)(vRenderPos.x + 50);
     textRect.bottom = (int)(vRenderPos.y - GetScale().y / 2 - 30);
-
-    // 깜빡이는 효과
-    float fBlinkSpeed = 3.0f;
-    if (sin(m_fAnimTimer * fBlinkSpeed) > 0.0f)
-    {
-        DrawText(_dc, L"↑ ENTER", -1, &textRect, DT_CENTER | DT_VCENTER);
-    }
-
-    // 목표 씬 정보 표시 (디버그용)
-    if (!m_strTargetDoorID.empty())
-    {
-        SetTextColor(_dc, RGB(0, 255, 255));
-        RECT targetRect;
-        targetRect.left = (int)(vRenderPos.x - 60);
-        targetRect.top = (int)(vRenderPos.y + GetScale().y / 2 + 5);
-        targetRect.right = (int)(vRenderPos.x + 60);
-        targetRect.bottom = (int)(vRenderPos.y + GetScale().y / 2 + 25);
-
-        wstring strTargetInfo = L"→ " + m_strTargetDoorID;
-        DrawText(_dc, strTargetInfo.c_str(), -1, &targetRect, DT_CENTER | DT_VCENTER);
-    }
 }

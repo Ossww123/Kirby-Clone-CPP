@@ -12,11 +12,9 @@ CTile::CTile()
     , m_bSolid(true)
     , m_bHarmful(false)
     , m_bOneWay(false)
-    , m_bDecorative(false)
-    , m_displayColor(RGB(0, 0, 255))     // 기본: 파란색 (단단한 땅)
-    , m_bShowInEditor(true)
-    , m_eVisualType(TILE_VISUAL_TYPE::GRASS_PLATFORM)  // 호환성용
-    , m_pTileTexture(nullptr)            // 더 이상 사용 안함
+    , m_displayColor(RGB(0, 0, 255))
+    , m_eVisualType(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK)
+    , m_pTileTexture(nullptr)
 {
     // 기본 충돌체 타입 설정
     SetCollisionType(COLLISION_TYPE::SOLID_GROUND);
@@ -41,38 +39,32 @@ void CTile::Update()
 
 void CTile::Render(HDC _dc)
 {
-    if (!m_bShowInEditor)
-        return;
-
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
-    Vec2 vScale = GetScale();
-    float fPixelScale = CCore::GetPixelScale();
-    Vec2 vScaledSize = vScale * fPixelScale;
-
-    // 충돌체 타입에 따른 색상 박스 렌더링 (4배 확대)
-    HBRUSH hBrush = CreateSolidBrush(m_displayColor);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-
-    // 반투명한 효과를 위해 테두리와 내부를 다르게 렌더링
-    Rectangle(_dc,
-        (int)(vRenderPos.x - vScaledSize.x / 2.f),
-        (int)(vRenderPos.y - vScaledSize.y / 2.f),
-        (int)(vRenderPos.x + vScaledSize.x / 2.f),
-        (int)(vRenderPos.y + vScaledSize.y / 2.f));
-
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hBrush);
-
-    // 충돌체가 있으면 충돌체도 스케일 렌더링
-    if (GetCollider())
+    // 타일 타입별 메인 렌더링
+    switch (m_eVisualType)
     {
-        GetCollider()->RenderScaled(_dc, fPixelScale);
+    case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK:
+        RenderTransparentBlock(_dc);
+        break;
+    // 향후 추가될 타일들
+    // case TILE_VISUAL_TYPE::GRASS_PLATFORM:
+    //     RenderGrassPlatform(_dc);
+    //     break;
+    default:
+        // 알 수 없는 타일 타입은 기본 투명 블록으로 렌더링
+        RenderTransparentBlock(_dc);
+        break;
     }
+
+    // 공통 렌더링 요소들
+    RenderCommonElements(_dc);
 }
 
 void CTile::SetCollisionType(COLLISION_TYPE _eType)
 {
+    // 충돌 타입 설정
     m_eCollisionType = _eType;
+
+    // 기본 속성 업데이트
     SetupCollisionDefaults(_eType);
     UpdateCollisionProperties();
 }
@@ -104,14 +96,14 @@ void CTile::SetupCollisionDefaults(COLLISION_TYPE _eType)
         break;
 
     case COLLISION_TYPE::WATER:
-        m_bSolid = false;                       // 통과 가능
+        m_bSolid = false;
         m_bHarmful = false;
         m_bOneWay = false;
         m_displayColor = RGB(100, 200, 255);    // 연파란색
         break;
 
     case COLLISION_TYPE::LAVA:
-        m_bSolid = false;                       // 통과 가능하지만 데미지
+        m_bSolid = false;
         m_bHarmful = true;
         m_bOneWay = false;
         m_displayColor = RGB(255, 100, 0);      // 주황색
@@ -156,22 +148,25 @@ void CTile::SetupCollisionDefaults(COLLISION_TYPE _eType)
 
 void CTile::UpdateCollisionProperties()
 {
-    // 충돌체가 있으면 속성에 따라 업데이트
-    if (GetCollider())
+    // 충돌체 생성/제거 처리
+    if (m_bSolid || m_bHarmful)
     {
-        // 충돌체 크기는 64x64로 고정
-        GetCollider()->SetScale(Vec2(64.f, 64.f));
-
-        // 단단하지 않은 충돌체는 콜라이더를 트리거 모드로 설정할 수 있음
-        // (필요시 CCollider에 트리거 모드 추가)
-    }
-    else if (m_bSolid || m_bHarmful)
-    {
-        // 충돌이 필요한 타입이면 콜라이더 생성
-        CreateCollider();
+        // 충돌이 필요한 타일이면 콜라이더 생성
+        if (!GetCollider())
+        {
+            CreateCollider();
+        }
         if (GetCollider())
         {
-            GetCollider()->SetScale(Vec2(64.f, 64.f));
+            GetCollider()->SetScale(GetScale());
+        }
+    }
+    else if (IsDecorative())
+    {
+        // 장식용 타일이면 콜라이더 제거
+        if (GetCollider())
+        {
+            // TODO: 콜라이더 제거 로직 구현 필요
         }
     }
 }
@@ -263,6 +258,67 @@ void CTile::RenderSpecialIndicators(HDC _dc, Vec2 vRenderPos, Vec2 vScale)
 
 void CTile::RenderCollisionInfo(HDC _dc)
 {
-    // 선택사항: 충돌체 정보를 텍스트로 표시
-    // 이 함수는 필요시 구현 (에디터에서 상세 정보 표시용)
+    // 디버그 정보 텍스트 렌더링
+    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
+
+    // 충돌 타입 정보 표시
+    wstring strInfo = L"";
+    switch (m_eCollisionType)
+    {
+    case COLLISION_TYPE::SOLID_GROUND: strInfo = L"SOLID"; break;
+    case COLLISION_TYPE::PLATFORM: strInfo = L"PLATFORM"; break;
+    case COLLISION_TYPE::SPIKE: strInfo = L"SPIKE"; break;
+    default: strInfo = L"UNKNOWN"; break;
+    }
+
+    // 텍스트 출력
+    SetTextColor(_dc, RGB(255, 255, 255));
+    SetBkMode(_dc, TRANSPARENT);
+    TextOut(_dc,
+        (int)(vRenderPos.x - 20),
+        (int)(vRenderPos.y - 30),
+        strInfo.c_str(),
+        (int)strInfo.length());
+}
+
+// === 타일 타입별 렌더링 ===
+
+void CTile::RenderTransparentBlock(HDC _dc)
+{
+    // 렌더링 좌표 계산
+    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
+    Vec2 vScale = GetScale();
+    float fPixelScale = CCore::GetPixelScale();
+    Vec2 vScaledSize = vScale * fPixelScale;
+    Vec2 vActualSize = vScale;
+
+    // 충돌체 타입에 따른 색상 박스 렌더링
+    HBRUSH hBrush = CreateSolidBrush(m_displayColor);
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+
+    // 반투명한 효과를 위해 테두리와 내부를 다르게 렌더링
+    /*Rectangle(_dc,
+        (int)(vRenderPos.x - vScaledSize.x / 2.f),
+        (int)(vRenderPos.y - vScaledSize.y / 2.f),
+        (int)(vRenderPos.x + vScaledSize.x / 2.f),
+        (int)(vRenderPos.y + vScaledSize.y / 2.f));*/
+
+    Rectangle(_dc,
+        (int)(vRenderPos.x - vActualSize.x / 2.f),
+        (int)(vRenderPos.y - vActualSize.y / 2.f),
+        (int)(vRenderPos.x + vActualSize.x / 2.f),
+        (int)(vRenderPos.y + vActualSize.y / 2.f));
+
+    SelectObject(_dc, hOldBrush);
+    DeleteObject(hBrush);
+}
+
+void CTile::RenderCommonElements(HDC _dc)
+{
+    // 콜라이더 렌더링
+    if (GetCollider())
+    {
+        float fPixelScale = CCore::GetPixelScale();
+        GetCollider()->RenderScaled(_dc, fPixelScale);
+    }
 }

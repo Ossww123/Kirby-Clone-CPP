@@ -140,12 +140,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CAnimation.h" />
+    <ClInclude Include="CAnimationDataMgr.h" />
     <ClInclude Include="CAnimator.h" />
     <ClInclude Include="CBackground.h" />
     <ClInclude Include="CBackgroundMgr.h" />
+    <ClInclude Include="CBasicMonster.h" />
+    <ClInclude Include="CBoss.h" />
+    <ClInclude Include="CBrontoBurt.h" />
     <ClInclude Include="CCamera.h" />
     <ClInclude Include="CCollider.h" />
     <ClInclude Include="CCollisionMgr.h" />
+    <ClInclude Include="CCopyMonster.h" />
     <ClInclude Include="CCore.h" />
     <ClInclude Include="CDoor.h" />
     <ClInclude Include="CEditorCameraController.h" />
@@ -157,7 +162,10 @@
     <ClInclude Include="CEditorToolbar.h" />
     <ClInclude Include="CEditorUI.h" />
     <ClInclude Include="CEventMgr.h" />
+    <ClInclude Include="CGordo.h" />
     <ClInclude Include="CGrid.h" />
+    <ClInclude Include="CHotHead.h" />
+    <ClInclude Include="CInvincibleMonster.h" />
     <ClInclude Include="CItem.h" />
     <ClInclude Include="CKeyMgr.h" />
     <ClInclude Include="CMonster.h" />
@@ -179,6 +187,7 @@
     <ClInclude Include="CScene_Stage02.h" />
     <ClInclude Include="CScene_Start.h" />
     <ClInclude Include="CScene_Tool.h" />
+    <ClInclude Include="CSparky.h" />
     <ClInclude Include="CSpecialObject.h" />
     <ClInclude Include="CStageImage.h" />
     <ClInclude Include="CStageMgr.h" />
@@ -186,6 +195,9 @@
     <ClInclude Include="CTile.h" />
     <ClInclude Include="CTileMgr.h" />
     <ClInclude Include="CTimeMgr.h" />
+    <ClInclude Include="CWaddleDee.h" />
+    <ClInclude Include="CWaddleDoo.h" />
+    <ClInclude Include="CWhispyWoods.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="enum.h" />
     <ClInclude Include="framework.h" />
@@ -197,12 +209,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CAnimation.cpp" />
+    <ClCompile Include="CAnimationDataMgr.cpp" />
     <ClCompile Include="CAnimator.cpp" />
     <ClCompile Include="CBackground.cpp" />
     <ClCompile Include="CBackgroundMgr.cpp" />
+    <ClCompile Include="CBasicMonster.cpp" />
+    <ClCompile Include="CBoss.cpp" />
+    <ClCompile Include="CBrontoBurt.cpp" />
     <ClCompile Include="CCamera.cpp" />
     <ClCompile Include="CCollider.cpp" />
     <ClCompile Include="CCollisionMgr.cpp" />
+    <ClCompile Include="CCopyMonster.cpp" />
     <ClCompile Include="CCore.cpp" />
     <ClCompile Include="CDoor.cpp" />
     <ClCompile Include="CEditorCameraController.cpp" />
@@ -214,7 +231,10 @@
     <ClCompile Include="CEditorToolbar.cpp" />
     <ClCompile Include="CEditorUI.cpp" />
     <ClCompile Include="CEventMgr.cpp" />
+    <ClCompile Include="CGordo.cpp" />
     <ClCompile Include="CGrid.cpp" />
+    <ClCompile Include="CHotHead.cpp" />
+    <ClCompile Include="CInvincibleMonster.cpp" />
     <ClCompile Include="CItem.cpp" />
     <ClCompile Include="CKeyMgr.cpp" />
     <ClCompile Include="CMonster.cpp" />
@@ -236,6 +256,7 @@
     <ClCompile Include="CScene_Stage02.cpp" />
     <ClCompile Include="CScene_Start.cpp" />
     <ClCompile Include="CScene_Tool.cpp" />
+    <ClCompile Include="CSparky.cpp" />
     <ClCompile Include="CSpecialObject.cpp" />
     <ClCompile Include="CStageImage.cpp" />
     <ClCompile Include="CStageMgr.cpp" />
@@ -243,6 +264,9 @@
     <ClCompile Include="CTile.cpp" />
     <ClCompile Include="CTileMgr.cpp" />
     <ClCompile Include="CTimeMgr.cpp" />
+    <ClCompile Include="CWaddleDee.cpp" />
+    <ClCompile Include="CWaddleDoo.cpp" />
+    <ClCompile Include="CWhispyWoods.cpp" />
     <ClCompile Include="KirbyClone.cpp" />
   </ItemGroup>
   <ItemGroup>

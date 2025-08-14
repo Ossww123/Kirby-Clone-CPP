@@ -1,6 +1,7 @@
 #pragma once
 
 class CEditorCore;
+class CDoor;
 
 class CEditorInput
 {
@@ -20,6 +21,7 @@ private:
     void UpdateFileInput();         // 파일 관련 입력
     void UpdateGridInput();         // 그리드 관련 입력
     void UpdateModeInput();         // 모드 전환 입력
+    void UpdateSelectedObjectInput(); // 선택된 오브젝트 편집
     void UpdateMouseInput();        // 마우스 입력
     void UpdateObjectSelection();   // 오브젝트 선택 입력
 
@@ -38,6 +40,10 @@ public:
     void HandleBackgroundModeInput();
     void HandleTileModeInput();
     void HandleStageImageModeInput();
+    void HandleDoorPropertyInput(CDoor* _pDoor);
+
+private:
+    void ShowDoorPropertyChanged(CDoor* _pDoor, const wchar_t* _message);
 
 private:
     // === 스테이지 이미지 처리 ===

@@ -1655,3 +1655,11 @@ GetRigidBody()->SetFriction(5.f);
 
 - [X] CPlayer 코드 리팩토링
   - CPlayerColliderManager 추가
+
+- ## 2025-08-14
+
+### 완료
+
+- [X] 레벨 에디터 간소화
+- [X] 애니메이션 json파일 불러오기로 변경
+- [X] 몬스터 상속 구조

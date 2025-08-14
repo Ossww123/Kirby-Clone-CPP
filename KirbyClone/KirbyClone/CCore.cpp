@@ -13,6 +13,7 @@
 #include "CBackgroundMgr.h"
 #include "CTileMgr.h"
 #include "CStageMgr.h"
+#include "CAnimationDataMgr.h"
 
 CCore::CCore()
 	: m_hWnd(0)
@@ -58,6 +59,9 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	CPathMgr::GetInst()->init();
 	CResMgr::GetInst()->init();
 
+	// 애니메이션 데이터 매니저 초기화
+	CAnimationDataMgr::GetInst()->init();
+
 	// 게임 콘텐츠 매니저들 초기화
 	CBackgroundMgr::GetInst()->init();
 	CTileMgr::GetInst()->init();
@@ -69,6 +73,13 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	CEventMgr::GetInst()->init();
 	CCamera::GetInst()->init(m_ptResolution.x, m_ptResolution.y);
 	CGrid::GetInst()->init();
+
+	//// 테스트 코드
+	//CAnimationDataMgr::GetInst()->init();
+	//CAnimationDataMgr::GetInst()->CreateSampleAnimationFile(L"test_player.json");
+	//CAnimationDataMgr::GetInst()->TestDirectLoad();
+
+	//CAnimationDataMgr::GetInst()->TestLoadAnimationFile(L"test_player.json");
 
 	return S_OK;
 }

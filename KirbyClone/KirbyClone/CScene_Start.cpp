@@ -25,10 +25,10 @@ void CScene_Start::Enter()
     AddObject(pPlayer, GROUP_TYPE::PLAYER);  // GROUP_TYPE 추가
 
     // 몬스터 생성
-    CMonster* pMonster = new CMonster;
-    pMonster->SetPos(Vec2(300.f, 300.f));
-    pMonster->SetScale(Vec2(60.f, 60.f));
-    AddObject(pMonster, GROUP_TYPE::MONSTER);  // GROUP_TYPE 추가
+    //CMonster* pMonster = new CMonster;
+    //pMonster->SetPos(Vec2(300.f, 300.f));
+    //pMonster->SetScale(Vec2(60.f, 60.f));
+    //AddObject(pMonster, GROUP_TYPE::MONSTER);  // GROUP_TYPE 추가
 }
 
 void CScene_Start::Exit()

@@ -53,7 +53,7 @@ void CAnimator::Render(HDC _dc)
     // 오브젝트 위치 가져오기
     Vec2 vPos = m_pOwner->GetPos();
 
-    // 스케일 팩터 적용
+    // 스케일링 팩터 적용
     float fScale = CCore::GetPixelScale();
 
     // 스케일된 렌더링 수행

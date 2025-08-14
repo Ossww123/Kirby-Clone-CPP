@@ -9,6 +9,7 @@
 #include "CTimeMgr.h"
 #include "CTile.h"
 #include "CMonster.h"
+#include "CAnimationDataMgr.h"
 #include "CResMgr.h"
 #include "CCore.h"
 #include "CCamera.h"
@@ -153,6 +154,14 @@ void CPlayer::Render(HDC _dc)
     {
         // 애니메이터가 없으면 기본 오브젝트 렌더링
         CObject::Render(_dc);
+    }
+
+    // 충돌체 렌더링 추가
+    if (GetCollider())
+    {
+        //GetCollider()->Render(_dc);  // 항상 보이는 초록색
+        // 또는
+        GetCollider()->RenderScaled(_dc, 1.0f);  // TAB키 필요
     }
 
     // 흡입 시스템 이펙트 렌더링
@@ -329,293 +338,15 @@ void CPlayer::UpdateInhale()
 // === 애니메이션 생성 함수 ===
 void CPlayer::CreateAnimation()
 {
-    // 커비 텍스처 로드
-    CTexture* pKirbyTex = CResMgr::GetInst()->LoadTexture(L"KirbySprite", L"texture\\kirby\\kirby.bmp");
-
-    // 기본 설정 - 32x32 픽셀, 시작 오프셋 8픽셀
-    const int SPRITE_SIZE = 32;
-    const int BORDER = 8;
-
+    // 애니메이션 매니저를 통한 파일 기반 로딩
     CAnimator* pAnimator = GetAnimator();
+    if (!pAnimator)
+        return;
 
-    // ===========================================
-    // 1행: IDLE 상태 (1~2열, 깜빡임)
-    // ===========================================
-    CAnimation* pIdleAnim = new CAnimation();
-    pIdleAnim->SetName(L"IDLE");
-    pIdleAnim->SetTexture(pKirbyTex);
-    pIdleAnim->SetLoop(true);
+    // 플레이어 애니메이션 파일 로드
+    wstring animationFilePath = L"player_animations.json";
+    CAnimationDataMgr::GetInst()->LoadAnimationsIntoAnimator(pAnimator, animationFilePath);
 
-    // 깜빡임 시퀀스: 눈 뜨고 오래 대기 (1.5초) → 깜빡 (0.1초) → 눈 뜨고 짧은 대기 (1초) → 깜빡 (0.1초) → 눈 뜨고 짧은 대기 (0.2초) → 깜빡 (0.1초)
-
-    // 1. 눈 뜨고 오래 대기 (1.5초)
-    pIdleAnim->AddFrame(Vec2(BORDER, BORDER), Vec2(SPRITE_SIZE, SPRITE_SIZE), 1.5f);
-
-    // 2. 첫 번째 깜빡임 (0.1초)
-    pIdleAnim->AddFrame(Vec2(BORDER + SPRITE_SIZE, BORDER), Vec2(SPRITE_SIZE, SPRITE_SIZE), 0.1f);
-
-    // 3. 눈 뜨고 짧은 대기 (1초)
-    pIdleAnim->AddFrame(Vec2(BORDER, BORDER), Vec2(SPRITE_SIZE, SPRITE_SIZE), 1.0f);
-
-    // 4. 두 번째 깜빡임 (0.1초)
-    pIdleAnim->AddFrame(Vec2(BORDER + SPRITE_SIZE, BORDER), Vec2(SPRITE_SIZE, SPRITE_SIZE), 0.1f);
-
-    // 5. 눈 뜨고 짧은 대기 (0.2초)
-    pIdleAnim->AddFrame(Vec2(BORDER, BORDER), Vec2(SPRITE_SIZE, SPRITE_SIZE), 0.2f);
-
-    // 6. 세 번째 깜빡임 (0.1초)
-    pIdleAnim->AddFrame(Vec2(BORDER + SPRITE_SIZE, BORDER), Vec2(SPRITE_SIZE, SPRITE_SIZE), 0.1f);
-
-    pAnimator->AddCustomAnimation(L"IDLE", pIdleAnim);
-
-    // ===========================================
-    // 2행: 납작 업드린 상태 (1~2열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"CROUCH", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.2f, 2, true);
-
-    // ===========================================
-    // 3행: WALK 상태 (1~10열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"WALK", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 2),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 10, true);
-
-    // ===========================================
-    // 4행: RUN 상태 (1~8열) + 브레이크 (9열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"RUN", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 3),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.08f, 8, true);
-
-    pAnimator->CreateAnimation(L"BRAKE", pKirbyTex,
-        Vec2(BORDER + SPRITE_SIZE * 8, BORDER + SPRITE_SIZE * 3),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 1, false);
-
-    // ===========================================
-    // 5행: 점프 상태 (1~9열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"JUMP", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 4),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 9, false);
-
-    // ===========================================
-    // 6행: 낙하 상태 (1~5열) + 바운스 (6~13열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"FALL", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 5),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 5, true);
-
-    pAnimator->CreateAnimation(L"BOUNCE", pKirbyTex,
-        Vec2(BORDER + SPRITE_SIZE * 5, BORDER + SPRITE_SIZE * 5),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.08f, 8, false);
-
-    // ===========================================
-    // 7행: 공기 머금기 (1~5열) + 날아다니기 (6~11열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"INFLATE", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 6),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 5, false);
-
-    pAnimator->CreateAnimation(L"FLY", pKirbyTex,
-        Vec2(BORDER + SPRITE_SIZE * 5, BORDER + SPRITE_SIZE * 6),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.15f, 6, true);
-
-    // ===========================================
-    // 8행: 공기 내뱉기 (1~5열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"DEFLATE", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 7),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.08f, 5, false);
-
-    // ===========================================
-    // 9행: 게임오버 상태 (1~16열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"GAME_OVER", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 8),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 16, false);
-
-    // ===========================================
-    // 10행: 빨아들이기 상태 (1~8열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"INHALE", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 9),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 8, true);
-
-    // ===========================================
-    // 11행: 빨아들이기 공기 파티클 (1~8열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"INHALE_EFFECT", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 10),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.05f, 8, true);
-
-    // ===========================================
-    // 12~13행: 빨아들이기 성공 과정 (12행 1~5열 + 13행 1~4열)
-    // ===========================================
-    CAnimation* pInhaleSuccessAnim = new CAnimation();
-    pInhaleSuccessAnim->SetName(L"INHALE_SUCCESS");
-    pInhaleSuccessAnim->SetTexture(pKirbyTex);
-    pInhaleSuccessAnim->SetLoop(false);
-
-    // 12행 1~5열
-    for (int i = 0; i < 5; ++i)
-    {
-        pInhaleSuccessAnim->AddFrame(
-            Vec2(BORDER + i * SPRITE_SIZE, BORDER + SPRITE_SIZE * 11),
-            Vec2(SPRITE_SIZE, SPRITE_SIZE),
-            0.1f
-        );
-    }
-
-    // 13행 1~4열
-    for (int i = 0; i < 4; ++i)
-    {
-        pInhaleSuccessAnim->AddFrame(
-            Vec2(BORDER + i * SPRITE_SIZE, BORDER + SPRITE_SIZE * 12),
-            Vec2(SPRITE_SIZE, SPRITE_SIZE),
-            0.1f
-        );
-    }
-
-    pAnimator->AddCustomAnimation(L"INHALE_SUCCESS", pInhaleSuccessAnim);
-
-    // ===========================================
-    // 13행: 빨아들인 후 IDLE 상태 (1~2열) - 위에서 처리됨
-    // ===========================================
-    pAnimator->CreateAnimation(L"MOUTHFUL_IDLE", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 12),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.3f, 2, true);
-
-    // ===========================================
-    // 14행: 빨아들인 후 WALK, RUN 상태 (1~14열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"MOUTHFUL_WALK", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 13),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 14, true);
-
-    // 빨아들인 후 RUN은 WALK와 같은 애니메이션을 더 빠르게
-    pAnimator->CreateAnimation(L"MOUTHFUL_RUN", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 13),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.07f, 14, true);
-
-    // ===========================================
-    // 15행: 빨아들인 후 점프 상태 (2~6열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"MOUTHFUL_JUMP", pKirbyTex,
-        Vec2(BORDER + SPRITE_SIZE, BORDER + SPRITE_SIZE * 14),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 5, false);
-
-    // ===========================================
-    // 17~19행: 빨아들인 후 내뱉기 (17행 1~5열 + 18행 1~5열 + 19행 1~4열)
-    // ===========================================
-    CAnimation* pSpitOutAnim = new CAnimation();
-    pSpitOutAnim->SetName(L"SPIT_OUT");
-    pSpitOutAnim->SetTexture(pKirbyTex);
-    pSpitOutAnim->SetLoop(false);
-
-    // 17행 1~5열
-    for (int i = 0; i < 5; ++i)
-    {
-        pSpitOutAnim->AddFrame(
-            Vec2(BORDER + i * SPRITE_SIZE, BORDER + SPRITE_SIZE * 16),
-            Vec2(SPRITE_SIZE, SPRITE_SIZE),
-            0.08f
-        );
-    }
-
-    // 18행 1~5열
-    for (int i = 0; i < 5; ++i)
-    {
-        pSpitOutAnim->AddFrame(
-            Vec2(BORDER + i * SPRITE_SIZE, BORDER + SPRITE_SIZE * 17),
-            Vec2(SPRITE_SIZE, SPRITE_SIZE),
-            0.08f
-        );
-    }
-
-    // 19행 1~4열
-    for (int i = 0; i < 4; ++i)
-    {
-        pSpitOutAnim->AddFrame(
-            Vec2(BORDER + i * SPRITE_SIZE, BORDER + SPRITE_SIZE * 18),
-            Vec2(SPRITE_SIZE, SPRITE_SIZE),
-            0.08f
-        );
-    }
-
-    pAnimator->AddCustomAnimation(L"SPIT_OUT", pSpitOutAnim);
-
-    // ===========================================
-    // 19행: 내뱉은 투사체(별) 스프라이트 (1~4열) - 위에서 처리됨
-    // ===========================================
-    pAnimator->CreateAnimation(L"STAR_PROJECTILE", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 18),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 4, true);
-
-    // ===========================================
-    // 20행: 빨아들인 후 삼키기 상태 (1~6열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"SWALLOW", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 19),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.15f, 6, false);
-
-    // ===========================================
-    // 21행: 대미지를 받는 상태 (1~9열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"DAMAGE", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 20),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 9, false);
-
-    // ===========================================
-    // 22행: 빨아들인 후 대미지 상태 (1~4열)
-    // ===========================================
-    pAnimator->CreateAnimation(L"MOUTHFUL_DAMAGE", pKirbyTex,
-        Vec2(BORDER, BORDER + SPRITE_SIZE * 21),
-        Vec2(SPRITE_SIZE, SPRITE_SIZE),
-        Vec2(SPRITE_SIZE, 0),
-        0.1f, 4, false);
-
-    // 초기 애니메이션 재생
+    // 기본 애니메이션 설정
     pAnimator->Play(L"IDLE", true);
 }

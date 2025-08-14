@@ -187,11 +187,20 @@ public:
 };
 
 
+// =============================================================================
+// === 입력 시스템 ===
+// =============================================================================
+
+// 키 입력 상태 정보
 struct tKeyInfo
 {
 	KEY_STATE   eState;     // 키의 상태
 	bool        bPrevPush;  // 이전 프레임에 눌렸는지 여부
 };
+
+// =============================================================================
+// === 이벤트 시스템 ===
+// =============================================================================
 
 // 이벤트 구조체
 struct tEvent
@@ -213,6 +222,10 @@ struct tEvent
 	{}
 };
 
+// =============================================================================
+// === 애니메이션 시스템 ===
+// =============================================================================
+
 // 애니메이션 프레임 정보
 struct tAnimFrame
 {
@@ -233,63 +246,40 @@ struct tAnimFrame
 	{}
 };
 
-// 레벨 오브젝트 데이터 (타일 시각 타입 정보 추가)
-struct tLevelObjectData
+// 애니메이션 데이터 (파일 저장용)
+struct tAnimationData
 {
-	// 기본 필드들...
-	GROUP_TYPE eGroupType;
-	Vec2 vPos;
-	Vec2 vScale;
-	int iSubType;
-	int iTileVisualType;        // 기존 (호환성용)
+	wstring strName;                        // 애니메이션 이름
+	vector<tAnimFrame> vecFrames;           // 프레임 목록
+	bool bLoop;                             // 반복 재생 여부
 
-	// 새로 추가할 필드
-	int iCollisionType;         // COLLISION_TYPE을 int로 저장
+	tAnimationData()
+		: bLoop(true)
+	{}
 
-	tLevelObjectData()
-		: eGroupType(GROUP_TYPE::END)
-		, vPos(Vec2(0.f, 0.f))
-		, vScale(Vec2(64.f, 64.f))
-		, iSubType(0)
-		, iTileVisualType(-1)
-		, iCollisionType(-1)    // 새로 추가
+	tAnimationData(const wstring& _strName, bool _bLoop = true)
+		: strName(_strName)
+		, bLoop(_bLoop)
 	{}
 };
 
-// 레벨 전체 데이터 (배경 정보 + 경계 정보 추가)
-struct tLevelData
+// 파일 전체 데이터 (한 파일에 여러 애니메이션)
+struct tAnimationFileData
 {
-	// 기본 필드들...
-	wstring strLevelName;
-	int iVersion;
-	Vec2 vPlayerSpawn;
-	vector<tLevelObjectData> vecObjects;
+	wstring strTexturePath;                     // 텍스처 파일 경로
+	Vec2 vSpriteSize;                          // 기본 스프라이트 크기
+	int iBorder;                               // 테두리 크기
+	map<wstring, tAnimationData> mapAnimations; // 애니메이션 맵
 
-	// 배경 시스템 (수정된 부분)
-	int iBackgroundType;                // BACKGROUND_TYPE을 int로 저장
-
-	// 경계 시스템
-	Vec2 vLevelBoundsMin;
-	Vec2 vLevelBoundsMax;
-	float fGameOverY;
-
-	// 스테이지 이미지 시스템 
-	wstring strStageImagePath;
-	STAGE_IMAGE_TYPE eStageType;
-
-	// 기본 생성자 업데이트 필요
-	tLevelData()
-		: strLevelName(L"Untitled")
-		, iVersion(4)
-		, vPlayerSpawn(Vec2(640.f, 400.f))
-		, iBackgroundType(0)                    // BACKGROUND_TYPE::BACKGROUND1
-		, vLevelBoundsMin(Vec2(0.f, 0.f))
-		, vLevelBoundsMax(Vec2(3840.f, 2160.f))
-		, fGameOverY(2200.f)
-		, strStageImagePath(L"")
-		, eStageType(STAGE_IMAGE_TYPE::STAGE_01)
+	tAnimationFileData()
+		: vSpriteSize(32.f, 32.f)
+		, iBorder(1)
 	{}
 };
+
+// =============================================================================
+// === 충돌 시스템 ===
+// =============================================================================
 
 // 충돌체 속성을 나타내는 구조체
 struct tCollisionInfo
@@ -321,55 +311,21 @@ struct tCollisionInfo
 	{}
 };
 
-// 문 전환 데이터 구조체
-struct tDoorTransition
-{
-	SCENE_TYPE eTargetScene;    // 목표 씬
-	Vec2 vTargetPos;            // 목표 위치
-	wstring strTargetDoorID;    // 목표 문 ID
-	bool bIsValid;              // 유효한 데이터인지
+// =============================================================================
+// === 타일 시스템 ===
+// =============================================================================
 
-	tDoorTransition()
-		: eTargetScene(SCENE_TYPE::STAGE_01)
-		, vTargetPos(Vec2(100.f, 400.f))
-		, strTargetDoorID(L"")
-		, bIsValid(false)
-	{
-	}
-};
-
-// 레벨 데이터에 문 정보 추가용 확장 구조체
-struct tLevelObjectDataEx : public tLevelObjectData
-{
-	// 문 전용 확장 데이터
-	SCENE_TYPE eTargetScene;    // 문의 목표 씬
-	Vec2 vTargetPos;            // 문의 목표 위치
-	wstring strDoorID;          // 문 고유 ID
-	wstring strTargetDoorID;    // 연결된 문 ID
-	bool bIsLocked;             // 잠김 상태
-	float fInteractionRange;    // 상호작용 범위
-
-	tLevelObjectDataEx() : tLevelObjectData()
-		, eTargetScene(SCENE_TYPE::STAGE_01)
-		, vTargetPos(Vec2(100.f, 400.f))
-		, strDoorID(L"")
-		, strTargetDoorID(L"")
-		, bIsLocked(false)
-		, fInteractionRange(80.f)
-	{
-	}
-};
-
+// 타일 정보 구조체 (현재는 TRANSPARENT_BLOCK만 사용)
 struct tTileInfo
 {
 	TILE_VISUAL_TYPE eType;      // 타일 시각적 타입
 	Vec2 vDefaultSize;           // 기본 크기
 	bool bDecorative;            // 장식용 타일인가
 	bool bHarmful;               // 위험한 타일인가
-	wstring strTexturePath;      // 텍스처 경로 (더 이상 사용 안함)
+	wstring strTexturePath;      // 텍스처 경로
 
 	tTileInfo()
-		: eType(TILE_VISUAL_TYPE::GRASS_PLATFORM)
+		: eType(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK)
 		, vDefaultSize(Vec2(64.f, 64.f))
 		, bDecorative(false)
 		, bHarmful(false)
@@ -382,5 +338,85 @@ struct tTileInfo
 		, bDecorative(_bDecorative)
 		, bHarmful(_bHarmful)
 		, strTexturePath(_strPath)
+	{}
+};
+
+// =============================================================================
+// === 레벨 에디터 시스템 ===
+// =============================================================================
+
+// 레벨 객체 데이터 (타일 시각 타입 정보 추가)
+struct tLevelObjectData
+{
+	// 기본 필드들
+	GROUP_TYPE eGroupType;
+	Vec2 vPos;
+	Vec2 vScale;
+	int iSubType;
+	int iTileVisualType;
+	int iCollisionType;
+
+	tLevelObjectData()
+		: eGroupType(GROUP_TYPE::END)
+		, vPos(Vec2(0.f, 0.f))
+		, vScale(Vec2(64.f, 64.f))
+		, iSubType(0)
+		, iTileVisualType(-1)
+		, iCollisionType(-1)
+	{}
+};
+
+// 레벨 전체 데이터 (배경 정보 + 경계 정보 추가)
+struct tLevelData
+{
+	// 기본 필드들
+	wstring strLevelName;
+	int iVersion;
+	Vec2 vPlayerSpawn;
+	vector<tLevelObjectData> vecObjects;
+
+	// 배경 시스템
+	int iBackgroundType;
+
+	// 경계 시스템
+	Vec2 vLevelBoundsMin;
+	Vec2 vLevelBoundsMax;
+	float fGameOverY;
+
+	// 스테이지 이미지 시스템
+	wstring strStageImagePath;
+	STAGE_IMAGE_TYPE eStageType;
+	Vec2 vStageImagePos;
+
+	tLevelData()
+		: strLevelName(L"Untitled")
+		, iVersion(1)
+		, vPlayerSpawn(Vec2(320.f, 320.f))
+		, iBackgroundType(0)
+		, vLevelBoundsMin(Vec2(0.f, 0.f))
+		, vLevelBoundsMax(Vec2(4096.f, 640.f))
+		, fGameOverY(736.f)
+		, strStageImagePath(L"")
+		, eStageType(STAGE_IMAGE_TYPE::STAGE_01)
+		, vStageImagePos(Vec2(0.f, 0.f))
+	{}
+};
+
+// =============================================================================
+// === 문 전환 시스템 ===
+// =============================================================================
+
+// 레벨 데이터에 문 정보 추가용 확장 구조체
+struct tDoorObjectData : public tLevelObjectData
+{
+	// 문 전용 확장 데이터
+	SCENE_TYPE eTargetScene;    // 문의 목표 씬
+	Vec2 vTargetPos;            // 문의 목표 위치
+	float fInteractionRange;    // 상호작용 범위
+
+	tDoorObjectData() : tLevelObjectData()
+		, eTargetScene(SCENE_TYPE::STAGE_01)
+		, vTargetPos(Vec2(100.f, 400.f))
+		, fInteractionRange(80.f)
 	{}
 };

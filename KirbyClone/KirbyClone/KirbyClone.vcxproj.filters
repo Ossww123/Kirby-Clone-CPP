@@ -131,9 +131,6 @@
     <Filter Include="Engine\05. Scene\Scene_Stage\Stage02">
       <UniqueIdentifier>{2e2eb7a7-344d-4be9-9d96-178e72fdb02c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\04. Object\Door">
-      <UniqueIdentifier>{b87cb695-2453-43a7-a4da-58ff5d6c7efb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\06. Resource\StageImage">
       <UniqueIdentifier>{1ad94b0b-dc52-41d7-8fee-1e598b88d528}</UniqueIdentifier>
     </Filter>
@@ -142,6 +139,45 @@
     </Filter>
     <Filter Include="Engine\04. Object\Player\PlayerCollisionSystem">
       <UniqueIdentifier>{32bb63a9-4b8f-4b06-9057-f6405f4b534c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\AnimationDataMgr">
+      <UniqueIdentifier>{669de768-a536-4935-b171-e43c8e158895}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\SpecialObject\Door">
+      <UniqueIdentifier>{b87cb695-2453-43a7-a4da-58ff5d6c7efb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\Boss">
+      <UniqueIdentifier>{0f49b9fd-d0a5-4aab-8533-266ccb7ca993}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster">
+      <UniqueIdentifier>{49c34e67-79a3-48b1-82e8-ea58b1cdff82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster">
+      <UniqueIdentifier>{8f7222c5-b943-4088-92d0-97e82b3435a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\WaddleDee">
+      <UniqueIdentifier>{33b63b88-2b2d-4744-a918-5dcc7c508aad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\BrontoBurt">
+      <UniqueIdentifier>{d76764da-1bd9-4083-81c3-859fc7951c13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo">
+      <UniqueIdentifier>{2d3e6703-bb4c-4ea1-ace4-d475fd2b581b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead">
+      <UniqueIdentifier>{f2ec8010-e4aa-43d0-a798-8ed6361c1e54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky">
+      <UniqueIdentifier>{2c0919e5-a329-4087-bbee-8568fa1697d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\InvincibleMonster">
+      <UniqueIdentifier>{bfc279d5-d374-4b48-83e8-ff65eab7dd6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\InvincibleMonster\Gordo">
+      <UniqueIdentifier>{98e1b374-8173-4a52-9839-019d7e190791}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\Boss\WhispyWoods">
+      <UniqueIdentifier>{f48a561e-aae5-458f-8d39-3146e78b2391}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -297,7 +333,7 @@
       <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
     </ClInclude>
     <ClInclude Include="CDoor.h">
-      <Filter>Engine\04. Object\Door</Filter>
+      <Filter>Engine\04. Object\SpecialObject\Door</Filter>
     </ClInclude>
     <ClInclude Include="CStageImage.h">
       <Filter>Engine\06. Resource\StageImage</Filter>
@@ -307,6 +343,42 @@
     </ClInclude>
     <ClInclude Include="CPlayerCollisionSystem.h">
       <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CAnimationDataMgr.h">
+      <Filter>Engine\03. Manager\AnimationDataMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="CBasicMonster.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
+    </ClInclude>
+    <ClInclude Include="CWaddleDee.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
+    </ClInclude>
+    <ClInclude Include="CBrontoBurt.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\BrontoBurt</Filter>
+    </ClInclude>
+    <ClInclude Include="CCopyMonster.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster</Filter>
+    </ClInclude>
+    <ClInclude Include="CWaddleDoo.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo</Filter>
+    </ClInclude>
+    <ClInclude Include="CHotHead.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead</Filter>
+    </ClInclude>
+    <ClInclude Include="CSparky.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>
+    </ClInclude>
+    <ClInclude Include="CInvincibleMonster.h">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster</Filter>
+    </ClInclude>
+    <ClInclude Include="CGordo.h">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster\Gordo</Filter>
+    </ClInclude>
+    <ClInclude Include="CBoss.h">
+      <Filter>Engine\04. Object\Monster\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="CWhispyWoods.h">
+      <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -454,7 +526,7 @@
       <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
     </ClCompile>
     <ClCompile Include="CDoor.cpp">
-      <Filter>Engine\04. Object\Door</Filter>
+      <Filter>Engine\04. Object\SpecialObject\Door</Filter>
     </ClCompile>
     <ClCompile Include="CStageImage.cpp">
       <Filter>Engine\06. Resource\StageImage</Filter>
@@ -464,6 +536,42 @@
     </ClCompile>
     <ClCompile Include="CPlayerCollisionSystem.cpp">
       <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CAnimationDataMgr.cpp">
+      <Filter>Engine\03. Manager\AnimationDataMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="CBasicMonster.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
+    </ClCompile>
+    <ClCompile Include="CWaddleDee.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
+    </ClCompile>
+    <ClCompile Include="CBrontoBurt.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\BrontoBurt</Filter>
+    </ClCompile>
+    <ClCompile Include="CCopyMonster.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster</Filter>
+    </ClCompile>
+    <ClCompile Include="CWaddleDoo.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo</Filter>
+    </ClCompile>
+    <ClCompile Include="CHotHead.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead</Filter>
+    </ClCompile>
+    <ClCompile Include="CSparky.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>
+    </ClCompile>
+    <ClCompile Include="CInvincibleMonster.cpp">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster</Filter>
+    </ClCompile>
+    <ClCompile Include="CGordo.cpp">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster\Gordo</Filter>
+    </ClCompile>
+    <ClCompile Include="CBoss.cpp">
+      <Filter>Engine\04. Object\Monster\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="CWhispyWoods.cpp">
+      <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,13 @@
 #pragma once
 
 class CObject;
+class CWaddleDee;
+class CWaddleDoo;
+class CBrontoBurt;
+class CGordo;
+class CHotHead;
+class CSparky;
+class CWhispyWoods;
 
 class CObjectFactory
 {
@@ -20,6 +27,15 @@ public:
     static CObject* CreateTile(OBJECT_TYPE _eTileType, Vec2 _vPos);
     static CObject* CreateSpecialObject(OBJECT_TYPE _eObjectType, Vec2 _vPos);
 
+    // === 몬스터별 개별 생성 함수들 ===
+    static CWaddleDee* CreateWaddleDee(Vec2 _vPos);
+    static CWaddleDoo* CreateWaddleDoo(Vec2 _vPos);
+    static CBrontoBurt* CreateBrontoBurt(Vec2 _vPos);
+    static CGordo* CreateGordo(Vec2 _vPos);
+    static CHotHead* CreateHotHead(Vec2 _vPos);
+    static CSparky* CreateSparky(Vec2 _vPos);
+    static CWhispyWoods* CreateWhispyWoods(Vec2 _vPos);
+
     // 유틸리티 함수들
     static const wchar_t* GetObjectTypeName(OBJECT_TYPE _eType);
     static GROUP_TYPE GetObjectGroup(OBJECT_TYPE _eType);
@@ -30,11 +46,11 @@ public:
     static vector<OBJECT_TYPE> GetObjectTypesByCategory(const wstring& _strCategory);
     static vector<wstring> GetAvailableCategories();
 
-    // 새로 추가: 충돌체 시스템 관련 변환 함수들
+    // 충돌체 시스템 관련 변환 함수들
     static COLLISION_TYPE ConvertObjectTypeToCollisionType(OBJECT_TYPE _eObjectType);
     static OBJECT_TYPE ConvertCollisionTypeToObjectType(COLLISION_TYPE _eCollisionType);
 
-    // 새로 추가: 충돌체 타입 관련 유틸리티
+    // 충돌체 타입 관련 유틸리티
     static const wchar_t* GetCollisionTypeName(COLLISION_TYPE _eType);
     static COLORREF GetCollisionTypeColor(COLLISION_TYPE _eType);
     static vector<COLLISION_TYPE> GetAvailableCollisionTypes();

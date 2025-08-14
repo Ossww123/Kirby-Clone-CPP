@@ -19,7 +19,7 @@ CEditorObjectManager::CEditorObjectManager()
     , m_pCurrentBackground(nullptr)
     , m_eCurrentBgType(BACKGROUND_TYPE::BACKGROUND1)
     , m_vecBackgroundTypes{}
-    , m_eCurrentTileVisual(TILE_VISUAL_TYPE::GRASS_PLATFORM)
+    , m_eCurrentTileVisual(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK)
     , m_vecTileVisualTypes{}
     , m_iTileVisualIndex(0)
     , m_vPlayerSpawnPos(Vec2(640.f, 400.f))
@@ -260,6 +260,7 @@ const wchar_t* CEditorObjectManager::GetBackgroundName(BACKGROUND_TYPE _eType) c
 void CEditorObjectManager::InitializeTileVisualSystem()
 {
     // 사용 가능한 타일 시각 타입들 초기화
+    /*m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::GRASS_PLATFORM);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::DIRT_BLOCK);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::STONE_BLOCK);
@@ -268,10 +269,10 @@ void CEditorObjectManager::InitializeTileVisualSystem()
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::FLOWER);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::FENCE);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::SPIKE);
-    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::WATER);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::WATER);*/
 
     // 기본 타일 시각 타입 설정
-    m_eCurrentTileVisual = TILE_VISUAL_TYPE::GRASS_PLATFORM;
+    m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
     m_iTileVisualIndex = 0;
 }
 
@@ -295,7 +296,8 @@ const wchar_t* CEditorObjectManager::GetTileVisualName(TILE_VISUAL_TYPE _eType) 
 {
     switch (_eType)
     {
-    case TILE_VISUAL_TYPE::GRASS_PLATFORM:   return L"Grass Platform";
+    case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK: return L"Transparent Block";
+    /*case TILE_VISUAL_TYPE::GRASS_PLATFORM:   return L"Grass Platform";
     case TILE_VISUAL_TYPE::DIRT_BLOCK:       return L"Dirt Block";
     case TILE_VISUAL_TYPE::STONE_BLOCK:      return L"Stone Block";
     case TILE_VISUAL_TYPE::GRASS_BLOCK:      return L"Grass Block";
@@ -307,7 +309,7 @@ const wchar_t* CEditorObjectManager::GetTileVisualName(TILE_VISUAL_TYPE _eType) 
     case TILE_VISUAL_TYPE::LAVA:             return L"Lava";
     case TILE_VISUAL_TYPE::WATER:            return L"Water";
     case TILE_VISUAL_TYPE::MOVING_PLATFORM:  return L"Moving Platform";
-    case TILE_VISUAL_TYPE::BRIDGE:           return L"Bridge";
+    case TILE_VISUAL_TYPE::BRIDGE:           return L"Bridge";*/
     default:                                 return L"Unknown";
     }
 }
@@ -342,7 +344,7 @@ void CEditorObjectManager::ResetToDefault()
     ChangeBackground(BACKGROUND_TYPE::BACKGROUND1);
 
     // 기본 타일 비주얼로 설정
-    m_eCurrentTileVisual = TILE_VISUAL_TYPE::GRASS_PLATFORM;
+    m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
     m_iTileVisualIndex = 0;
 }
 

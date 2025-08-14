@@ -116,9 +116,13 @@ Vec2 CGrid::SnapToGrid(Vec2 _vPos)
     if (!m_bSnapToGrid)
         return _vPos;
 
-    // 그리드에 맞춰 스냅
-    float fSnappedX = round((_vPos.x - m_vGridOffset.x) / m_fGridSize) * m_fGridSize + m_vGridOffset.x;
-    float fSnappedY = round((_vPos.y - m_vGridOffset.y) / m_fGridSize) * m_fGridSize + m_vGridOffset.y;
+    // 모든 오브젝트가 그리드 셀의 중심에 배치되도록 수정
+    float fGridX = floor((_vPos.x - m_vGridOffset.x) / m_fGridSize);
+    float fGridY = floor((_vPos.y - m_vGridOffset.y) / m_fGridSize);
+
+    // 그리드 중심 + (그리드 크기 / 2) = 셀의 중심
+    float fSnappedX = fGridX * m_fGridSize + m_vGridOffset.x + (m_fGridSize / 2.f);
+    float fSnappedY = fGridY * m_fGridSize + m_vGridOffset.y + (m_fGridSize / 2.f);
 
     return Vec2(fSnappedX, fSnappedY);
 }

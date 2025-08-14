@@ -7,30 +7,38 @@ class CTileMgr
 {
     SINGLE(CTileMgr);
 
-private:
-    map<TILE_VISUAL_TYPE, CTexture*> m_mapTileTexture;   // 타일 시각 타입별 텍스처
-    map<TILE_VISUAL_TYPE, tTileInfo> m_mapTileInfo;      // 타일 정보
-
 public:
+    // === 핵심 생명주기 함수 ===
     void init();
 
-    // 타일 정보 관리
+public:
+    // === 타일 정보 관리 ===
     void RegisterTileInfo(const tTileInfo& _tileInfo);
-    tTileInfo* GetTileInfo(TILE_VISUAL_TYPE _eType);
-    Vec2 GetTileDefaultSize(TILE_VISUAL_TYPE _eType);
+    tTileInfo* GetTileInfo(TILE_VISUAL_TYPE _eType) const;
+    Vec2 GetTileDefaultSize(TILE_VISUAL_TYPE _eType) const;
 
-    // 타일 텍스처 관리
+private:
+    void CreateDefaultTileInfos();
+
+public:
+    // === 타일 텍스처 관리 ===
     CTexture* LoadTileTexture(TILE_VISUAL_TYPE _eVisualType, const wstring& _strTexturePath);
-    CTexture* FindTileTexture(TILE_VISUAL_TYPE _eVisualType);
+    CTexture* FindTileTexture(TILE_VISUAL_TYPE _eVisualType) const;
 
-    // 타일 시각 타입 관련 유틸리티
-    const wchar_t* GetTileVisualName(TILE_VISUAL_TYPE _eType);
-    vector<TILE_VISUAL_TYPE> GetAvailableTileVisualTypes();
+private:
+    void CreateDefaultTileTextures();
 
-    // 타일 속성 설정 도우미
+public:
+    // === 타일 시각 타입 유틸리티 ===
+    const wchar_t* GetTileVisualName(TILE_VISUAL_TYPE _eType) const;
+    vector<TILE_VISUAL_TYPE> GetAvailableTileVisualTypes() const;
+
+public:
+    // === 타일 속성 설정 도우미 ===
     void SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType);
 
 private:
-    void CreateDefaultTileInfos();       // 기본 타일 정보들 등록
-    void CreateDefaultTileTextures();    // 기본 타일 텍스처들 로드
+    // === 타일 데이터 ===
+    map<TILE_VISUAL_TYPE, CTexture*>    m_mapTileTexture;   // 타일 시각 타입별 텍스처
+    map<TILE_VISUAL_TYPE, tTileInfo>    m_mapTileInfo;      // 타일 정보
 };

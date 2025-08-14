@@ -2,91 +2,103 @@
 
 class CEditorCore;
 class CScene;
+class CDoor;
 
 class CEditorUI
 {
-private:
-    CEditorCore* m_pEditorCore;
-    CScene* m_pScene;
-
-    // UI 설정
-    int m_iUIWidth;
-    int m_iUIHeight;
-    int m_iUIMargin;
-    int m_iLineHeight;
-
-    // 객체 팔레트 관련
-    int m_iPaletteX;
-    int m_iPaletteY;
-    int m_iPaletteWidth;
-    int m_iPaletteHeight;
-    int m_iItemSize;
-    int m_iItemPadding;
-    int m_iItemsPerRow;
-
-    // 스크롤 관련
-    int m_iScrollOffset;
-    int m_iMaxScroll;
-
 public:
+    // === 핵심 생명주기 함수 ===
+    CEditorUI();
+    ~CEditorUI();
+
     void Initialize(CEditorCore* _pCore, CScene* _pScene);
     void Render(HDC _dc);
 
+public:
+    // === 오브젝트 팔레트 시스템 ===
+    void RenderObjectPalette(HDC _dc);
+    bool HandlePaletteClick(Vec2 vMousePos);
+    bool HandleStageImagePaletteClick(Vec2 vMousePos);
+    bool IsInPaletteArea(Vec2 vMousePos) const;
+
+public:
+    // === 속성 패널 시스템 ===
+    void RenderPropertyPanel(HDC _dc);
+    bool HandlePropertyPanelClick(Vec2 vMousePos);
+    bool IsInPropertyPanelArea(Vec2 vMousePos) const;
+
 private:
-    // UI 렌더링 세분화
-    void RenderMainUI(HDC _dc);
-    void RenderModeInfo(HDC _dc, int& yPos);
-    void RenderBackgroundSettings(HDC _dc, int& yPos);
-    void RenderObjectInfo(HDC _dc, int& yPos);
-    void RenderTileVisualSettings(HDC _dc, int& yPos);
-    void RenderGridInfo(HDC _dc, int& yPos);
-    void RenderObjectCount(HDC _dc, int& yPos);
-    void RenderControlInstructions(HDC _dc, int& yPos);
-    void RenderBackgroundModeUI(HDC _dc, int& yPos);
-    void RenderLevelBounds(HDC _dc, int& yPos);
+    // === 속성 패널 렌더링 ===
+    void RenderPropertyPanelBackground(HDC _dc);
+    void RenderPropertyPanelHeader(HDC _dc);
+    void RenderDoorProperties(HDC _dc, CDoor* _pDoor);
+    void RenderNoSelection(HDC _dc);
 
-    // UI 구성 요소 렌더링
-    void RenderUIHeader(HDC _dc, int& yPos);
-    void RenderSeparatorLine(HDC _dc, int yPos);
-    void RenderHighlightBox(HDC _dc, int x, int y, int width, int height);
+private:
+    // === 문 속성 편집 ===
+    bool HandleDoorPropertyEdit(CDoor* _pDoor, Vec2 _vPos);
+    void RenderSceneDropdown(HDC _dc, SCENE_TYPE _currentScene, int _x, int _y, int _width, int _height);
+    void RenderInputField(HDC _dc, const wchar_t* _label, float _value, int _x, int _y, int _width);
 
-    // 팔레트 세부 렌더링
+private:
+    // === 씬 이름 반환 유틸리티 ===
+    const wchar_t* GetSceneName(SCENE_TYPE _eScene) const;
+
+private:
+    // === 팔레트 렌더링 ===
     void RenderPaletteBackground(HDC _dc);
     void RenderPaletteHeader(HDC _dc);
     void RenderPaletteItems(HDC _dc);
     void RenderPaletteItem(HDC _dc, int index, OBJECT_TYPE objType, int x, int y, bool selected);
-    void RenderObjectIcon(HDC _dc, OBJECT_TYPE objType, int x, int y, int size);
 
-    // 새로 추가: 충돌체 관련 렌더링 함수들
+    // === 아이콘 렌더링 ===
+    void RenderObjectIcon(HDC _dc, OBJECT_TYPE objType, int x, int y, int size);
     void RenderCollisionIcon(HDC _dc, COLLISION_TYPE collisionType, int centerX, int centerY);
-    void RenderCollisionPalette(HDC _dc);                    // 충돌체 전용 팔레트 (선택사항)
-    void RenderStageImagePalette(HDC _dc);                   // 스테이지 이미지 팔레트 (선택사항)
-    void RenderCollisionTooltip(HDC _dc, OBJECT_TYPE objType, int mouseX, int mouseY);
+
+    // === 특수 팔레트 렌더링 ===
+    void RenderCollisionPalette(HDC _dc);
+    void RenderStageImagePalette(HDC _dc);
     void RenderStageImageItem(HDC _dc, STAGE_IMAGE_TYPE stageType, int x, int y, bool selected);
     void RenderStageImageIcon(HDC _dc, STAGE_IMAGE_TYPE stageType, int centerX, int centerY);
 
-    // UI 유틸리티
-    void DrawUIBackground(HDC _dc);
+    // === 팔레트 유틸리티 ===
+    int GetPaletteItemAt(Vec2 vMousePos) const;
+    void CalculatePaletteLayout();
+
+public:
+    // === 텍스트 렌더링 유틸리티 ===
     void SetupTextStyle(HDC _dc, COLORREF color);
     void RenderText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color = RGB(255, 255, 255));
     void RenderBoldText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color = RGB(255, 255, 100));
 
-public:
-    // 객체 팔레트 렌더링
-    void RenderObjectPalette(HDC _dc);
-    bool HandlePaletteClick(Vec2 vMousePos);
-    bool HandleStageImagePaletteClick(Vec2 vMousePos);
-    //void UpdatePaletteScroll(int deltaY);
-
-    // 팔레트 유틸리티
-    int GetPaletteItemAt(Vec2 vMousePos);
-    bool IsInPaletteArea(Vec2 vMousePos);
-    void CalculatePaletteLayout();
-
-    // 폰트 관리
+private:
+    // === 폰트 관리 ===
     HFONT CreateUIFont(int size = 14, bool bold = false);
 
-public:
-    CEditorUI();
-    ~CEditorUI();
+    // === 툴팁 시스템 ===
+    void RenderCollisionTooltip(HDC _dc, OBJECT_TYPE objType, int mouseX, int mouseY);
+
+private:
+    // === 에디터 시스템 참조 ===
+    CEditorCore* m_pEditorCore;
+    CScene* m_pScene;
+
+    // === 팔레트 레이아웃 ===
+    int                 m_iPaletteX;
+    int                 m_iPaletteY;
+    int                 m_iPaletteWidth;
+    int                 m_iPaletteHeight;
+    int                 m_iItemSize;
+    int                 m_iItemPadding;
+    int                 m_iItemsPerRow;
+
+    // === 속성 패널 레이아웃 ===
+    int                 m_iPropertyPanelX;
+    int                 m_iPropertyPanelY; 
+    int                 m_iPropertyPanelWidth;      // 속성 패널 너비 (팔레트와 동일)
+    int                 m_iPropertyPanelHeight;
+
+    // === 스크롤 관련 ===
+    int                 m_iScrollOffset;
+    int                 m_iMaxScroll;
 };

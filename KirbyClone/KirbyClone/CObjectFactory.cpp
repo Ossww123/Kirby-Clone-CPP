@@ -1,7 +1,16 @@
 #include "pch.h"
 #include "CObjectFactory.h"
-#include "CTileMgr.h"
 
+// 몬스터 클래스들 include
+#include "CWaddleDee.h"
+#include "CWaddleDoo.h"
+#include "CBrontoBurt.h"
+#include "CGordo.h"
+#include "CHotHead.h"
+#include "CSparky.h"
+#include "CWhispyWoods.h"
+
+#include "CTileMgr.h"
 #include "CObject.h"
 #include "CPlayer.h"
 #include "CCollider.h"
@@ -27,9 +36,11 @@ CObject* CObjectFactory::CreateObject(OBJECT_TYPE _eType, Vec2 _vPos)
 
         // 몬스터 타입들
     case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-    case OBJECT_TYPE::MONSTER_GORDOS:
+    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
     case OBJECT_TYPE::MONSTER_BRONTO_BURT:
+    case OBJECT_TYPE::MONSTER_GORDOS:
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
+    case OBJECT_TYPE::MONSTER_SPARKY:
         pObject = CreateMonster(_eType, _vPos);
         break;
 
@@ -46,12 +57,12 @@ CObject* CObjectFactory::CreateObject(OBJECT_TYPE _eType, Vec2 _vPos)
     case OBJECT_TYPE::TILE_SPIKE:
     case OBJECT_TYPE::TILE_WATER:
     case OBJECT_TYPE::TILE_WARP_STAR:
-    case OBJECT_TYPE::TILE_PLATFORM:      // 새로 추가
-    case OBJECT_TYPE::TILE_LAVA:          // 새로 추가
-    case OBJECT_TYPE::TILE_ONE_WAY:       // 새로 추가
-    case OBJECT_TYPE::TILE_MOVING:        // 새로 추가
-    case OBJECT_TYPE::TILE_BREAKABLE:     // 새로 추가
-    case OBJECT_TYPE::TILE_INVISIBLE:     // 새로 추가
+    case OBJECT_TYPE::TILE_PLATFORM: 
+    case OBJECT_TYPE::TILE_LAVA:     
+    case OBJECT_TYPE::TILE_ONE_WAY:  
+    case OBJECT_TYPE::TILE_MOVING:   
+    case OBJECT_TYPE::TILE_BREAKABLE:
+    case OBJECT_TYPE::TILE_INVISIBLE:
         pObject = CreateTile(_eType, _vPos);
         break;
 
@@ -87,37 +98,33 @@ CObject* CObjectFactory::CreatePlayer(Vec2 _vPos)
 
 CObject* CObjectFactory::CreateMonster(OBJECT_TYPE _eMonsterType, Vec2 _vPos)
 {
-    CMonster* pMonster = new CMonster;
-    pMonster->SetPos(_vPos);
-    pMonster->SetMonsterType(_eMonsterType);  // 몬스터 타입 설정
+    CObject* pMonster = nullptr;
 
-    // 몬스터 타입에 따른 기본 설정
+    // 각 몬스터별 전용 생성 함수 호출
     switch (_eMonsterType)
     {
     case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-        pMonster->SetScale(Vec2(16.f, 16.f));
+        pMonster = CreateWaddleDee(_vPos);
         break;
     case OBJECT_TYPE::MONSTER_WADDLE_DOO:
-        pMonster->SetScale(Vec2(16.f, 16.f));
+        pMonster = CreateWaddleDoo(_vPos);
         break;
     case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-        pMonster->SetScale(Vec2(16.f, 16.f));
+        pMonster = CreateBrontoBurt(_vPos);
         break;
     case OBJECT_TYPE::MONSTER_GORDOS:
-        pMonster->SetScale(Vec2(16.f, 16.f));
+        pMonster = CreateGordo(_vPos);
         break;
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
-        pMonster->SetScale(Vec2(16.f, 16.f));
+        pMonster = CreateHotHead(_vPos);
         break;
     case OBJECT_TYPE::MONSTER_SPARKY:
-        pMonster->SetScale(Vec2(16.f, 16.f));
+        pMonster = CreateSparky(_vPos);
         break;
     default:
-        pMonster->SetScale(Vec2(16.f, 16.f));
-        break;
+        return nullptr;
     }
 
-    SetupMonsterAI(pMonster, _eMonsterType);
     return pMonster;
 }
 
@@ -158,6 +165,7 @@ CObject* CObjectFactory::CreateTile(OBJECT_TYPE _eTileType, Vec2 _vPos)
 {
     CTile* pTile = new CTile;
     pTile->SetTileType(_eTileType);  // 호환성용으로 유지
+    pTile->SetType(_eTileType);
 
     // 모든 타일은 기본적으로 64x64 (한 타일 크기)
     pTile->SetScale(Vec2(64.f, 64.f));
@@ -186,7 +194,6 @@ CObject* CObjectFactory::CreateSpecialObject(OBJECT_TYPE _eObjectType, Vec2 _vPo
         // 기본 문 설정
         pDoor->SetTargetScene(SCENE_TYPE::STAGE_02);
         pDoor->SetTargetPosition(Vec2(100.f, 400.f));
-        pDoor->SetDoorID(L"DefaultDoor");
 
         pObject = pDoor;
     }
@@ -224,6 +231,93 @@ CObject* CObjectFactory::CreateSpecialObject(OBJECT_TYPE _eObjectType, Vec2 _vPo
 
     return pObject;
 }
+
+CWaddleDee* CObjectFactory::CreateWaddleDee(Vec2 _vPos)
+{
+    CWaddleDee* pWaddleDee = new CWaddleDee;
+    pWaddleDee->SetPos(_vPos);
+    pWaddleDee->SetScale(Vec2(64.f, 64.f));
+
+    // 웨이들 디 전용 설정
+    // (생성자에서 대부분 처리되므로 추가 설정은 최소화)
+
+    return pWaddleDee;
+}
+
+CWaddleDoo* CObjectFactory::CreateWaddleDoo(Vec2 _vPos)
+{
+    CWaddleDoo* pWaddleDoo = new CWaddleDoo;
+    pWaddleDoo->SetPos(_vPos);
+    pWaddleDoo->SetScale(Vec2(64.f, 64.f));
+
+    // 웨이들 두 전용 설정
+    // pWaddleDoo->SetAttackRange(150.f);  // 공격 범위 설정 예시
+
+    return pWaddleDoo;
+}
+
+CBrontoBurt* CObjectFactory::CreateBrontoBurt(Vec2 _vPos)
+{
+    CBrontoBurt* pBrontoBurt = new CBrontoBurt;
+    pBrontoBurt->SetPos(_vPos);
+    pBrontoBurt->SetScale(Vec2(72.f, 64.f));  // 약간 더 큰 크기
+
+    // 브론토 버트 전용 설정
+    // pBrontoBurt->SetFlightHeight(_vPos.y);  // 비행 기준 높이 설정
+
+    return pBrontoBurt;
+}
+
+CGordo* CObjectFactory::CreateGordo(Vec2 _vPos)
+{
+    CGordo* pGordo = new CGordo;
+    pGordo->SetPos(_vPos);
+    pGordo->SetScale(Vec2(80.f, 80.f));  // 더 큰 크기
+
+    // 고르도 전용 설정
+    // pGordo->SetMoveDirection(GORDO_MOVE_TYPE::HORIZONTAL);  // 이동 방향 설정
+
+    return pGordo;
+}
+
+CHotHead* CObjectFactory::CreateHotHead(Vec2 _vPos)
+{
+    CHotHead* pHotHead = new CHotHead;
+    pHotHead->SetPos(_vPos);
+    pHotHead->SetScale(Vec2(64.f, 64.f));
+
+    // 핫 헤드 전용 설정
+    // pHotHead->SetFireRange(120.f);  // 화염 공격 범위 설정
+
+    return pHotHead;
+}
+
+CSparky* CObjectFactory::CreateSparky(Vec2 _vPos)
+{
+    CSparky* pSparky = new CSparky;
+    pSparky->SetPos(_vPos);
+    pSparky->SetScale(Vec2(64.f, 64.f));
+
+    // 스파키 전용 설정
+    // pSparky->SetElectricRange(100.f);  // 전기 공격 범위 설정
+
+    return pSparky;
+}
+
+CWhispyWoods* CObjectFactory::CreateWhispyWoods(Vec2 _vPos)
+{
+    CWhispyWoods* pWhispyWoods = new CWhispyWoods;
+    pWhispyWoods->SetPos(_vPos);
+    pWhispyWoods->SetScale(Vec2(128.f, 160.f));  // 큰 보스 크기
+
+    // 위스피 우드 전용 설정
+    // pWhispyWoods->SetBossHP(1000);      // 보스 체력 설정
+    // pWhispyWoods->SetBossPhase(BOSS_PHASE::INTRO);  // 초기 페이즈
+
+    return pWhispyWoods;
+}
+
+
 
 const wchar_t* CObjectFactory::GetObjectTypeName(OBJECT_TYPE _eType)
 {
@@ -371,7 +465,7 @@ vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory(const wstring& _str
     else if (_strCategory == L"Collision" || _strCategory == L"Tile")
     {
         result.push_back(OBJECT_TYPE::TILE_GROUND);
-        result.push_back(OBJECT_TYPE::TILE_PLATFORM);
+        /*result.push_back(OBJECT_TYPE::TILE_PLATFORM);
         result.push_back(OBJECT_TYPE::TILE_ONE_WAY);
         result.push_back(OBJECT_TYPE::TILE_SPIKE);
         result.push_back(OBJECT_TYPE::TILE_WATER);
@@ -379,13 +473,13 @@ vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory(const wstring& _str
         result.push_back(OBJECT_TYPE::TILE_MOVING);
         result.push_back(OBJECT_TYPE::TILE_BREAKABLE);
         result.push_back(OBJECT_TYPE::TILE_INVISIBLE);
-        result.push_back(OBJECT_TYPE::TILE_WARP_STAR);
+        result.push_back(OBJECT_TYPE::TILE_WARP_STAR);*/
     }
     else if (_strCategory == L"Special")
     {
         result.push_back(OBJECT_TYPE::OBJECT_DOOR);
-        result.push_back(OBJECT_TYPE::OBJECT_SWITCH);
-        result.push_back(OBJECT_TYPE::OBJECT_MIRROR);
+        /*result.push_back(OBJECT_TYPE::OBJECT_SWITCH);
+        result.push_back(OBJECT_TYPE::OBJECT_MIRROR);*/
     }
 
     return result;

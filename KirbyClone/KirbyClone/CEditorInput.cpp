@@ -39,6 +39,7 @@ void CEditorInput::Update()
     UpdateFileInput();          // 파일 작업 (Ctrl 조합)
     UpdateGridInput();          // 그리드 설정
     UpdateModeInput();          // 모드 전환
+    UpdateSelectedObjectInput(); // 선택된 오브젝트 편집
     UpdateMouseInput();         // 마우스 처리
     UpdateObjectSelection();    // 오브젝트 선택 (Tab 키)
     HandleModeSpecificInput();  // 현재 모드에 특화된 입력
@@ -186,6 +187,25 @@ void CEditorInput::UpdateModeInput()
     {
         m_pEditorCore->ChangeMode(EDITOR_MODE::PLAYER_SPAWN);
     }
+}
+
+void CEditorInput::UpdateSelectedObjectInput()
+{
+    // 선택된 오브젝트가 있을 때만 처리
+    CObject* pSelected = m_pEditorCore->GetSelectedObject();
+    if (!pSelected)
+        return;
+
+    // 문 오브젝트인 경우 속성 편집
+    if (pSelected->GetType() == OBJECT_TYPE::OBJECT_DOOR)
+    {
+        CDoor* pDoor = dynamic_cast<CDoor*>(pSelected);
+        if (pDoor)
+        {
+            HandleDoorPropertyInput(pDoor);
+        }
+    }
+    // 다른 특수 오브젝트들도 추후 추가 가능
 }
 
 void CEditorInput::UpdateMouseInput()
@@ -414,6 +434,75 @@ void CEditorInput::HandleStageImageModeInput()
             pCurrent->SetImageToBottomLeft();
         }
     }
+}
+
+void CEditorInput::HandleDoorPropertyInput(CDoor* _pDoor)
+{
+    // 목표 씬 변경 (1~2 키)
+    if (KEY_TAP(KEY::ALPHA_1))
+    {
+        _pDoor->SetTargetScene(SCENE_TYPE::STAGE_01);
+        ShowDoorPropertyChanged(_pDoor, L"목표 씬을 '스테이지 1'로 변경");
+    }
+    else if (KEY_TAP(KEY::ALPHA_2))
+    {
+        _pDoor->SetTargetScene(SCENE_TYPE::STAGE_02);
+        ShowDoorPropertyChanged(_pDoor, L"목표 씬을 '스테이지 2'로 변경");
+    }
+
+    // 목표 위치 조정 (Q/W/A/S 키)
+    Vec2 currentPos = _pDoor->GetTargetPosition();
+    bool posChanged = false;
+    float moveStep = 32.f; // 그리드 크기에 맞춤
+
+    if (KEY_TAP(KEY::Q))
+    {
+        currentPos.x -= moveStep;
+        posChanged = true;
+    }
+    else if (KEY_TAP(KEY::W))
+    {
+        currentPos.x += moveStep;
+        posChanged = true;
+    }
+    else if (KEY_TAP(KEY::A))
+    {
+        currentPos.y -= moveStep;
+        posChanged = true;
+    }
+    else if (KEY_TAP(KEY::S))
+    {
+        currentPos.y += moveStep;
+        posChanged = true;
+    }
+
+    // 위치가 변경되었으면 적용
+    if (posChanged)
+    {
+        _pDoor->SetTargetPosition(currentPos);
+
+        wchar_t szMessage[128];
+        swprintf_s(szMessage, L"목표 위치를 (%.0f, %.0f)로 변경", currentPos.x, currentPos.y);
+        ShowDoorPropertyChanged(_pDoor, szMessage);
+    }
+
+    // 기본 위치로 리셋 (R 키)
+    if (KEY_TAP(KEY::R))
+    {
+        _pDoor->SetTargetPosition(Vec2(256.f, 384.f)); // 기본 위치
+        ShowDoorPropertyChanged(_pDoor, L"목표 위치를 기본값으로 리셋");
+    }
+}
+
+void CEditorInput::ShowDoorPropertyChanged(CDoor* _pDoor, const wchar_t* _message)
+{
+    // 윈도우 타이틀에 변경 사항 표시 (임시 피드백)
+    wchar_t szTitle[256];
+    swprintf_s(szTitle, L"Door Editor - %s", _message);
+    SetWindowText(CCore::GetInst()->GetMainHwnd(), szTitle);
+
+    // 또는 콘솔 출력으로 디버그 정보 표시
+    wprintf(L"[Door Property] %s\n", _message);
 }
 
 void CEditorInput::HandleStageImageClick()

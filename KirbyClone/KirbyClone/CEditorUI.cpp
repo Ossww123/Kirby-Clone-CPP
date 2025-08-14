@@ -12,14 +12,12 @@
 #include "CTexture.h"
 #include "CStageImage.h"
 #include "CStageMgr.h"
+#include "CObject.h"
+#include "CDoor.h"
 
 CEditorUI::CEditorUI()
     : m_pEditorCore(nullptr)
     , m_pScene(nullptr)
-    , m_iUIWidth(450)
-    , m_iUIHeight(800)
-    , m_iUIMargin(10)
-    , m_iLineHeight(18)
 {
 }
 
@@ -47,6 +45,12 @@ void CEditorUI::Initialize(CEditorCore* _pCore, CScene* _pScene)
     m_iItemsPerRow = 4;              // 한 줄에 4개씩
     m_iScrollOffset = 0;
 
+    // 속성 패널 레이아웃 설정 - 팔레트 바로 아래
+    m_iPropertyPanelX = m_iPaletteX;                           // 팔레트와 같은 X
+    m_iPropertyPanelY = m_iPaletteY + m_iPaletteHeight + 10;   // 팔레트 아래 10px 간격
+    m_iPropertyPanelWidth = m_iPaletteWidth;                   // 팔레트와 같은 너비
+    m_iPropertyPanelHeight = 250;
+
     CalculatePaletteLayout();
 }
 
@@ -55,361 +59,8 @@ void CEditorUI::Render(HDC _dc)
     if (!m_pEditorCore->IsShowUI())
         return;
 
-    //RenderMainUI(_dc);
     RenderObjectPalette(_dc);
-}
-
-void CEditorUI::RenderMainUI(HDC _dc)
-{
-    // 툴바 높이만큼 아래로 이동한 위치에서 시작
-    int toolbarHeight = m_pEditorCore->GetToolbar()->GetToolbarHeight();
-    int adjustedUITop = m_iUIMargin + toolbarHeight;
-
-    // UI 패널 배경 그리기
-    HBRUSH hBrush = CreateSolidBrush(RGB(30, 30, 30));
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Rectangle(_dc, m_iUIMargin, adjustedUITop, m_iUIWidth, m_iUIHeight + adjustedUITop);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hBrush);
-
-    // 테두리
-    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    HBRUSH hOldBrush2 = (HBRUSH)SelectObject(_dc, hHollowBrush);
-    Rectangle(_dc, m_iUIMargin, adjustedUITop, m_iUIWidth, m_iUIHeight + adjustedUITop);
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush2);
-    DeleteObject(hPen);
-
-    // 텍스트 기본 설정
-    SetBkMode(_dc, TRANSPARENT);
-
-    int yPos = adjustedUITop + 20; // 툴바 아래에서 시작
-
-    // UI 섹션별 렌더링
-    RenderUIHeader(_dc, yPos);
-    RenderModeInfo(_dc, yPos);
-    RenderBackgroundSettings(_dc, yPos);
-    RenderObjectInfo(_dc, yPos);
-    RenderTileVisualSettings(_dc, yPos);
-    RenderGridInfo(_dc, yPos);
-    RenderLevelBounds(_dc, yPos);
-    RenderObjectCount(_dc, yPos);
-    RenderControlInstructions(_dc, yPos);
-    RenderBackgroundModeUI(_dc, yPos);
-}
-
-void CEditorUI::RenderUIHeader(HDC _dc, int& yPos)
-{
-    // 제목
-    HFONT hFont = CreateUIFont(16, true);
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
-
-    RenderBoldText(_dc, 20, yPos, L"=== KIRBY LEVEL EDITOR ===", RGB(255, 255, 100));
-
-    SelectObject(_dc, hOldFont);
-    DeleteObject(hFont);
-    yPos += 25;
-}
-
-void CEditorUI::RenderModeInfo(HDC _dc, int& yPos)
-{
-    // 현재 모드 표시
-    wchar_t szBuffer[256];
-    swprintf_s(szBuffer, L"Mode: %s", m_pEditorCore->GetModeString());
-    RenderBoldText(_dc, 20, yPos, szBuffer, RGB(100, 255, 100));
-    yPos += m_iLineHeight + 5;
-}
-
-void CEditorUI::RenderBackgroundSettings(HDC _dc, int& yPos)
-{
-    yPos += 5;
-    RenderBoldText(_dc, 20, yPos, L"Background Settings:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    // 현재 배경 표시
-    wchar_t szBgBuffer[256];
-    const wchar_t* szCurrentBgName = m_pEditorCore->GetObjectManager()->GetBackgroundName(
-        m_pEditorCore->GetObjectManager()->GetCurrentBackgroundType());
-    swprintf_s(szBgBuffer, L"Current: %s", szCurrentBgName);
-    RenderText(_dc, 20, yPos, szBgBuffer);
-    yPos += m_iLineHeight;
-
-    // 배경 변경 단축키 안내
-    RenderText(_dc, 20, yPos, L"B - Background Mode", RGB(200, 200, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"Q / E - Change Background", RGB(200, 200, 255));
-    yPos += m_iLineHeight + 5;
-}
-
-void CEditorUI::RenderObjectInfo(HDC _dc, int& yPos)
-{
-    EDITOR_MODE eMode = m_pEditorCore->GetCurrentMode();
-
-    // 현재 선택된 오브젝트 정보
-    if (eMode == EDITOR_MODE::PLACE_MONSTER ||
-        eMode == EDITOR_MODE::PLACE_ITEM ||
-        eMode == EDITOR_MODE::PLACE_TILE ||
-        eMode == EDITOR_MODE::PLACE_SPECIAL)
-    {
-        RenderBoldText(_dc, 20, yPos, L"Selected Object:", RGB(255, 255, 100));
-        yPos += m_iLineHeight;
-
-        wchar_t szBuffer[256];
-        const vector<OBJECT_TYPE>& vecCategory = m_pEditorCore->GetObjectManager()->GetCurrentCategory();
-        swprintf_s(szBuffer, L"%s (%d/%d)",
-            m_pEditorCore->GetObjectManager()->GetCurrentObjectName(),
-            m_pEditorCore->GetObjectManager()->GetCurrentSubType() + 1,
-            (int)vecCategory.size());
-        RenderText(_dc, 20, yPos, szBuffer);
-        yPos += m_iLineHeight + 5;
-    }
-}
-
-void CEditorUI::RenderTileVisualSettings(HDC _dc, int& yPos)
-{
-    // 타일 모드일 때만 표시
-    if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_TILE)
-    {
-        RenderBoldText(_dc, 20, yPos, L"Tile Visual Settings:", RGB(255, 255, 100));
-        yPos += m_iLineHeight;
-
-        // 현재 타일 시각 타입 표시
-        wchar_t szTileBuffer[256];
-        const wchar_t* szCurrentTileName = m_pEditorCore->GetObjectManager()->GetTileVisualName(
-            m_pEditorCore->GetObjectManager()->GetCurrentTileVisual());
-        swprintf_s(szTileBuffer, L"Visual: %s", szCurrentTileName);
-        RenderText(_dc, 20, yPos, szTileBuffer);
-        yPos += m_iLineHeight;
-
-        // 타일 변경 단축키 안내
-        RenderText(_dc, 20, yPos, L"Q / E - Change Tile Visual", RGB(200, 200, 255));
-        yPos += m_iLineHeight + 5;
-    }
-}
-
-void CEditorUI::RenderGridInfo(HDC _dc, int& yPos)
-{
-    RenderBoldText(_dc, 20, yPos, L"Grid Settings:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    wchar_t szBuffer[256];
-
-    swprintf_s(szBuffer, L"Size: %.0fpx", CGrid::GetInst()->GetGridSize());
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight;
-
-    swprintf_s(szBuffer, L"Show: %s", CGrid::GetInst()->IsShowGrid() ? L"ON" : L"OFF");
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight;
-
-    swprintf_s(szBuffer, L"Snap: %s", CGrid::GetInst()->IsSnapToGrid() ? L"ON" : L"OFF");
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight + 5;
-}
-
-void CEditorUI::RenderObjectCount(HDC _dc, int& yPos)
-{
-    RenderBoldText(_dc, 20, yPos, L"Object Count:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    wchar_t szBuffer[256];
-
-    const vector<CObject*>& vecPlayer = m_pScene->GetGroupObject(GROUP_TYPE::PLAYER);
-    const vector<CObject*>& vecMonster = m_pScene->GetGroupObject(GROUP_TYPE::MONSTER);
-    const vector<CObject*>& vecItem = m_pScene->GetGroupObject(GROUP_TYPE::ITEM);
-    const vector<CObject*>& vecTile = m_pScene->GetGroupObject(GROUP_TYPE::TILE);
-    const vector<CObject*>& vecSpecial = m_pScene->GetGroupObject(GROUP_TYPE::SPECIAL);
-
-    swprintf_s(szBuffer, L"Players: %d", (int)vecPlayer.size());
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight;
-
-    swprintf_s(szBuffer, L"Monsters: %d", (int)vecMonster.size());
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight;
-
-    swprintf_s(szBuffer, L"Items: %d", (int)vecItem.size());
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight;
-
-    swprintf_s(szBuffer, L"Tiles: %d", (int)vecTile.size());
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight;
-
-    swprintf_s(szBuffer, L"Special: %d", (int)vecSpecial.size());
-    RenderText(_dc, 20, yPos, szBuffer);
-    yPos += m_iLineHeight + 10;
-}
-
-void CEditorUI::RenderControlInstructions(HDC _dc, int& yPos)
-{
-    // 구분선
-    RenderSeparatorLine(_dc, yPos);
-    yPos += 10;
-
-    // 컨트롤 안내
-    RenderBoldText(_dc, 20, yPos, L"Object Placement:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    RenderText(_dc, 20, yPos, L"M - Monster Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"I - Item Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"T - Tile Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"P - Special Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"B - Background Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"R - Player Spawn Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-
-    yPos += 3;
-    RenderText(_dc, 20, yPos, L"Tab - Next Object", RGB(200, 200, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"Shift+Tab - Prev Object", RGB(200, 200, 255));
-    yPos += m_iLineHeight;
-
-    yPos += 5;
-    RenderBoldText(_dc, 20, yPos, L"Edit Tools:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    RenderText(_dc, 20, yPos, L"S - Select Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"E - Erase Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"ESC - Normal Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-
-    yPos += 5;
-    RenderBoldText(_dc, 20, yPos, L"File & Navigation:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    RenderText(_dc, 20, yPos, L"F - Quick Save", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"L - Quick Load", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-
-    RenderText(_dc, 20, yPos, L"Ctrl+S - Save As...", RGB(200, 255, 200));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"Ctrl+O - Open File...", RGB(200, 255, 200));
-    yPos += m_iLineHeight;
-
-    RenderText(_dc, 20, yPos, L"Ctrl+T - Game Mode", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-
-    yPos += 5;
-    RenderBoldText(_dc, 20, yPos, L"View Controls:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    RenderText(_dc, 20, yPos, L"G - Toggle Grid", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"1,2,3,4 - Grid Size", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"Arrow Keys - Camera", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-    RenderText(_dc, 20, yPos, L"H - Toggle UI", RGB(255, 255, 255));
-    yPos += m_iLineHeight;
-}
-
-void CEditorUI::RenderBackgroundModeUI(HDC _dc, int& yPos)
-{
-    // 배경 모드일 때 특별한 UI 표시
-    if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::BACKGROUND)
-    {
-        yPos += 10;
-
-        // 배경 모드 전용 하이라이트 박스
-        RenderHighlightBox(_dc, 15, yPos - 5, 420, 80);
-
-        RenderBoldText(_dc, 20, yPos, L"=== BACKGROUND MODE ===", RGB(255, 255, 100));
-        yPos += m_iLineHeight + 5;
-
-        RenderText(_dc, 20, yPos, L"Available Backgrounds:", RGB(255, 255, 255));
-        yPos += m_iLineHeight;
-
-        // 사용 가능한 배경 목록 표시
-        const vector<BACKGROUND_TYPE>& vecBgTypes = m_pEditorCore->GetObjectManager()->GetBackgroundTypes();
-        BACKGROUND_TYPE eCurrentBg = m_pEditorCore->GetObjectManager()->GetCurrentBackgroundType();
-
-        for (size_t i = 0; i < vecBgTypes.size(); ++i)
-        {
-            const wchar_t* szBgName = m_pEditorCore->GetObjectManager()->GetBackgroundName(vecBgTypes[i]);
-
-            // 현재 선택된 배경은 하이라이트
-            if (vecBgTypes[i] == eCurrentBg)
-            {
-                wchar_t szSelectedBg[256];
-                swprintf_s(szSelectedBg, L"-> %s (Selected)", szBgName);
-                RenderBoldText(_dc, 25, yPos, szSelectedBg, RGB(255, 255, 100));
-            }
-            else
-            {
-                wchar_t szBgEntry[256];
-                swprintf_s(szBgEntry, L"   %s", szBgName);
-                RenderText(_dc, 25, yPos, szBgEntry, RGB(200, 200, 200));
-            }
-            yPos += m_iLineHeight;
-        }
-
-        RenderText(_dc, 20, yPos, L"Click or Q/E to change", RGB(200, 200, 255));
-    }
-}
-
-// CEditorUI.cpp에 추가
-void CEditorUI::RenderLevelBounds(HDC _dc, int& yPos)
-{
-    RenderBoldText(_dc, 20, yPos, L"Level Bounds:", RGB(255, 255, 100));
-    yPos += m_iLineHeight;
-
-    CEditorCameraController* pCamera = m_pEditorCore->GetCameraController();
-    if (pCamera)
-    {
-        Vec2 vMin = pCamera->GetCameraBoundsMin();
-        Vec2 vMax = pCamera->GetCameraBoundsMax();
-
-        // UI용 좌표 변환: Y축만 뒤집기
-        float uiMinY = vMax.y - vMax.y;  // 실제 최상단 → UI 최상단 (0)
-        float uiMaxY = vMax.y - vMin.y;  // 실제 최하단 → UI 최하단 (height)
-
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"X: %.0f ~ %.0f", vMin.x, vMax.x);
-        RenderText(_dc, 20, yPos, szBuffer);
-        yPos += m_iLineHeight;
-
-        swprintf_s(szBuffer, L"Y: %.0f ~ %.0f", uiMinY, uiMaxY);
-        RenderText(_dc, 20, yPos, szBuffer);
-        yPos += m_iLineHeight;
-    }
-    else
-    {
-        RenderText(_dc, 20, yPos, L"No bounds set", RGB(200, 100, 100));
-        yPos += m_iLineHeight;
-    }
-
-    yPos += 5;
-}
-
-void CEditorUI::DrawUIBackground(HDC _dc)
-{
-    // UI 패널 배경
-    HBRUSH hBrush = CreateSolidBrush(RGB(30, 30, 30));
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Rectangle(_dc, m_iUIMargin, m_iUIMargin, m_iUIWidth, m_iUIHeight);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hBrush);
-
-    // 테두리
-    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    HBRUSH hOldBrush2 = (HBRUSH)SelectObject(_dc, hHollowBrush);
-    Rectangle(_dc, m_iUIMargin, m_iUIMargin, m_iUIWidth, m_iUIHeight);
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush2);
-    DeleteObject(hPen);
+    RenderPropertyPanel(_dc);
 }
 
 void CEditorUI::SetupTextStyle(HDC _dc, COLORREF color)
@@ -436,7 +87,7 @@ void CEditorUI::RenderBoldText(HDC _dc, int x, int y, const wchar_t* text, COLOR
     DeleteObject(hFont);
 }
 
-int CEditorUI::GetPaletteItemAt(Vec2 vMousePos)
+int CEditorUI::GetPaletteItemAt(Vec2 vMousePos) const
 {
     int startY = m_iPaletteY + 50;
     int relativeX = (int)vMousePos.x - (m_iPaletteX + 10);
@@ -455,10 +106,219 @@ int CEditorUI::GetPaletteItemAt(Vec2 vMousePos)
     return itemIndex;
 }
 
-bool CEditorUI::IsInPaletteArea(Vec2 vMousePos)
+bool CEditorUI::IsInPaletteArea(Vec2 vMousePos) const
 {
     return vMousePos.x >= m_iPaletteX && vMousePos.x <= m_iPaletteX + m_iPaletteWidth &&
         vMousePos.y >= m_iPaletteY && vMousePos.y <= m_iPaletteY + m_iPaletteHeight;
+}
+
+void CEditorUI::RenderPropertyPanel(HDC _dc)
+{
+    // 배경 렌더링
+    RenderPropertyPanelBackground(_dc);
+
+    // 헤더 렌더링
+    RenderPropertyPanelHeader(_dc);
+
+    // 선택된 오브젝트에 따른 속성 렌더링
+    CObject* pSelected = m_pEditorCore->GetSelectedObject();
+    if (!pSelected)
+    {
+        RenderNoSelection(_dc);
+        return;
+    }
+
+    // 오브젝트 타입에 따른 속성 패널
+    if (pSelected->GetType() == OBJECT_TYPE::OBJECT_DOOR)
+    {
+        CDoor* pDoor = dynamic_cast<CDoor*>(pSelected);
+        if (pDoor)
+        {
+            RenderDoorProperties(_dc, pDoor);
+        }
+    }
+    // 다른 오브젝트 타입들도 추후 추가 가능
+}
+
+bool CEditorUI::HandlePropertyPanelClick(Vec2 vMousePos)
+{
+    return false;
+}
+
+bool CEditorUI::IsInPropertyPanelArea(Vec2 vMousePos) const
+{
+    return false;
+}
+
+void CEditorUI::RenderPropertyPanelBackground(HDC _dc)
+{
+    // 배경색 (팔레트와 동일한 스타일)
+    HBRUSH hBrush = CreateSolidBrush(RGB(40, 40, 40));
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+
+    Rectangle(_dc,
+        m_iPropertyPanelX,
+        m_iPropertyPanelY,
+        m_iPropertyPanelX + m_iPropertyPanelWidth,
+        m_iPropertyPanelY + m_iPropertyPanelHeight);
+
+    // 테두리
+    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
+    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
+
+    HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+    HBRUSH hOldHollowBrush = (HBRUSH)SelectObject(_dc, hHollowBrush);
+
+    Rectangle(_dc,
+        m_iPropertyPanelX,
+        m_iPropertyPanelY,
+        m_iPropertyPanelX + m_iPropertyPanelWidth,
+        m_iPropertyPanelY + m_iPropertyPanelHeight);
+
+    SelectObject(_dc, hOldBrush);
+    SelectObject(_dc, hOldPen);
+    SelectObject(_dc, hOldHollowBrush);
+    DeleteObject(hBrush);
+    DeleteObject(hPen);
+}
+
+void CEditorUI::RenderPropertyPanelHeader(HDC _dc)
+{
+    // 헤더 배경
+    HBRUSH hHeaderBrush = CreateSolidBrush(RGB(60, 60, 60));
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hHeaderBrush);
+
+    Rectangle(_dc,
+        m_iPropertyPanelX,
+        m_iPropertyPanelY,
+        m_iPropertyPanelX + m_iPropertyPanelWidth,
+        m_iPropertyPanelY + 30);
+
+    // 헤더 텍스트
+    SetBkMode(_dc, TRANSPARENT);
+    SetTextColor(_dc, RGB(255, 255, 255));
+
+    HFONT hFont = CreateUIFont(14, true);
+    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+
+    TextOut(_dc, m_iPropertyPanelX + 10, m_iPropertyPanelY + 8, L"속성", 2);
+
+    SelectObject(_dc, hOldBrush);
+    SelectObject(_dc, hOldFont);
+    DeleteObject(hHeaderBrush);
+    DeleteObject(hFont);
+}
+
+void CEditorUI::RenderDoorProperties(HDC _dc, CDoor* _pDoor)
+{
+    int currentY = m_iPropertyPanelY + 40;  // 헤더 아래부터 시작
+    int leftMargin = m_iPropertyPanelX + 10;
+    int lineHeight = 20;
+
+    SetBkMode(_dc, TRANSPARENT);
+    SetTextColor(_dc, RGB(255, 255, 255));
+
+    // 오브젝트 타입 표시
+    RenderBoldText(_dc, leftMargin, currentY, L"문 오브젝트", RGB(255, 255, 100));
+    currentY += lineHeight + 5;
+
+    // 구분선
+    HPEN hLinePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+    HPEN hOldPen = (HPEN)SelectObject(_dc, hLinePen);
+    MoveToEx(_dc, leftMargin, currentY, NULL);
+    LineTo(_dc, m_iPropertyPanelX + m_iPropertyPanelWidth - 10, currentY);
+    currentY += 10;
+
+    // 현재 설정 정보
+    SetTextColor(_dc, RGB(200, 200, 200));
+    TextOut(_dc, leftMargin, currentY, L"현재 설정:", 5);
+    currentY += lineHeight;
+
+    // 목표 씬 정보
+    SCENE_TYPE targetScene = _pDoor->GetTargetScene();
+    wchar_t szSceneInfo[64];
+    swprintf_s(szSceneInfo, L"  씬: %s", GetSceneName(targetScene));
+    SetTextColor(_dc, RGB(255, 255, 255));
+    TextOut(_dc, leftMargin, currentY, szSceneInfo, (int)wcslen(szSceneInfo));
+    currentY += lineHeight;
+
+    // 목표 위치 정보
+    Vec2 targetPos = _pDoor->GetTargetPosition();
+    wchar_t szPosInfo[64];
+    swprintf_s(szPosInfo, L"  위치: (%.0f, %.0f)", targetPos.x, targetPos.y);
+    TextOut(_dc, leftMargin, currentY, szPosInfo, (int)wcslen(szPosInfo));
+    currentY += lineHeight + 10;
+
+    // 편집 가이드
+    SetTextColor(_dc, RGB(200, 200, 100));
+    TextOut(_dc, leftMargin, currentY, L"편집 방법:", 5);
+    currentY += lineHeight;
+
+    SetTextColor(_dc, RGB(180, 180, 180));
+
+    // 씬 변경 안내
+    TextOut(_dc, leftMargin, currentY, L"씬 변경:", 4);
+    currentY += lineHeight - 5;
+    TextOut(_dc, leftMargin + 10, currentY, L"[1] 스테이지 1", 10);
+    currentY += lineHeight - 5;
+    TextOut(_dc, leftMargin + 10, currentY, L"[2] 스테이지 2", 10);
+    currentY += lineHeight;
+
+    // 위치 조정 안내
+    TextOut(_dc, leftMargin, currentY, L"위치 조정:", 5);
+    currentY += lineHeight - 5;
+    TextOut(_dc, leftMargin + 10, currentY, L"[Q/W] 좌/우 이동", 11);
+    currentY += lineHeight - 5;
+    TextOut(_dc, leftMargin + 10, currentY, L"[A/S] 위/아래 이동", 12);
+    currentY += lineHeight - 5;
+    TextOut(_dc, leftMargin + 10, currentY, L"[R] 기본 위치로 리셋", 13);
+
+    SelectObject(_dc, hOldPen);
+    DeleteObject(hLinePen);
+}
+
+void CEditorUI::RenderNoSelection(HDC _dc)
+{
+    int centerY = m_iPropertyPanelY + m_iPropertyPanelHeight / 2;
+    int centerX = m_iPropertyPanelX + m_iPropertyPanelWidth / 2;
+
+    SetBkMode(_dc, TRANSPARENT);
+    SetTextColor(_dc, RGB(128, 128, 128));
+
+    // 텍스트 중앙 정렬을 위한 크기 계산
+    const wchar_t* text = L"오브젝트를 선택하세요";
+    SIZE textSize;
+    GetTextExtentPoint32(_dc, text, (int)wcslen(text), &textSize);
+
+    TextOut(_dc,
+        centerX - textSize.cx / 2,
+        centerY - textSize.cy / 2,
+        text,
+        (int)wcslen(text));
+}
+
+bool CEditorUI::HandleDoorPropertyEdit(CDoor* _pDoor, Vec2 _vPos)
+{
+    return false;
+}
+
+void CEditorUI::RenderSceneDropdown(HDC _dc, SCENE_TYPE _currentScene, int _x, int _y, int _width, int _height)
+{
+}
+
+void CEditorUI::RenderInputField(HDC _dc, const wchar_t* _label, float _value, int _x, int _y, int _width)
+{
+}
+
+const wchar_t* CEditorUI::GetSceneName(SCENE_TYPE _eScene) const
+{
+    switch (_eScene)
+    {
+    case SCENE_TYPE::STAGE_01: return L"스테이지 1";
+    case SCENE_TYPE::STAGE_02: return L"스테이지 2";
+    case SCENE_TYPE::START: return L"시작 화면";
+    default: return L"알 수 없음";
+    }
 }
 
 void CEditorUI::CalculatePaletteLayout()
@@ -468,25 +328,6 @@ void CEditorUI::CalculatePaletteLayout()
     int totalRows = ((int)vecCategory.size() + m_iItemsPerRow - 1) / m_iItemsPerRow;
     int visibleRows = (m_iPaletteHeight - 60) / (m_iItemSize + m_iItemPadding);
     m_iMaxScroll = max(0, (totalRows - visibleRows) * (m_iItemSize + m_iItemPadding));
-}
-
-void CEditorUI::RenderSeparatorLine(HDC _dc, int yPos)
-{
-    HPEN hLinePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
-    HPEN hOldLinePen = (HPEN)SelectObject(_dc, hLinePen);
-    MoveToEx(_dc, 20, yPos, nullptr);
-    LineTo(_dc, 430, yPos);
-    SelectObject(_dc, hOldLinePen);
-    DeleteObject(hLinePen);
-}
-
-void CEditorUI::RenderHighlightBox(HDC _dc, int x, int y, int width, int height)
-{
-    HBRUSH hHighlightBrush = CreateSolidBrush(RGB(50, 50, 100));
-    HBRUSH hOldHighlightBrush = (HBRUSH)SelectObject(_dc, hHighlightBrush);
-    Rectangle(_dc, x, y, x + width, y + height);
-    SelectObject(_dc, hOldHighlightBrush);
-    DeleteObject(hHighlightBrush);
 }
 
 void CEditorUI::RenderObjectPalette(HDC _dc)
@@ -932,30 +773,30 @@ void CEditorUI::RenderCollisionIcon(HDC _dc, COLLISION_TYPE collisionType, int c
     case COLLISION_TYPE::SOLID_GROUND:
         wcscpy_s(szIcon, L"sol");  // 단단한 블록
         break;
-    case COLLISION_TYPE::PLATFORM:
-        wcscpy_s(szIcon, L"plf");  // 플랫폼
-        break;
-    case COLLISION_TYPE::SPIKE:
-        wcscpy_s(szIcon, L"spk");  // 가시 (삼각형)
-        break;
-    case COLLISION_TYPE::WATER:
-        wcscpy_s(szIcon, L"wat");  // 물결
-        break;
-    case COLLISION_TYPE::LAVA:
-        wcscpy_s(szIcon, L"dia");  // 다이아몬드 (용암)
-        break;
-    case COLLISION_TYPE::ONE_WAY_PLATFORM:
-        wcscpy_s(szIcon, L"upp");  // 위쪽 화살표
-        break;
-    case COLLISION_TYPE::MOVING_PLATFORM:
-        wcscpy_s(szIcon, L"lr");  // 좌우 화살표
-        break;
-    case COLLISION_TYPE::BREAKABLE_BLOCK:
-        wcscpy_s(szIcon, L"emp");  // 빈 박스
-        break;
-    case COLLISION_TYPE::INVISIBLE_WALL:
-        wcscpy_s(szIcon, L"?");  // 물음표
-        break;
+    //case COLLISION_TYPE::PLATFORM:
+    //    wcscpy_s(szIcon, L"plf");  // 플랫폼
+    //    break;
+    //case COLLISION_TYPE::SPIKE:
+    //    wcscpy_s(szIcon, L"spk");  // 가시 (삼각형)
+    //    break;
+    //case COLLISION_TYPE::WATER:
+    //    wcscpy_s(szIcon, L"wat");  // 물결
+    //    break;
+    //case COLLISION_TYPE::LAVA:
+    //    wcscpy_s(szIcon, L"dia");  // 다이아몬드 (용암)
+    //    break;
+    //case COLLISION_TYPE::ONE_WAY_PLATFORM:
+    //    wcscpy_s(szIcon, L"upp");  // 위쪽 화살표
+    //    break;
+    //case COLLISION_TYPE::MOVING_PLATFORM:
+    //    wcscpy_s(szIcon, L"lr");  // 좌우 화살표
+    //    break;
+    //case COLLISION_TYPE::BREAKABLE_BLOCK:
+    //    wcscpy_s(szIcon, L"emp");  // 빈 박스
+    //    break;
+    //case COLLISION_TYPE::INVISIBLE_WALL:
+    //    wcscpy_s(szIcon, L"?");  // 물음표
+    //    break;
     default:
         wcscpy_s(szIcon, L"nor");  // 기본 블록
         break;
