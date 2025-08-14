@@ -8,6 +8,7 @@
 #include "CTimeMgr.h"
 #include "CEventMgr.h"
 #include "CCamera.h"
+#include "CBasicMonster.h"
 
 CPlayerInhaleSystem::CPlayerInhaleSystem(CPlayer* _pOwner)
     : m_pOwner(_pOwner)
@@ -139,6 +140,17 @@ void CPlayerInhaleSystem::UpdateInhaleTargets()
                 if (fDot > 0.5f)
                 {
                     m_vecInhaleTargets.push_back(pObj);
+
+                    CMonster* pMonster = dynamic_cast<CMonster*>(pObj);
+                    if (pMonster && pMonster->CanBeInhaled())
+                    {
+                        CBasicMonster* pBasic = dynamic_cast<CBasicMonster*>(pMonster);
+                        if (pBasic && !pBasic->IsBeingInhaled())
+                        {
+                            pBasic->SetInhaled(true);
+                            pBasic->OnInhaleStart();
+                        }
+                    }
                 }
             }
         }
@@ -258,7 +270,7 @@ bool CPlayerInhaleSystem::IsValidInhaleTarget(CObject* _pTarget)
     if (!pMonster)
         return false;
 
-    return true;
+    return pMonster->CanBeInhaled();
 }
 
 void CPlayerInhaleSystem::ApplyInhaleForce(CObject* _pTarget)

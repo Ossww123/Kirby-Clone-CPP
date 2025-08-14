@@ -12,7 +12,8 @@ CBasicMonster::CBasicMonster()
     , m_bBeingInhaled(false)
     , m_fInhaleForce(0.f)
     , m_vPlayerPos(Vec2(0.f, 0.f))
-    , m_fInhaleDistance(150.f)
+    , m_bPlayerDetected(false)
+    , m_fDetectionRange(100.f)
 {
     // 일반 몬스터는 빨아들임 가능하므로 특별한 설정 불필요
 }
@@ -24,13 +25,9 @@ CBasicMonster::~CBasicMonster()
 
 void CBasicMonster::OnInhaled()
 {
-    // 빨아들임 당했을 때의 기본 처리
-    // 자식 클래스에서 override하여 추가 처리 가능
-
-    // 몬스터 제거 또는 커비로 흡수
+    // 몬스터 제거
     SetDead();
 
-    // TODO: 커비에게 기본 능력 부여 (필요시)
     // TODO: 이펙트 생성
     // TODO: 사운드 재생
 }
@@ -47,15 +44,6 @@ void CBasicMonster::OnInhaleStart()
     }
 }
 
-void CBasicMonster::OnInhaleEnd()
-{
-    // 빨아들임 종료 시 처리 (범위를 벗어났을 때)
-    m_bBeingInhaled = false;
-
-    // 일반 상태로 복귀
-    ChangeState(MONSTER_STATE::WALK);
-}
-
 void CBasicMonster::CheckPlayerDistance()
 {
     // 플레이어와의 거리 체크
@@ -63,27 +51,19 @@ void CBasicMonster::CheckPlayerDistance()
     if (nullptr == pCurScene)
         return;
 
-    // TODO: 실제 플레이어 오브젝트 찾기
-    // CPlayer* pPlayer = pCurScene->FindPlayer();
-    // if (nullptr != pPlayer)
-    // {
-    //     m_vPlayerPos = pPlayer->GetPos();
-    //     
-    //     Vec2 vDist = m_vPlayerPos - GetPos();
-    //     float fDistance = vDist.Length();
-    //     
-    //     // 빨아들임 범위 체크
-    //     if (fDistance <= m_fInhaleDistance && pPlayer->IsInhaling())
-    //     {
-    //         if (!m_bBeingInhaled)
-    //             OnInhaleStart();
-    //     }
-    //     else
-    //     {
-    //         if (m_bBeingInhaled)
-    //             OnInhaleEnd();
-    //     }
-    // }
+    const vector<CObject*>& vecPlayers = pCurScene->GetGroupObject(GROUP_TYPE::PLAYER);
+    
+    if (!vecPlayers.empty())
+    {
+        CPlayer* pPlayer = (CPlayer*)vecPlayers[0];  // 플레이어는 1명
+        m_vPlayerPos = pPlayer->GetPos();
+
+        Vec2 vDist = m_vPlayerPos - GetPos();
+        float fDistance = vDist.Length();
+
+        // AI용 플레이어 감지
+        m_bPlayerDetected = (fDistance <= m_fDetectionRange);
+    }
 }
 
 void CBasicMonster::HandleInhaleEffect()
@@ -112,11 +92,11 @@ void CBasicMonster::UpdateInhaleState()
 
 void CBasicMonster::UpdateIdle()
 {
-    // 빨아들임 상태 체크 먼저
-    UpdateInhaleState();
-
     if (m_bBeingInhaled)
         return;  // 빨아들임 중이면 일반 AI 중단
+
+    // 플레이어 감지 (AI용)
+    CheckPlayerDistance();
 
     // 부모 클래스의 기본 Idle 처리
     CMonster::UpdateIdle();

@@ -13,8 +13,7 @@ public:
 
     // === 빨아들임 처리 ===
     virtual void OnInhaled();               // 빨아들임 당했을 때 처리
-    virtual void OnInhaleStart();           // 빨아들임 시작
-    virtual void OnInhaleEnd();             // 빨아들임 종료
+    virtual void OnInhaleStart();           // 빨아들임 시작\
 
 public:
     // === 빨아들임 상태 확인 ===
@@ -33,7 +32,19 @@ protected:
     void UpdateFly() override;          // 비행 상태도 추가
     void UpdateTurn() override;
 
+public:
+    // === 감지 관련 Getter/Setter ===
+    bool IsPlayerDetected() const { return m_bPlayerDetected; }
+    float GetDetectionRange() const { return m_fDetectionRange; }
+    void SetDetectionRange(float _fRange) { m_fDetectionRange = _fRange; }
+    const Vec2& GetPlayerPos() const { return m_vPlayerPos; }
+
 private:
+    // === 플레이어 감지 관련 ===
+    bool    m_bPlayerDetected;      // 플레이어 감지 여부
+    float   m_fDetectionRange;      // 플레이어 감지 범위
+    Vec2    m_vPlayerPos;           // 플레이어 위치
+
     // === 빨아들임 관련 내부 처리 ===
     void ProcessInhaleMovement();           // 빨아들임 중 이동 처리
     void CheckInhaleDistance();             // 빨아들임 거리 체크
@@ -42,6 +53,4 @@ private:
     // === 빨아들임 상태 ===
     bool    m_bBeingInhaled;        // 빨아들임 중 상태
     float   m_fInhaleForce;         // 빨아들임 힘
-    Vec2    m_vPlayerPos;           // 플레이어 위치 (빨아들임용)
-    float   m_fInhaleDistance;      // 빨아들임 가능 거리
 };

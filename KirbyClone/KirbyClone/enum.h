@@ -72,11 +72,56 @@ enum class SCENE_TYPE
 // 이벤트 타입 추가
 enum class EVENT_TYPE
 {
-    CREATE_OBJECT,      // 오브젝트 생성 (wParam: GROUP_TYPE, lParam: CObject*)
-    DELETE_OBJECT,      // 오브젝트 삭제 (lParam: CObject*)
-    SCENE_CHANGE,       // 씬 변경 (lParam: SCENE_TYPE)
-    COLLISION_ENTER,    // 충돌 시작 이벤트
-    COLLISION_EXIT,     // 충돌 종료 이벤트
+    // === 기존 기본 이벤트들 ===
+    CREATE_OBJECT,      // 오브젝트 생성
+    DELETE_OBJECT,      // 오브젝트 삭제
+    SCENE_CHANGE,       // 씬 변경
+    COLLISION_ENTER,    // 충돌 시작
+    COLLISION_EXIT,     // 충돌 종료
+
+    // === 플레이어 관련 이벤트 ===
+    PLAYER_INHALE_START,    // 빨아들이기 시작
+    PLAYER_INHALE_UPDATE,   // 빨아들이기 진행 중
+    PLAYER_INHALE_COMPLETE, // 빨아들이기 완료 (흡수)
+    PLAYER_SPIT_OUT,        // 뱉기
+    PLAYER_SWALLOW,         // 삼키기 (능력 획득)
+    PLAYER_DAMAGE,          // 플레이어 데미지
+    PLAYER_DEATH,           // 플레이어 사망
+    PLAYER_STATE_CHANGE,    // 플레이어 상태 변경
+
+    // === 몬스터 관련 이벤트 ===
+    MONSTER_DAMAGE,         // 몬스터 데미지
+    MONSTER_DEATH,          // 몬스터 사망
+    MONSTER_ATTACK,         // 몬스터 공격
+
+    // === 보스 관련 이벤트 ===
+    BOSS_BATTLE_START,      // 보스전 시작
+    BOSS_DAMAGE,            // 보스 데미지
+    STAGE_CLEAR,            // 스테이지 클리어 (= 보스 패배)
+
+    // === 능력 시스템 이벤트 ===
+    ABILITY_ACQUIRE,        // 능력 획득
+    ABILITY_LOSE,           // 능력 상실
+    ABILITY_USE,            // 능력 사용
+
+    // === 투사체 관련 이벤트 ===
+    PROJECTILE_FIRE,        // 투사체 발사
+    PROJECTILE_HIT,         // 투사체 명중
+
+    // === 아이템 관련 이벤트 ===
+    ITEM_COLLECT,           // 아이템 획득 (즉시 사용)
+
+    // === 게임 진행 이벤트 ===
+    STAGE_START,            // 스테이지 시작
+    DOOR_ENTER,             // 문 통과
+
+    // === 사운드/이펙트 이벤트 ===
+    SOUND_PLAY,             // 사운드 재생
+    EFFECT_CREATE,          // 이펙트 생성
+    SCREEN_SHAKE,           // 화면 진동
+
+    // === 환경 관련 이벤트 ===
+    BLOCK_BREAK,            // 블록 파괴
 
     END
 };
