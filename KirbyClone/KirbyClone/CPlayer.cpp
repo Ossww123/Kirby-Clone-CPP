@@ -210,6 +210,11 @@ PLAYER_STATE CPlayer::GetPreviousState() const
 
 void CPlayer::ChangeState(PLAYER_STATE _eState)
 {
+    int debug = 0;
+    if (_eState == PLAYER_STATE::SLIDE) {
+        debug = 1;
+    }
+
     // 이벤트를 통한 상태 변경 요청
     CEventMgr::RequestPlayerStateChange(this, _eState);
 }
@@ -219,12 +224,6 @@ void CPlayer::ChangeStateInternal(PLAYER_STATE _eState)
 {
     if (m_pStateMachine)
     {
-        // 슬라이드 상태로 전환 시 물리 처리
-        if (_eState == PLAYER_STATE::SLIDE)
-        {
-            InitiateSlidePhysics();
-        }
-
         m_pStateMachine->ChangeStateInternal(_eState);
     }
 }

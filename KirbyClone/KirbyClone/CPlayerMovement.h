@@ -21,6 +21,7 @@ private:
     void HandleMovementInput();
     void HandleJumpInput();
     void HandleCrouchInput();
+    void HandleCrouchStateInput();
 
 private:
     // === 방향 관리 함수들 ===

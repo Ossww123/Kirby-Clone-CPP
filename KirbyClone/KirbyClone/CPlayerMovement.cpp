@@ -55,10 +55,15 @@ void CPlayerMovement::Update()
     // 점프 처리
     HandleJumpInput();
 
-    // 일반 이동 처리
+    // 일반 이동 처리 (크라우치 상태가 아닐 때만)
     if (m_pOwner && m_pOwner->GetCurrentState() != PLAYER_STATE::CROUCH)
     {
         HandleMovementInput();
+    }
+    else if (m_pOwner && m_pOwner->GetCurrentState() == PLAYER_STATE::CROUCH)
+    {
+        // 크라우치 상태에서의 특별한 입력 처리
+        HandleCrouchStateInput();
     }
 
     // 방향 업데이트
@@ -212,6 +217,23 @@ void CPlayerMovement::HandleCrouchInput()
     {
         HandleCrouchDirectionInput();
     }
+}
+
+// === 크라우치 상태에서의 입력 처리 ===
+void CPlayerMovement::HandleCrouchStateInput()
+{
+    if (!m_pOwner)
+        return;
+
+    // 크라우치 상태에서 슬라이드 입력 체크
+    if (KEY_TAP(KEY::SPACE) || KEY_TAP(KEY::X))
+    {
+        InitiateSlide();
+        return;
+    }
+
+    // 크라우치 상태에서 방향 변경 처리
+    HandleCrouchDirectionInput();
 }
 
 // === 방향 관리 함수들 ===

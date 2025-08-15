@@ -45,6 +45,12 @@ private:
     void HandleLanding();
     void PerformBounce();
 
+    // === 슬라이드 상태 처리 ===
+    void InitiateSlide();           // 슬라이드 시작 처리
+    void UpdateSlideMovement();     // 슬라이드 이동 처리
+    void CheckSlideCompletion();    // 슬라이드 완료 체크
+    void HandleSlideToFall();       // 슬라이드 중 낙하 처리
+
     // === 애니메이션 설정 ===
     void SetAnimationForState(PLAYER_STATE _eState);
 
@@ -65,7 +71,13 @@ private:
     bool m_bWasGrounded;            // 이전 프레임에 땅에 있었는지
 
     // === 슬라이드 관련 변수들 ===
-    float m_fSlideTimer;
+    float m_fSlideTimer;            // 슬라이드 지속 시간 타이머
+    float m_fSlideDuration;         // 슬라이드 총 지속 시간
+    float m_fSlideDistance;         // 슬라이드 이동할 총 거리
+    float m_fSlideSpeed;            // 슬라이드 속도
+    Vec2 m_vSlideStartPos;          // 슬라이드 시작 위치
+    int m_iSlideDirection;          // 슬라이드 방향 (1: 오른쪽, -1: 왼쪽)
+    bool m_bSlideGroundCheck;       // 슬라이드 중 지면 체크 여부
 
     // === 멤버 변수들 ===
     CPlayer* m_pOwner;       // 플레이어 참조
