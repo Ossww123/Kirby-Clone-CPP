@@ -15,8 +15,8 @@ public:
     void ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern) override;  // 공격 패턴 실행
 
 protected:
-    // === 애니메이션 생성 구현 ===
-    void CreateAnimations() override;
+    // === 애니메이션 매핑 설정 구현 ===
+    void SetupAnimationMapping() override;
 
 public:
     // === 위스피 우드 공격 패턴들 ===

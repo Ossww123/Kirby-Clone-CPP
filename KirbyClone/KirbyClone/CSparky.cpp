@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "CSparky.h"
+#include "CRigidBody.h"
+#include "CTimeMgr.h"
 
 CSparky::CSparky()
     : m_bJumping(false)
@@ -19,7 +21,6 @@ CSparky::CSparky()
     m_fAttackDuration = 1.5f;               // 1.5초 공격 (긴 지속시간)
 
     // 애니메이션 생성
-    CreateAnimations();
 
     // 초기 상태 설정
     ChangeState(MONSTER_STATE::IDLE);
@@ -65,6 +66,10 @@ void CSparky::Attack()
     }
 }
 
+void CSparky::SetupAnimationMapping()
+{
+}
+
 void CSparky::UpdateWalk()
 {
     // 점프 타이머 업데이트
@@ -72,31 +77,6 @@ void CSparky::UpdateWalk()
 
     // 부모 클래스의 UpdateWalk 호출
     CCopyMonster::UpdateWalk();
-}
-
-void CSparky::CreateAnimations()
-{
-    // 여섯 번째 행: 스파키 - 시작 위치 (8, 168)
-    Vec2 startPos = Vec2(8.f, 8.f + 160.f);
-
-    // WALK 애니메이션 (1~5열) - 점프 애니메이션
-    CreateBasicAnimation(L"WALK", startPos, 5, Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.15f, true);
-
-    // DAMAGE 애니메이션 (9~12열)
-    CreateBasicAnimation(L"DAMAGE", Vec2(startPos.x + 32.f * 8, startPos.y), 4,
-        Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.15f, false);
-
-    // ATTACK_READY 애니메이션 (13~14열)
-    CreateBasicAnimation(L"ATTACK_READY", Vec2(startPos.x + 32.f * 12, startPos.y), 2,
-        Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.15f, true);
-
-    // ATTACK 애니메이션 - 일곱 번째 행의 큰 스프라이트 사용
-    Vec2 bigFrameSize = Vec2(64.f, 64.f);
-    Vec2 attackStartPos = Vec2(8.f, 200.f);
-    CreateBasicAnimation(L"ATTACK", attackStartPos, 3, bigFrameSize, Vec2(64.f, 64.f), 0.15f, false);
-
-    // IDLE 애니메이션
-    CreateBasicAnimation(L"IDLE", startPos, 1, Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.5f, true);
 }
 
 void CSparky::JumpMove()

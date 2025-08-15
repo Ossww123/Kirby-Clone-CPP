@@ -22,7 +22,6 @@ CBrontoBurt::CBrontoBurt()
     m_vStartPos = GetPos();
 
     // 애니메이션 생성
-    CreateAnimations();
 
     // 초기 상태를 FLY로 설정 (WALK가 아님!)
     ChangeState(MONSTER_STATE::FLY);
@@ -47,20 +46,8 @@ void CBrontoBurt::Move()
     }
 }
 
-void CBrontoBurt::CreateAnimations()
+void CBrontoBurt::SetupAnimationMapping()
 {
-    // 세 번째 행: 브론토 버트 - 시작 위치 (8, 72)
-    Vec2 startPos = Vec2(8.f, 8.f + 64.f);
-
-    // FLY 애니메이션 (1~4열)
-    CreateBasicAnimation(L"FLY", startPos, 4, Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.15f, true);
-
-    // DAMAGE 애니메이션 (5~8열) - 빨아들임 중에도 사용
-    CreateBasicAnimation(L"DAMAGE", Vec2(startPos.x + 32.f * 4, startPos.y), 4,
-        Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.15f, false);
-
-    // IDLE은 FLY와 동일
-    CreateBasicAnimation(L"IDLE", startPos, 1, Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.5f, true);
 }
 
 void CBrontoBurt::UpdateFlightPattern()

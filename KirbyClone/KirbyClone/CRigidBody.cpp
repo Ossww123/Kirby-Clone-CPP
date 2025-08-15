@@ -13,7 +13,7 @@ CRigidBody::CRigidBody()
     , m_vForce{}
     , m_fMass(1.f)
     , m_fGravityScale(1.f)
-    , m_fMaxVelocity(1000.f)
+    , m_fMaxVelocity(2000.f)
     , m_fFriction(0.1f)
     , m_bUseGravity(true)
     , m_bGround(false)

@@ -20,6 +20,17 @@ public:
 public:
     // === 핵심 생명주기 함수들 ===
     void Update() override;
+    void Render(HDC _dc) override;
+
+public:
+    // === 충돌 콜백 함수들 ===
+    void OnCollisionEnter(CCollider* _pOther) override;
+    void OnCollision(CCollider* _pOther) override;
+    void OnCollisionExit(CCollider* _pOther) override;
+
+private:
+    // === 충돌 처리 헬퍼 함수 ===
+    void HandleTileCollision(CObject* _pTile);
 
 public:
     // === 가상 인터페이스 (자식 클래스에서 구현) ===
@@ -28,8 +39,9 @@ public:
     virtual bool HasAttack() const { return false; }   // 공격 가능 여부
 
 protected:
-    // === 애니메이션 인터페이스 (자식 클래스에서 구현) ===
-    virtual void CreateAnimations() = 0;        // 애니메이션 생성 (순수 가상)
+    // === 애니메이션 시스템 (자식 클래스에서 사용) ===
+    void LoadAnimationsFromFile(const wstring& _strFileName);   // JSON 파일에서 애니메이션 로드
+    virtual void SetupAnimationMapping() = 0;                   // 자식 클래스에서 애니메이션 매핑 설정
 
 public:
     // === 몬스터 기본 인터페이스 ===
@@ -51,10 +63,6 @@ protected:
 
     // === 공통 애니메이션 유틸리티 ===
     void LoadEnemySpriteSheet();               // 공통 스프라이트 시트 로드
-    void CreateBasicAnimation(const wstring& name, Vec2 startPos, int frameCount,
-        Vec2 frameSize = Vec2(32.f, 32.f),
-        Vec2 frameOffset = Vec2(32.f, 32.f),
-        float duration = 0.15f, bool loop = true);
 
 private:
     // === 상태 업데이트 ===
@@ -76,7 +84,11 @@ public:
     bool CheckWallAhead();
     bool CheckGroundAhead();
 
-private:
+protected:
+    // === 애니메이션 매핑 (자식 클래스에서 설정) ===
+    map<MONSTER_STATE, wstring> m_mapStateToAnimation;  // 상태 → 애니메이션 이름 매핑
+
+protected:
     // === 상태 관리 ===
     MONSTER_STATE   m_eCurState;        // 현재 상태
     MONSTER_STATE   m_ePrevState;       // 이전 상태

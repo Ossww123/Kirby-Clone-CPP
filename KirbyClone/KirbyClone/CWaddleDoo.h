@@ -14,8 +14,8 @@ public:
     COPY_ABILITY GetCopyAbility() const override { return COPY_ABILITY::BEAM; }
 
 protected:
-    // === 애니메이션 생성 구현 ===
-    void CreateAnimations() override;
+    // === 애니메이션 매핑 설정 구현 ===
+    void SetupAnimationMapping() override;
 
 private:
     // === 웨이들 두 전용 공격 ===

@@ -50,7 +50,7 @@ void CPlayerInhaleSystem::StartInhale()
     m_fInhaleTime = 0.f;
     m_vecInhaleTargets.clear();
 
-    // 상태 머신을 통한 상태 변경
+    // 상태 머신을 통한 상태 변경 - 이벤트 기반
     if (m_pOwner)
     {
         m_pOwner->ChangeState(PLAYER_STATE::INHALE_READY);
@@ -76,27 +76,26 @@ void CPlayerInhaleSystem::UpdateInhale()
         }
     }
 
-    // 빨아들이기 단계별 처리 (시간에 따른 상태 변경)
-    if (m_fInhaleTime > 0.5f && m_fInhaleTime <= 1.0f)
+    // 흡입 시간에 따른 상태 변경 - 이벤트 기반
+    PLAYER_STATE currentState = m_pOwner->GetCurrentState();
+    PLAYER_STATE newState = currentState;
+
+    if (m_fInhaleTime < 0.5f)
     {
-        if (m_pOwner->GetCurrentState() == PLAYER_STATE::INHALE_READY)
-        {
-            m_pOwner->ChangeState(PLAYER_STATE::INHALE_1);
-        }
+        newState = PLAYER_STATE::INHALE_1;
     }
-    else if (m_fInhaleTime > 1.0f && m_fInhaleTime <= 2.0f)
+    else if (m_fInhaleTime < 1.0f)
     {
-        if (m_pOwner->GetCurrentState() == PLAYER_STATE::INHALE_1)
-        {
-            m_pOwner->ChangeState(PLAYER_STATE::INHALE_2);
-        }
+        newState = PLAYER_STATE::INHALE_2;
     }
-    else if (m_fInhaleTime > 2.0f)
+    else
     {
-        if (m_pOwner->GetCurrentState() == PLAYER_STATE::INHALE_2)
-        {
-            m_pOwner->ChangeState(PLAYER_STATE::INHALE_HOLD);
-        }
+        newState = PLAYER_STATE::INHALE_HOLD;
+    }
+
+    if (newState != m_pOwner->GetCurrentState())
+    {
+        m_pOwner->ChangeState(newState);  // 이벤트 기반
     }
 }
 

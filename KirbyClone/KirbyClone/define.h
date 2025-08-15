@@ -37,3 +37,7 @@
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)scene); \
         CEventMgr::GetInst()->AddEvent(event); \
     } while(0)
+
+// 플레이어 상태 변경 매크로
+#define CHANGE_PLAYER_STATE(player, state) \
+    CEventMgr::RequestPlayerStateChange(player, state)

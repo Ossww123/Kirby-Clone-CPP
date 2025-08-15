@@ -8,6 +8,7 @@
 #include "CCore.h"
 #include "CSceneMgr.h"
 #include "CAnimation.h"
+#include "CTimeMgr.h"
 
 CObject::CObject()
 	: m_vPos{}
@@ -62,6 +63,40 @@ void CObject::Render(HDC _dc)
 
     // 스케일 팩터 결정
     float fScale = GetRenderScale();
+
+    // === 디버깅: 몬스터 렌더링 확인 ===
+    if (m_eObjectType >= OBJECT_TYPE::MONSTER_WADDLE_DEE &&
+        m_eObjectType <= OBJECT_TYPE::MONSTER_SPARKY)
+    {
+        static float debugTimer = 0.f;
+        debugTimer += CTimeMgr::GetInst()->GetfDT();
+        if (debugTimer >= 3.f)
+        {
+            char debugMsg[256];
+            sprintf_s(debugMsg, "Monster Render: pos(%.1f,%.1f), renderPos(%.1f,%.1f), scale=%.1f\n",
+                m_vPos.x, m_vPos.y, vRenderPos.x, vRenderPos.y, fScale);
+            OutputDebugStringA(debugMsg);
+
+            if (m_pAnimator)
+            {
+                CAnimation* pAnim = m_pAnimator->GetCurAnim();
+                if (pAnim)
+                {
+                    OutputDebugStringA("Monster: Has animator and animation\n");
+                }
+                else
+                {
+                    OutputDebugStringA("Monster: Has animator but NO animation\n");
+                }
+            }
+            else
+            {
+                OutputDebugStringA("Monster: NO animator\n");
+            }
+
+            debugTimer = 0.f;
+        }
+    }
 
     // 메인 렌더링 수행
     RenderMain(_dc, vRenderPos, fScale);

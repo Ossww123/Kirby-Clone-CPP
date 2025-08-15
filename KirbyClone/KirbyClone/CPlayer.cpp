@@ -13,6 +13,7 @@
 #include "CResMgr.h"
 #include "CCore.h"
 #include "CCamera.h"
+#include "CEventMgr.h"
 
 #include "CPlayerStateMachine.h"
 #include "CPlayerInhaleSystem.h"
@@ -29,21 +30,25 @@ CPlayer::CPlayer()
 {
     SetType(OBJECT_TYPE::PLAYER);
 
-    // === 컴포넌트들 생성 (기존 방식) ===
+    // === 컴포넌트들 생성 ===
     CreateAnimator();
     CreateRigidBody();
 
-    // 리지드바디 설정 (올바른 함수명 사용)
+    // 리지드바디 설정
     CRigidBody* pRigidBody = GetRigidBody();
     pRigidBody->SetMass(1.f);
-    pRigidBody->SetMaxVelocity(500.f);
+    pRigidBody->SetMaxVelocity(640.f);
     pRigidBody->SetFriction(0.1f);
     pRigidBody->SetUseGravity(true);
 
     // 콜라이더 생성 및 설정
     CreateCollider();
     GetCollider()->SetOffsetPos(Vec2(0.f, 0.f));
-    GetCollider()->SetScale(Vec2(56.f, 56.f));
+
+    // === 충돌체 크기 설정 ===
+    m_vNormalColliderScale = Vec2(56.f, 56.f);      // 일반 상태 크기
+    m_vCrouchColliderScale = Vec2(56.f, 28.f);      // 크라우치 상태 크기 (Y축 절반)
+    GetCollider()->SetScale(m_vNormalColliderScale); // 초기에는 일반 크기
 
     // === 시스템들 생성 ===
     m_pStateMachine = new CPlayerStateMachine(this);
@@ -108,6 +113,9 @@ void CPlayer::Update()
     // 게임오버 상태라면 다른 업데이트 중지
     if (m_pHealthSystem && m_pHealthSystem->IsGameOver())
         return;
+
+    // === 충돌체 크기 업데이트 ===
+    UpdateColliderSize();
 
     // === 흡입 관련 입력 처리 ===
     UpdateInhale();
@@ -202,8 +210,23 @@ PLAYER_STATE CPlayer::GetPreviousState() const
 
 void CPlayer::ChangeState(PLAYER_STATE _eState)
 {
+    // 이벤트를 통한 상태 변경 요청
+    CEventMgr::RequestPlayerStateChange(this, _eState);
+}
+
+// === 이벤트 매니저에서 호출될 실제 상태 변경 함수 ===
+void CPlayer::ChangeStateInternal(PLAYER_STATE _eState)
+{
     if (m_pStateMachine)
-        m_pStateMachine->ChangeState(_eState);
+    {
+        // 슬라이드 상태로 전환 시 물리 처리
+        if (_eState == PLAYER_STATE::SLIDE)
+        {
+            InitiateSlidePhysics();
+        }
+
+        m_pStateMachine->ChangeStateInternal(_eState);
+    }
 }
 
 // === 필수 래퍼 함수들 구현 ===
@@ -296,6 +319,17 @@ void CPlayer::RenderInvincible(HDC _dc)
 // === 업데이트 헬퍼 함수들 ===
 void CPlayer::UpdateInhale()
 {
+    // 크라우치 상태에서는 흡입 불가
+    PLAYER_STATE currentState = GetCurrentState();
+    if (currentState == PLAYER_STATE::CROUCH || currentState == PLAYER_STATE::SLIDE)
+    {
+        if (IsInhaling())
+        {
+            StopInhale();
+        }
+        return;
+    }
+
     // 흡입 입력 처리
     if (KEY_HOLD(KEY::X))
     {
@@ -333,6 +367,65 @@ void CPlayer::UpdateInhale()
             }
         }
     }
+}
+
+// === 충돌체 크기 업데이트 함수 ===
+void CPlayer::UpdateColliderSize()
+{
+    if (!GetCollider())
+        return;
+
+    PLAYER_STATE currentState = GetCurrentState();
+    Vec2 targetScale = m_vNormalColliderScale;
+
+    // 크라우치 상태에서는 충돌체 크기 축소
+    if (currentState == PLAYER_STATE::CROUCH || currentState == PLAYER_STATE::SLIDE)
+    {
+        targetScale = m_vCrouchColliderScale;
+    }
+
+    // 현재 충돌체 크기와 다르면 업데이트
+    Vec2 currentScale = GetCollider()->GetScale();
+    if (currentScale != targetScale)
+    {
+        GetCollider()->SetScale(targetScale);
+
+        // 크기 변경 시 위치 보정 (바닥에 맞춤)
+        AdjustPositionForColliderResize(currentScale, targetScale);
+    }
+}
+
+// === 충돌체 크기 변경 시 위치 보정 ===
+void CPlayer::AdjustPositionForColliderResize(const Vec2& _vOldScale, const Vec2& _vNewScale)
+{
+    if (!GetRigidBody() || !GetRigidBody()->IsGround())
+        return;
+
+    // Y축 크기 변화량 계산
+    float scaleDifference = _vOldScale.y - _vNewScale.y;
+
+    if (abs(scaleDifference) > 0.1f)  // 유의미한 변화만 처리
+    {
+        // 크기가 작아지면 (크라우치) 아래로 이동
+        // 크기가 커지면 (일반상태) 위로 이동
+        Vec2 currentPos = GetPos();
+        currentPos.y += scaleDifference * 0.5f;  // 절반만큼 이동 (중심점 기준)
+        SetPos(currentPos);
+    }
+}
+
+// === 슬라이드 관련 물리 처리 ===
+void CPlayer::InitiateSlidePhysics()
+{
+    if (!GetRigidBody() || !m_pMovement)
+        return;
+
+    // 슬라이드 속도 계산 (현재 보는 방향으로)
+    float slideSpeed = 300.f;  // 슬라이드 속도
+    float direction = m_pMovement->IsFacingRight() ? 1.0f : -1.0f;
+
+    // 슬라이드 속도 적용
+    GetRigidBody()->SetVelocityX(direction * slideSpeed);
 }
 
 // === 애니메이션 생성 함수 ===

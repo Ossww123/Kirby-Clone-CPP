@@ -58,7 +58,7 @@ private:
     // === 공격 시스템 내부 처리 ===
     void ProcessAttackLogic();                          // 공격 로직 처리
 
-private:
+protected:
     // === 공격 관련 변수들 ===
     bool    m_bAttacking;           // 공격 중 상태
     float   m_fAttackCooldown;      // 현재 공격 쿨타임

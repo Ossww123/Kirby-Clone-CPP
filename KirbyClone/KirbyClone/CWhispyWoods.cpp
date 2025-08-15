@@ -4,6 +4,7 @@
 #include "CTimeMgr.h"
 #include "CSceneMgr.h"
 #include "CScene.h"
+#include "CCollider.h"
 
 CWhispyWoods::CWhispyWoods()
     : m_iCurrentRootIndex(0)
@@ -33,7 +34,6 @@ CWhispyWoods::CWhispyWoods()
     m_vRootPositions[4] = Vec2(bossPos.x + 200.f, bossPos.y + 100.f);
 
     // 애니메이션 생성
-    CreateAnimations();
 
     // 보스 인트로 상태로 시작
     SetBossPhase(BOSS_PHASE::INTRO);
@@ -98,25 +98,8 @@ void CWhispyWoods::ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern)
     }
 }
 
-void CWhispyWoods::CreateAnimations()
+void CWhispyWoods::SetupAnimationMapping()
 {
-    // 위스피 우드는 큰 스프라이트 사용 (가정: 별도 텍스처 파일)
-    // 실제로는 boss_whispy_woods.bmp 등의 별도 파일 사용
-
-    // 기본 애니메이션 (눈 깜빡임)
-    Vec2 startPos = Vec2(0.f, 0.f);
-    Vec2 bigFrameSize = Vec2(128.f, 160.f);
-
-    CreateBasicAnimation(L"IDLE", startPos, 2, bigFrameSize, Vec2(128.f, 0.f), 1.f, true);
-
-    // 공격 준비 애니메이션 (화난 표정)
-    CreateBasicAnimation(L"ATTACK_READY", Vec2(256.f, 0.f), 2, bigFrameSize, Vec2(128.f, 0.f), 0.3f, true);
-
-    // 공격 애니메이션 (입 벌리기)
-    CreateBasicAnimation(L"ATTACK", Vec2(512.f, 0.f), 3, bigFrameSize, Vec2(128.f, 0.f), 0.2f, false);
-
-    // 데미지 애니메이션 (아픈 표정)
-    CreateBasicAnimation(L"DAMAGE", Vec2(768.f, 0.f), 2, bigFrameSize, Vec2(128.f, 0.f), 0.3f, false);
 }
 
 void CWhispyWoods::AttackPattern1_AppleDrop()

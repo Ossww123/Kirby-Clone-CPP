@@ -12,8 +12,8 @@ public:
     void Move() override;                   // 사인파 비행 패턴
 
 protected:
-    // === 애니메이션 생성 구현 ===
-    void CreateAnimations() override;
+    // === 애니메이션 매핑 설정 구현 ===
+    void SetupAnimationMapping() override;
 
 private:
     // === 비행 패턴 로직 ===

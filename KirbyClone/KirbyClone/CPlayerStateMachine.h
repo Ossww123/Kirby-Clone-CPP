@@ -19,7 +19,7 @@ public:
 
 public:
     // === 상태 관리 인터페이스 ===
-    void ChangeState(PLAYER_STATE _eState);
+    void ChangeStateInternal(PLAYER_STATE _eState);
     bool CanChangeToState(PLAYER_STATE _eState) const;
 
 private:
@@ -29,6 +29,9 @@ private:
     void UpdateInhaleState();
     void UpdateAirborneState();
     void UpdateSpecialState();
+    void UpdateBounceState();
+    void UpdateCrouchState();
+    void UpdateSlideState();
 
 public:
     // === 상태 체크 함수들 ===
@@ -38,6 +41,10 @@ public:
     bool IsGroundedState() const;
 
 private:
+    // === 공중 상태 처리 ===
+    void HandleLanding();
+    void PerformBounce();
+
     // === 애니메이션 설정 ===
     void SetAnimationForState(PLAYER_STATE _eState);
 
@@ -51,6 +58,15 @@ private:
     bool IsValidStateTransition(PLAYER_STATE _from, PLAYER_STATE _to) const;
 
 private:
+    // === 점프/낙하 관련 변수들 ===
+    float m_fFallTime;              // 현재 낙하 지속 시간
+    float m_fFallToBounceThreshold; // FALL2로 전환되는 시간 (1.0초)
+    float m_fBounceHeight;          // 바운스 시 점프 높이 (일반 점프의 70%)
+    bool m_bWasGrounded;            // 이전 프레임에 땅에 있었는지
+
+    // === 슬라이드 관련 변수들 ===
+    float m_fSlideTimer;
+
     // === 멤버 변수들 ===
     CPlayer* m_pOwner;       // 플레이어 참조
     CAnimator* m_pAnimator;    // 애니메이터 참조

@@ -134,7 +134,17 @@ enum class PLAYER_STATE
     RUN,            // 뛰기  
     JUMP,           // 점프
     FALL,           // 낙하
+    FALL2,          // 낙하 (장시간 - 바운스 예정)
     BOUNCE,         // 땅에서 바운스
+
+    // === 크라우치 관련 상태들 ===
+    CROUCH,         // 크라우치 (앉기) - DOWN 키, 방향변경만 가능
+    SLIDE,          // 슬라이드 킥 (크라우치에서 Z키 또는 X키)
+
+    // === 공중 부유 관련 상태들 ===
+    HOVER,          // 공기머금기 부유 (공중에서 A키)
+    HOVER_FALL,     // 부유 해제 후 천천히 낙하
+
     INHALE_READY,   // 빨아들이기 준비 (공기머금기)
     INHALE_1,       // 빨아들이기 1단계
     INHALE_2,       // 빨아들이기 2단계
@@ -145,6 +155,7 @@ enum class PLAYER_STATE
     MOUTHFUL_WALK,  // 머금은 상태 걷기
     MOUTHFUL_RUN,   // 머금은 상태 뛰기
     MOUTHFUL_JUMP,  // 머금은 상태 점프
+
     END
 };
 
@@ -200,6 +211,9 @@ enum class OBJECT_TYPE
     MONSTER_GORDOS,         // 고르도 (가시 적)
     MONSTER_HOT_HEAD,       // 핫 헤드 (불 적)
     MONSTER_SPARKY,         // 스파키 (전기 적)
+
+    // 보스
+    MONSTER_WHISPY_WOODS,
 
     // 아이템 타입들
     ITEM_STAR,              // 별 (기본 아이템)

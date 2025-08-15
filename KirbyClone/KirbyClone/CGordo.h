@@ -20,8 +20,8 @@ public:
     void Move() override;                                   // 직선/원형 이동
 
 protected:
-    // === 애니메이션 생성 구현 ===
-    void CreateAnimations() override;
+    // === 애니메이션 매핑 설정 구현 ===
+    void SetupAnimationMapping() override;
 
 public:
     // === 고르도 전용 설정 ===

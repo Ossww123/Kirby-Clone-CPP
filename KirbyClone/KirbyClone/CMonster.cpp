@@ -11,6 +11,7 @@
 #include "CSceneMgr.h"
 #include "CScene.h"
 #include "CTile.h"
+#include "CAnimationDataMgr.h"
 
 CMonster::CMonster()
     : CObject(OBJECT_TYPE::MONSTER_WADDLE_DEE)  // 기본값, 자식에서 변경
@@ -70,36 +71,190 @@ void CMonster::Update()
     m_fStateTimer += CTimeMgr::GetInst()->GetfDT();
 }
 
+void CMonster::Render(HDC _dc)
+{
+    // 플레이어와 동일한 렌더링 방식
+    CAnimator* pAnimator = GetAnimator();
+    if (pAnimator)
+    {
+        pAnimator->Render(_dc);
+    }
+    else
+    {
+        // 애니메이터가 없으면 기본 오브젝트 렌더링
+        CObject::Render(_dc);
+    }
+
+    // 충돌체 렌더링
+    if (GetCollider())
+    {
+        GetCollider()->RenderScaled(_dc, 1.0f);  // TAB키로 토글
+    }
+}
+
+// === 충돌 처리 ===
+
+void CMonster::OnCollisionEnter(CCollider* _pOther)
+{
+    CObject* pOtherObj = _pOther->GetOwner();
+    if (!pOtherObj)
+        return;
+
+    OBJECT_TYPE eType = pOtherObj->GetType();
+
+    // 타일과의 충돌 처리
+    if (eType >= OBJECT_TYPE::TILE_GROUND && eType <= OBJECT_TYPE::TILE_INVISIBLE)
+    {
+        HandleTileCollision(pOtherObj);
+    }
+}
+
+void CMonster::OnCollision(CCollider* _pOther)
+{
+    CObject* pOtherObj = _pOther->GetOwner();
+    if (!pOtherObj)
+        return;
+
+    OBJECT_TYPE eType = pOtherObj->GetType();
+
+    // 타일과의 지속적인 충돌 처리
+    if (eType >= OBJECT_TYPE::TILE_GROUND && eType <= OBJECT_TYPE::TILE_INVISIBLE)
+    {
+        HandleTileCollision(pOtherObj);
+    }
+}
+
+void CMonster::OnCollisionExit(CCollider* _pOther)
+{
+    CObject* pOtherObj = _pOther->GetOwner();
+    if (!pOtherObj)
+        return;
+
+    OBJECT_TYPE eType = pOtherObj->GetType();
+
+    // 타일에서 벗어날 때 처리
+    if (eType >= OBJECT_TYPE::TILE_GROUND && eType <= OBJECT_TYPE::TILE_INVISIBLE)
+    {
+        // Ground 상태 해제 (점프나 낙하 중일 때만)
+        if (GetRigidBody())
+        {
+            Vec2 vVelocity = GetRigidBody()->GetVelocity();
+            if (vVelocity.y < -50.f)  // 위로 이동 중
+            {
+                GetRigidBody()->SetGround(false);
+            }
+        }
+    }
+}
+
+void CMonster::HandleTileCollision(CObject* _pTile)
+{
+    CTile* pTile = dynamic_cast<CTile*>(_pTile);
+    if (!pTile)  // IsSolid() 체크 제거
+        return;
+
+    if (!GetRigidBody())
+        return;
+
+    Vec2 vMyPos = GetPos();
+    Vec2 vTilePos = pTile->GetPos();
+    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
+    Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
+
+    // 타일 위에 서 있는지 확인
+    float tileTop = vTilePos.y - vTileScale.y / 2.f;
+    float myBottom = vMyPos.y + vMyScale.y / 2.f;
+
+    // 몬스터가 타일 위에 있고, 아래로 떨어지는 중이거나 정지 상태면 Ground 설정
+    if (abs(myBottom - tileTop) < 8.f && vMyPos.y < vTilePos.y)
+    {
+        Vec2 vVelocity = GetRigidBody()->GetVelocity();
+
+        // 아래로 떨어지는 중이면 위치 보정 및 Ground 설정
+        if (vVelocity.y >= 0.f)
+        {
+            // 위치 보정
+            float correctedY = tileTop - vMyScale.y / 2.f;
+            SetPos(Vec2(vMyPos.x, correctedY));
+
+            // Ground 설정 및 Y 속도 제거
+            GetRigidBody()->SetGround(true);
+            GetRigidBody()->SetVelocityY(0.f);
+        }
+    }
+}
+
+void CMonster::LoadAnimationsFromFile(const wstring& _strFileName)
+{
+    CAnimator* pAnimator = GetAnimator();
+    if (!pAnimator)
+    {
+        OutputDebugStringA("Monster: Animator is null!\n");
+        return;
+    }
+
+    // 애니메이션 파일 로드
+    CAnimationDataMgr::GetInst()->LoadAnimationsIntoAnimator(pAnimator, _strFileName);
+
+    // 자식 클래스에서 애니메이션 매핑 설정
+    SetupAnimationMapping();
+
+    // 로드 확인
+    pAnimator->Play(L"IDLE", true);
+    if (pAnimator->GetCurAnim() == nullptr)
+    {
+        char debugMsg[512];
+        sprintf_s(debugMsg, "Monster: Failed to load animations from %ws\n", _strFileName.c_str());
+        OutputDebugStringA(debugMsg);
+    }
+    else
+    {
+        char debugMsg[512];
+        sprintf_s(debugMsg, "Monster: Successfully loaded animations from %ws\n", _strFileName.c_str());
+        OutputDebugStringA(debugMsg);
+    }
+}
+
 void CMonster::ChangeState(MONSTER_STATE _eState)
 {
     m_ePrevState = m_eCurState;
     m_eCurState = _eState;
     m_fStateTimer = 0.f;
 
-    // 상태별 애니메이션 재생
-    switch (_eState)
+    // 상태에 맞는 애니메이션 재생
+    CAnimator* pAnimator = GetAnimator();
+    if (pAnimator)
     {
-    case MONSTER_STATE::IDLE:
-        GetAnimator()->Play(L"IDLE", true);
-        break;
-    case MONSTER_STATE::WALK:
-        GetAnimator()->Play(L"WALK", true);
-        break;
-    case MONSTER_STATE::FLY:
-        GetAnimator()->Play(L"FLY", true);
-        break;
-    case MONSTER_STATE::TURN:
-        GetAnimator()->Play(L"WALK", true);
-        break;
-    case MONSTER_STATE::DAMAGE:
-        GetAnimator()->Play(L"DAMAGE", false);
-        break;
-    case MONSTER_STATE::ATTACK_READY:
-        GetAnimator()->Play(L"ATTACK_READY", true);
-        break;
-    case MONSTER_STATE::ATTACK:
-        GetAnimator()->Play(L"ATTACK", false);
-        break;
+        // 매핑에서 애니메이션 이름 찾기
+        auto iter = m_mapStateToAnimation.find(_eState);
+        if (iter != m_mapStateToAnimation.end())
+        {
+            const wstring& animName = iter->second;
+            bool bLoop = (_eState != MONSTER_STATE::DAMAGE); // DAMAGE는 반복 안함
+            pAnimator->Play(animName, bLoop);
+        }
+        else
+        {
+            // 매핑에 없으면 기본 애니메이션 사용
+            switch (_eState)
+            {
+            case MONSTER_STATE::IDLE:
+                pAnimator->Play(L"IDLE", true);
+                break;
+            case MONSTER_STATE::WALK:
+                pAnimator->Play(L"WALK", true);
+                break;
+            case MONSTER_STATE::TURN:
+                pAnimator->Play(L"WALK", true);
+                break;
+            case MONSTER_STATE::DAMAGE:
+                pAnimator->Play(L"DAMAGE", false);
+                break;
+            default:
+                pAnimator->Play(L"IDLE", true);
+                break;
+            }
+        }
     }
 }
 
@@ -140,16 +295,6 @@ void CMonster::LoadEnemySpriteSheet()
     if (nullptr == m_pEnemyTex)
     {
         m_pEnemyTex = CResMgr::GetInst()->LoadTexture(L"EnemiesSprite", L"texture\\enemy\\enemies.bmp");
-    }
-}
-
-void CMonster::CreateBasicAnimation(const wstring& name, Vec2 startPos, int frameCount,
-    Vec2 frameSize, Vec2 frameOffset, float duration, bool loop)
-{
-    if (nullptr != GetAnimator() && nullptr != m_pEnemyTex)
-    {
-        GetAnimator()->CreateAnimation(name, m_pEnemyTex, startPos, frameSize,
-            frameOffset, duration, frameCount, loop);
     }
 }
 
@@ -281,15 +426,41 @@ void CMonster::UpdateAttack()
 
 bool CMonster::CheckWallAhead()
 {
-    // TODO: 실제 타일맵 또는 충돌체를 이용한 벽 체크 구현
-    // 현재는 임시로 false 반환
+    // 실제 타일과의 충돌 검사 구현
+    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+    if (!pCurScene)
+        return false;
 
-    // 예시 구현 (실제로는 레이캐스팅이나 충돌 검사 필요)
-    Vec2 currentPos = GetPos();
-    Vec2 checkPos = Vec2(currentPos.x + (m_fWallCheckDist * m_iDir), currentPos.y);
+    const vector<CObject*>& vecTiles = pCurScene->GetGroupObject(GROUP_TYPE::TILE);
 
-    // 화면 경계 체크 (임시)
-    if (checkPos.x < 0 || checkPos.x > 1920)  // 화면 너비 가정
+    Vec2 vMyPos = GetPos();
+    Vec2 vCheckPos = Vec2(vMyPos.x + (m_fWallCheckDist * m_iDir), vMyPos.y);
+
+    // 몬스터의 충돌체 크기
+    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
+
+    for (CObject* pTile : vecTiles)
+    {
+        if (!pTile || pTile->IsDead())
+            continue;
+
+        CTile* pTileObj = dynamic_cast<CTile*>(pTile);
+        if (!pTileObj || !pTileObj->IsSolid())
+            continue;
+
+        Vec2 vTilePos = pTile->GetPos();
+        Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
+
+        // AABB 충돌 검사
+        if (abs(vCheckPos.x - vTilePos.x) < (vMyScale.x + vTileScale.x) / 2.f &&
+            abs(vMyPos.y - vTilePos.y) < (vMyScale.y + vTileScale.y) / 2.f)
+        {
+            return true;
+        }
+    }
+
+    // 화면 경계 체크
+    if (vCheckPos.x < 32.f || vCheckPos.x > 928.f)
     {
         return true;
     }
@@ -299,19 +470,37 @@ bool CMonster::CheckWallAhead()
 
 bool CMonster::CheckGroundAhead()
 {
-    // TODO: 실제 타일맵 또는 충돌체를 이용한 바닥 체크 구현
-    // 현재는 임시로 true 반환
-
-    // 예시 구현 (실제로는 레이캐스팅이나 충돌 검사 필요)
-    Vec2 currentPos = GetPos();
-    Vec2 checkPos = Vec2(currentPos.x + (m_fWallCheckDist * m_iDir),
-        currentPos.y + m_fGroundCheckDist);
-
-    // 화면 하단 경계 체크 (임시)
-    if (checkPos.y > 1080)  // 화면 높이 가정
-    {
+    // 실제 타일과의 바닥 검사 구현
+    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+    if (!pCurScene)
         return false;
+
+    const vector<CObject*>& vecTiles = pCurScene->GetGroupObject(GROUP_TYPE::TILE);
+
+    Vec2 vMyPos = GetPos();
+    Vec2 vCheckPos = Vec2(vMyPos.x + (m_fWallCheckDist * m_iDir), vMyPos.y + m_fGroundCheckDist);
+
+    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
+
+    for (CObject* pTile : vecTiles)
+    {
+        if (!pTile || pTile->IsDead())
+            continue;
+
+        CTile* pTileObj = dynamic_cast<CTile*>(pTile);
+        if (!pTileObj || !pTileObj->IsSolid())
+            continue;
+
+        Vec2 vTilePos = pTile->GetPos();
+        Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
+
+        // 발 아래쪽 위치에 타일이 있는지 검사
+        if (abs(vCheckPos.x - vTilePos.x) < (vMyScale.x + vTileScale.x) / 2.f &&
+            abs(vCheckPos.y - vTilePos.y) < (vMyScale.y + vTileScale.y) / 2.f)
+        {
+            return true;
+        }
     }
 
-    return true;
+    return false;
 }

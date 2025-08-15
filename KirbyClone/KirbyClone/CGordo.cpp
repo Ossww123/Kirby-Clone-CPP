@@ -36,8 +36,7 @@ CGordo::CGordo()
     m_vCircularCenter = m_vStartPos;
 
     // 애니메이션 생성
-    CreateAnimations();
-
+    
     // 초기 상태 설정 (고르도는 계속 이동)
     ChangeState(MONSTER_STATE::FLY);
 }
@@ -70,19 +69,8 @@ void CGordo::Move()
     HandleBoundaryCollision();
 }
 
-void CGordo::CreateAnimations()
+void CGordo::SetupAnimationMapping()
 {
-    // 네 번째 행: 고르도 - 시작 위치 (8, 104)
-    Vec2 startPos = Vec2(8.f, 8.f + 96.f);
-
-    // FLY 애니메이션 (1~4열) - 회전하는 가시
-    CreateBasicAnimation(L"FLY", startPos, 4, Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.1f, true);
-
-    // WALK도 FLY와 동일 (고르도는 항상 날아다님)
-    CreateBasicAnimation(L"WALK", startPos, 4, Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.1f, true);
-
-    // IDLE도 FLY와 동일
-    CreateBasicAnimation(L"IDLE", startPos, 1, Vec2(32.f, 32.f), Vec2(32.f, 32.f), 0.5f, true);
 }
 
 void CGordo::MoveHorizontal()

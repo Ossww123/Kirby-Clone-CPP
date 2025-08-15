@@ -39,7 +39,7 @@ public:
     void SetDetectionRange(float _fRange) { m_fDetectionRange = _fRange; }
     const Vec2& GetPlayerPos() const { return m_vPlayerPos; }
 
-private:
+protected:
     // === 플레이어 감지 관련 ===
     bool    m_bPlayerDetected;      // 플레이어 감지 여부
     float   m_fDetectionRange;      // 플레이어 감지 범위
@@ -49,7 +49,7 @@ private:
     void ProcessInhaleMovement();           // 빨아들임 중 이동 처리
     void CheckInhaleDistance();             // 빨아들임 거리 체크
 
-private:
+protected:
     // === 빨아들임 상태 ===
     bool    m_bBeingInhaled;        // 빨아들임 중 상태
     float   m_fInhaleForce;         // 빨아들임 힘

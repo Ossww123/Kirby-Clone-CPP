@@ -12,10 +12,9 @@ public:
     void Move() override;                   // 기본 걷기 이동
 
 protected:
-    // === 애니메이션 생성 구현 ===
-    void CreateAnimations() override;
+    // === 애니메이션 매핑 설정 구현 ===
+    void SetupAnimationMapping() override;
 
 private:
-    // === 웨이들 디 전용 로직 ===
     void ChangeDirection();                 // 방향 전환 로직
 };

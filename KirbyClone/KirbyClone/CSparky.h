@@ -14,8 +14,8 @@ public:
     COPY_ABILITY GetCopyAbility() const override { return COPY_ABILITY::SPARK; }
 
 protected:
-    // === 애니메이션 생성 구현 ===
-    void CreateAnimations() override;
+    // === 애니메이션 매핑 설정 구현 ===
+    void SetupAnimationMapping() override;
 
     // === 상태 업데이트 오버라이드 ===
     void UpdateWalk() override;
