@@ -67,7 +67,6 @@ void CPlayerStateMachine::Init()
 // === 새로운 핵심 업데이트 로직 ===
 void CPlayerStateMachine::Update()
 {
-    // m_pRigidBody 대신 m_pOwner->GetRigidBody() 사용
     CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
     if (!m_pOwner || !pRigidBody || !m_pInputManager || !m_pTransitionTable)
         return;

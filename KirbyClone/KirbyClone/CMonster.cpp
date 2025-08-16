@@ -201,18 +201,6 @@ void CMonster::LoadAnimationsFromFile(const wstring& _strFileName)
 
     // 로드 확인
     pAnimator->Play(L"IDLE", true);
-    if (pAnimator->GetCurAnim() == nullptr)
-    {
-        char debugMsg[512];
-        sprintf_s(debugMsg, "Monster: Failed to load animations from %ws\n", _strFileName.c_str());
-        OutputDebugStringA(debugMsg);
-    }
-    else
-    {
-        char debugMsg[512];
-        sprintf_s(debugMsg, "Monster: Successfully loaded animations from %ws\n", _strFileName.c_str());
-        OutputDebugStringA(debugMsg);
-    }
 }
 
 void CMonster::ChangeState(MONSTER_STATE _eState)

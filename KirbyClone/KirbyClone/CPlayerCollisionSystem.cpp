@@ -8,11 +8,12 @@
 #include "CTile.h"
 #include "CMonster.h"
 #include "CRigidBody.h"
+#include "CTimeMgr.h"
+#include "CScene.h"
+#include "CSceneMgr.h"
 
 CPlayerCollisionSystem::CPlayerCollisionSystem(CPlayer* _pOwner)
     : m_pOwner(_pOwner)
-    , m_bNeedGroundCheck(false)
-    , m_pExitingTile(nullptr)
 {
 }
 
@@ -27,20 +28,99 @@ void CPlayerCollisionSystem::Init()
 
 void CPlayerCollisionSystem::UpdateGroundState()
 {
-    if (!m_bNeedGroundCheck) return;
+    if (!m_pOwner) return;
 
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
     if (!pRigidBody) return;
 
-    // Exit 중인 타일을 제외하고 다른 solid 타일과 충돌 중인지 확인
-    if (!IsCollidingWithOtherSolidTiles(m_pExitingTile))
+    // 현재 Ground 상태인지 확인
+    bool isCurrentlyGrounded = pRigidBody->IsGround();
+
+    // 실제로 땅 위에 있는지 체크
+    bool isActuallyOnGround = IsPlayerOnGround();
+
+    // 상태 불일치 시 수정
+    if (isCurrentlyGrounded && !isActuallyOnGround)
     {
+        // Ground 상태이지만 실제로는 땅 위에 없음 -> FALL 상태로 전환
         pRigidBody->SetGround(false);
+
+        // 플레이어 상태도 FALL로 전환
+        if (m_pOwner->GetCurrentState() != PLAYER_STATE::JUMP &&
+            m_pOwner->GetCurrentState() != PLAYER_STATE::FALL &&
+            m_pOwner->GetCurrentState() != PLAYER_STATE::FALL2)
+        {
+            m_pOwner->ChangeState(PLAYER_STATE::FALL);
+        }
+    }
+}
+
+bool CPlayerCollisionSystem::IsPlayerOnGround() const
+{
+    if (!m_pOwner) return false;
+
+    // 발 아래 타일이 있는지 체크
+    return CheckGroundBelow();
+}
+
+bool CPlayerCollisionSystem::CheckGroundBelow() const
+{
+    if (!m_pOwner) return false;
+
+    CTile* pSupportingTile = FindSupportingTile();
+    return (pSupportingTile != nullptr);
+}
+
+CTile* CPlayerCollisionSystem::FindSupportingTile() const
+{
+    if (!m_pOwner) return nullptr;
+
+    Vec2 vPlayerPos = m_pOwner->GetPos();
+    Vec2 vPlayerScale = GetPlayerColliderScale();
+
+    // 플레이어 발 아래 영역 정의
+    float playerLeft = vPlayerPos.x - vPlayerScale.x / 2.f;
+    float playerRight = vPlayerPos.x + vPlayerScale.x / 2.f;
+    float playerBottom = vPlayerPos.y + vPlayerScale.y / 2.f;
+
+    // 발 아래 약간의 여유 공간 (픽셀 단위)
+    float groundCheckDistance = 8.f;
+    float checkY = playerBottom + groundCheckDistance;
+
+    // 현재 씬의 모든 타일 검사
+    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+    if (!pCurScene) return nullptr;
+
+    const vector<CObject*>& vecTiles = pCurScene->GetGroupObject(GROUP_TYPE::TILE);
+
+    for (CObject* pObj : vecTiles)
+    {
+        if (!pObj || pObj->IsDead()) continue;
+
+        CTile* pTile = dynamic_cast<CTile*>(pObj);
+        if (!pTile || !pTile->IsSolid()) continue;
+
+        Vec2 vTilePos = pTile->GetPos();
+        Vec2 vTileScale = GetTileColliderScale(pTile);
+
+        // 타일 영역 계산
+        float tileLeft = vTilePos.x - vTileScale.x / 2.f;
+        float tileRight = vTilePos.x + vTileScale.x / 2.f;
+        float tileTop = vTilePos.y - vTileScale.y / 2.f;
+        float tileBottom = vTilePos.y + vTileScale.y / 2.f;
+
+        // 플레이어가 타일 위에 있고, 발 아래 영역이 타일과 겹치는지 체크
+        bool horizontalOverlap = (playerRight > tileLeft) && (playerLeft < tileRight);
+        bool isAboveTile = (playerBottom <= tileTop + TILE_COLLISION_THRESHOLD);
+        bool isWithinCheckRange = (checkY >= tileTop) && (playerBottom <= tileTop + groundCheckDistance);
+
+        if (horizontalOverlap && isAboveTile && isWithinCheckRange)
+        {
+            return pTile;
+        }
     }
 
-    // 플래그 및 Exit 타일 초기화
-    m_bNeedGroundCheck = false;
-    m_pExitingTile = nullptr;
+    return nullptr;
 }
 
 // === 충돌 처리 메인 인터페이스 ===
@@ -52,19 +132,26 @@ void CPlayerCollisionSystem::HandleCollisionEnter(CCollider* _pOther)
     CObject* pOtherObj = _pOther->GetOwner();
     if (!pOtherObj) return;
 
-    if (IsInvincibleState()) return;
+    // 무적 상태 확인
+    if (IsInvincibleState())
+    {
+        return;
+    }
 
+    // 오브젝트 타입별 처리
     OBJECT_TYPE eType = pOtherObj->GetType();
 
     if (IsTileType(eType))
     {
         CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
-        if (pTile) HandleTileCollisionEnter(pTile);
+        if (pTile)
+            HandleTileCollisionEnter(pTile);
     }
     else if (IsMonsterType(eType))
     {
         CMonster* pMonster = dynamic_cast<CMonster*>(pOtherObj);
-        if (pMonster) HandleMonsterCollisionEnter(pMonster);
+        if (pMonster)
+            HandleMonsterCollisionEnter(pMonster);
     }
     else if (IsItemType(eType))
     {
@@ -83,12 +170,14 @@ void CPlayerCollisionSystem::HandleCollision(CCollider* _pOther)
     CObject* pOtherObj = _pOther->GetOwner();
     if (!pOtherObj) return;
 
+    // 지속적인 충돌 처리 (주로 타일)
     OBJECT_TYPE eType = pOtherObj->GetType();
 
     if (IsTileType(eType))
     {
         CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
-        if (pTile) HandleTileCollision(pTile);
+        if (pTile)
+            HandleTileCollision(pTile);
     }
 }
 
@@ -99,12 +188,14 @@ void CPlayerCollisionSystem::HandleCollisionExit(CCollider* _pOther)
     CObject* pOtherObj = _pOther->GetOwner();
     if (!pOtherObj) return;
 
+    // 타일에서 벗어날 때 Ground 상태 처리
     OBJECT_TYPE eType = pOtherObj->GetType();
 
     if (IsTileType(eType))
     {
         CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
-        if (pTile) HandleTileCollisionExit(pTile);
+        if (pTile)
+            HandleTileCollisionExit(pTile);
     }
 }
 
@@ -113,18 +204,122 @@ void CPlayerCollisionSystem::HandleCollisionExit(CCollider* _pOther)
 void CPlayerCollisionSystem::HandleTileCollisionEnter(CTile* _pTile)
 {
     if (!_pTile || !_pTile->IsSolid()) return;
+
     // 타일 진입 시 특별한 처리가 필요하면 여기에 추가
 }
 
 void CPlayerCollisionSystem::HandleTileCollision(CTile* _pTile)
 {
-    if (!_pTile || !_pTile->IsSolid()) return;
+    CTile* pTile = dynamic_cast<CTile*>(_pTile);
+    if (!pTile || !pTile->IsSolid())
+        return;
 
-    if (ShouldSetGroundState(_pTile))
+    CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
+    if (!pRigidBody)
+        return;
+
+    Vec2 vMyPos = m_pOwner->GetPos();
+    Vec2 vTilePos = pTile->GetPos();
+    Vec2 vMyScale = GetPlayerColliderScale();
+    Vec2 vTileScale = GetTileColliderScale(pTile);
+
+    // 현재 속도 기반으로 충돌 방향 추정
+    Vec2 vVelocity = pRigidBody->GetVelocity();
+    float deltaTime = CTimeMgr::GetInst()->GetfDT();
+
+    // 이전 프레임 위치 추정
+    Vec2 vPrevPos = vMyPos - vVelocity * deltaTime;
+
+    // 충돌 박스 경계 계산
+    float myLeft = vMyPos.x - vMyScale.x / 2.f;
+    float myRight = vMyPos.x + vMyScale.x / 2.f;
+    float myTop = vMyPos.y - vMyScale.y / 2.f;
+    float myBottom = vMyPos.y + vMyScale.y / 2.f;
+
+    float tileLeft = vTilePos.x - vTileScale.x / 2.f;
+    float tileRight = vTilePos.x + vTileScale.x / 2.f;
+    float tileTop = vTilePos.y - vTileScale.y / 2.f;
+    float tileBottom = vTilePos.y + vTileScale.y / 2.f;
+
+    // 겹침 계산
+    float overlapX = min(myRight, tileRight) - max(myLeft, tileLeft);
+    float overlapY = min(myBottom, tileBottom) - max(myTop, tileTop);
+
+    if (overlapX <= 0 || overlapY <= 0)
+        return;
+
+    // 속도 방향을 고려한 충돌 처리
+    bool collisionFromLeft = vVelocity.x > 0 && vPrevPos.x < tileLeft;
+    bool collisionFromRight = vVelocity.x < 0 && vPrevPos.x > tileRight;
+    bool collisionFromTop = vVelocity.y > 0 && vPrevPos.y < tileTop;
+    bool collisionFromBottom = vVelocity.y < 0 && vPrevPos.y > tileBottom;
+
+    // 우선순위: 수직 충돌을 먼저 처리 (착지와 천장 충돌)
+    if (collisionFromTop && overlapY <= overlapX)
     {
-        CorrectPlayerPosition(_pTile);
-        SetGroundState(_pTile);
-        ResetVerticalVelocity();
+        // 위에서 아래로 떨어져서 착지
+        float correctedY = tileTop - vMyScale.y / 2.f;
+        m_pOwner->SetPos(Vec2(vMyPos.x, correctedY));
+        pRigidBody->SetGround(true);
+        pRigidBody->SetVelocityY(0.f);
+    }
+    else if (collisionFromBottom && overlapY <= overlapX)
+    {
+        // 아래에서 위로 올라와서 천장 충돌
+        float correctedY = tileBottom + vMyScale.y / 2.f;
+        m_pOwner->SetPos(Vec2(vMyPos.x, correctedY));
+        pRigidBody->SetVelocityY(0.f);
+    }
+    else if (collisionFromLeft)
+    {
+        // 왼쪽에서 오른쪽으로 이동해서 벽 충돌
+        float correctedX = tileLeft - vMyScale.x / 2.f;
+        m_pOwner->SetPos(Vec2(correctedX, vMyPos.y));
+        pRigidBody->SetVelocityX(0.f);
+    }
+    else if (collisionFromRight)
+    {
+        // 오른쪽에서 왼쪽으로 이동해서 벽 충돌
+        float correctedX = tileRight + vMyScale.x / 2.f;
+        m_pOwner->SetPos(Vec2(correctedX, vMyPos.y));
+        pRigidBody->SetVelocityX(0.f);
+    }
+    else
+    {
+        // 방향을 정확히 알 수 없는 경우 - 최소 겹침 방향으로 처리
+        if (overlapX < overlapY)
+        {
+            // 수평 분리
+            if (vMyPos.x < vTilePos.x)
+            {
+                float correctedX = tileLeft - vMyScale.x / 2.f;
+                m_pOwner->SetPos(Vec2(correctedX, vMyPos.y));
+                if (vVelocity.x > 0) pRigidBody->SetVelocityX(0.f);
+            }
+            else
+            {
+                float correctedX = tileRight + vMyScale.x / 2.f;
+                m_pOwner->SetPos(Vec2(correctedX, vMyPos.y));
+                if (vVelocity.x < 0) pRigidBody->SetVelocityX(0.f);
+            }
+        }
+        else
+        {
+            // 수직 분리
+            if (vMyPos.y < vTilePos.y)
+            {
+                float correctedY = tileTop - vMyScale.y / 2.f;
+                m_pOwner->SetPos(Vec2(vMyPos.x, correctedY));
+                pRigidBody->SetGround(true);
+                if (vVelocity.y > 0) pRigidBody->SetVelocityY(0.f);
+            }
+            else
+            {
+                float correctedY = tileBottom + vMyScale.y / 2.f;
+                m_pOwner->SetPos(Vec2(vMyPos.x, correctedY));
+                if (vVelocity.y < 0) pRigidBody->SetVelocityY(0.f);
+            }
+        }
     }
 }
 
@@ -132,8 +327,16 @@ void CPlayerCollisionSystem::HandleTileCollisionExit(CTile* _pTile)
 {
     if (!_pTile || !_pTile->IsSolid()) return;
 
-    m_pExitingTile = _pTile;
-    m_bNeedGroundCheck = true;
+    CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
+    if (!pRigidBody) return;
+
+    Vec2 vVelocity = pRigidBody->GetVelocity();
+
+    // 위쪽으로 벗어나는 이동(점프) 중일 때만 Ground 해제
+    if (vVelocity.y < JUMP_VELOCITY_THRESHOLD)
+    {
+        pRigidBody->SetGround(false);
+    }
 }
 
 void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
@@ -146,6 +349,7 @@ void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
         Vec2 vDiff = m_pOwner->GetPos() - _pMonster->GetPos();
         if (vDiff.Length() < 60.f) // 흡입 범위 내
         {
+            // 몬스터 흡수 처리 (직접 시스템 접근)
             if (m_pOwner->GetInhaleSystem())
             {
                 m_pOwner->GetInhaleSystem()->SwallowTarget(_pMonster);
@@ -157,8 +361,13 @@ void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
     // 입에 물고 있거나 흡입 중이 아니면 데미지 처리
     if (!m_pOwner->HasMouthful() && !m_pOwner->IsInhaling())
     {
-        Vec2 vKnockbackDir = m_pOwner->GetPos() - _pMonster->GetPos();
+        // 넉백 방향 계산 (몬스터에서 플레이어 방향)
+        Vec2 vMonsterPos = _pMonster->GetPos();
+        Vec2 vPlayerPos = m_pOwner->GetPos();
+        Vec2 vKnockbackDir = vPlayerPos - vMonsterPos;
         vKnockbackDir.Normalize();
+
+        // 데미지 적용
         m_pOwner->TakeDamage(1, vKnockbackDir);
     }
 }
@@ -166,13 +375,17 @@ void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
 void CPlayerCollisionSystem::HandleItemCollisionEnter(CObject* _pItem)
 {
     if (!_pItem) return;
+
     // TODO: 아이템별 처리 로직 추가
+    // 예: 체력 회복, 파워업 등
 }
 
 void CPlayerCollisionSystem::HandleSpecialObjectCollisionEnter(CObject* _pSpecialObject)
 {
     if (!_pSpecialObject) return;
+
     // TODO: 특수 오브젝트 처리 로직 추가
+    // 예: 문, 스위치, 이동 플랫폼 등
 }
 
 // === 타일 충돌 세부 처리 ===
@@ -184,6 +397,7 @@ bool CPlayerCollisionSystem::ShouldSetGroundState(CTile* _pTile) const
     float tileTop = GetTileTopPosition(_pTile);
     float playerBottom = GetPlayerBottomPosition();
 
+    // 플레이어 바닥과 타일 윗면이 거의 맞닿아 있고, 플레이어가 위에 있는지 확인
     return (abs(playerBottom - tileTop) < TILE_COLLISION_THRESHOLD &&
         IsPlayerAboveTile(_pTile));
 }
@@ -195,6 +409,7 @@ void CPlayerCollisionSystem::CorrectPlayerPosition(CTile* _pTile)
     float tileTop = GetTileTopPosition(_pTile);
     float playerBottom = GetPlayerBottomPosition();
 
+    // 미세한 위치 보정이 필요한 경우
     if (playerBottom > tileTop + POSITION_CORRECTION_THRESHOLD)
     {
         Vec2 vPlayerColliderScale = GetPlayerColliderScale();
@@ -206,18 +421,6 @@ void CPlayerCollisionSystem::CorrectPlayerPosition(CTile* _pTile)
     }
 }
 
-void CPlayerCollisionSystem::SetGroundState(CTile* _pTile)
-{
-    if (!_pTile || !m_pOwner) return;
-
-    CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
-    if (!pRigidBody) return;
-
-    if (!pRigidBody->IsGround())
-    {
-        pRigidBody->SetGround(true);
-    }
-}
 
 void CPlayerCollisionSystem::ResetVerticalVelocity()
 {
@@ -227,13 +430,15 @@ void CPlayerCollisionSystem::ResetVerticalVelocity()
     if (!pRigidBody) return;
 
     Vec2 vVelocity = pRigidBody->GetVelocity();
+
+    // 아래로 떨어지는 속도가 있다면 제거
     if (vVelocity.y > 0.f)
     {
         pRigidBody->SetVelocityY(0.f);
     }
 }
 
-// === 헬퍼 함수들 ===
+// === 충돌 계산 헬퍼 함수들 ===
 
 bool CPlayerCollisionSystem::IsPlayerAboveTile(CTile* _pTile) const
 {
@@ -281,12 +486,13 @@ Vec2 CPlayerCollisionSystem::GetTileColliderScale(CTile* _pTile) const
     return pCollider ? pCollider->GetScale() : Vec2(0.f, 0.f);
 }
 
-// === 유틸리티 함수들 ===
+// === 무적 상태 체크 ===
 
 bool CPlayerCollisionSystem::IsInvincibleState() const
 {
     if (!m_pOwner) return false;
 
+    // 체력 시스템을 통한 무적 상태 확인
     if (m_pOwner->GetHealthSystem())
     {
         return m_pOwner->GetHealthSystem()->IsInvincible();
@@ -295,30 +501,7 @@ bool CPlayerCollisionSystem::IsInvincibleState() const
     return false;
 }
 
-bool CPlayerCollisionSystem::IsCollidingWithOtherSolidTiles(CTile* _excludeTile) const
-{
-    if (!m_pOwner || !m_pOwner->GetCollider()) return false;
-
-    CCollider* pPlayerCollider = m_pOwner->GetCollider();
-    const vector<CCollider*>& collidingColliders = pPlayerCollider->GetCollidingColliders();
-
-    for (CCollider* pOtherCollider : collidingColliders)
-    {
-        if (!pOtherCollider || !pOtherCollider->GetOwner()) continue;
-
-        CObject* pOtherObj = pOtherCollider->GetOwner();
-        if (IsTileType(pOtherObj->GetType()))
-        {
-            CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
-            if (pTile && pTile->IsSolid() && pTile != _excludeTile)
-            {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
+// === 오브젝트 타입 유틸리티 함수들 ===
 
 bool CPlayerCollisionSystem::IsMonsterType(OBJECT_TYPE _eType)
 {
