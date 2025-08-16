@@ -176,8 +176,10 @@
     <ClInclude Include="CPlayerCollisionSystem.h" />
     <ClInclude Include="CPlayerHealthSystem.h" />
     <ClInclude Include="CPlayerInhaleSystem.h" />
+    <ClInclude Include="CPlayerInputManager.h" />
     <ClInclude Include="CPlayerMovement.h" />
     <ClInclude Include="CPlayerStateMachine.h" />
+    <ClInclude Include="CPlayerStateTransitionTable.h" />
     <ClInclude Include="CRes.h" />
     <ClInclude Include="CResMgr.h" />
     <ClInclude Include="CRigidBody.h" />
@@ -245,8 +247,10 @@
     <ClCompile Include="CPlayerCollisionSystem.cpp" />
     <ClCompile Include="CPlayerHealthSystem.cpp" />
     <ClCompile Include="CPlayerInhaleSystem.cpp" />
+    <ClCompile Include="CPlayerInputManager.cpp" />
     <ClCompile Include="CPlayerMovement.cpp" />
     <ClCompile Include="CPlayerStateMachine.cpp" />
+    <ClCompile Include="CPlayerStateTransitionTable.cpp" />
     <ClCompile Include="CRes.cpp" />
     <ClCompile Include="CResMgr.cpp" />
     <ClCompile Include="CRigidBody.cpp" />

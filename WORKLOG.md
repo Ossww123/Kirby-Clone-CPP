@@ -1677,3 +1677,4 @@ GetRigidBody()->SetFriction(5.f);
 ### 완료
 
 - [X] 커비 SLIDE 구현
+- [X] 상태 변화 시스템을 중앙 집중화로 변경

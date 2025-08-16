@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CPlayerMovement.h"
+#include "CPlayerInputManager.h"
 #include "CPlayer.h"
 #include "CRigidBody.h"
 #include "CKeyMgr.h"
@@ -7,7 +8,7 @@
 
 CPlayerMovement::CPlayerMovement(CPlayer* _pOwner) :
     m_pOwner(_pOwner),
-    m_pRigidBody(nullptr),
+    m_pInputManager(nullptr),
     m_fSpeed(150.f),
     m_fRunSpeed(250.f),
     m_fJumpPower(640.f),
@@ -22,9 +23,7 @@ CPlayerMovement::CPlayerMovement(CPlayer* _pOwner) :
     m_iDeceleratingDirection(0),
     m_bWasMovingLastFrame(false),
     m_bInputPressed(false),
-    // === 크라우치 관련 초기화 ===
-    m_bCrouchPressed(false),
-    m_fCrouchDeceleration(1200.f)  // 일반 감속보다 빠르게
+    m_fCrouchDeceleration(1200.f)
 {
 }
 
@@ -32,14 +31,15 @@ CPlayerMovement::~CPlayerMovement()
 {
 }
 
-void CPlayerMovement::Init(CRigidBody* _pRigidBody)
+void CPlayerMovement::Init()
 {
-    m_pRigidBody = _pRigidBody;
+
 }
 
 void CPlayerMovement::Update()
 {
-    if (!m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
         return;
 
     // 흡입 중이면 이동 제한
@@ -49,64 +49,65 @@ void CPlayerMovement::Update()
         return;
     }
 
-    // 크라우치 입력 처리
-    HandleCrouchInput();
+    // === 물리적 이동만 처리 ===
+    ApplyCurrentMovement();
 
-    // 점프 처리
-    HandleJumpInput();
-
-    // 일반 이동 처리 (크라우치 상태가 아닐 때만)
-    if (m_pOwner && m_pOwner->GetCurrentState() != PLAYER_STATE::CROUCH)
-    {
-        HandleMovementInput();
-    }
-    else if (m_pOwner && m_pOwner->GetCurrentState() == PLAYER_STATE::CROUCH)
-    {
-        // 크라우치 상태에서의 특별한 입력 처리
-        HandleCrouchStateInput();
-    }
-
-    // 방향 업데이트
+    // === 방향 및 상태 업데이트 ===
     UpdateDirection();
-
-    // 이동 상태 업데이트
     UpdateMovementState();
+}
+
+// === 새로 추가: 현재 상태에 따른 물리적 이동 적용 ===
+void CPlayerMovement::ApplyCurrentMovement()
+{
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!m_pOwner || !pRigidBody)
+    {
+        return;
+    }
+
+    PLAYER_STATE currentState = m_pOwner->GetCurrentState();
+
+    // 특정 상태에서는 이동 불가
+    if (currentState == PLAYER_STATE::CROUCH ||
+        currentState == PLAYER_STATE::SLIDE ||
+        currentState == PLAYER_STATE::SWALLOW ||
+        currentState == PLAYER_STATE::EXHALE)
+    {
+        return;
+    }
+
+    // 이동 입력 처리
+    ProcessMovementInput();
 }
 
 // === 입력 처리 함수들 ===
 
-void CPlayerMovement::HandleMovementInput()
+// === 이동 입력 처리 ===
+void CPlayerMovement::ProcessMovementInput()
 {
-    if (!m_pRigidBody)
-        return;
-
-    // 크라우치 상태에서 X키(공격키) 입력 시 슬라이드
-    if (KEY_TAP(KEY::X) && m_pOwner && m_pOwner->GetCurrentState() == PLAYER_STATE::CROUCH)
+    if (!m_pInputManager)
     {
-        InitiateSlide();
+        ProcessMovementInputLegacy();
         return;
     }
 
-    int currentMoveDir = 0;
-    m_bInputPressed = false;
-
-    // 왼쪽 이동
-    if (KEY_HOLD(KEY::LEFT))
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
     {
-        currentMoveDir = -1;
-        m_bInputPressed = true;
+        return;
+    }
 
-        // 더블탭 체크 - 이벤트 기반으로 상태 변경
-        if (CheckDoubleTap(currentMoveDir))
+    int currentMoveDir = m_pInputManager->GetHorizontalInput();
+    m_bInputPressed = (currentMoveDir != 0);
+
+    if (currentMoveDir != 0)
+    {
+        // 더블탭 체크
+        if ((currentMoveDir == -1 && m_pInputManager->IsDoubleTapLeft()) ||
+            (currentMoveDir == 1 && m_pInputManager->IsDoubleTapRight()))
         {
             m_bRunMode = true;
-            // 상태도 즉시 업데이트 (이벤트 기반)
-            if (m_pOwner)
-            {
-                PLAYER_STATE newState = m_pOwner->HasMouthful() ?
-                    PLAYER_STATE::MOUTHFUL_RUN : PLAYER_STATE::RUN;
-                m_pOwner->ChangeState(newState);
-            }
         }
 
         m_bIsDecelerating = false;
@@ -118,41 +119,13 @@ void CPlayerMovement::HandleMovementInput()
         if (m_pOwner && m_pOwner->HasMouthful())
             fCurrentSpeed *= 0.7f;
 
-        m_pRigidBody->SetVelocityX(-fCurrentSpeed);
+        float finalVelocity = fCurrentSpeed * currentMoveDir;
+
+        pRigidBody->SetVelocityX(finalVelocity);
     }
-    // 오른쪽 이동
-    else if (KEY_HOLD(KEY::RIGHT))
-    {
-        currentMoveDir = 1;
-        m_bInputPressed = true;
-
-        // 더블탭 체크 - 이벤트 기반으로 상태 변경
-        if (CheckDoubleTap(currentMoveDir))
-        {
-            m_bRunMode = true;
-            // 상태도 즉시 업데이트 (이벤트 기반)
-            if (m_pOwner)
-            {
-                PLAYER_STATE newState = m_pOwner->HasMouthful() ?
-                    PLAYER_STATE::MOUTHFUL_RUN : PLAYER_STATE::RUN;
-                m_pOwner->ChangeState(newState);
-            }
-        }
-
-        m_bIsDecelerating = false;
-        ResetDoubleTapState();
-
-        float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
-
-        // 입에 물고 있으면 속도 감소
-        if (m_pOwner && m_pOwner->HasMouthful())
-            fCurrentSpeed *= 0.7f;
-
-        m_pRigidBody->SetVelocityX(fCurrentSpeed);
-    }
-    // 입력이 없으면 감속 시작
     else
     {
+        // 입력이 없으면 감속 시작
         if (!m_bIsDecelerating)
         {
             StartDeceleration(m_iLastMoveDir);
@@ -164,76 +137,65 @@ void CPlayerMovement::HandleMovementInput()
     m_iLastMoveDir = currentMoveDir;
 }
 
-void CPlayerMovement::HandleJumpInput()
+void CPlayerMovement::ProcessMovementInputLegacy()
 {
-    if (!m_pRigidBody || !m_pOwner)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
         return;
 
-    if (KEY_TAP(KEY::SPACE))
+    int currentMoveDir = 0;
+    m_bInputPressed = false;
+
+    if (KEY_HOLD(KEY::LEFT))
     {
-        // 크라우치 상태에서는 슬라이드
-        if (m_pOwner->GetCurrentState() == PLAYER_STATE::CROUCH)
+        currentMoveDir = -1;
+        m_bInputPressed = true;
+
+        if (CheckDoubleTap(currentMoveDir))
         {
-            InitiateSlide();
+            m_bRunMode = true;
         }
-        // 일반 상태에서는 점프
-        else
+
+        m_bIsDecelerating = false;
+        ResetDoubleTapState();
+
+        float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
+
+        if (m_pOwner && m_pOwner->HasMouthful())
+            fCurrentSpeed *= 0.7f;
+
+        pRigidBody->SetVelocityX(-fCurrentSpeed);
+    }
+    else if (KEY_HOLD(KEY::RIGHT))
+    {
+        currentMoveDir = 1;
+        m_bInputPressed = true;
+
+        if (CheckDoubleTap(currentMoveDir))
         {
-            Jump();
+            m_bRunMode = true;
         }
+
+        m_bIsDecelerating = false;
+        ResetDoubleTapState();
+
+        float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
+
+        if (m_pOwner && m_pOwner->HasMouthful())
+            fCurrentSpeed *= 0.7f;
+
+        pRigidBody->SetVelocityX(fCurrentSpeed);
     }
-}
-
-// === 크라우치 입력 처리 ===
-void CPlayerMovement::HandleCrouchInput()
-{
-    if (!m_pOwner)
-        return;
-
-    // DOWN 키 입력 상태 체크
-    m_bCrouchPressed = KEY_HOLD(KEY::DOWN);
-
-    PLAYER_STATE currentState = m_pOwner->GetCurrentState();
-
-    // 크라우치 진입 조건: 땅에 선 상태 + DOWN 키 + 머금은 상태 아님
-    if (m_bCrouchPressed &&
-        (currentState == PLAYER_STATE::IDLE ||
-            currentState == PLAYER_STATE::WALK ||
-            currentState == PLAYER_STATE::RUN) &&
-        !m_pOwner->HasMouthful())
+    else
     {
-        // 크라우치 상태로 전환
-        m_pOwner->ChangeState(PLAYER_STATE::CROUCH);
-    }
-    // 크라우치 종료 조건: DOWN 키 해제
-    else if (!m_bCrouchPressed && currentState == PLAYER_STATE::CROUCH)
-    {
-        // IDLE 상태로 복귀
-        m_pOwner->ChangeState(PLAYER_STATE::IDLE);
+        if (!m_bIsDecelerating)
+        {
+            StartDeceleration(m_iLastMoveDir);
+        }
+        ApplyDeceleration();
     }
 
-    // 크라우치 상태에서 방향 변경 처리
-    if (currentState == PLAYER_STATE::CROUCH)
-    {
-        HandleCrouchDirectionInput();
-    }
-}
-
-// === 크라우치 상태에서의 입력 처리 ===
-void CPlayerMovement::HandleCrouchStateInput()
-{
-    if (!m_pOwner)
-        return;
-
-    // 크라우치 상태에서 슬라이드 입력 체크
-    if (KEY_TAP(KEY::SPACE) || KEY_TAP(KEY::X))
-    {
-        InitiateSlide();
-        return;
-    }
-
-    // 크라우치 상태에서 방향 변경 처리
-    HandleCrouchDirectionInput();
+    m_iLastMoveDir = currentMoveDir;
 }
 
 // === 방향 관리 함수들 ===
@@ -283,15 +245,16 @@ void CPlayerMovement::StartDeceleration(int _iDirection)
 
 void CPlayerMovement::ApplyDeceleration()
 {
-    if (!m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
         return;
 
-    float currentSpeedX = m_pRigidBody->GetVelocity().x;
+    float currentSpeedX = pRigidBody->GetVelocity().x;
 
     // 이미 정지 상태면 감속 완료
     if (abs(currentSpeedX) <= m_fMinMovingSpeed)
     {
-        m_pRigidBody->SetVelocityX(0.f);
+        pRigidBody->SetVelocityX(0.f);
         m_bIsDecelerating = false;
 
         // 감속 완료 시 RUN 모드 해제 및 더블탭 상태 리셋
@@ -309,29 +272,30 @@ void CPlayerMovement::ApplyDeceleration()
         float newSpeedX = currentSpeedX - decelAmount;
         if (newSpeedX < m_fMinMovingSpeed)
             newSpeedX = 0;
-        m_pRigidBody->SetVelocityX(newSpeedX);
+        pRigidBody->SetVelocityX(newSpeedX);
     }
     else if (currentSpeedX < 0)
     {
         float newSpeedX = currentSpeedX + decelAmount;
         if (newSpeedX > -m_fMinMovingSpeed)
             newSpeedX = 0;
-        m_pRigidBody->SetVelocityX(newSpeedX);
+        pRigidBody->SetVelocityX(newSpeedX);
     }
 }
 
 // === 크라우치 상태 감속 처리 ===
 void CPlayerMovement::ApplyCrouchDeceleration()
 {
-    if (!m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
         return;
 
-    float currentSpeedX = m_pRigidBody->GetVelocity().x;
+    float currentSpeedX = pRigidBody->GetVelocity().x;
 
     // 이미 정지 상태면 감속 완료
     if (abs(currentSpeedX) <= m_fMinMovingSpeed)
     {
-        m_pRigidBody->SetVelocityX(0.f);
+        pRigidBody->SetVelocityX(0.f);
         return;
     }
 
@@ -344,14 +308,14 @@ void CPlayerMovement::ApplyCrouchDeceleration()
         float newSpeedX = currentSpeedX - decelAmount;
         if (newSpeedX < m_fMinMovingSpeed)
             newSpeedX = 0;
-        m_pRigidBody->SetVelocityX(newSpeedX);
+        pRigidBody->SetVelocityX(newSpeedX);
     }
     else if (currentSpeedX < 0)
     {
         float newSpeedX = currentSpeedX + decelAmount;
         if (newSpeedX > -m_fMinMovingSpeed)
             newSpeedX = 0;
-        m_pRigidBody->SetVelocityX(newSpeedX);
+        pRigidBody->SetVelocityX(newSpeedX);
     }
 }
 
@@ -409,18 +373,23 @@ void CPlayerMovement::Jump()
     if (!CanJump())
         return;
 
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
+        return;
+
     // 점프 실행
-    m_pRigidBody->SetVelocityY(-m_fJumpPower);
-    m_pRigidBody->SetGround(false);
+    pRigidBody->SetVelocityY(-m_fJumpPower);
+    pRigidBody->SetGround(false);
 }
 
 bool CPlayerMovement::CanJump() const
 {
-    if (!m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
         return false;
 
     // 땅에 있을 때만 점프 가능
-    return m_pRigidBody->IsGround();
+    return pRigidBody->IsGround();
 }
 
 // === 슬라이드 관련 함수들 ===
@@ -447,9 +416,10 @@ void CPlayerMovement::InitiateSlide()
 
 void CPlayerMovement::StopMovement()
 {
-    if (m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (pRigidBody)
     {
-        m_pRigidBody->SetVelocityX(0.f);
+        pRigidBody->SetVelocityX(0.f);
     }
     m_bInputPressed = false;
     m_bIsDecelerating = false;
@@ -458,9 +428,10 @@ void CPlayerMovement::StopMovement()
 
 void CPlayerMovement::SetVelocityX(float _fVelX)
 {
-    if (m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (pRigidBody)
     {
-        m_pRigidBody->SetVelocityX(_fVelX);
+        pRigidBody->SetVelocityX(_fVelX);
     }
 }
 
@@ -468,17 +439,19 @@ void CPlayerMovement::SetVelocityX(float _fVelX)
 
 bool CPlayerMovement::IsActuallyMoving() const
 {
-    if (!m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
         return false;
 
-    float currentSpeedX = abs(m_pRigidBody->GetVelocity().x);
+    float currentSpeedX = abs(pRigidBody->GetVelocity().x);
     return currentSpeedX > m_fMinMovingSpeed;
 }
 
 float CPlayerMovement::GetCurrentSpeed() const
 {
-    if (!m_pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
+    if (!pRigidBody)
         return 0.f;
 
-    return abs(m_pRigidBody->GetVelocity().x);
+    return abs(pRigidBody->GetVelocity().x);
 }

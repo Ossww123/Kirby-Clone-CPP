@@ -1,9 +1,9 @@
 #pragma once
 
 // 전방 선언
-class CAnimator;
-class CRigidBody;
 class CPlayer;
+class CPlayerInputManager;
+class CPlayerStateTransitionTable;
 
 class CPlayerStateMachine
 {
@@ -14,24 +14,13 @@ public:
 
 public:
     // === 핵심 생명주기 함수들 ===
-    void Init(CAnimator* _pAnimator, CRigidBody* _pRigidBody);
+    void Init();
     void Update();
 
 public:
     // === 상태 관리 인터페이스 ===
     void ChangeStateInternal(PLAYER_STATE _eState);
     bool CanChangeToState(PLAYER_STATE _eState) const;
-
-private:
-    // === 상태 업데이트 로직들 ===
-    void UpdateIdleState();
-    void UpdateMovementState();
-    void UpdateInhaleState();
-    void UpdateAirborneState();
-    void UpdateSpecialState();
-    void UpdateBounceState();
-    void UpdateCrouchState();
-    void UpdateSlideState();
 
 public:
     // === 상태 체크 함수들 ===
@@ -40,28 +29,61 @@ public:
     bool IsMouthfulState() const;
     bool IsGroundedState() const;
 
-private:
-    // === 공중 상태 처리 ===
-    void HandleLanding();
-    void PerformBounce();
+public:
+    // === Getter 함수들 ===
+    PLAYER_STATE GetCurrentState() const { return m_eCurState; }
+    PLAYER_STATE GetPreviousState() const { return m_ePrevState; }
+    CPlayerInputManager* GetInputManager() const { return m_pInputManager; }
 
+private:
+    // === 상태 실행 (입력 처리 없음, 순수 실행만) ===
+    void ExecuteCurrentState();
+    void ExecuteIdleState();
+    void ExecuteMovementState();
+    void ExecuteJumpState();
+    void ExecuteFallState();
+    void ExecuteCrouchState();
+    void ExecuteSlideState();
+    void ExecuteInhaleStates();
+    void ExecuteSpecialStates();
+    void ExecuteBounceState();
+
+    // === 상태 변경 시 실행 ===
+    void OnStateEnter(PLAYER_STATE _eState);
+    void OnEnterJumpState();
+    void OnEnterSlideState();
+    void OnEnterInhaleState();
+    void OnEnterBounceState();
+    void OnEnterFallState();
+
+private:
     // === 슬라이드 상태 처리 ===
     void InitiateSlide();           // 슬라이드 시작 처리
     void UpdateSlideMovement();     // 슬라이드 이동 처리
     void CheckSlideCompletion();    // 슬라이드 완료 체크
     void HandleSlideToFall();       // 슬라이드 중 낙하 처리
 
+private:
+    // === 공중 상태 처리 ===
+    void HandleLanding();
+    void PerformBounce();
+
+private:
     // === 애니메이션 설정 ===
     void SetAnimationForState(PLAYER_STATE _eState);
-
-public:
-    // === Getter 함수들 ===
-    PLAYER_STATE GetCurrentState() const { return m_eCurState; }
-    PLAYER_STATE GetPreviousState() const { return m_ePrevState; }
 
 private:
     // === 상태 전환 유효성 검사 ===
     bool IsValidStateTransition(PLAYER_STATE _from, PLAYER_STATE _to) const;
+
+private:
+    // === 전환 테이블 초기화 ===
+    void InitializeTransitionTable();
+    void AddBasicMovementTransitions();
+    void AddJumpAndFallTransitions();
+    void AddCrouchAndSlideTransitions();
+    void AddInhaleTransitions();
+    void AddSpecialTransitions();
 
 private:
     // === 점프/낙하 관련 변수들 ===
@@ -80,9 +102,9 @@ private:
     bool m_bSlideGroundCheck;       // 슬라이드 중 지면 체크 여부
 
     // === 멤버 변수들 ===
-    CPlayer* m_pOwner;       // 플레이어 참조
-    CAnimator* m_pAnimator;    // 애니메이터 참조
-    CRigidBody* m_pRigidBody;   // 리지드바디 참조
+    CPlayer* m_pOwner;                              // 플레이어 참조
+    CPlayerInputManager* m_pInputManager;           // 입력 매니저 (새로 추가)
+    CPlayerStateTransitionTable* m_pTransitionTable; // 전환 테이블 (새로 추가)
 
     PLAYER_STATE    m_eCurState;    // 현재 상태
     PLAYER_STATE    m_ePrevState;   // 이전 상태

@@ -56,13 +56,9 @@ private:
     // === 렌더링 헬퍼 함수 ===
     void RenderInvincible(HDC _dc);
 
-    // === 업데이트 헬퍼 함수 ===
-    void UpdateInhale();
-
     // === 크라우치 관련 헬퍼 함수들 ===
     void UpdateColliderSize(); 
     void AdjustPositionForColliderResize(const Vec2& _vOldScale, const Vec2& _vNewScale);
-    void InitiateSlidePhysics();
 
     // === 애니메이션 생성 함수 ===
     void CreateAnimation();

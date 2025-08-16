@@ -46,9 +46,9 @@ CPlayer::CPlayer()
     GetCollider()->SetOffsetPos(Vec2(0.f, 0.f));
 
     // === 충돌체 크기 설정 ===
-    m_vNormalColliderScale = Vec2(56.f, 56.f);      // 일반 상태 크기
-    m_vCrouchColliderScale = Vec2(56.f, 28.f);      // 크라우치 상태 크기 (Y축 절반)
-    GetCollider()->SetScale(m_vNormalColliderScale); // 초기에는 일반 크기
+    m_vNormalColliderScale = Vec2(56.f, 56.f);
+    m_vCrouchColliderScale = Vec2(56.f, 28.f);
+    GetCollider()->SetScale(m_vNormalColliderScale);
 
     // === 시스템들 생성 ===
     m_pStateMachine = new CPlayerStateMachine(this);
@@ -58,9 +58,9 @@ CPlayer::CPlayer()
     m_pCollisionSystem = new CPlayerCollisionSystem(this);
 
     // === 시스템들 초기화 ===
-    m_pStateMachine->Init(GetAnimator(), GetRigidBody());
+    m_pStateMachine->Init();
     m_pInhaleSystem->Init();
-    m_pMovement->Init(GetRigidBody());
+    m_pMovement->Init();
     m_pHealthSystem->Init();
 
     // === 애니메이션 생성 ===
@@ -117,10 +117,15 @@ void CPlayer::Update()
     // === 충돌체 크기 업데이트 ===
     UpdateColliderSize();
 
-    // === 흡입 관련 입력 처리 ===
-    UpdateInhale();
+    // === Ground 상태 업데이트 ===
+    if (m_pCollisionSystem)
+        m_pCollisionSystem->UpdateGroundState();
 
-    // === 이동 시스템 업데이트 ===
+    // === 상태 머신 업데이트 (입력 처리 + 상태 전환 + 상태 실행) ===
+    if (m_pStateMachine)
+        m_pStateMachine->Update();
+
+    // === 이동 시스템 업데이트 (물리적 이동만) ===
     if (m_pMovement)
         m_pMovement->Update();
 
@@ -132,10 +137,6 @@ void CPlayer::Update()
     CRigidBody* pRigidBody = GetRigidBody();
     if (pRigidBody)
         pRigidBody->Update();
-
-    // === 상태 머신 업데이트 ===
-    if (m_pStateMachine)
-        m_pStateMachine->Update();
 
     // === 애니메이터 업데이트 ===
     CAnimator* pAnimator = GetAnimator();
@@ -315,59 +316,6 @@ void CPlayer::RenderInvincible(HDC _dc)
     }
 }
 
-// === 업데이트 헬퍼 함수들 ===
-void CPlayer::UpdateInhale()
-{
-    // 크라우치 상태에서는 흡입 불가
-    PLAYER_STATE currentState = GetCurrentState();
-    if (currentState == PLAYER_STATE::CROUCH || currentState == PLAYER_STATE::SLIDE)
-    {
-        if (IsInhaling())
-        {
-            StopInhale();
-        }
-        return;
-    }
-
-    // 흡입 입력 처리
-    if (KEY_HOLD(KEY::X))
-    {
-        if (!IsInhaling())
-        {
-            StartInhale();
-        }
-    }
-    else
-    {
-        if (IsInhaling())
-        {
-            StopInhale();
-        }
-    }
-
-    // 뱉기 입력 처리
-    if (KEY_TAP(KEY::Z))
-    {
-        if (HasMouthful())
-        {
-            SpitOut();
-        }
-    }
-
-    // 삼키기 입력 처리 (직접 시스템 접근)
-    if (KEY_TAP(KEY::C))
-    {
-        if (m_pInhaleSystem && m_pInhaleSystem->HasMouthful())
-        {
-            CObject* pTarget = m_pInhaleSystem->GetMouthfulTarget();
-            if (pTarget)
-            {
-                m_pInhaleSystem->SwallowTarget(pTarget);
-            }
-        }
-    }
-}
-
 // === 충돌체 크기 업데이트 함수 ===
 void CPlayer::UpdateColliderSize()
 {
@@ -411,20 +359,6 @@ void CPlayer::AdjustPositionForColliderResize(const Vec2& _vOldScale, const Vec2
         currentPos.y += scaleDifference * 0.5f;  // 절반만큼 이동 (중심점 기준)
         SetPos(currentPos);
     }
-}
-
-// === 슬라이드 관련 물리 처리 ===
-void CPlayer::InitiateSlidePhysics()
-{
-    if (!GetRigidBody() || !m_pMovement)
-        return;
-
-    // 슬라이드 속도 계산 (현재 보는 방향으로)
-    float slideSpeed = 300.f;  // 슬라이드 속도
-    float direction = m_pMovement->IsFacingRight() ? 1.0f : -1.0f;
-
-    // 슬라이드 속도 적용
-    GetRigidBody()->SetVelocityX(direction * slideSpeed);
 }
 
 // === 애니메이션 생성 함수 ===

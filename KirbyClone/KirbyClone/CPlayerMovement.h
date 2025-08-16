@@ -2,7 +2,7 @@
 #include "pch.h"
 
 class CPlayer;
-class CRigidBody;
+class CPlayerInputManager;
 
 class CPlayerMovement
 {
@@ -13,15 +13,14 @@ public:
 
 public:
     // === 핵심 생명주기 함수들 ===
-    void Init(CRigidBody* _pRigidBody);
+    void Init();
     void Update();
 
 private:
     // === 입력 처리 함수들 ===
-    void HandleMovementInput();
-    void HandleJumpInput();
-    void HandleCrouchInput();
-    void HandleCrouchStateInput();
+    void ApplyCurrentMovement();
+    void ProcessMovementInput();
+    void ProcessMovementInputLegacy();
 
 private:
     // === 방향 관리 함수들 ===
@@ -52,8 +51,7 @@ public:
 
 public:
     // === 크라우치 관련 ===
-    bool IsCrouchInputPressed() const { return m_bCrouchPressed; }
-    void HandleCrouchDirectionInput();                            
+    void HandleCrouchDirectionInput();
 
 public:
     // === 점프 관련 ===
@@ -88,10 +86,14 @@ public:
     void SetDeceleration(float _fDeceleration) { m_fDeceleration = _fDeceleration; }
     void SetMinMovingSpeed(float _fMinSpeed) { m_fMinMovingSpeed = _fMinSpeed; }
 
+public:
+    // === InputManager 연결 ===
+    void SetInputManager(CPlayerInputManager* pInputManager) { m_pInputManager = pInputManager; }
+
 private:
     // === 소유자 참조 ===
-    CPlayer* m_pOwner;          // 플레이어 참조
-    CRigidBody* m_pRigidBody;   // 리지드바디 참조
+    CPlayer* m_pOwner;                          // 플레이어 참조
+    CPlayerInputManager* m_pInputManager;       // 입력 매니저
 
     // === 이동 관련 변수들 ===
     float m_fSpeed;             // 기본 이동 속도
@@ -110,7 +112,6 @@ private:
     bool m_bIsDecelerating;     // 현재 감속 중인지
 
     // === 크라우치 관련 변수들 ===
-    bool m_bCrouchPressed;      // 크라우치 키가 눌려있는지
     float m_fCrouchDeceleration; // 크라우치 상태 감속도 (더 빠르게)
 
     // === 더블탭 RUN 시스템 관련 변수들 ===

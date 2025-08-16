@@ -179,6 +179,12 @@
     <Filter Include="Engine\04. Object\Monster\Boss\WhispyWoods">
       <UniqueIdentifier>{f48a561e-aae5-458f-8d39-3146e78b2391}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerInputManager">
+      <UniqueIdentifier>{19bc1d86-f6d0-4a11-9f83-4ab600eba430}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerStateTransitionTable">
+      <UniqueIdentifier>{4fe3851b-7e29-4f3b-b3f9-782cc974cec6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -380,6 +386,12 @@
     <ClInclude Include="CWhispyWoods.h">
       <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
     </ClInclude>
+    <ClInclude Include="CPlayerInputManager.h">
+      <Filter>Engine\04. Object\Player\PlayerInputManager</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayerStateTransitionTable.h">
+      <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -572,6 +584,12 @@
     </ClCompile>
     <ClCompile Include="CWhispyWoods.cpp">
       <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerInputManager.cpp">
+      <Filter>Engine\04. Object\Player\PlayerInputManager</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerStateTransitionTable.cpp">
+      <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
