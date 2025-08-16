@@ -87,7 +87,6 @@ enum class EVENT_TYPE
     PLAYER_SWALLOW,         // 삼키기 (능력 획득)
     PLAYER_DAMAGE,          // 플레이어 데미지
     PLAYER_DEATH,           // 플레이어 사망
-    PLAYER_STATE_CHANGE,    // 플레이어 상태 변경
 
     // === 몬스터 관련 이벤트 ===
     MONSTER_DAMAGE,         // 몬스터 데미지
@@ -141,9 +140,12 @@ enum class PLAYER_STATE
     CROUCH,         // 크라우치 (앉기) - DOWN 키, 방향변경만 가능
     SLIDE,          // 슬라이드 킥 (크라우치에서 Z키 또는 X키)
 
+    // === 피격 상태 ===
+    DAMAGE,         // 데미지를 받는 상태
+
     // === 공중 부유 관련 상태들 ===
     HOVER,          // 공기머금기 부유 (공중에서 A키)
-    HOVER_FALL,     // 부유 해제 후 천천히 낙하
+    HOVER_EXHALE,     // 내뱉기
 
     INHALE_READY,   // 빨아들이기 준비 (공기머금기)
     INHALE_1,       // 빨아들이기 1단계
@@ -300,6 +302,16 @@ enum class TILE_VISUAL_TYPE
     // 
     // MOVING_PLATFORM,       
     // BRIDGE,                
+
+    END
+};
+
+enum class HOVER_SUBSTATE
+{
+    ENTER,          // 최초 진입 (공기 머금기)
+    FLY_UP,         // Z키 입력으로 위로 올라가기 (버둥거리기)
+    FLOAT,          // 천천히 낙하 중
+    GROUNDED,       // 땅 위에서 떠다니기
 
     END
 };

@@ -11,6 +11,7 @@
 #include "CTimeMgr.h"
 #include "CScene.h"
 #include "CSceneMgr.h"
+#include "CEventMgr.h"
 
 CPlayerCollisionSystem::CPlayerCollisionSystem(CPlayer* _pOwner)
     : m_pOwner(_pOwner)
@@ -26,6 +27,7 @@ void CPlayerCollisionSystem::Init()
     // 필요시 초기화 로직 추가
 }
 
+// CPlayerCollisionSystem.cpp
 void CPlayerCollisionSystem::UpdateGroundState()
 {
     if (!m_pOwner) return;
@@ -33,25 +35,15 @@ void CPlayerCollisionSystem::UpdateGroundState()
     CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
     if (!pRigidBody) return;
 
-    // 현재 Ground 상태인지 확인
     bool isCurrentlyGrounded = pRigidBody->IsGround();
-
-    // 실제로 땅 위에 있는지 체크
     bool isActuallyOnGround = IsPlayerOnGround();
 
-    // 상태 불일치 시 수정
     if (isCurrentlyGrounded && !isActuallyOnGround)
     {
-        // Ground 상태이지만 실제로는 땅 위에 없음 -> FALL 상태로 전환
+        // Ground 상태만 수정 (상태 변경은 TransitionTable이 자동 처리)
         pRigidBody->SetGround(false);
 
-        // 플레이어 상태도 FALL로 전환
-        if (m_pOwner->GetCurrentState() != PLAYER_STATE::JUMP &&
-            m_pOwner->GetCurrentState() != PLAYER_STATE::FALL &&
-            m_pOwner->GetCurrentState() != PLAYER_STATE::FALL2)
-        {
-            m_pOwner->ChangeState(PLAYER_STATE::FALL);
-        }
+        // 상태 변경은 다음 프레임 StateMachine::Update()에서 자동으로 처리됨
     }
 }
 
@@ -361,14 +353,30 @@ void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
     // 입에 물고 있거나 흡입 중이 아니면 데미지 처리
     if (!m_pOwner->HasMouthful() && !m_pOwner->IsInhaling())
     {
-        // 넉백 방향 계산 (몬스터에서 플레이어 방향)
+        // 넉백 방향 계산
         Vec2 vMonsterPos = _pMonster->GetPos();
         Vec2 vPlayerPos = m_pOwner->GetPos();
         Vec2 vKnockbackDir = vPlayerPos - vMonsterPos;
         vKnockbackDir.Normalize();
 
-        // 데미지 적용
-        m_pOwner->TakeDamage(1, vKnockbackDir);
+        // === 1. 플레이어에게 피격 요청 (즉시) ===
+        m_pOwner->RequestDamage(vKnockbackDir);
+
+        // === 2. 실제 데미지 처리는 이벤트로 등록 ===
+        tEvent playerDamageEvent;
+        playerDamageEvent.eType = EVENT_TYPE::PLAYER_DAMAGE;
+        playerDamageEvent.wParam = (DWORD_PTR)m_pOwner;
+        playerDamageEvent.lParam = (DWORD_PTR)new Vec2(vKnockbackDir);
+        CEventMgr::GetInst()->AddEvent(playerDamageEvent);
+
+        // === 3. 몬스터 데미지 이벤트 등록 ===
+        tEvent monsterDamageEvent;
+        monsterDamageEvent.eType = EVENT_TYPE::MONSTER_DAMAGE;
+        monsterDamageEvent.wParam = (DWORD_PTR)_pMonster;
+        monsterDamageEvent.lParam = 0;
+        CEventMgr::GetInst()->AddEvent(monsterDamageEvent);
+
+        // === 상태 전환은 전환 테이블에서 자동으로 감지! ===
     }
 }
 

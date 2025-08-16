@@ -59,11 +59,6 @@ public:
     bool CanJump() const;
 
 public:
-    // === 슬라이드 관련 ===
-    bool CanSlide() const;
-    void InitiateSlide();
-
-public:
     // === 속도 직접 제어 (특수 상황용) ===
     void StopMovement();
     void SetVelocityX(float _fVelX);

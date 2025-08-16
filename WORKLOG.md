@@ -1566,115 +1566,121 @@ GetRigidBody()->SetFriction(5.f);
 
 - [x] CCamera의 update 함수를 여러 함수로 분리
 - [x] CSceneMgr의 ChangeScene 함수의 접근 제어자를 기존 public에서 private으로 변경, CEventMgr 을 Friend class 로 추가
-- [X] CPlayer 디버깅코드 제거
-- [X] Flip 애니메이션 단순화
-- [X] CPlayer StateMachine 분리
-- [X] CPlayer InhaleSystem 분리
-- [X] CPlayer Movement 분리
-- [X] 착지 후 착지를 반복하던 현상 수정
+- [x] CPlayer 디버깅코드 제거
+- [x] Flip 애니메이션 단순화
+- [x] CPlayer StateMachine 분리
+- [x] CPlayer InhaleSystem 분리
+- [x] CPlayer Movement 분리
+- [x] 착지 후 착지를 반복하던 현상 수정
 
 ## 2025-08-04
 
 ### 완료
 
-- [X] ToolScene에 UI 추가
-- [X] 체력 시스템과 게임오버 추가
-- [X] 레벨 에디터에서 오브젝트 팔레트가 안 바뀌던 오류 수정
-
+- [x] ToolScene에 UI 추가
+- [x] 체력 시스템과 게임오버 추가
+- [x] 레벨 에디터에서 오브젝트 팔레트가 안 바뀌던 오류 수정
 
 ## 2025-08-05
 
 ### 완료
 
-- [X] ToolScene에 카메라 범위 설정
-- [X] 레벨 에디터에 맵 범위 설정 추가
-- [X] 레벨 에디터 메인UI 제거(주석처리)
-- [X] 문 오브젝트 추가
+- [x] ToolScene에 카메라 범위 설정
+- [x] 레벨 에디터에 맵 범위 설정 추가
+- [x] 레벨 에디터 메인UI 제거(주석처리)
+- [x] 문 오브젝트 추가
 
 ## 2025-08-06
 
 ### 완료
 
-- [X] 스프라이트 작업
+- [x] 스프라이트 작업
 
 ## 2025-08-07
 
 ### 완료
 
-- [X] 기존 마젠타 방식에서 알파채널을 이용하는 방식으로 변경
-- [X] 오류가 많아 다시 마젠타 방식으로 변경
+- [x] 기존 마젠타 방식에서 알파채널을 이용하는 방식으로 변경
+- [x] 오류가 많아 다시 마젠타 방식으로 변경
 
 ## 2025-08-08
 
 ### 완료
 
-- [X] 스프라이트 작게 하고 4배 스케일 적용
-- [X] 툴씬과 게임 씬 해상도 분리
-- [X] 툴씬 좌표계 변경
+- [x] 스프라이트 작게 하고 4배 스케일 적용
+- [x] 툴씬과 게임 씬 해상도 분리
+- [x] 툴씬 좌표계 변경
 
 ## 2025-08-09
 
 ### 완료
 
-- [X] CCore 클래스 리팩토링
+- [x] CCore 클래스 리팩토링
   - 헤더의 멤버들 순서 정리
   - ChangeResolution 함수 책임 분리
   - 코드 블럭 정리
   - ChangeREsolution 접근제어자 변경
-- [X] CSceneMgr 클래스 리팩토링
+- [x] CSceneMgr 클래스 리팩토링
   - 헤더의 멤버들 순서 정리
   - update에서 핫 키 기능 책임 분리
   - O(N)의 GetCurSceneType함수 O(1)로 최적화
   - 안정성 검사 조건문 추가
   - Getter 함수에 const 키워드 추가
-- [X] CScene, CScene_Tool 리팩토링
+- [x] CScene, CScene_Tool 리팩토링
   - 컨벤션에 맞게 수정
-- [X] CEditorCore 렌더링
+- [x] CEditorCore 렌더링
   - CScene_Tool에 있던 중복 렌더링 삭제
-- [X] CStageMgr 리팩토링
+- [x] CStageMgr 리팩토링
 
 ## 2025-08-10
 
 ### 완료
 
-- [X] CCStageMgr 리팩토링 완료
-- [X] CStageImage 리팩토링 완료 (4배 스케일링 적용)
-- [X] CEditorCameraController 리팩토링 완료 (헤더 구조, 주석 정리, 디버깅 코드 제거, 불필요한 기능 제거)
-  
+- [x] CCStageMgr 리팩토링 완료
+- [x] CStageImage 리팩토링 완료 (4배 스케일링 적용)
+- [x] CEditorCameraController 리팩토링 완료 (헤더 구조, 주석 정리, 디버깅 코드 제거, 불필요한 기능 제거)
+
 ## 2025-08-11
 
 ### 완료
 
-- [X] CObject 코드 리팩토링
-- [X] CAnimator, CAnimation 코드 리팩토링
+- [x] CObject 코드 리팩토링
+- [x] CAnimator, CAnimation 코드 리팩토링
   - 알파 채널 이미지 처리 기능 제거
 
 ## 2025-08-12
 
 ### 완료
 
-- [X] CPlayer 코드 리팩토링
+- [x] CPlayer 코드 리팩토링
+
   - CPlayerColliderManager 추가
 
 - ## 2025-08-14
 
 ### 완료
 
-- [X] 레벨 에디터 간소화
-- [X] 애니메이션 json파일 불러오기로 변경
-- [X] 몬스터 상속 구조
-- [X] 빨아들이기 시스템, 이벤트 종류 추가
+- [x] 레벨 에디터 간소화
+- [x] 애니메이션 json파일 불러오기로 변경
+- [x] 몬스터 상속 구조
+- [x] 빨아들이기 시스템, 이벤트 종류 추가
 
 - ## 2025-08-15
 
 ### 완료
 
-- [X] 웨이들 디 구현
-- [X] 플레이어 기본 움직임 구현
+- [x] 웨이들 디 구현
+- [x] 플레이어 기본 움직임 구현
 
 - ## 2025-08-16
 
 ### 완료
 
-- [X] 커비 SLIDE 구현
-- [X] 상태 변화 시스템을 중앙 집중화로 변경
+- [x] 커비 SLIDE 구현
+- [x] 상태 변화 시스템을 중앙 집중화로 변경
+
+- ## 2025-08-17
+
+### 완료
+
+- [x] 상태 변화 시스템 관련 정리

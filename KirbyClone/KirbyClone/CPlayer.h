@@ -27,8 +27,6 @@ public:
     // === 상태 관리 인터페이스 ===
     PLAYER_STATE GetCurrentState() const;
     PLAYER_STATE GetPreviousState() const;
-    void ChangeState(PLAYER_STATE _eState);
-    void ChangeStateInternal(PLAYER_STATE _eState);
 
     // === 필수 래퍼 함수들 ===
     // 흡입 관련 필수 기능
@@ -45,6 +43,12 @@ public:
     void TakeDamage(int _iDamage = 1, Vec2 _vKnockbackDir = Vec2(0.f, 0.f));
     bool IsGameOver() const;
     bool ShouldRenderBlink() const;
+
+    // === 데미지 관련 인터페이스 ===
+    void RequestDamage(Vec2 _vKnockbackDir = Vec2(0.f, 0.f));
+    bool IsDamageRequested() const { return m_bDamageRequested; }
+    Vec2 GetDamageKnockback() const { return m_vDamageKnockback; }
+    void ClearDamageRequest();
 
     // === 시스템 접근자들 ===
     CPlayerInhaleSystem* GetInhaleSystem() const { return m_pInhaleSystem; }
@@ -73,4 +77,11 @@ private:
     // === 크라우치 관련 멤버 변수들 (새로 추가) ===
     Vec2 m_vNormalColliderScale;            // 일반 상태 충돌체 크기
     Vec2 m_vCrouchColliderScale;            // 크라우치 상태 충돌체 크기
+
+private:
+    // === 데미지 관련 플래그 ===
+    bool m_bDamageRequested;     // 피격 요청 플래그
+    Vec2 m_vDamageKnockback;     // 피격 넉백 방향
+
+    friend class CPlayerStateMachine;
 };

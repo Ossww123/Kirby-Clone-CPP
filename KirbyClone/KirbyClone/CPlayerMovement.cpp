@@ -392,26 +392,6 @@ bool CPlayerMovement::CanJump() const
     return pRigidBody->IsGround();
 }
 
-// === 슬라이드 관련 함수들 ===
-bool CPlayerMovement::CanSlide() const
-{
-    if (!m_pOwner)
-        return false;
-
-    // 크라우치 상태이고 머금은 상태가 아닐 때만 슬라이드 가능
-    return (m_pOwner->GetCurrentState() == PLAYER_STATE::CROUCH &&
-        !m_pOwner->HasMouthful());
-}
-
-void CPlayerMovement::InitiateSlide()
-{
-    if (!CanSlide() || !m_pOwner)
-        return;
-
-    // 슬라이드 상태로 전환
-    m_pOwner->ChangeState(PLAYER_STATE::SLIDE);
-}
-
 // === 속도 직접 제어 (특수 상황용) ===
 
 void CPlayerMovement::StopMovement()

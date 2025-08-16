@@ -7,6 +7,7 @@
 #include "CCore.h"
 #include "CCamera.h"
 #include "CSceneMgr.h"
+#include "CPlayerStateMachine.h"
 
 CPlayerHealthSystem::CPlayerHealthSystem(CPlayer* _pOwner)
     : m_pOwner(_pOwner)
@@ -179,8 +180,11 @@ void CPlayerHealthSystem::RestartStage()
             pRigidBody->SetGround(false);
         }
 
-        // 상태 초기화
-        m_pOwner->ChangeState(PLAYER_STATE::IDLE);
+        // === 시스템 레벨 상태 초기화 ===
+        if (m_pOwner->GetStateMachine())
+        {
+            m_pOwner->GetStateMachine()->ForceStateForSystemReset(PLAYER_STATE::IDLE);
+        }
 
         // 흡입 시스템 초기화
         if (m_pOwner->GetInhaleSystem())

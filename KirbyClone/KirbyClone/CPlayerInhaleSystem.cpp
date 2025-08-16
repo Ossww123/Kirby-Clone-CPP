@@ -53,7 +53,7 @@ void CPlayerInhaleSystem::StartInhale()
     // 상태 머신을 통한 상태 변경 - 이벤트 기반
     if (m_pOwner)
     {
-        m_pOwner->ChangeState(PLAYER_STATE::INHALE_READY);
+        //m_pOwner->ChangeState(PLAYER_STATE::INHALE_READY);
     }
 }
 
@@ -95,7 +95,7 @@ void CPlayerInhaleSystem::UpdateInhale()
 
     if (newState != m_pOwner->GetCurrentState())
     {
-        m_pOwner->ChangeState(newState);  // 이벤트 기반
+        //m_pOwner->ChangeState(newState);  // 이벤트 기반
     }
 }
 
@@ -164,7 +164,7 @@ void CPlayerInhaleSystem::SwallowTarget(CObject* _pTarget)
     // 삼키기 상태로 전환
     if (m_pOwner)
     {
-        m_pOwner->ChangeState(PLAYER_STATE::SWALLOW);
+        //m_pOwner->ChangeState(PLAYER_STATE::SWALLOW);
     }
 
     // 물고 있는 상태로 설정
@@ -188,7 +188,7 @@ void CPlayerInhaleSystem::SpitOut()
         return;
 
     // 뱉기 애니메이션 재생
-    m_pOwner->ChangeState(PLAYER_STATE::EXHALE);
+    //m_pOwner->ChangeState(PLAYER_STATE::EXHALE);
 
     // 투사체 생성 (나중에 구현 가능)
     // Vec2 vSpitPos = m_pOwner->GetPos() + m_vInhaleDir * 50.f;

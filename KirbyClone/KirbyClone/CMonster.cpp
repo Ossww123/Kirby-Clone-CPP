@@ -189,7 +189,6 @@ void CMonster::LoadAnimationsFromFile(const wstring& _strFileName)
     CAnimator* pAnimator = GetAnimator();
     if (!pAnimator)
     {
-        OutputDebugStringA("Monster: Animator is null!\n");
         return;
     }
 

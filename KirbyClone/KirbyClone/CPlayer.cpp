@@ -27,6 +27,8 @@ CPlayer::CPlayer()
     , m_pMovement(nullptr)
     , m_pHealthSystem(nullptr)
     , m_pCollisionSystem(nullptr)
+    , m_bDamageRequested(false)
+    , m_vDamageKnockback(Vec2(0.f, 0.f))
 {
     SetType(OBJECT_TYPE::PLAYER);
 
@@ -209,26 +211,6 @@ PLAYER_STATE CPlayer::GetPreviousState() const
     return m_pStateMachine ? m_pStateMachine->GetPreviousState() : PLAYER_STATE::END;
 }
 
-void CPlayer::ChangeState(PLAYER_STATE _eState)
-{
-    int debug = 0;
-    if (_eState == PLAYER_STATE::SLIDE) {
-        debug = 1;
-    }
-
-    // 이벤트를 통한 상태 변경 요청
-    CEventMgr::RequestPlayerStateChange(this, _eState);
-}
-
-// === 이벤트 매니저에서 호출될 실제 상태 변경 함수 ===
-void CPlayer::ChangeStateInternal(PLAYER_STATE _eState)
-{
-    if (m_pStateMachine)
-    {
-        m_pStateMachine->ChangeStateInternal(_eState);
-    }
-}
-
 // === 필수 래퍼 함수들 구현 ===
 
 // 흡입 관련 필수 기능
@@ -281,6 +263,18 @@ bool CPlayer::IsGameOver() const
 bool CPlayer::ShouldRenderBlink() const
 {
     return m_pHealthSystem ? m_pHealthSystem->ShouldRenderBlink() : false;
+}
+
+void CPlayer::RequestDamage(Vec2 _vKnockbackDir)
+{
+    m_bDamageRequested = true;
+    m_vDamageKnockback = _vKnockbackDir;
+}
+
+void CPlayer::ClearDamageRequest()
+{
+    m_bDamageRequested = false;
+    m_vDamageKnockback = Vec2(0.f, 0.f);
 }
 
 // === 렌더링 헬퍼 함수들 ===
