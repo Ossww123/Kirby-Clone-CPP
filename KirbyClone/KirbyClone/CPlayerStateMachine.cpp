@@ -861,10 +861,9 @@ void CPlayerStateMachine::AddDamageTransitions()
     auto damageCondition = [](CPlayer* p) -> bool {
         if (!p) return false;
 
-        // 무적 상태나 게임오버 상태면 피격 불가
-        if (p->GetHealthSystem() &&
-            (p->GetHealthSystem()->IsInvincible() ||
-                p->GetHealthSystem()->IsGameOver()))
+        // 게임오버 상태면 피격 불가
+        
+        if (p->GetHealthSystem() && p->GetHealthSystem()->IsGameOver())
             return false;
 
         // 피격 요청 플래그 체크

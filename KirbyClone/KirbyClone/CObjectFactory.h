@@ -12,52 +12,53 @@ class CWhispyWoods;
 class CObjectFactory
 {
 private:
-    // ÆÑÅä¸®´Â Á¤Àû Å¬·¡½º·Î »ç¿ë
-    CObjectFactory() = delete;
-    ~CObjectFactory() = delete;
+    // íŒ©í† ë¦¬ëŠ” ì •ì  í´ë˜ìŠ¤ë¡œ ì‚¬ìš©
+    CObjectFactory ( ) = delete;
+    ~CObjectFactory ( ) = delete;
 
 public:
-    // ¸ŞÀÎ ÆÑÅä¸® ÇÔ¼ö
-    static CObject* CreateObject(OBJECT_TYPE _eType, Vec2 _vPos = Vec2(0.f, 0.f));
+    // í†µí•© íŒ©í† ë¦¬ í•¨ìˆ˜
+    static CObject* CreateObject ( OBJECT_TYPE _eType , Vec2 _vPos = Vec2 ( 0.f , 0.f ) );
 
-    // Ä«Å×°í¸®º° »ı¼º ÇÔ¼öµé
-    static CObject* CreatePlayer(Vec2 _vPos);
-    static CObject* CreateMonster(OBJECT_TYPE _eMonsterType, Vec2 _vPos);
-    static CObject* CreateItem(OBJECT_TYPE _eItemType, Vec2 _vPos);
-    static CObject* CreateTile(OBJECT_TYPE _eTileType, Vec2 _vPos);
-    static CObject* CreateSpecialObject(OBJECT_TYPE _eObjectType, Vec2 _vPos);
+    // ì¹´í…Œê³ ë¦¬ë³„ ìƒì„± í•¨ìˆ˜ë“¤
+    static CObject* CreatePlayer ( Vec2 _vPos );
+    static CObject* CreateMonster ( OBJECT_TYPE _eMonsterType , Vec2 _vPos );
+    static CObject* CreateItem ( OBJECT_TYPE _eItemType , Vec2 _vPos );
+    static CObject* CreateTile ( OBJECT_TYPE _eTileType , Vec2 _vPos );
+    static CObject* CreateSpecialObject ( OBJECT_TYPE _eObjectType , Vec2 _vPos );
 
-    // === ¸ó½ºÅÍº° °³º° »ı¼º ÇÔ¼öµé ===
-    static CWaddleDee* CreateWaddleDee(Vec2 _vPos);
-    static CWaddleDoo* CreateWaddleDoo(Vec2 _vPos);
-    static CBrontoBurt* CreateBrontoBurt(Vec2 _vPos);
-    static CGordo* CreateGordo(Vec2 _vPos);
-    static CHotHead* CreateHotHead(Vec2 _vPos);
-    static CSparky* CreateSparky(Vec2 _vPos);
-    static CWhispyWoods* CreateWhispyWoods(Vec2 _vPos);
+    // === ëª¬ìŠ¤í„°ë³„ ì„¸ë¶€ ìƒì„± í•¨ìˆ˜ë“¤ ===
+    static CWaddleDee* CreateWaddleDee ( Vec2 _vPos );
+    static CWaddleDoo* CreateWaddleDoo ( Vec2 _vPos );
+    static CBrontoBurt* CreateBrontoBurt ( Vec2 _vPos );
+    static CGordo* CreateGordo ( Vec2 _vPos );
+    static CHotHead* CreateHotHead ( Vec2 _vPos );
+    static CSparky* CreateSparky ( Vec2 _vPos );
+    static CWhispyWoods* CreateWhispyWoods ( Vec2 _vPos );
 
-    // À¯Æ¿¸®Æ¼ ÇÔ¼öµé
-    static const wchar_t* GetObjectTypeName(OBJECT_TYPE _eType);
-    static GROUP_TYPE GetObjectGroup(OBJECT_TYPE _eType);
-    static Vec2 GetDefaultScale(OBJECT_TYPE _eType);
-    static bool IsValidObjectType(OBJECT_TYPE _eType);
 
-    // ¿¡µğÅÍ¿ë ÇÔ¼öµé
-    static vector<OBJECT_TYPE> GetObjectTypesByCategory(const wstring& _strCategory);
-    static vector<wstring> GetAvailableCategories();
+    // ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ë“¤
+    static const wchar_t* GetObjectTypeName ( OBJECT_TYPE _eType );
+    static GROUP_TYPE GetObjectGroup ( OBJECT_TYPE _eType );
+    static Vec2 GetDefaultScale ( OBJECT_TYPE _eType );
+    static bool IsValidObjectType ( OBJECT_TYPE _eType );
 
-    // Ãæµ¹Ã¼ ½Ã½ºÅÛ °ü·Ã º¯È¯ ÇÔ¼öµé
-    static COLLISION_TYPE ConvertObjectTypeToCollisionType(OBJECT_TYPE _eObjectType);
-    static OBJECT_TYPE ConvertCollisionTypeToObjectType(COLLISION_TYPE _eCollisionType);
+    // ì—ë””í„°ìš© í•¨ìˆ˜ë“¤
+    static vector<OBJECT_TYPE> GetObjectTypesByCategory ( const wstring& _strCategory );
+    static vector<wstring> GetAvailableCategories ( );
 
-    // Ãæµ¹Ã¼ Å¸ÀÔ °ü·Ã À¯Æ¿¸®Æ¼
-    static const wchar_t* GetCollisionTypeName(COLLISION_TYPE _eType);
-    static COLORREF GetCollisionTypeColor(COLLISION_TYPE _eType);
-    static vector<COLLISION_TYPE> GetAvailableCollisionTypes();
+    // ì¶©ëŒì²´ ì‹œìŠ¤í…œ íƒ€ì… ë³€í™˜ í•¨ìˆ˜ë“¤
+    static COLLISION_TYPE ConvertObjectTypeToCollisionType ( OBJECT_TYPE _eObjectType );
+    static OBJECT_TYPE ConvertCollisionTypeToObjectType ( COLLISION_TYPE _eCollisionType );
+
+    // ì¶©ëŒì²´ íƒ€ì… ì •ë³´ ìœ í‹¸ë¦¬í‹°
+    static const wchar_t* GetCollisionTypeName ( COLLISION_TYPE _eType );
+    static COLORREF GetCollisionTypeColor ( COLLISION_TYPE _eType );
+    static vector<COLLISION_TYPE> GetAvailableCollisionTypes ( );
 
 private:
-    // ³»ºÎ ÇïÆÛ ÇÔ¼öµé
-    static void SetupMonsterAI(CObject* _pMonster, OBJECT_TYPE _eType);
-    static void SetupItemProperties(CObject* _pItem, OBJECT_TYPE _eType);
-    static void SetupTileProperties(CObject* _pTile, OBJECT_TYPE _eType);
+    // ë‚´ë¶€ ì„¤ì • í•¨ìˆ˜ë“¤
+    static void SetupMonsterAI ( CObject* _pMonster , OBJECT_TYPE _eType );
+    static void SetupItemProperties ( CObject* _pItem , OBJECT_TYPE _eType );
+    static void SetupTileProperties ( CObject* _pTile , OBJECT_TYPE _eType );
 };

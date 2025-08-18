@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "CObjectFactory.h"
 
-// ¸ó½ºÅÍ Å¬·¡½ºµé include
+// ëª¬ìŠ¤í„° í´ë˜ìŠ¤ë“¤ include
 #include "CWaddleDee.h"
 #include "CWaddleDoo.h"
 #include "CBrontoBurt.h"
@@ -20,106 +20,106 @@
 #include "CSpecialObject.h"
 #include "CDoor.h"
 
-CObject* CObjectFactory::CreateObject(OBJECT_TYPE _eType, Vec2 _vPos)
+CObject* CObjectFactory::CreateObject ( OBJECT_TYPE _eType , Vec2 _vPos )
 {
-    if (!IsValidObjectType(_eType))
+    if ( !IsValidObjectType ( _eType ) )
         return nullptr;
 
     CObject* pObject = nullptr;
 
-    // °´Ã¼ Å¸ÀÔ¿¡ µû¶ó ÀûÀıÇÑ »ı¼º ÇÔ¼ö È£Ãâ
-    switch (_eType)
+    // ê°ì²´ íƒ€ì…ì— ë”°ë¥¸ ì¹´í…Œê³ ë¦¬ë³„ ìƒì„± í•¨ìˆ˜ í˜¸ì¶œ
+    switch ( _eType )
     {
     case OBJECT_TYPE::PLAYER:
-        pObject = CreatePlayer(_vPos);
+        pObject = CreatePlayer ( _vPos );
         break;
 
-        // ¸ó½ºÅÍ Å¸ÀÔµé
+        // ëª¬ìŠ¤í„° íƒ€ì…ë“¤
     case OBJECT_TYPE::MONSTER_WADDLE_DEE:
     case OBJECT_TYPE::MONSTER_WADDLE_DOO:
     case OBJECT_TYPE::MONSTER_BRONTO_BURT:
     case OBJECT_TYPE::MONSTER_GORDOS:
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
     case OBJECT_TYPE::MONSTER_SPARKY:
-        pObject = CreateMonster(_eType, _vPos);
+        pObject = CreateMonster ( _eType , _vPos );
         break;
 
-        // ¾ÆÀÌÅÛ Å¸ÀÔµé
+        // ì•„ì´í…œ íƒ€ì…ë“¤
     case OBJECT_TYPE::ITEM_STAR:
     case OBJECT_TYPE::ITEM_ENERGY_DRINK:
     case OBJECT_TYPE::ITEM_1UP:
     case OBJECT_TYPE::ITEM_ABILITY_STAR:
-        pObject = CreateItem(_eType, _vPos);
+        pObject = CreateItem ( _eType , _vPos );
         break;
 
-        // Å¸ÀÏ/Ãæµ¹Ã¼ Å¸ÀÔµé (È®ÀåµÊ)
+        // íƒ€ì¼/ì¶©ëŒì²´ íƒ€ì…ë“¤ (í™•ì¥ë¨)
     case OBJECT_TYPE::TILE_GROUND:
     case OBJECT_TYPE::TILE_SPIKE:
     case OBJECT_TYPE::TILE_WATER:
     case OBJECT_TYPE::TILE_WARP_STAR:
-    case OBJECT_TYPE::TILE_PLATFORM: 
-    case OBJECT_TYPE::TILE_LAVA:     
-    case OBJECT_TYPE::TILE_ONE_WAY:  
-    case OBJECT_TYPE::TILE_MOVING:   
+    case OBJECT_TYPE::TILE_PLATFORM:
+    case OBJECT_TYPE::TILE_LAVA:
+    case OBJECT_TYPE::TILE_ONE_WAY:
+    case OBJECT_TYPE::TILE_MOVING:
     case OBJECT_TYPE::TILE_BREAKABLE:
     case OBJECT_TYPE::TILE_INVISIBLE:
-        pObject = CreateTile(_eType, _vPos);
+        pObject = CreateTile ( _eType , _vPos );
         break;
 
-        // Æ¯¼ö °´Ã¼µé
+        // íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ë“¤
     case OBJECT_TYPE::OBJECT_DOOR:
     case OBJECT_TYPE::OBJECT_SWITCH:
     case OBJECT_TYPE::OBJECT_MIRROR:
-        pObject = CreateSpecialObject(_eType, _vPos);
+        pObject = CreateSpecialObject ( _eType , _vPos );
         break;
 
     default:
         return nullptr;
     }
 
-    if (pObject)
+    if ( pObject )
     {
-        pObject->SetPos(_vPos);
-        Vec2 vDefaultScale = GetDefaultScale(_eType);
-        pObject->SetScale(vDefaultScale);
+        pObject->SetPos ( _vPos );
+        Vec2 vDefaultScale = GetDefaultScale ( _eType );
+        pObject->SetScale ( vDefaultScale );
     }
 
     return pObject;
 }
 
-CObject* CObjectFactory::CreatePlayer(Vec2 _vPos)
+CObject* CObjectFactory::CreatePlayer ( Vec2 _vPos )
 {
     CPlayer* pPlayer = new CPlayer;
-    pPlayer->SetPos(_vPos);
-    pPlayer->SetScale(Vec2(16.f, 16.f));
+    pPlayer->SetPos ( _vPos );
+    pPlayer->SetScale ( Vec2 ( 16.f , 16.f ) );
 
     return pPlayer;
 }
 
-CObject* CObjectFactory::CreateMonster(OBJECT_TYPE _eMonsterType, Vec2 _vPos)
+CObject* CObjectFactory::CreateMonster ( OBJECT_TYPE _eMonsterType , Vec2 _vPos )
 {
     CObject* pMonster = nullptr;
 
-    // °¢ ¸ó½ºÅÍº° Àü¿ë »ı¼º ÇÔ¼ö È£Ãâ
-    switch (_eMonsterType)
+    // ê° ëª¬ìŠ¤í„°ë³„ ì„¸ë¶€ ìƒì„± í•¨ìˆ˜ í˜¸ì¶œ
+    switch ( _eMonsterType )
     {
     case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-        pMonster = CreateWaddleDee(_vPos);
+        pMonster = CreateWaddleDee ( _vPos );
         break;
     case OBJECT_TYPE::MONSTER_WADDLE_DOO:
-        pMonster = CreateWaddleDoo(_vPos);
+        pMonster = CreateWaddleDoo ( _vPos );
         break;
     case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-        pMonster = CreateBrontoBurt(_vPos);
+        pMonster = CreateBrontoBurt ( _vPos );
         break;
     case OBJECT_TYPE::MONSTER_GORDOS:
-        pMonster = CreateGordo(_vPos);
+        pMonster = CreateGordo ( _vPos );
         break;
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
-        pMonster = CreateHotHead(_vPos);
+        pMonster = CreateHotHead ( _vPos );
         break;
     case OBJECT_TYPE::MONSTER_SPARKY:
-        pMonster = CreateSparky(_vPos);
+        pMonster = CreateSparky ( _vPos );
         break;
     default:
         return nullptr;
@@ -128,205 +128,203 @@ CObject* CObjectFactory::CreateMonster(OBJECT_TYPE _eMonsterType, Vec2 _vPos)
     return pMonster;
 }
 
-CObject* CObjectFactory::CreateItem(OBJECT_TYPE _eItemType, Vec2 _vPos)
+CObject* CObjectFactory::CreateItem ( OBJECT_TYPE _eItemType , Vec2 _vPos )
 {
     CItem* pItem = new CItem;
-    pItem->SetItemType(_eItemType);
+    pItem->SetItemType ( _eItemType );
 
-    switch (_eItemType)
+    switch ( _eItemType )
     {
     case OBJECT_TYPE::ITEM_STAR:
-        pItem->SetScale(Vec2(8.f, 8.f));  
-        pItem->SetValue(100);
+        pItem->SetScale ( Vec2 ( 8.f , 8.f ) );
+        pItem->SetValue ( 100 );
         break;
     case OBJECT_TYPE::ITEM_ENERGY_DRINK:
-        pItem->SetScale(Vec2(12.f, 16.f));
-        pItem->SetValue(500);
+        pItem->SetScale ( Vec2 ( 12.f , 16.f ) );
+        pItem->SetValue ( 500 );
         break;
     case OBJECT_TYPE::ITEM_1UP:
-        pItem->SetScale(Vec2(16.f, 16.f));
-        pItem->SetValue(1000);
+        pItem->SetScale ( Vec2 ( 16.f , 16.f ) );
+        pItem->SetValue ( 1000 );
         break;
     case OBJECT_TYPE::ITEM_ABILITY_STAR:
-        pItem->SetScale(Vec2(12.f, 12.f));
-        pItem->SetValue(200);
+        pItem->SetScale ( Vec2 ( 12.f , 12.f ) );
+        pItem->SetValue ( 200 );
         break;
     default:
-        pItem->SetScale(Vec2(8.f, 8.f));  
-        pItem->SetValue(100);
+        pItem->SetScale ( Vec2 ( 8.f , 8.f ) );
+        pItem->SetValue ( 100 );
         break;
     }
 
-    SetupItemProperties(pItem, _eItemType);
+    SetupItemProperties ( pItem , _eItemType );
     return pItem;
 }
 
-CObject* CObjectFactory::CreateTile(OBJECT_TYPE _eTileType, Vec2 _vPos)
+CObject* CObjectFactory::CreateTile ( OBJECT_TYPE _eTileType , Vec2 _vPos )
 {
     CTile* pTile = new CTile;
-    pTile->SetTileType(_eTileType);  // È£È¯¼º¿ëÀ¸·Î À¯Áö
-    pTile->SetType(_eTileType);
+    pTile->SetTileType ( _eTileType );  // í˜¸í™˜ì„± ìœ ì§€ìš© ì„¤ì •
+    pTile->SetType ( _eTileType );
 
-    // ¸ğµç Å¸ÀÏÀº ±âº»ÀûÀ¸·Î 64x64 (ÇÑ Å¸ÀÏ Å©±â)
-    pTile->SetScale(Vec2(64.f, 64.f));
+    // ëª¨ë“  íƒ€ì¼ì˜ ê¸°ë³¸ í¬ê¸°ëŠ” 64x64 (í•œ íƒ€ì¼ í¬ê¸°)
+    pTile->SetScale ( Vec2 ( 64.f , 64.f ) );
 
-    // OBJECT_TYPEÀ» »õ·Î¿î COLLISION_TYPEÀ¸·Î ¸ÅÇÎ
-    COLLISION_TYPE collisionType = ConvertObjectTypeToCollisionType(_eTileType);
-    pTile->SetCollisionType(collisionType);
+    // OBJECT_TYPEì„ ìƒˆë¡œìš´ COLLISION_TYPEìœ¼ë¡œ ë³€í™˜
+    COLLISION_TYPE collisionType = ConvertObjectTypeToCollisionType ( _eTileType );
+    pTile->SetCollisionType ( collisionType );
 
-    // À§Ä¡ ¼³Á¤
-    pTile->SetPos(_vPos);
+    // ìœ„ì¹˜ ì„¤ì •
+    pTile->SetPos ( _vPos );
 
     return pTile;
 }
 
-CObject* CObjectFactory::CreateSpecialObject(OBJECT_TYPE _eObjectType, Vec2 _vPos)
+CObject* CObjectFactory::CreateSpecialObject ( OBJECT_TYPE _eObjectType , Vec2 _vPos )
 {
     CSpecialObject* pObject = nullptr;
 
-    switch (_eObjectType)
+    switch ( _eObjectType )
     {
     case OBJECT_TYPE::OBJECT_DOOR:
     {
         CDoor* pDoor = new CDoor;
-        pDoor->SetPos(_vPos);
+        pDoor->SetPos ( _vPos );
 
-        // ±âº» ¹® ¼³Á¤
-        pDoor->SetTargetScene(SCENE_TYPE::STAGE_02);
-        pDoor->SetTargetPosition(Vec2(100.f, 400.f));
+        // ê¸°ë³¸ ë¬¸ ì„¤ì •
+        pDoor->SetTargetScene ( SCENE_TYPE::STAGE_02 );
+        pDoor->SetTargetPosition ( Vec2 ( 100.f , 400.f ) );
 
         pObject = pDoor;
     }
-        break;
+    break;
 
     case OBJECT_TYPE::OBJECT_SWITCH:
     {
-        // TODO: CSwitch Å¬·¡½º ±¸Çö ÈÄ »ı¼º
+        // TODO: CSwitch í´ë˜ìŠ¤ êµ¬í˜„ í›„ ìˆ˜ì •
         CSpecialObject* pSwitch = new CSpecialObject;
-        pSwitch->SetSpecialType(OBJECT_TYPE::OBJECT_SWITCH);
-        pSwitch->SetScale(Vec2(48.f, 32.f));
-        pSwitch->SetActive(false);
-        pSwitch->SetInteractable(true);
+        pSwitch->SetSpecialType ( OBJECT_TYPE::OBJECT_SWITCH );
+        pSwitch->SetScale ( Vec2 ( 48.f , 32.f ) );
+        pSwitch->SetActive ( false );
+        pSwitch->SetInteractable ( true );
         pObject = pSwitch;
     }
     break;
 
     case OBJECT_TYPE::OBJECT_MIRROR:
     {
-        // TODO: CMirror Å¬·¡½º ±¸Çö ÈÄ »ı¼º  
+        // TODO: CMirror í´ë˜ìŠ¤ êµ¬í˜„ í›„ ìˆ˜ì •  
         CSpecialObject* pMirror = new CSpecialObject;
-        pMirror->SetSpecialType(OBJECT_TYPE::OBJECT_MIRROR);
-        pMirror->SetScale(Vec2(96.f, 128.f));
-        pMirror->SetActive(true);
-        pMirror->SetInteractable(false);
+        pMirror->SetSpecialType ( OBJECT_TYPE::OBJECT_MIRROR );
+        pMirror->SetScale ( Vec2 ( 96.f , 128.f ) );
+        pMirror->SetActive ( true );
+        pMirror->SetInteractable ( false );
         pObject = pMirror;
     }
     break;
 
     default:
-        pObject->SetScale(Vec2(64.f, 64.f));
-        pObject->SetActive(true);
+        pObject->SetScale ( Vec2 ( 64.f , 64.f ) );
+        pObject->SetActive ( true );
         break;
     }
 
     return pObject;
 }
 
-CWaddleDee* CObjectFactory::CreateWaddleDee(Vec2 _vPos)
+CWaddleDee* CObjectFactory::CreateWaddleDee ( Vec2 _vPos )
 {
     CWaddleDee* pWaddleDee = new CWaddleDee;
-    pWaddleDee->SetPos(_vPos);
-    pWaddleDee->SetScale(Vec2(64.f, 64.f));
+    pWaddleDee->SetPos ( _vPos );
+    pWaddleDee->SetScale ( Vec2 ( 64.f , 64.f ) );
 
-    // ¿şÀÌµé µğ Àü¿ë ¼³Á¤
-    // (»ı¼ºÀÚ¿¡¼­ ´ëºÎºĞ Ã³¸®µÇ¹Ç·Î Ãß°¡ ¼³Á¤Àº ÃÖ¼ÒÈ­)
+    // ì›¨ì´ë“¤ ë”” ì „ìš© ì„¤ì •
+    // (ìƒì„±ìì—ì„œ ëŒ€ë¶€ë¶„ ì²˜ë¦¬ë˜ë¯€ë¡œ ì¶”ê°€ ì„¤ì •ì€ ìµœì†Œí™”)
 
     return pWaddleDee;
 }
 
-CWaddleDoo* CObjectFactory::CreateWaddleDoo(Vec2 _vPos)
+CWaddleDoo* CObjectFactory::CreateWaddleDoo ( Vec2 _vPos )
 {
     CWaddleDoo* pWaddleDoo = new CWaddleDoo;
-    pWaddleDoo->SetPos(_vPos);
-    pWaddleDoo->SetScale(Vec2(64.f, 64.f));
+    pWaddleDoo->SetPos ( _vPos );
+    pWaddleDoo->SetScale ( Vec2 ( 64.f , 64.f ) );
 
-    // ¿şÀÌµé µÎ Àü¿ë ¼³Á¤
-    // pWaddleDoo->SetAttackRange(150.f);  // °ø°İ ¹üÀ§ ¼³Á¤ ¿¹½Ã
+    // ì›¨ì´ë“¤ ë‘ ì „ìš© ì„¤ì •
+    // pWaddleDoo->SetAttackRange(150.f);  // í–¥í›„ ê³µê²© ë²”ìœ„ ì„¤ì • ì¶”ê°€
 
     return pWaddleDoo;
 }
 
-CBrontoBurt* CObjectFactory::CreateBrontoBurt(Vec2 _vPos)
+CBrontoBurt* CObjectFactory::CreateBrontoBurt ( Vec2 _vPos )
 {
     CBrontoBurt* pBrontoBurt = new CBrontoBurt;
-    pBrontoBurt->SetPos(_vPos);
-    pBrontoBurt->SetScale(Vec2(72.f, 64.f));  // ¾à°£ ´õ Å« Å©±â
+    pBrontoBurt->SetPos ( _vPos );
+    pBrontoBurt->SetScale ( Vec2 ( 72.f , 64.f ) );  // ì¡°ê¸ˆ ë” í° í¬ê¸°
 
-    // ºê·ĞÅä ¹öÆ® Àü¿ë ¼³Á¤
-    // pBrontoBurt->SetFlightHeight(_vPos.y);  // ºñÇà ±âÁØ ³ôÀÌ ¼³Á¤
+    // ë¸Œë¡ í†  ë²„íŠ¸ ì „ìš© ì„¤ì •
+    // pBrontoBurt->SetFlightHeight(_vPos.y);  // í–¥í›„ ë¹„í–‰ ë†’ì´ ì„¤ì • ì¶”ê°€
 
     return pBrontoBurt;
 }
 
-CGordo* CObjectFactory::CreateGordo(Vec2 _vPos)
+CGordo* CObjectFactory::CreateGordo ( Vec2 _vPos )
 {
     CGordo* pGordo = new CGordo;
-    pGordo->SetPos(_vPos);
-    pGordo->SetScale(Vec2(80.f, 80.f));  // ´õ Å« Å©±â
+    pGordo->SetPos ( _vPos );
+    pGordo->SetScale ( Vec2 ( 80.f , 80.f ) );  // ë” í° í¬ê¸°
 
-    // °í¸£µµ Àü¿ë ¼³Á¤
-    // pGordo->SetMoveDirection(GORDO_MOVE_TYPE::HORIZONTAL);  // ÀÌµ¿ ¹æÇâ ¼³Á¤
+    // ê³ ë¥´ë„ ì „ìš© ì„¤ì •
+    // pGordo->SetMoveDirection(GORDO_MOVE_TYPE::HORIZONTAL);  // ì´ë™ ë°©í–¥ ì„¤ì • ì¶”ê°€
 
     return pGordo;
 }
 
-CHotHead* CObjectFactory::CreateHotHead(Vec2 _vPos)
+CHotHead* CObjectFactory::CreateHotHead ( Vec2 _vPos )
 {
     CHotHead* pHotHead = new CHotHead;
-    pHotHead->SetPos(_vPos);
-    pHotHead->SetScale(Vec2(64.f, 64.f));
+    pHotHead->SetPos ( _vPos );
+    pHotHead->SetScale ( Vec2 ( 64.f , 64.f ) );
 
-    // ÇÖ Çìµå Àü¿ë ¼³Á¤
-    // pHotHead->SetFireRange(120.f);  // È­¿° °ø°İ ¹üÀ§ ¼³Á¤
+    // í•« í—¤ë“œ ì „ìš© ì„¤ì •
+    // pHotHead->SetFireRange(120.f);  // í™”ì—¼ ê³µê²© ë²”ìœ„ ì„¤ì • ì¶”ê°€
 
     return pHotHead;
 }
 
-CSparky* CObjectFactory::CreateSparky(Vec2 _vPos)
+CSparky* CObjectFactory::CreateSparky ( Vec2 _vPos )
 {
     CSparky* pSparky = new CSparky;
-    pSparky->SetPos(_vPos);
-    pSparky->SetScale(Vec2(64.f, 64.f));
+    pSparky->SetPos ( _vPos );
+    pSparky->SetScale ( Vec2 ( 64.f , 64.f ) );
 
-    // ½ºÆÄÅ° Àü¿ë ¼³Á¤
-    // pSparky->SetElectricRange(100.f);  // Àü±â °ø°İ ¹üÀ§ ¼³Á¤
+    // ìŠ¤íŒŒí‚¤ ì „ìš© ì„¤ì •
+    // pSparky->SetElectricRange(100.f);  // ì „ê¸° ê³µê²© ë²”ìœ„ ì„¤ì • ì¶”ê°€
 
     return pSparky;
 }
 
-CWhispyWoods* CObjectFactory::CreateWhispyWoods(Vec2 _vPos)
+CWhispyWoods* CObjectFactory::CreateWhispyWoods ( Vec2 _vPos )
 {
     CWhispyWoods* pWhispyWoods = new CWhispyWoods;
-    pWhispyWoods->SetPos(_vPos);
-    pWhispyWoods->SetScale(Vec2(128.f, 160.f));  // Å« º¸½º Å©±â
+    pWhispyWoods->SetPos ( _vPos );
+    pWhispyWoods->SetScale ( Vec2 ( 128.f , 160.f ) );  // í° ë³´ìŠ¤ í¬ê¸°
 
-    // À§½ºÇÇ ¿ìµå Àü¿ë ¼³Á¤
-    // pWhispyWoods->SetBossHP(1000);      // º¸½º Ã¼·Â ¼³Á¤
-    // pWhispyWoods->SetBossPhase(BOSS_PHASE::INTRO);  // ÃÊ±â ÆäÀÌÁî
+    // ìœ„ìŠ¤í”¼ ìš°ì¦ˆ ì „ìš© ì„¤ì •
+    // pWhispyWoods->SetBossHP(1000);      // ë³´ìŠ¤ ì²´ë ¥ ì„¤ì • ì¶”ê°€
+    // pWhispyWoods->SetBossPhase(BOSS_PHASE::INTRO);  // ì´ˆê¸° í˜ì´ì¦ˆ ì„¤ì •
 
     return pWhispyWoods;
 }
 
-
-
-const wchar_t* CObjectFactory::GetObjectTypeName(OBJECT_TYPE _eType)
+const wchar_t* CObjectFactory::GetObjectTypeName ( OBJECT_TYPE _eType )
 {
-    switch (_eType)
+    switch ( _eType )
     {
-        // ÇÃ·¹ÀÌ¾î
+        // í”Œë ˆì´ì–´
     case OBJECT_TYPE::PLAYER: return L"Player";
 
-        // ¸ó½ºÅÍµé (¾÷µ¥ÀÌÆ®µÈ ºÎºĞ)
+        // ëª¬ìŠ¤í„°ë“¤ (êµ¬í˜„ëœ ë¶€ë¶„)
     case OBJECT_TYPE::MONSTER_WADDLE_DEE: return L"Waddle Dee";
     case OBJECT_TYPE::MONSTER_WADDLE_DOO: return L"Waddle Doo";
     case OBJECT_TYPE::MONSTER_BRONTO_BURT: return L"Bronto Burt";
@@ -334,13 +332,13 @@ const wchar_t* CObjectFactory::GetObjectTypeName(OBJECT_TYPE _eType)
     case OBJECT_TYPE::MONSTER_HOT_HEAD: return L"Hot Head";
     case OBJECT_TYPE::MONSTER_SPARKY: return L"Sparky";
 
-        // ¾ÆÀÌÅÛµé
+        // ì•„ì´í…œë“¤
     case OBJECT_TYPE::ITEM_STAR: return L"Star";
     case OBJECT_TYPE::ITEM_ENERGY_DRINK: return L"Energy Drink";
     case OBJECT_TYPE::ITEM_1UP: return L"1UP";
     case OBJECT_TYPE::ITEM_ABILITY_STAR: return L"Ability Star";
 
-        // Ãæµ¹Ã¼/Å¸ÀÏµé (»õ·Î¿î ÀÌ¸§µé)
+        // ì¶©ëŒì²´/íƒ€ì¼ë“¤ (ìƒˆë¡œìš´ ì´ë¦„ë“¤)
     case OBJECT_TYPE::TILE_GROUND: return L"Solid Ground";
     case OBJECT_TYPE::TILE_PLATFORM: return L"Platform";
     case OBJECT_TYPE::TILE_ONE_WAY: return L"One-Way Platform";
@@ -352,7 +350,7 @@ const wchar_t* CObjectFactory::GetObjectTypeName(OBJECT_TYPE _eType)
     case OBJECT_TYPE::TILE_INVISIBLE: return L"Invisible Wall";
     case OBJECT_TYPE::TILE_WARP_STAR: return L"Warp Star";
 
-        // Æ¯¼ö ¿ÀºêÁ§Æ®µé
+        // íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ë“¤
     case OBJECT_TYPE::OBJECT_DOOR: return L"Door";
     case OBJECT_TYPE::OBJECT_SWITCH: return L"Switch";
     case OBJECT_TYPE::OBJECT_MIRROR: return L"Mirror";
@@ -361,10 +359,9 @@ const wchar_t* CObjectFactory::GetObjectTypeName(OBJECT_TYPE _eType)
     }
 }
 
-
-GROUP_TYPE CObjectFactory::GetObjectGroup(OBJECT_TYPE _eType)
+GROUP_TYPE CObjectFactory::GetObjectGroup ( OBJECT_TYPE _eType )
 {
-    switch (_eType)
+    switch ( _eType )
     {
     case OBJECT_TYPE::PLAYER:
         return GROUP_TYPE::PLAYER;
@@ -405,66 +402,66 @@ GROUP_TYPE CObjectFactory::GetObjectGroup(OBJECT_TYPE _eType)
     }
 }
 
-Vec2 CObjectFactory::GetDefaultScale(OBJECT_TYPE _eType)
+Vec2 CObjectFactory::GetDefaultScale ( OBJECT_TYPE _eType )
 {
-    switch (_eType)
+    switch ( _eType )
     {
-    case OBJECT_TYPE::PLAYER:               return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_WADDLE_DEE:   return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_WADDLE_DOO:   return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_BRONTO_BURT:  return Vec2(72.f, 64.f);
-    case OBJECT_TYPE::MONSTER_GORDOS:       return Vec2(80.f, 80.f);
-    case OBJECT_TYPE::MONSTER_HOT_HEAD:     return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_SPARKY:       return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::ITEM_STAR:            return Vec2(32.f, 32.f);
-    case OBJECT_TYPE::ITEM_ENERGY_DRINK:    return Vec2(48.f, 64.f);
-    case OBJECT_TYPE::ITEM_1UP:             return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::ITEM_ABILITY_STAR:    return Vec2(48.f, 48.f);
-    case OBJECT_TYPE::TILE_GROUND:          return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_PLATFORM:        return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_ONE_WAY:         return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_SPIKE:           return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_WATER:           return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_LAVA:            return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_MOVING:          return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_BREAKABLE:       return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_INVISIBLE:       return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::TILE_WARP_STAR:       return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::OBJECT_DOOR:          return Vec2(64.f, 128.f);
-    case OBJECT_TYPE::OBJECT_SWITCH:        return Vec2(48.f, 32.f);
-    case OBJECT_TYPE::OBJECT_MIRROR:        return Vec2(96.f, 128.f);
-    default:                                return Vec2(64.f, 64.f);
+    case OBJECT_TYPE::PLAYER:               return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::MONSTER_WADDLE_DEE:   return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::MONSTER_WADDLE_DOO:   return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::MONSTER_BRONTO_BURT:  return Vec2 ( 72.f , 64.f );
+    case OBJECT_TYPE::MONSTER_GORDOS:       return Vec2 ( 80.f , 80.f );
+    case OBJECT_TYPE::MONSTER_HOT_HEAD:     return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::MONSTER_SPARKY:       return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::ITEM_STAR:            return Vec2 ( 32.f , 32.f );
+    case OBJECT_TYPE::ITEM_ENERGY_DRINK:    return Vec2 ( 48.f , 64.f );
+    case OBJECT_TYPE::ITEM_1UP:             return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::ITEM_ABILITY_STAR:    return Vec2 ( 48.f , 48.f );
+    case OBJECT_TYPE::TILE_GROUND:          return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_PLATFORM:        return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_ONE_WAY:         return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_SPIKE:           return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_WATER:           return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_LAVA:            return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_MOVING:          return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_BREAKABLE:       return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_INVISIBLE:       return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_WARP_STAR:       return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::OBJECT_DOOR:          return Vec2 ( 64.f , 128.f );
+    case OBJECT_TYPE::OBJECT_SWITCH:        return Vec2 ( 48.f , 32.f );
+    case OBJECT_TYPE::OBJECT_MIRROR:        return Vec2 ( 96.f , 128.f );
+    default:                                return Vec2 ( 64.f , 64.f );
     }
 }
 
-bool CObjectFactory::IsValidObjectType(OBJECT_TYPE _eType)
+bool CObjectFactory::IsValidObjectType ( OBJECT_TYPE _eType )
 {
     return _eType >= OBJECT_TYPE::PLAYER && _eType < OBJECT_TYPE::END;
 }
 
-vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory(const wstring& _strCategory)
+vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory ( const wstring& _strCategory )
 {
     vector<OBJECT_TYPE> result;
 
-    if (_strCategory == L"Monster")
+    if ( _strCategory == L"Monster" )
     {
-        result.push_back(OBJECT_TYPE::MONSTER_WADDLE_DEE);
-        result.push_back(OBJECT_TYPE::MONSTER_WADDLE_DOO);
-        result.push_back(OBJECT_TYPE::MONSTER_BRONTO_BURT);
-        result.push_back(OBJECT_TYPE::MONSTER_GORDOS);
-        result.push_back(OBJECT_TYPE::MONSTER_HOT_HEAD);
-        result.push_back(OBJECT_TYPE::MONSTER_SPARKY);
+        result.push_back ( OBJECT_TYPE::MONSTER_WADDLE_DEE );
+        result.push_back ( OBJECT_TYPE::MONSTER_WADDLE_DOO );
+        result.push_back ( OBJECT_TYPE::MONSTER_BRONTO_BURT );
+        result.push_back ( OBJECT_TYPE::MONSTER_GORDOS );
+        result.push_back ( OBJECT_TYPE::MONSTER_HOT_HEAD );
+        result.push_back ( OBJECT_TYPE::MONSTER_SPARKY );
     }
-    else if (_strCategory == L"Item")
+    else if ( _strCategory == L"Item" )
     {
-        result.push_back(OBJECT_TYPE::ITEM_STAR);
-        result.push_back(OBJECT_TYPE::ITEM_ENERGY_DRINK);
-        result.push_back(OBJECT_TYPE::ITEM_1UP);
-        result.push_back(OBJECT_TYPE::ITEM_ABILITY_STAR);
+        result.push_back ( OBJECT_TYPE::ITEM_STAR );
+        result.push_back ( OBJECT_TYPE::ITEM_ENERGY_DRINK );
+        result.push_back ( OBJECT_TYPE::ITEM_1UP );
+        result.push_back ( OBJECT_TYPE::ITEM_ABILITY_STAR );
     }
-    else if (_strCategory == L"Collision" || _strCategory == L"Tile")
+    else if ( _strCategory == L"Collision" || _strCategory == L"Tile" )
     {
-        result.push_back(OBJECT_TYPE::TILE_GROUND);
+        result.push_back ( OBJECT_TYPE::TILE_GROUND );
         /*result.push_back(OBJECT_TYPE::TILE_PLATFORM);
         result.push_back(OBJECT_TYPE::TILE_ONE_WAY);
         result.push_back(OBJECT_TYPE::TILE_SPIKE);
@@ -475,9 +472,9 @@ vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory(const wstring& _str
         result.push_back(OBJECT_TYPE::TILE_INVISIBLE);
         result.push_back(OBJECT_TYPE::TILE_WARP_STAR);*/
     }
-    else if (_strCategory == L"Special")
+    else if ( _strCategory == L"Special" )
     {
-        result.push_back(OBJECT_TYPE::OBJECT_DOOR);
+        result.push_back ( OBJECT_TYPE::OBJECT_DOOR );
         /*result.push_back(OBJECT_TYPE::OBJECT_SWITCH);
         result.push_back(OBJECT_TYPE::OBJECT_MIRROR);*/
     }
@@ -485,17 +482,17 @@ vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory(const wstring& _str
     return result;
 }
 
-// GetAvailableCategories ÇÔ¼ö ¾÷µ¥ÀÌÆ® (Collision Ä«Å×°í¸® Ãß°¡)
-vector<wstring> CObjectFactory::GetAvailableCategories()
+// GetAvailableCategories í•¨ìˆ˜ ì—…ë°ì´íŠ¸ (Collision ì¹´í…Œê³ ë¦¬ ì¶”ê°€)
+vector<wstring> CObjectFactory::GetAvailableCategories ( )
 {
     return { L"Monster", L"Item", L"Collision", L"Special" };
-    // ±âÁ¸ "Tile"Àº "Collision"À¸·Î º¯°æ (´õ ¸íÈ®ÇÑ ÀÇ¹Ì)
+    // ê¸°ì¡´ "Tile"ì„ "Collision"ìœ¼ë¡œ ë³€ê²½ (ë” ì •í™•í•œ ì˜ë¯¸)
 }
 
-// »õ·Î Ãß°¡: OBJECT_TYPEÀ» COLLISION_TYPEÀ¸·Î º¯È¯ÇÏ´Â ÇÔ¼ö
-COLLISION_TYPE CObjectFactory::ConvertObjectTypeToCollisionType(OBJECT_TYPE _eObjectType)
+// ìƒˆë¡œ ì¶”ê°€: OBJECT_TYPEì„ COLLISION_TYPEìœ¼ë¡œ ë³€í™˜í•˜ëŠ” í•¨ìˆ˜
+COLLISION_TYPE CObjectFactory::ConvertObjectTypeToCollisionType ( OBJECT_TYPE _eObjectType )
 {
-    switch (_eObjectType)
+    switch ( _eObjectType )
     {
     case OBJECT_TYPE::TILE_GROUND:
         return COLLISION_TYPE::SOLID_GROUND;
@@ -507,9 +504,9 @@ COLLISION_TYPE CObjectFactory::ConvertObjectTypeToCollisionType(OBJECT_TYPE _eOb
         return COLLISION_TYPE::WATER;
 
     case OBJECT_TYPE::TILE_WARP_STAR:
-        return COLLISION_TYPE::PLATFORM;  // ¿öÇÁ½ºÅ¸´Â ÇÃ·§ÆûÀ¸·Î Ãë±Ş
+        return COLLISION_TYPE::PLATFORM;  // ì›Œí”„ìŠ¤íƒ€ë¥¼ í”Œë«í¼ìœ¼ë¡œ ì²˜ë¦¬
 
-        // »õ·Î¿î Å¸ÀÏ Å¸ÀÔµé Ãß°¡ (±âÁ¸ OBJECT_TYPE enum¿¡ Ãß°¡ ÇÊ¿ä)
+        // ìƒˆë¡œìš´ íƒ€ì¼ íƒ€ì…ë“¤ ì¶”ê°€ (ê¸°ì¡´ OBJECT_TYPE enumì— ì¶”ê°€ í•„ìš”)
     case OBJECT_TYPE::TILE_PLATFORM:
         return COLLISION_TYPE::PLATFORM;
 
@@ -529,14 +526,14 @@ COLLISION_TYPE CObjectFactory::ConvertObjectTypeToCollisionType(OBJECT_TYPE _eOb
         return COLLISION_TYPE::INVISIBLE_WALL;
 
     default:
-        return COLLISION_TYPE::SOLID_GROUND;  // ±âº»°ª
+        return COLLISION_TYPE::SOLID_GROUND;  // ê¸°ë³¸ê°’
     }
 }
 
-// »õ·Î Ãß°¡: COLLISION_TYPEÀ» OBJECT_TYPEÀ¸·Î º¯È¯ÇÏ´Â ÇÔ¼ö (¿¡µğÅÍ¿ë)
-OBJECT_TYPE CObjectFactory::ConvertCollisionTypeToObjectType(COLLISION_TYPE _eCollisionType)
+// ìƒˆë¡œ ì¶”ê°€: COLLISION_TYPEì„ OBJECT_TYPEìœ¼ë¡œ ë³€í™˜í•˜ëŠ” í•¨ìˆ˜ (ì—ë””í„°ìš©)
+OBJECT_TYPE CObjectFactory::ConvertCollisionTypeToObjectType ( COLLISION_TYPE _eCollisionType )
 {
-    switch (_eCollisionType)
+    switch ( _eCollisionType )
     {
     case COLLISION_TYPE::SOLID_GROUND:
         return OBJECT_TYPE::TILE_GROUND;
@@ -570,11 +567,11 @@ OBJECT_TYPE CObjectFactory::ConvertCollisionTypeToObjectType(COLLISION_TYPE _eCo
     }
 }
 
-// CObjectFactory.cpp¿¡ Ãß°¡ÇÒ Ãæµ¹Ã¼ °ü·Ã ÇïÆÛ ÇÔ¼öµé
+// CObjectFactory.cppì— ì¶”ê°€ëœ ì¶©ëŒì²´ íƒ€ì… ì •ë³´ í•¨ìˆ˜ë“¤
 
-const wchar_t* CObjectFactory::GetCollisionTypeName(COLLISION_TYPE _eType)
+const wchar_t* CObjectFactory::GetCollisionTypeName ( COLLISION_TYPE _eType )
 {
-    switch (_eType)
+    switch ( _eType )
     {
     case COLLISION_TYPE::SOLID_GROUND:      return L"Solid Ground";
     case COLLISION_TYPE::PLATFORM:          return L"Platform";
@@ -589,86 +586,87 @@ const wchar_t* CObjectFactory::GetCollisionTypeName(COLLISION_TYPE _eType)
     }
 }
 
-COLORREF CObjectFactory::GetCollisionTypeColor(COLLISION_TYPE _eType)
+COLORREF CObjectFactory::GetCollisionTypeColor ( COLLISION_TYPE _eType )
 {
-    switch (_eType)
+    switch ( _eType )
     {
-    case COLLISION_TYPE::SOLID_GROUND:      return RGB(0, 0, 255);        // ÆÄ¶õ»ö
-    case COLLISION_TYPE::PLATFORM:          return RGB(0, 255, 0);        // ÃÊ·Ï»ö
-    case COLLISION_TYPE::SPIKE:             return RGB(255, 0, 0);        // »¡°£»ö
-    case COLLISION_TYPE::WATER:             return RGB(100, 200, 255);    // ¿¬ÆÄ¶õ»ö
-    case COLLISION_TYPE::LAVA:              return RGB(255, 100, 0);      // ÁÖÈ²»ö
-    case COLLISION_TYPE::ONE_WAY_PLATFORM:  return RGB(100, 255, 100);    // ¿¬ÃÊ·Ï»ö
-    case COLLISION_TYPE::MOVING_PLATFORM:   return RGB(255, 0, 255);      // º¸¶ó»ö
-    case COLLISION_TYPE::BREAKABLE_BLOCK:   return RGB(139, 69, 19);      // È²Åä»ö
-    case COLLISION_TYPE::INVISIBLE_WALL:    return RGB(128, 128, 128);    // È¸»ö
-    default:                                return RGB(0, 0, 255);        // ±âº» ÆÄ¶õ»ö
+    case COLLISION_TYPE::SOLID_GROUND:      return RGB ( 0 , 0 , 255 );        // íŒŒë€ìƒ‰
+    case COLLISION_TYPE::PLATFORM:          return RGB ( 0 , 255 , 0 );        // ì´ˆë¡ìƒ‰
+    case COLLISION_TYPE::SPIKE:             return RGB ( 255 , 0 , 0 );        // ë¹¨ê°„ìƒ‰
+    case COLLISION_TYPE::WATER:             return RGB ( 100 , 200 , 255 );    // ì—°íŒŒë€ìƒ‰
+    case COLLISION_TYPE::LAVA:              return RGB ( 255 , 100 , 0 );      // ì£¼í™©ìƒ‰
+    case COLLISION_TYPE::ONE_WAY_PLATFORM:  return RGB ( 100 , 255 , 100 );    // ì—°ì´ˆë¡ìƒ‰
+    case COLLISION_TYPE::MOVING_PLATFORM:   return RGB ( 255 , 0 , 255 );      // ë³´ë¼ìƒ‰
+    case COLLISION_TYPE::BREAKABLE_BLOCK:   return RGB ( 139 , 69 , 19 );      // í™©í† ìƒ‰
+    case COLLISION_TYPE::INVISIBLE_WALL:    return RGB ( 128 , 128 , 128 );    // íšŒìƒ‰
+    default:                                return RGB ( 0 , 0 , 255 );        // ê¸°ë³¸ íŒŒë€ìƒ‰
     }
 }
 
-vector<COLLISION_TYPE> CObjectFactory::GetAvailableCollisionTypes()
+vector<COLLISION_TYPE> CObjectFactory::GetAvailableCollisionTypes ( )
 {
     vector<COLLISION_TYPE> result;
 
-    result.push_back(COLLISION_TYPE::SOLID_GROUND);
-    result.push_back(COLLISION_TYPE::PLATFORM);
-    result.push_back(COLLISION_TYPE::ONE_WAY_PLATFORM);
-    result.push_back(COLLISION_TYPE::SPIKE);
-    result.push_back(COLLISION_TYPE::WATER);
-    result.push_back(COLLISION_TYPE::LAVA);
-    result.push_back(COLLISION_TYPE::MOVING_PLATFORM);
-    result.push_back(COLLISION_TYPE::BREAKABLE_BLOCK);
-    result.push_back(COLLISION_TYPE::INVISIBLE_WALL);
+    result.push_back ( COLLISION_TYPE::SOLID_GROUND );
+    result.push_back ( COLLISION_TYPE::PLATFORM );
+    result.push_back ( COLLISION_TYPE::ONE_WAY_PLATFORM );
+    result.push_back ( COLLISION_TYPE::SPIKE );
+    result.push_back ( COLLISION_TYPE::WATER );
+    result.push_back ( COLLISION_TYPE::LAVA );
+    result.push_back ( COLLISION_TYPE::MOVING_PLATFORM );
+    result.push_back ( COLLISION_TYPE::BREAKABLE_BLOCK );
+    result.push_back ( COLLISION_TYPE::INVISIBLE_WALL );
 
     return result;
 }
 
-void CObjectFactory::SetupMonsterAI(CObject* _pMonster, OBJECT_TYPE _eType)
+void CObjectFactory::SetupMonsterAI ( CObject* _pMonster , OBJECT_TYPE _eType )
 {
-    // TODO: ¸ó½ºÅÍ Å¸ÀÔº° AI ¼³Á¤
-    // ÇöÀç´Â ±âº» CMonster Å¬·¡½º¸¸ ÀÖÀ¸¹Ç·Î ÃßÈÄ È®Àå
+    // TODO: ëª¬ìŠ¤í„° íƒ€ì…ë³„ AI ì„¤ì •
+    // í˜„ì¬ëŠ” ê¸°ë³¸ CMonster í´ë˜ìŠ¤ì˜ ë™ì‘ì„ ë”°ë¥´ë¯€ë¡œ í–¥í›„ í™•ì¥
 
-    switch (_eType)
+    switch ( _eType )
     {
     case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-        // ±âº» ÁÂ¿ì ÀÌµ¿ AI (ÇöÀç CMonster ±âº» µ¿ÀÛ)
+        // ê¸°ë³¸ ì¢Œìš° ì´ë™ AI (í˜„ì¬ CMonster ê¸°ë³¸ ë™ì‘)
         break;
 
     case OBJECT_TYPE::MONSTER_GORDOS:
-        // ¿òÁ÷ÀÌÁö ¾Ê´Â °¡½Ã - ÃßÈÄ º°µµ Å¬·¡½º ÇÊ¿ä
+        // í¡ì…ë˜ì§€ ì•ŠëŠ” ì ë“¤ - í–¥í›„ íŠ¹ìˆ˜ í´ë˜ìŠ¤ í•„ìš”
         break;
 
     case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-        // ³¯¾Æ´Ù´Ï´Â AI - ÃßÈÄ º°µµ Å¬·¡½º ÇÊ¿ä
+        // ë‚ ì•„ë‹¤ë‹ˆëŠ” AI - í–¥í›„ íŠ¹ìˆ˜ í´ë˜ìŠ¤ í•„ìš”
         break;
 
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
-        // ºÒ °ø°İ AI - ÃßÈÄ º°µµ Å¬·¡½º ÇÊ¿ä
+        // ë¶ˆ ê³µê²© AI - í–¥í›„ íŠ¹ìˆ˜ í´ë˜ìŠ¤ í•„ìš”
         break;
     }
 }
 
-void CObjectFactory::SetupItemProperties(CObject* _pItem, OBJECT_TYPE _eType)
+void CObjectFactory::SetupItemProperties ( CObject* _pItem , OBJECT_TYPE _eType )
 {
-    // TODO: CItem Å¬·¡½º ±¸Çö ÈÄ ¾ÆÀÌÅÛº° ¼Ó¼º ¼³Á¤
-    // Á¡¼ö, È¿°ú, ¾Ö´Ï¸ŞÀÌ¼Ç µî
+    // TODO: CItem í´ë˜ìŠ¤ êµ¬í˜„ í›„ ì•„ì´í…œë³„ ì†ì„± ì„¤ì •
+    // ì ìˆ˜, íš¨ê³¼, ì• ë‹ˆë©”ì´ì…˜ ë“±
 }
 
-void CObjectFactory::SetupTileProperties(CObject* _pTile, OBJECT_TYPE _eType)
+void CObjectFactory::SetupTileProperties ( CObject* _pTile , OBJECT_TYPE _eType )
 {
-    CTile* pTile = dynamic_cast<CTile*>(_pTile);
-    if (!pTile) return;
+    CTile* pTile = dynamic_cast< CTile* >( _pTile );
+    if ( !pTile ) return;
 
-    // »õ·Î¿î Ãæµ¹Ã¼ ½Ã½ºÅÛ »ç¿ë
-    COLLISION_TYPE collisionType = ConvertObjectTypeToCollisionType(_eType);
-    pTile->SetCollisionType(collisionType);
+    // ìƒˆë¡œìš´ ì¶©ëŒì²´ ì‹œìŠ¤í…œ ì ìš©
+    COLLISION_TYPE collisionType = ConvertObjectTypeToCollisionType ( _eType );
+    pTile->SetCollisionType ( collisionType );
 
-    // ±âº» ¿ÀºêÁ§Æ® Å¸ÀÔµµ ¼³Á¤ (È£È¯¼º¿ë)
-    pTile->SetTileType(_eType);
+    // ê¸°ë³¸ ì˜¤ë¸Œì íŠ¸ íƒ€ì…ë“¤ ì„¤ì • (í˜¸í™˜ì„±)
+    pTile->SetTileType ( _eType );
 
-    // *** ´õ ÀÌ»ó ½Ã°¢Àû ÅØ½ºÃ³ °ü·Ã Ã³¸®´Â ÇÏÁö ¾ÊÀ½ ***
-    // ½Ã°¢Àû Å¸ÀÔ ¼³Á¤Àº ¿¡µğÅÍ¿¡¼­ º°µµ·Î Ã³¸®
-    // pTile->SetVisualType(...);  // ´õ ÀÌ»ó »ç¿ë ¾ÈÇÔ
+    // *** ë” ì´ìƒ ì‹œê°ì  í…ìŠ¤ì²˜ íƒ€ì… ì²˜ë¦¬ëŠ” í•˜ì§€ ì•ŠìŒ ***
+    // ì‹œê°ì  íƒ€ì¼ ì‹œìŠ¤í…œì€ ì—ë””í„°ì—ì„œ ë³„ë„ë¡œ ì²˜ë¦¬
+    // pTile->SetVisualType(...);  // ë” ì´ìƒ ì‚¬ìš© ì•ˆí•¨
 
-    // Ãæµ¹Ã¼ ¼Ó¼ºÀº ÀÌ¹Ì SetCollisionType¿¡¼­ ÀÚµ¿À¸·Î ¼³Á¤µÊ
+    // ì¶©ëŒì²´ ì†ì„±ì€ ì´ë¯¸ SetCollisionTypeì—ì„œ ìë™ìœ¼ë¡œ ì„¤ì •ë¨
 }
+

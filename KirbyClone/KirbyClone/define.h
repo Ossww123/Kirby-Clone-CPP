@@ -11,14 +11,14 @@
 						 ~type();
 
 /* ------------- */
-/* Å° ¸Å´ÏÀú °ü·Ã */
+/* í‚¤ ë§¤ë‹ˆì € ê´€ë ¨ */
 /* ------------- */
 #define KEY_TAP(key)    CKeyMgr::GetInst()->IsKeyTap(key)
 #define KEY_HOLD(key)   CKeyMgr::GetInst()->IsKeyHold(key)
 #define KEY_AWAY(key)   CKeyMgr::GetInst()->IsKeyAway(key)
 
 /* --------------- */
-/* ÀÌº¥Æ® °ü·Ã ¸ÅÅ©·Î */
+/* ì´ë²¤íŠ¸ ê´€ë ¨ ë§¤í¬ë¡œ */
 /* --------------- */
 #define CREATE_OBJECT(obj, group) \
     do { \
@@ -38,6 +38,6 @@
         CEventMgr::GetInst()->AddEvent(event); \
     } while(0)
 
-// ÇÃ·¹ÀÌ¾î »óÅÂ º¯°æ ¸ÅÅ©·Î
+// í”Œë ˆì´ì–´ ìƒíƒœ ë³€ê²½ ë§¤í¬ë¡œ
 #define CHANGE_PLAYER_STATE(player, state) \
     CEventMgr::RequestPlayerStateChange(player, state)

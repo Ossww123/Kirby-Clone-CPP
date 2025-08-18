@@ -180,6 +180,8 @@
     <ClInclude Include="CPlayerMovement.h" />
     <ClInclude Include="CPlayerStateMachine.h" />
     <ClInclude Include="CPlayerStateTransitionTable.h" />
+    <ClInclude Include="CProjectile.h" />
+    <ClInclude Include="CProjectileFactory.h" />
     <ClInclude Include="CRes.h" />
     <ClInclude Include="CResMgr.h" />
     <ClInclude Include="CRigidBody.h" />
@@ -251,6 +253,8 @@
     <ClCompile Include="CPlayerMovement.cpp" />
     <ClCompile Include="CPlayerStateMachine.cpp" />
     <ClCompile Include="CPlayerStateTransitionTable.cpp" />
+    <ClCompile Include="CProjectile.cpp" />
+    <ClCompile Include="CProjectileFactory.cpp" />
     <ClCompile Include="CRes.cpp" />
     <ClCompile Include="CResMgr.cpp" />
     <ClCompile Include="CRigidBody.cpp" />

@@ -5,41 +5,41 @@ class CObject;
 class CCollider
 {
 public:
-    // === »ı¼ºÀÚ & ¼Ò¸êÀÚ ===
+    // === ìƒì„±ì & ì†Œë©¸ì ===
     CCollider();
     ~CCollider();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
     void FinalUpdate();
     void Render(HDC _dc);
     void RenderScaled(HDC _dc, float _fScale);
 
 public:
-    // === Ãæµ¹ °Ë»ç ===
+    // === ì¶©ëŒ ê²€ì‚¬ ===
     bool IsCollision(CCollider* _pOther);
 
 public:
-    // === Ãæµ¹ ÀÌº¥Æ® Ã³¸® ===
-    void OnCollisionEnter(CCollider* _pOther);  // Ãæµ¹ ½ÃÀÛ
-    void OnCollision(CCollider* _pOther);       // Ãæµ¹ Áß
-    void OnCollisionExit(CCollider* _pOther);   // Ãæµ¹ ³¡
+    // === ì¶©ëŒ ì´ë²¤íŠ¸ ì²˜ë¦¬ ===
+    void OnCollisionEnter(CCollider* _pOther);  // ì¶©ëŒ ì‹œì‘
+    void OnCollision(CCollider* _pOther);       // ì¶©ëŒ ì¤‘
+    void OnCollisionExit(CCollider* _pOther);   // ì¶©ëŒ ë
 
 public:
-    // === À§Ä¡ ¹× Å©±â °ü¸® ===
+    // === ìœ„ì¹˜ ë° í¬ê¸° ê´€ë¦¬ ===
     void SetOffsetPos(Vec2 _vPos) { m_vOffsetPos = _vPos; }
     void SetScale(Vec2 _vScale) { m_vScale = _vScale; }
     Vec2 GetOffsetPos() const { return m_vOffsetPos; }
     Vec2 GetScale() const { return m_vScale; }
-    Vec2 GetFinalPos();         // ÃÖÁ¾ À§Ä¡ (¿ÀºêÁ§Æ® À§Ä¡ + ¿ÀÇÁ¼Â)
+    Vec2 GetFinalPos();         // ìµœì¢… ìœ„ì¹˜ (ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ + ì˜¤í”„ì…‹)
 
 public:
-    // === ¼ÒÀ¯ÀÚ ¹× ID °ü¸® ===
+    // === ì†Œìœ ì ë° ID ê´€ë¦¬ ===
     CObject* GetOwner() const { return m_pOwner; }
     UINT GetID() const { return m_iID; }
 
 public:
-    // === Ãæµ¹ ¸ñ·Ï °ü¸® ===
+    // === ì¶©ëŒ ëª©ë¡ ê´€ë¦¬ ===
     const vector<CCollider*>& GetCollidingColliders() const { return m_vecCollidingColliders; }
     void AddCollidingCollider(CCollider* _pOther);
     void RemoveCollidingCollider(CCollider* _pOther);
@@ -47,17 +47,17 @@ public:
     bool IsCollidingWith(CCollider* _pOther) const;
 
 private:
-    // === Á¤Àû º¯¼ö ===
-    static UINT g_iNextID;      // ´ÙÀ½ ID »ı¼º¿ë
+    // === ì •ì  ë³€ìˆ˜ ===
+    static UINT g_iNextID;      // ë‹¤ìŒ ID ìƒì„±ìš©
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    CObject* m_pOwner;          // ÀÌ Ãæµ¹Ã¼¸¦ ¼ÒÀ¯ÇÑ ¿ÀºêÁ§Æ®
-    Vec2        m_vOffsetPos;   // ¿ÀºêÁ§Æ® Áß½ÉÀ¸·ÎºÎÅÍÀÇ ¿ÀÇÁ¼Â
-    Vec2        m_vScale;       // Ãæµ¹Ã¼ Å©±â
-    UINT        m_iID;          // Ãæµ¹Ã¼ °íÀ¯ ID
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
+    CObject*    m_pOwner;          // ì´ ì¶©ëŒì²´ë¥¼ ì†Œìœ í•œ ì˜¤ë¸Œì íŠ¸
+    Vec2        m_vOffsetPos;   // ì˜¤ë¸Œì íŠ¸ ì¤‘ì‹¬ìœ¼ë¡œë¶€í„°ì˜ ì˜¤í”„ì…‹
+    Vec2        m_vScale;       // ì¶©ëŒì²´ í¬ê¸°
+    UINT        m_iID;          // ì¶©ëŒì²´ ê³ ìœ  ID
 
-    // ÇöÀç Ãæµ¹ ÁßÀÎ Äİ¶óÀÌ´õµéÀÇ ¸ñ·Ï
+    // í˜„ì¬ ì¶©ëŒ ì¤‘ì¸ ì½œë¼ì´ë”ë“¤ì˜ ëª©ë¡
     vector<CCollider*> m_vecCollidingColliders;
 
     friend class CObject;

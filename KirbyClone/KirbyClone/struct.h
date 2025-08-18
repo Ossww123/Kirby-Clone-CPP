@@ -21,13 +21,13 @@ public:
 		, y((float)_y)
 	{}
 
-	// º¹»ç »ı¼ºÀÚ
+	// ë³µì‚¬ ìƒì„±ì
 	Vec2(const Vec2& _other)
 		: x(_other.x)
 		, y(_other.y)
 	{}
 
-	// ¿¬»êÀÚ ¿À¹ö·Îµù
+	// ì—°ì‚°ì ì˜¤ë²„ë¡œë”©
 	Vec2 operator + (const Vec2& _other) const
 	{
 		return Vec2(x + _other.x, y + _other.y);
@@ -48,7 +48,7 @@ public:
 		return Vec2(x / _f, y / _f);
 	}
 
-	// ´ÜÇ× ¸¶ÀÌ³Ê½º ¿¬»êÀÚ (º¤ÅÍ ¹İ´ë ¹æÇâ)
+	// ë‹¨í•­ ë§ˆì´ë„ˆìŠ¤ ì—°ì‚°ì (ë²¡í„° ë°˜ëŒ€ ë°©í–¥)
 	Vec2 operator - () const
 	{
 		return Vec2(-x, -y);
@@ -82,7 +82,7 @@ public:
 		return *this;
 	}
 
-	// ´ëÀÔ ¿¬»êÀÚ
+	// ëŒ€ì… ì—°ì‚°ì
 	Vec2& operator = (const Vec2& _other)
 	{
 		x = _other.x;
@@ -90,7 +90,7 @@ public:
 		return *this;
 	}
 
-	// ºñ±³ ¿¬»êÀÚ
+	// ë¹„êµ ì—°ì‚°ì
 	bool operator == (const Vec2& _other) const
 	{
 		return x == _other.x && y == _other.y;
@@ -101,25 +101,25 @@ public:
 		return !(*this == _other);
 	}
 
-	// º¤ÅÍÀÇ ±æÀÌ
+	// ë²¡í„°ì˜ ê¸¸ì´
 	float Length() const
 	{
 		return sqrt(x * x + y * y);
 	}
 
-	// ³»Àû(Dot Product) °è»ê
+	// ë‚´ì (Dot Product) ê³„ì‚°
 	float Dot(const Vec2& _other) const
 	{
 		return x * _other.x + y * _other.y;
 	}
 
-	// ¿ÜÀû(Cross Product) °è»ê (2D¿¡¼­´Â ½ºÄ®¶ó °ª ¹İÈ¯)
+	// ì™¸ì (Cross Product) ê³„ì‚° (2Dì—ì„œëŠ” ìŠ¤ì¹¼ë¼ ê°’ ë°˜í™˜)
 	float Cross(const Vec2& _other) const
 	{
 		return x * _other.y - y * _other.x;
 	}
 
-	// º¤ÅÍ »çÀÌÀÇ °¢µµ °è»ê (¶óµğ¾È)
+	// ë²¡í„° ì‚¬ì´ì˜ ê°ë„ ê³„ì‚° (ë¼ë””ì•ˆ)
 	float Angle(const Vec2& _other) const
 	{
 		float dot = Dot(_other);
@@ -129,31 +129,31 @@ public:
 			return 0.f;
 
 		float cosTheta = dot / lenProduct;
-		// cos °ªÀ» [-1, 1] ¹üÀ§·Î Å¬·¥ÇÎ
+		// cos ê°’ì„ [-1, 1] ë²”ìœ„ë¡œ í´ë¨í•‘
 		cosTheta = max(-1.f, min(1.f, cosTheta));
 
 		return acos(cosTheta);
 	}
 
-	// º¤ÅÍÀÇ Á¦°ö ±æÀÌ (¼º´É»ó ÀÌÁ¡ - sqrt ¿¬»ê »ı·«)
+	// ë²¡í„°ì˜ ì œê³± ê¸¸ì´ (ì„±ëŠ¥ìƒ ì´ì  - sqrt ì—°ì‚° ìƒëµ)
 	float LengthSq() const
 	{
 		return x * x + y * y;
 	}
 
-	// °Å¸® °è»ê (´Ù¸¥ Á¡±îÁöÀÇ °Å¸®)
+	// ê±°ë¦¬ ê³„ì‚° (ë‹¤ë¥¸ ì ê¹Œì§€ì˜ ê±°ë¦¬)
 	float Distance(const Vec2& _other) const
 	{
 		return (*this - _other).Length();
 	}
 
-	// Á¦°ö °Å¸® °è»ê (¼º´É»ó ÀÌÁ¡)
+	// ì œê³± ê±°ë¦¬ ê³„ì‚° (ì„±ëŠ¥ìƒ ì´ì )
 	float DistanceSq(const Vec2& _other) const
 	{
 		return (*this - _other).LengthSq();
 	}
 
-	// Á¤±ÔÈ­µÈ º¤ÅÍ ¹İÈ¯ (¿øº» ¼öÁ¤ ¾ÈÇÔ)
+	// ì •ê·œí™”ëœ ë²¡í„° ë°˜í™˜ (ì›ë³¸ ìˆ˜ì • ì•ˆí•¨)
 	Vec2 GetNormalized() const
 	{
 		Vec2 result = *this;
@@ -161,19 +161,19 @@ public:
 		return result;
 	}
 
-	// º¤ÅÍ°¡ ¿µº¤ÅÍÀÎÁö È®ÀÎ
+	// ë²¡í„°ê°€ ì˜ë²¡í„°ì¸ì§€ í™•ì¸
 	bool IsZero() const
 	{
 		return x == 0.f && y == 0.f;
 	}
 
-	// ¼±Çü º¸°£ (Linear Interpolation)
+	// ì„ í˜• ë³´ê°„ (Linear Interpolation)
 	static Vec2 Lerp(const Vec2& _from, const Vec2& _to, float _t)
 	{
 		return _from + (_to - _from) * _t;
 	}
 
-	// Á¤±ÔÈ­ (´ÜÀ§ º¤ÅÍ·Î ¸¸µé±â)
+	// ì •ê·œí™” (ë‹¨ìœ„ ë²¡í„°ë¡œ ë§Œë“¤ê¸°)
 	Vec2& Normalize()
 	{
 		float len = Length();
@@ -188,26 +188,26 @@ public:
 
 
 // =============================================================================
-// === ÀÔ·Â ½Ã½ºÅÛ ===
+// === ì…ë ¥ ì‹œìŠ¤í…œ ===
 // =============================================================================
 
-// Å° ÀÔ·Â »óÅÂ Á¤º¸
+// í‚¤ ì…ë ¥ ìƒíƒœ ì •ë³´
 struct tKeyInfo
 {
-	KEY_STATE   eState;     // Å°ÀÇ »óÅÂ
-	bool        bPrevPush;  // ÀÌÀü ÇÁ·¹ÀÓ¿¡ ´­·È´ÂÁö ¿©ºÎ
+	KEY_STATE   eState;     // í‚¤ì˜ ìƒíƒœ
+	bool        bPrevPush;  // ì´ì „ í”„ë ˆì„ì— ëˆŒë ¸ëŠ”ì§€ ì—¬ë¶€
 };
 
 // =============================================================================
-// === ÀÌº¥Æ® ½Ã½ºÅÛ ===
+// === ì´ë²¤íŠ¸ ì‹œìŠ¤í…œ ===
 // =============================================================================
 
-// ÀÌº¥Æ® ±¸Á¶Ã¼
+// ì´ë²¤íŠ¸ êµ¬ì¡°ì²´
 struct tEvent
 {
-	EVENT_TYPE  eType;      // ÀÌº¥Æ® Å¸ÀÔ
-	DWORD_PTR   wParam;     // Ã¹ ¹øÂ° ¸Å°³º¯¼ö
-	DWORD_PTR   lParam;     // µÎ ¹øÂ° ¸Å°³º¯¼ö
+	EVENT_TYPE  eType;      // ì´ë²¤íŠ¸ íƒ€ì…
+	DWORD_PTR   wParam;     // ì²« ë²ˆì§¸ ë§¤ê°œë³€ìˆ˜
+	DWORD_PTR   lParam;     // ë‘ ë²ˆì§¸ ë§¤ê°œë³€ìˆ˜
 
 	tEvent()
 		: eType(EVENT_TYPE::END)
@@ -223,15 +223,15 @@ struct tEvent
 };
 
 // =============================================================================
-// === ¾Ö´Ï¸ŞÀÌ¼Ç ½Ã½ºÅÛ ===
+// === ì• ë‹ˆë©”ì´ì…˜ ì‹œìŠ¤í…œ ===
 // =============================================================================
 
-// ¾Ö´Ï¸ŞÀÌ¼Ç ÇÁ·¹ÀÓ Á¤º¸
+// ì• ë‹ˆë©”ì´ì…˜ í”„ë ˆì„ ì •ë³´
 struct tAnimFrame
 {
-	Vec2 vLT;           // ½ºÇÁ¶óÀÌÆ® ½ÃÆ®¿¡¼­ ÁÂ»ó´Ü ÁÂÇ¥
-	Vec2 vSlice;        // ÇÁ·¹ÀÓ Å©±â (°¡·Î, ¼¼·Î)
-	float fDuration;    // ÀÌ ÇÁ·¹ÀÓÀÇ Áö¼Ó ½Ã°£
+	Vec2 vLT;           // ìŠ¤í”„ë¼ì´íŠ¸ ì‹œíŠ¸ì—ì„œ ì¢Œìƒë‹¨ ì¢Œí‘œ
+	Vec2 vSlice;        // í”„ë ˆì„ í¬ê¸° (ê°€ë¡œ, ì„¸ë¡œ)
+	float fDuration;    // ì´ í”„ë ˆì„ì˜ ì§€ì† ì‹œê°„
 
 	tAnimFrame()
 		: vLT{}
@@ -246,12 +246,12 @@ struct tAnimFrame
 	{}
 };
 
-// ¾Ö´Ï¸ŞÀÌ¼Ç µ¥ÀÌÅÍ (ÆÄÀÏ ÀúÀå¿ë)
+// ì• ë‹ˆë©”ì´ì…˜ ë°ì´í„° (íŒŒì¼ ì €ì¥ìš©)
 struct tAnimationData
 {
-	wstring strName;                        // ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌ¸§
-	vector<tAnimFrame> vecFrames;           // ÇÁ·¹ÀÓ ¸ñ·Ï
-	bool bLoop;                             // ¹İº¹ Àç»ı ¿©ºÎ
+	wstring strName;                        // ì• ë‹ˆë©”ì´ì…˜ ì´ë¦„
+	vector<tAnimFrame> vecFrames;           // í”„ë ˆì„ ëª©ë¡
+	bool bLoop;                             // ë°˜ë³µ ì¬ìƒ ì—¬ë¶€
 
 	tAnimationData()
 		: bLoop(true)
@@ -263,13 +263,13 @@ struct tAnimationData
 	{}
 };
 
-// ÆÄÀÏ ÀüÃ¼ µ¥ÀÌÅÍ (ÇÑ ÆÄÀÏ¿¡ ¿©·¯ ¾Ö´Ï¸ŞÀÌ¼Ç)
+// íŒŒì¼ ì „ì²´ ë°ì´í„° (í•œ íŒŒì¼ì— ì—¬ëŸ¬ ì• ë‹ˆë©”ì´ì…˜)
 struct tAnimationFileData
 {
-	wstring strTexturePath;                     // ÅØ½ºÃ³ ÆÄÀÏ °æ·Î
-	Vec2 vSpriteSize;                          // ±âº» ½ºÇÁ¶óÀÌÆ® Å©±â
-	int iBorder;                               // Å×µÎ¸® Å©±â
-	map<wstring, tAnimationData> mapAnimations; // ¾Ö´Ï¸ŞÀÌ¼Ç ¸Ê
+	wstring strTexturePath;                     // í…ìŠ¤ì²˜ íŒŒì¼ ê²½ë¡œ
+	Vec2 vSpriteSize;                          // ê¸°ë³¸ ìŠ¤í”„ë¼ì´íŠ¸ í¬ê¸°
+	int iBorder;                               // í…Œë‘ë¦¬ í¬ê¸°
+	map<wstring, tAnimationData> mapAnimations; // ì• ë‹ˆë©”ì´ì…˜ ë§µ
 
 	tAnimationFileData()
 		: vSpriteSize(32.f, 32.f)
@@ -278,20 +278,20 @@ struct tAnimationFileData
 };
 
 // =============================================================================
-// === Ãæµ¹ ½Ã½ºÅÛ ===
+// === ì¶©ëŒ ì‹œìŠ¤í…œ ===
 // =============================================================================
 
-// Ãæµ¹Ã¼ ¼Ó¼ºÀ» ³ªÅ¸³»´Â ±¸Á¶Ã¼
+// ì¶©ëŒì²´ ì†ì„±ì„ ë‚˜íƒ€ë‚´ëŠ” êµ¬ì¡°ì²´
 struct tCollisionInfo
 {
-	COLLISION_TYPE eType;        // Ãæµ¹Ã¼ Å¸ÀÔ
-	COLORREF displayColor;       // ¿¡µğÅÍ¿¡¼­ Ç¥½ÃÇÒ »ö±ò
-	bool bIsSolid;              // ´Ü´ÜÇÑ Ãæµ¹ (Åë°ú ºÒ°¡)
-	bool bIsHarmful;            // µ¥¹ÌÁö¸¦ ÁÖ´Â°¡
-	bool bIsOneWay;             // ÀÏ¹æÅëÇàÀÎ°¡ (À§¿¡¼­¸¸ Ãæµ¹)
-	bool bIsVisible;            // °ÔÀÓ¿¡¼­ º¸ÀÌ´Â°¡
-	wstring strName;            // Ç¥½Ã¸í
-	wstring strDescription;     // ¼³¸í
+	COLLISION_TYPE eType;        // ì¶©ëŒì²´ íƒ€ì…
+	COLORREF displayColor;       // ì—ë””í„°ì—ì„œ í‘œì‹œí•  ìƒ‰ê¹”
+	bool bIsSolid;              // ë‹¨ë‹¨í•œ ì¶©ëŒ (í†µê³¼ ë¶ˆê°€)
+	bool bIsHarmful;            // ë°ë¯¸ì§€ë¥¼ ì£¼ëŠ”ê°€
+	bool bIsOneWay;             // ì¼ë°©í†µí–‰ì¸ê°€ (ìœ„ì—ì„œë§Œ ì¶©ëŒ)
+	bool bIsVisible;            // ê²Œì„ì—ì„œ ë³´ì´ëŠ”ê°€
+	wstring strName;            // í‘œì‹œëª…
+	wstring strDescription;     // ì„¤ëª…
 
 	tCollisionInfo()
 		: eType(COLLISION_TYPE::SOLID_GROUND)
@@ -312,17 +312,17 @@ struct tCollisionInfo
 };
 
 // =============================================================================
-// === Å¸ÀÏ ½Ã½ºÅÛ ===
+// === íƒ€ì¼ ì‹œìŠ¤í…œ ===
 // =============================================================================
 
-// Å¸ÀÏ Á¤º¸ ±¸Á¶Ã¼ (ÇöÀç´Â TRANSPARENT_BLOCK¸¸ »ç¿ë)
+// íƒ€ì¼ ì •ë³´ êµ¬ì¡°ì²´ (í˜„ì¬ëŠ” TRANSPARENT_BLOCKë§Œ ì‚¬ìš©)
 struct tTileInfo
 {
-	TILE_VISUAL_TYPE eType;      // Å¸ÀÏ ½Ã°¢Àû Å¸ÀÔ
-	Vec2 vDefaultSize;           // ±âº» Å©±â
-	bool bDecorative;            // Àå½Ä¿ë Å¸ÀÏÀÎ°¡
-	bool bHarmful;               // À§ÇèÇÑ Å¸ÀÏÀÎ°¡
-	wstring strTexturePath;      // ÅØ½ºÃ³ °æ·Î
+	TILE_VISUAL_TYPE eType;      // íƒ€ì¼ ì‹œê°ì  íƒ€ì…
+	Vec2 vDefaultSize;           // ê¸°ë³¸ í¬ê¸°
+	bool bDecorative;            // ì¥ì‹ìš© íƒ€ì¼ì¸ê°€
+	bool bHarmful;               // ìœ„í—˜í•œ íƒ€ì¼ì¸ê°€
+	wstring strTexturePath;      // í…ìŠ¤ì²˜ ê²½ë¡œ
 
 	tTileInfo()
 		: eType(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK)
@@ -342,13 +342,13 @@ struct tTileInfo
 };
 
 // =============================================================================
-// === ·¹º§ ¿¡µğÅÍ ½Ã½ºÅÛ ===
+// === ë ˆë²¨ ì—ë””í„° ì‹œìŠ¤í…œ ===
 // =============================================================================
 
-// ·¹º§ °´Ã¼ µ¥ÀÌÅÍ (Å¸ÀÏ ½Ã°¢ Å¸ÀÔ Á¤º¸ Ãß°¡)
+// ë ˆë²¨ ê°ì²´ ë°ì´í„° (íƒ€ì¼ ì‹œê° íƒ€ì… ì •ë³´ ì¶”ê°€)
 struct tLevelObjectData
 {
-	// ±âº» ÇÊµåµé
+	// ê¸°ë³¸ í•„ë“œë“¤
 	GROUP_TYPE eGroupType;
 	Vec2 vPos;
 	Vec2 vScale;
@@ -366,24 +366,24 @@ struct tLevelObjectData
 	{}
 };
 
-// ·¹º§ ÀüÃ¼ µ¥ÀÌÅÍ (¹è°æ Á¤º¸ + °æ°è Á¤º¸ Ãß°¡)
+// ë ˆë²¨ ì „ì²´ ë°ì´í„° (ë°°ê²½ ì •ë³´ + ê²½ê³„ ì •ë³´ ì¶”ê°€)
 struct tLevelData
 {
-	// ±âº» ÇÊµåµé
+	// ê¸°ë³¸ í•„ë“œë“¤
 	wstring strLevelName;
 	int iVersion;
 	Vec2 vPlayerSpawn;
 	vector<tLevelObjectData> vecObjects;
 
-	// ¹è°æ ½Ã½ºÅÛ
+	// ë°°ê²½ ì‹œìŠ¤í…œ
 	int iBackgroundType;
 
-	// °æ°è ½Ã½ºÅÛ
+	// ê²½ê³„ ì‹œìŠ¤í…œ
 	Vec2 vLevelBoundsMin;
 	Vec2 vLevelBoundsMax;
 	float fGameOverY;
 
-	// ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ½Ã½ºÅÛ
+	// ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì‹œìŠ¤í…œ
 	wstring strStageImagePath;
 	STAGE_IMAGE_TYPE eStageType;
 	Vec2 vStageImagePos;
@@ -403,16 +403,16 @@ struct tLevelData
 };
 
 // =============================================================================
-// === ¹® ÀüÈ¯ ½Ã½ºÅÛ ===
+// === ë¬¸ ì „í™˜ ì‹œìŠ¤í…œ ===
 // =============================================================================
 
-// ·¹º§ µ¥ÀÌÅÍ¿¡ ¹® Á¤º¸ Ãß°¡¿ë È®Àå ±¸Á¶Ã¼
+// ë ˆë²¨ ë°ì´í„°ì— ë¬¸ ì •ë³´ ì¶”ê°€ìš© í™•ì¥ êµ¬ì¡°ì²´
 struct tDoorObjectData : public tLevelObjectData
 {
-	// ¹® Àü¿ë È®Àå µ¥ÀÌÅÍ
-	SCENE_TYPE eTargetScene;    // ¹®ÀÇ ¸ñÇ¥ ¾À
-	Vec2 vTargetPos;            // ¹®ÀÇ ¸ñÇ¥ À§Ä¡
-	float fInteractionRange;    // »óÈ£ÀÛ¿ë ¹üÀ§
+	// ë¬¸ ì „ìš© í™•ì¥ ë°ì´í„°
+	SCENE_TYPE eTargetScene;    // ë¬¸ì˜ ëª©í‘œ ì”¬
+	Vec2 vTargetPos;            // ë¬¸ì˜ ëª©í‘œ ìœ„ì¹˜
+	float fInteractionRange;    // ìƒí˜¸ì‘ìš© ë²”ìœ„
 
 	tDoorObjectData() : tLevelObjectData()
 		, eTargetScene(SCENE_TYPE::STAGE_01)

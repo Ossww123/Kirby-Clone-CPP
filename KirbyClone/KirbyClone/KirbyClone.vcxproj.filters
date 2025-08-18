@@ -185,6 +185,12 @@
     <Filter Include="Engine\04. Object\Player\PlayerStateTransitionTable">
       <UniqueIdentifier>{4fe3851b-7e29-4f3b-b3f9-782cc974cec6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Projectile">
+      <UniqueIdentifier>{641f5702-330a-47da-865f-cdb935595243}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\08. Factory\CProjectileFactory">
+      <UniqueIdentifier>{0079e2ea-c9e2-472a-8d95-04699bd69df2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -392,6 +398,12 @@
     <ClInclude Include="CPlayerStateTransitionTable.h">
       <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
     </ClInclude>
+    <ClInclude Include="CProjectile.h">
+      <Filter>Engine\04. Object\Projectile</Filter>
+    </ClInclude>
+    <ClInclude Include="CProjectileFactory.h">
+      <Filter>Engine\08. Factory\CProjectileFactory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -590,6 +602,12 @@
     </ClCompile>
     <ClCompile Include="CPlayerStateTransitionTable.cpp">
       <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
+    </ClCompile>
+    <ClCompile Include="CProjectile.cpp">
+      <Filter>Engine\04. Object\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="CProjectileFactory.cpp">
+      <Filter>Engine\08. Factory\CProjectileFactory</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -2,290 +2,290 @@
 
 enum class KEY_STATE
 {
-    NONE,   // ÀÌÀü¿¡µµ ¾È´­¸², Áö±Ýµµ ¾È´­¸²
-    TAP,    // ÀÌÀü¿¡ ¾È´­¸², Áö±Ý ´­¸²
-    HOLD,   // ÀÌÀü¿¡µµ ´­¸², Áö±Ýµµ ´­¸²
-    AWAY,   // ÀÌÀü¿¡ ´­¸², Áö±Ý ¾È´­¸²
+    NONE ,   // ì´ì „ì—ë„ ì•ˆëˆŒë¦¼, ì§€ê¸ˆë„ ì•ˆëˆŒë¦¼
+    TAP ,    // ì´ì „ì— ì•ˆëˆŒë¦¼, ì§€ê¸ˆ ëˆŒë¦¼
+    HOLD ,   // ì´ì „ì—ë„ ëˆŒë¦¼, ì§€ê¸ˆë„ ëˆŒë¦¼
+    AWAY ,   // ì´ì „ì— ëˆŒë¦¼, ì§€ê¸ˆ ì•ˆëˆŒë¦¼
 };
 
 enum class KEY
 {
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
+    LEFT ,
+    RIGHT ,
+    UP ,
+    DOWN ,
 
-    Q, W, E, R, T, Y, U, I, O, P,
-    A, S, D, F, G, H, J, K, L,
-    Z, X, C, V, B, N, M,
+    Q , W , E , R , T , Y , U , I , O , P ,
+    A , S , D , F , G , H , J , K , L ,
+    Z , X , C , V , B , N , M ,
 
-    // ¼ýÀÚ Å° Ãß°¡
-    ALPHA_1, ALPHA_2, ALPHA_3, ALPHA_4,
-    ALPHA_5, ALPHA_6, ALPHA_7, ALPHA_8,
-    ALPHA_9, ALPHA_0,
+    // ìˆ«ìž í‚¤ ì¶”ê°€
+    ALPHA_1 , ALPHA_2 , ALPHA_3 , ALPHA_4 ,
+    ALPHA_5 , ALPHA_6 , ALPHA_7 , ALPHA_8 ,
+    ALPHA_9 , ALPHA_0 ,
 
-    ALT,      // Alt Å°
-    HOME,     // Home Å°
-    BACK,     // Backspace Å°
+    ALT ,      // Alt í‚¤
+    HOME ,     // Home í‚¤
+    BACK ,     // Backspace í‚¤
 
-    SPACE,
-    ENTER,
-    ESC,
-    TAB,
-    SHIFT,
-    CTRL,
+    SPACE ,
+    ENTER ,
+    ESC ,
+    TAB ,
+    SHIFT ,
+    CTRL ,
 
-    MOUSE_LEFT,
-    MOUSE_RIGHT,
-    MOUSE_MIDDLE,
+    MOUSE_LEFT ,
+    MOUSE_RIGHT ,
+    MOUSE_MIDDLE ,
 
-    LAST,  // enumÀÇ ³¡
+    LAST ,  // enumì˜ ë
 };
 
 enum class GROUP_TYPE
 {
-    DEFAULT,
-    PLAYER,
-    MONSTER,
-    PROJ_PLAYER,    // ÇÃ·¹ÀÌ¾î Åõ»çÃ¼
-    PROJ_MONSTER,   // ¸ó½ºÅÍ Åõ»çÃ¼
+    DEFAULT ,
+    PLAYER ,
+    MONSTER ,
+    PROJ_PLAYER ,    // í”Œë ˆì´ì–´ íˆ¬ì‚¬ì²´
+    PROJ_MONSTER ,   // ëª¬ìŠ¤í„° íˆ¬ì‚¬ì²´
 
-    // »õ·Î¿î ±×·ì Å¸ÀÔµé Ãß°¡
-    ITEM,           // ¾ÆÀÌÅÛ
-    TILE,           // Å¸ÀÏ/ÁöÇü
-    SPECIAL,        // Æ¯¼ö ¿ÀºêÁ§Æ® (¹®, ½ºÀ§Ä¡ µî)
-    UI,             // UI ¿ä¼Ò
+    // ìƒˆë¡œìš´ ê·¸ë£¹ íƒ€ìž…ë“¤ ì¶”ê°€
+    ITEM ,           // ì•„ì´í…œ
+    TILE ,           // íƒ€ì¼/ì§€í˜•
+    SPECIAL ,        // íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ (ë¬¸, ìŠ¤ìœ„ì¹˜ ë“±)
+    UI ,             // UI ìš”ì†Œ
 
-    END = 32,
+    END = 32 ,
 };
 
 enum class SCENE_TYPE
 {
-    TOOL,
-    START,
-    STAGE_01,
-    STAGE_02,
+    TOOL ,
+    START ,
+    STAGE_01 ,
+    STAGE_02 ,
 
-    END,
+    END ,
 };
 
-// ÀÌº¥Æ® Å¸ÀÔ Ãß°¡
+// ì´ë²¤íŠ¸ íƒ€ìž… ì¶”ê°€
 enum class EVENT_TYPE
 {
-    // === ±âÁ¸ ±âº» ÀÌº¥Æ®µé ===
-    CREATE_OBJECT,      // ¿ÀºêÁ§Æ® »ý¼º
-    DELETE_OBJECT,      // ¿ÀºêÁ§Æ® »èÁ¦
-    SCENE_CHANGE,       // ¾À º¯°æ
-    COLLISION_ENTER,    // Ãæµ¹ ½ÃÀÛ
-    COLLISION_EXIT,     // Ãæµ¹ Á¾·á
+    // === ê¸°ì¡´ ê¸°ë³¸ ì´ë²¤íŠ¸ë“¤ ===
+    CREATE_OBJECT ,      // ì˜¤ë¸Œì íŠ¸ ìƒì„±
+    DELETE_OBJECT ,      // ì˜¤ë¸Œì íŠ¸ ì‚­ì œ
+    SCENE_CHANGE ,       // ì”¬ ë³€ê²½
+    COLLISION_ENTER ,    // ì¶©ëŒ ì‹œìž‘
+    COLLISION_EXIT ,     // ì¶©ëŒ ì¢…ë£Œ
 
-    // === ÇÃ·¹ÀÌ¾î °ü·Ã ÀÌº¥Æ® ===
-    PLAYER_INHALE_START,    // »¡¾ÆµéÀÌ±â ½ÃÀÛ
-    PLAYER_INHALE_UPDATE,   // »¡¾ÆµéÀÌ±â ÁøÇà Áß
-    PLAYER_INHALE_COMPLETE, // »¡¾ÆµéÀÌ±â ¿Ï·á (Èí¼ö)
-    PLAYER_SPIT_OUT,        // ¹ñ±â
-    PLAYER_SWALLOW,         // »ïÅ°±â (´É·Â È¹µæ)
-    PLAYER_DAMAGE,          // ÇÃ·¹ÀÌ¾î µ¥¹ÌÁö
-    PLAYER_DEATH,           // ÇÃ·¹ÀÌ¾î »ç¸Á
+    // === í”Œë ˆì´ì–´ ê´€ë ¨ ì´ë²¤íŠ¸ ===
+    PLAYER_INHALE_START ,    // ë¹¨ì•„ë“¤ì´ê¸° ì‹œìž‘
+    PLAYER_INHALE_UPDATE ,   // ë¹¨ì•„ë“¤ì´ê¸° ì§„í–‰ ì¤‘
+    PLAYER_INHALE_COMPLETE , // ë¹¨ì•„ë“¤ì´ê¸° ì™„ë£Œ (í¡ìˆ˜)
+    PLAYER_SPIT_OUT ,        // ë±‰ê¸°
+    PLAYER_SWALLOW ,         // ì‚¼í‚¤ê¸° (ëŠ¥ë ¥ íšë“)
+    PLAYER_DAMAGE ,          // í”Œë ˆì´ì–´ ë°ë¯¸ì§€
+    PLAYER_DEATH ,           // í”Œë ˆì´ì–´ ì‚¬ë§
 
-    // === ¸ó½ºÅÍ °ü·Ã ÀÌº¥Æ® ===
-    MONSTER_DAMAGE,         // ¸ó½ºÅÍ µ¥¹ÌÁö
-    MONSTER_DEATH,          // ¸ó½ºÅÍ »ç¸Á
-    MONSTER_ATTACK,         // ¸ó½ºÅÍ °ø°Ý
+    // === ëª¬ìŠ¤í„° ê´€ë ¨ ì´ë²¤íŠ¸ ===
+    MONSTER_DAMAGE ,         // ëª¬ìŠ¤í„° ë°ë¯¸ì§€
+    MONSTER_DEATH ,          // ëª¬ìŠ¤í„° ì‚¬ë§
+    MONSTER_ATTACK ,         // ëª¬ìŠ¤í„° ê³µê²©
 
-    // === º¸½º °ü·Ã ÀÌº¥Æ® ===
-    BOSS_BATTLE_START,      // º¸½ºÀü ½ÃÀÛ
-    BOSS_DAMAGE,            // º¸½º µ¥¹ÌÁö
-    STAGE_CLEAR,            // ½ºÅ×ÀÌÁö Å¬¸®¾î (= º¸½º ÆÐ¹è)
+    // === ë³´ìŠ¤ ê´€ë ¨ ì´ë²¤íŠ¸ ===
+    BOSS_BATTLE_START ,      // ë³´ìŠ¤ì „ ì‹œìž‘
+    BOSS_DAMAGE ,            // ë³´ìŠ¤ ë°ë¯¸ì§€
+    STAGE_CLEAR ,            // ìŠ¤í…Œì´ì§€ í´ë¦¬ì–´ (= ë³´ìŠ¤ íŒ¨ë°°)
 
-    // === ´É·Â ½Ã½ºÅÛ ÀÌº¥Æ® ===
-    ABILITY_ACQUIRE,        // ´É·Â È¹µæ
-    ABILITY_LOSE,           // ´É·Â »ó½Ç
-    ABILITY_USE,            // ´É·Â »ç¿ë
+    // === ëŠ¥ë ¥ ì‹œìŠ¤í…œ ì´ë²¤íŠ¸ ===
+    ABILITY_ACQUIRE ,        // ëŠ¥ë ¥ íšë“
+    ABILITY_LOSE ,           // ëŠ¥ë ¥ ìƒì‹¤
+    ABILITY_USE ,            // ëŠ¥ë ¥ ì‚¬ìš©
 
-    // === Åõ»çÃ¼ °ü·Ã ÀÌº¥Æ® ===
-    PROJECTILE_FIRE,        // Åõ»çÃ¼ ¹ß»ç
-    PROJECTILE_HIT,         // Åõ»çÃ¼ ¸íÁß
+    // === íˆ¬ì‚¬ì²´ ê´€ë ¨ ì´ë²¤íŠ¸ ===
+    PROJECTILE_FIRE ,        // íˆ¬ì‚¬ì²´ ë°œì‚¬
+    PROJECTILE_HIT ,         // íˆ¬ì‚¬ì²´ ëª…ì¤‘
 
-    // === ¾ÆÀÌÅÛ °ü·Ã ÀÌº¥Æ® ===
-    ITEM_COLLECT,           // ¾ÆÀÌÅÛ È¹µæ (Áï½Ã »ç¿ë)
+    // === ì•„ì´í…œ ê´€ë ¨ ì´ë²¤íŠ¸ ===
+    ITEM_COLLECT ,           // ì•„ì´í…œ íšë“ (ì¦‰ì‹œ ì‚¬ìš©)
 
-    // === °ÔÀÓ ÁøÇà ÀÌº¥Æ® ===
-    STAGE_START,            // ½ºÅ×ÀÌÁö ½ÃÀÛ
-    DOOR_ENTER,             // ¹® Åë°ú
+    // === ê²Œìž„ ì§„í–‰ ì´ë²¤íŠ¸ ===
+    STAGE_START ,            // ìŠ¤í…Œì´ì§€ ì‹œìž‘
+    DOOR_ENTER ,             // ë¬¸ í†µê³¼
 
-    // === »ç¿îµå/ÀÌÆåÆ® ÀÌº¥Æ® ===
-    SOUND_PLAY,             // »ç¿îµå Àç»ý
-    EFFECT_CREATE,          // ÀÌÆåÆ® »ý¼º
-    SCREEN_SHAKE,           // È­¸é Áøµ¿
+    // === ì‚¬ìš´ë“œ/ì´íŽ™íŠ¸ ì´ë²¤íŠ¸ ===
+    SOUND_PLAY ,             // ì‚¬ìš´ë“œ ìž¬ìƒ
+    EFFECT_CREATE ,          // ì´íŽ™íŠ¸ ìƒì„±
+    SCREEN_SHAKE ,           // í™”ë©´ ì§„ë™
 
-    // === È¯°æ °ü·Ã ÀÌº¥Æ® ===
-    BLOCK_BREAK,            // ºí·Ï ÆÄ±«
+    // === í™˜ê²½ ê´€ë ¨ ì´ë²¤íŠ¸ ===
+    BLOCK_BREAK ,            // ë¸”ë¡ íŒŒê´´
 
     END
 };
 
-// ÇÃ·¹ÀÌ¾î »óÅÂ ¿­°ÅÇü
+// í”Œë ˆì´ì–´ ìƒíƒœ ì—´ê±°í˜•
 enum class PLAYER_STATE
 {
-    IDLE,           // ±âº» ´ë±â
-    WALK,           // °È±â
-    RUN,            // ¶Ù±â  
-    JUMP,           // Á¡ÇÁ
-    FALL,           // ³«ÇÏ
-    FALL2,          // ³«ÇÏ (Àå½Ã°£ - ¹Ù¿î½º ¿¹Á¤)
-    BOUNCE,         // ¶¥¿¡¼­ ¹Ù¿î½º
+    IDLE ,           // ê¸°ë³¸ ëŒ€ê¸°
+    WALK ,           // ê±·ê¸°
+    RUN ,            // ë›°ê¸°  
+    JUMP ,           // ì í”„
+    FALL ,           // ë‚™í•˜
+    FALL2 ,          // ë‚™í•˜ (ìž¥ì‹œê°„ - ë°”ìš´ìŠ¤ ì˜ˆì •)
+    BOUNCE ,         // ë•…ì—ì„œ ë°”ìš´ìŠ¤
 
-    // === Å©¶ó¿ìÄ¡ °ü·Ã »óÅÂµé ===
-    CROUCH,         // Å©¶ó¿ìÄ¡ (¾É±â) - DOWN Å°, ¹æÇâº¯°æ¸¸ °¡´É
-    SLIDE,          // ½½¶óÀÌµå Å± (Å©¶ó¿ìÄ¡¿¡¼­ ZÅ° ¶Ç´Â XÅ°)
+    // === í¬ë¼ìš°ì¹˜ ê´€ë ¨ ìƒíƒœë“¤ ===
+    CROUCH ,         // í¬ë¼ìš°ì¹˜ (ì•‰ê¸°) - DOWN í‚¤, ë°©í–¥ë³€ê²½ë§Œ ê°€ëŠ¥
+    SLIDE ,          // ìŠ¬ë¼ì´ë“œ í‚¥ (í¬ë¼ìš°ì¹˜ì—ì„œ Zí‚¤ ë˜ëŠ” Xí‚¤)
 
-    // === ÇÇ°Ý »óÅÂ ===
-    DAMAGE,         // µ¥¹ÌÁö¸¦ ¹Þ´Â »óÅÂ
+    // === í”¼ê²© ìƒíƒœ ===
+    DAMAGE ,         // ë°ë¯¸ì§€ë¥¼ ë°›ëŠ” ìƒíƒœ
 
-    // === °øÁß ºÎÀ¯ °ü·Ã »óÅÂµé ===
-    HOVER,          // °ø±â¸Ó±Ý±â ºÎÀ¯ (°øÁß¿¡¼­ AÅ°)
-    HOVER_EXHALE,     // ³»¹ñ±â
+    // === ê³µì¤‘ ë¶€ìœ  ê´€ë ¨ ìƒíƒœë“¤ ===
+    HOVER ,          // ê³µê¸°ë¨¸ê¸ˆê¸° ë¶€ìœ  (ê³µì¤‘ì—ì„œ Aí‚¤)
+    HOVER_EXHALE ,     // ë‚´ë±‰ê¸°
 
-    INHALE_READY,   // »¡¾ÆµéÀÌ±â ÁØºñ (°ø±â¸Ó±Ý±â)
-    INHALE_1,       // »¡¾ÆµéÀÌ±â 1´Ü°è
-    INHALE_2,       // »¡¾ÆµéÀÌ±â 2´Ü°è
-    INHALE_HOLD,    // ¼ûÂü (»¡¾ÆµéÀÌ±â À¯Áö)
-    EXHALE,         // °ø±â¹ñ±â
-    SWALLOW,        // »ïÅ°±â
-    MOUTHFUL_IDLE,  // ¸Ó±ÝÀº »óÅÂ ´ë±â
-    MOUTHFUL_WALK,  // ¸Ó±ÝÀº »óÅÂ °È±â
-    MOUTHFUL_RUN,   // ¸Ó±ÝÀº »óÅÂ ¶Ù±â
-    MOUTHFUL_JUMP,  // ¸Ó±ÝÀº »óÅÂ Á¡ÇÁ
+    INHALE_READY ,   // ë¹¨ì•„ë“¤ì´ê¸° ì¤€ë¹„ (ê³µê¸°ë¨¸ê¸ˆê¸°)
+    INHALE_1 ,       // ë¹¨ì•„ë“¤ì´ê¸° 1ë‹¨ê³„
+    INHALE_2 ,       // ë¹¨ì•„ë“¤ì´ê¸° 2ë‹¨ê³„
+    INHALE_HOLD ,    // ìˆ¨ì°¸ (ë¹¨ì•„ë“¤ì´ê¸° ìœ ì§€)
+    EXHALE ,         // ê³µê¸°ë±‰ê¸°
+    SWALLOW ,        // ì‚¼í‚¤ê¸°
+    MOUTHFUL_IDLE ,  // ë¨¸ê¸ˆì€ ìƒíƒœ ëŒ€ê¸°
+    MOUTHFUL_WALK ,  // ë¨¸ê¸ˆì€ ìƒíƒœ ê±·ê¸°
+    MOUTHFUL_RUN ,   // ë¨¸ê¸ˆì€ ìƒíƒœ ë›°ê¸°
+    MOUTHFUL_JUMP ,  // ë¨¸ê¸ˆì€ ìƒíƒœ ì í”„
 
     END
 };
 
-// ¸ó½ºÅÍ »óÅÂ ¿­°ÅÇü
+// ëª¬ìŠ¤í„° ìƒíƒœ ì—´ê±°í˜•
 enum class MONSTER_STATE
 {
-    IDLE,
-    WALK,
-    TURN,
+    IDLE ,
+    WALK ,
+    TURN ,
 
-    // »õ·Î Ãß°¡ÇÒ »óÅÂµé
-    DAMAGE,         // µ¥¹ÌÁö¸¦ ¹Þ´Â »óÅÂ
-    ATTACK_READY,   // °ø°Ý ÁØºñ »óÅÂ
-    ATTACK,         // °ø°Ý »óÅÂ
-    FLY,           // ºñÇà »óÅÂ (ºê·ÐÅä ¹öÆ®, °í¸£µµ)
+    // ìƒˆë¡œ ì¶”ê°€í•  ìƒíƒœë“¤
+    DAMAGE ,         // ë°ë¯¸ì§€ë¥¼ ë°›ëŠ” ìƒíƒœ
+    ATTACK_READY ,   // ê³µê²© ì¤€ë¹„ ìƒíƒœ
+    ATTACK ,         // ê³µê²© ìƒíƒœ
+    FLY ,           // ë¹„í–‰ ìƒíƒœ (ë¸Œë¡ í†  ë²„íŠ¸, ê³ ë¥´ë„)
 
     END
 };
 
-// ¿¡µðÅÍ ¸ðµå ¿­°ÅÇü (È®Àå)
+// ì—ë””í„° ëª¨ë“œ ì—´ê±°í˜• (í™•ìž¥)
 enum class EDITOR_MODE
 {
-    NORMAL,             // ±âº» ¸ðµå
-    SELECT,             // ¼±ÅÃ ¸ðµå
-    ERASE,              // »èÁ¦ ¸ðµå
+    NORMAL ,             // ê¸°ë³¸ ëª¨ë“œ
+    SELECT ,             // ì„ íƒ ëª¨ë“œ
+    ERASE ,              // ì‚­ì œ ëª¨ë“œ
 
-    // °´Ã¼ ¹èÄ¡ ¸ðµåµé
-    PLACE_MONSTER,      // ¸ó½ºÅÍ ¹èÄ¡
-    PLACE_ITEM,         // ¾ÆÀÌÅÛ ¹èÄ¡
-    PLACE_TILE,         // Ãæµ¹Ã¼ ¹èÄ¡
-    PLACE_SPECIAL,      // Æ¯¼ö °´Ã¼ ¹èÄ¡
+    // ê°ì²´ ë°°ì¹˜ ëª¨ë“œë“¤
+    PLACE_MONSTER ,      // ëª¬ìŠ¤í„° ë°°ì¹˜
+    PLACE_ITEM ,         // ì•„ì´í…œ ë°°ì¹˜
+    PLACE_TILE ,         // ì¶©ëŒì²´ ë°°ì¹˜
+    PLACE_SPECIAL ,      // íŠ¹ìˆ˜ ê°ì²´ ë°°ì¹˜
 
-    // È¯°æ ¼³Á¤ ¸ðµåµé
-    PLACE_STAGE,        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ¼±ÅÃ (»õ·Î Ãß°¡)
-    BACKGROUND,         // ¹è°æ ¼±ÅÃ (±âÁ¸)
+    // í™˜ê²½ ì„¤ì • ëª¨ë“œë“¤
+    PLACE_STAGE ,        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì„ íƒ (ìƒˆë¡œ ì¶”ê°€)
+    BACKGROUND ,         // ë°°ê²½ ì„ íƒ (ê¸°ì¡´)
 
-    // ±âÅ¸ ¸ðµåµé
-    PLAYER_SPAWN,       // ÇÃ·¹ÀÌ¾î ½ºÆù Æ÷ÀÎÆ® ¼³Á¤
+    // ê¸°íƒ€ ëª¨ë“œë“¤
+    PLAYER_SPAWN ,       // í”Œë ˆì´ì–´ ìŠ¤í° í¬ì¸íŠ¸ ì„¤ì •
 
     END
 };
 
-// ¿ÀºêÁ§Æ® Å¸ÀÔ ¿­°ÅÇü Ãß°¡
+// ì˜¤ë¸Œì íŠ¸ íƒ€ìž… ì—´ê±°í˜• ì¶”ê°€
 enum class OBJECT_TYPE
 {
-    // ÇÃ·¹ÀÌ¾î
-    PLAYER,
+    // í”Œë ˆì´ì–´
+    PLAYER ,
 
-    // ¸ó½ºÅÍ Å¸ÀÔµé
-    MONSTER_WADDLE_DEE,     // ¿þÀÌµé µð (±âº» Àû)
-    MONSTER_WADDLE_DOO,     // ¿þÀÌµé µÎ (ºö °ø°Ý)
-    MONSTER_BRONTO_BURT,    // ºê·ÐÅä ¹öÆ® (³¯¾Æ´Ù´Ï´Â Àû)
-    MONSTER_GORDOS,         // °í¸£µµ (°¡½Ã Àû)
-    MONSTER_HOT_HEAD,       // ÇÖ Çìµå (ºÒ Àû)
-    MONSTER_SPARKY,         // ½ºÆÄÅ° (Àü±â Àû)
+    // ëª¬ìŠ¤í„° íƒ€ìž…ë“¤
+    MONSTER_WADDLE_DEE ,     // ì›¨ì´ë“¤ ë”” (ê¸°ë³¸ ì )
+    MONSTER_WADDLE_DOO ,     // ì›¨ì´ë“¤ ë‘ (ë¹” ê³µê²©)
+    MONSTER_BRONTO_BURT ,    // ë¸Œë¡ í†  ë²„íŠ¸ (ë‚ ì•„ë‹¤ë‹ˆëŠ” ì )
+    MONSTER_GORDOS ,         // ê³ ë¥´ë„ (ê°€ì‹œ ì )
+    MONSTER_HOT_HEAD ,       // í•« í—¤ë“œ (ë¶ˆ ì )
+    MONSTER_SPARKY ,         // ìŠ¤íŒŒí‚¤ (ì „ê¸° ì )
 
-    // º¸½º
-    MONSTER_WHISPY_WOODS,
+    // ë³´ìŠ¤
+    MONSTER_WHISPY_WOODS ,
 
-    // ¾ÆÀÌÅÛ Å¸ÀÔµé
-    ITEM_STAR,              // º° (±âº» ¾ÆÀÌÅÛ)
-    ITEM_ENERGY_DRINK,      // ¿¡³ÊÁö µå¸µÅ© (Ã¼·Â È¸º¹)
-    ITEM_1UP,               // 1UP ¾ÆÀÌÅÛ
-    ITEM_ABILITY_STAR,      // ´É·Â º°
+    // ì•„ì´í…œ íƒ€ìž…ë“¤
+    ITEM_STAR ,              // ë³„ (ê¸°ë³¸ ì•„ì´í…œ)
+    ITEM_ENERGY_DRINK ,      // ì—ë„ˆì§€ ë“œë§í¬ (ì²´ë ¥ íšŒë³µ)
+    ITEM_1UP ,               // 1UP ì•„ì´í…œ
+    ITEM_ABILITY_STAR ,      // ëŠ¥ë ¥ ë³„
 
-    // ±âÁ¸ Å¸ÀÏ/Ãæµ¹Ã¼ Å¸ÀÔµé
-    TILE_GROUND,        // ±âÁ¸
-    TILE_SPIKE,         // ±âÁ¸  
-    TILE_WATER,         // ±âÁ¸
-    TILE_WARP_STAR,     // ±âÁ¸
+    // ê¸°ì¡´ íƒ€ì¼/ì¶©ëŒì²´ íƒ€ìž…ë“¤
+    TILE_GROUND ,        // ê¸°ì¡´
+    TILE_SPIKE ,         // ê¸°ì¡´  
+    TILE_WATER ,         // ê¸°ì¡´
+    TILE_WARP_STAR ,     // ê¸°ì¡´
 
-    // »õ·Î Ãß°¡ÇÒ Å¸ÀÏ/Ãæµ¹Ã¼ Å¸ÀÔµé
-    TILE_PLATFORM,      // ÇÃ·§Æû (À§¿¡¼­¸¸ Ãæµ¹)
-    TILE_LAVA,          // ¿ë¾Ï (µ¥¹ÌÁö + Åë°ú)
-    TILE_ONE_WAY,       // ÀÏ¹æÅëÇà ÇÃ·§Æû
-    TILE_MOVING,        // ¿òÁ÷ÀÌ´Â ÇÃ·§Æû
-    TILE_BREAKABLE,     // ºÎ¼­Áö´Â ºí·Ï
-    TILE_INVISIBLE,     // º¸ÀÌÁö ¾Ê´Â º®
+    // ìƒˆë¡œ ì¶”ê°€í•  íƒ€ì¼/ì¶©ëŒì²´ íƒ€ìž…ë“¤
+    TILE_PLATFORM ,      // í”Œëž«í¼ (ìœ„ì—ì„œë§Œ ì¶©ëŒ)
+    TILE_LAVA ,          // ìš©ì•” (ë°ë¯¸ì§€ + í†µê³¼)
+    TILE_ONE_WAY ,       // ì¼ë°©í†µí–‰ í”Œëž«í¼
+    TILE_MOVING ,        // ì›€ì§ì´ëŠ” í”Œëž«í¼
+    TILE_BREAKABLE ,     // ë¶€ì„œì§€ëŠ” ë¸”ë¡
+    TILE_INVISIBLE ,     // ë³´ì´ì§€ ì•ŠëŠ” ë²½
 
-    // Æ¯¼ö ¿ÀºêÁ§Æ®
-    OBJECT_DOOR,            // ¹®
-    OBJECT_SWITCH,          // ½ºÀ§Ä¡
-    OBJECT_MIRROR,          // °Å¿ï (°ÔÀÓ Á¦¸ñ¿¡ ¸Â°Ô)
+    // íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸
+    OBJECT_DOOR ,            // ë¬¸
+    OBJECT_SWITCH ,          // ìŠ¤ìœ„ì¹˜
+    OBJECT_MIRROR ,          // ê±°ìš¸ (ê²Œìž„ ì œëª©ì— ë§žê²Œ)
 
     END
 };
 
-// ¹è°æ Å¸ÀÔ ¿­°ÅÇü
+// ë°°ê²½ íƒ€ìž… ì—´ê±°í˜•
 enum class BACKGROUND_TYPE
 {
-    BACKGROUND1,        // background1.bmp
-    BACKGROUND2,        // background2.bmp
-    BACKGROUND3,        // background3.bmp
+    BACKGROUND1 ,        // background1.bmp
+    BACKGROUND2 ,        // background2.bmp
+    BACKGROUND3 ,        // background3.bmp
 
     END
 };
 
-// Ãæµ¹Ã¼ Å¸ÀÔ (±âÁ¸ TILE_VISUAL_TYPE ´ëÃ¼)
+// ì¶©ëŒì²´ íƒ€ìž… (ê¸°ì¡´ TILE_VISUAL_TYPE ëŒ€ì²´)
 enum class COLLISION_TYPE
 {
-    SOLID_GROUND,        // ÆÄ¶õ»ö - ±âº» ¶¥ (´Ü´ÜÇÑ Ãæµ¹)
-    PLATFORM,            // ÃÊ·Ï»ö - ÇÃ·§Æû (À§¿¡¼­¸¸ Ãæµ¹)
-    SPIKE,               // »¡°£»ö - °¡½Ã (µ¥¹ÌÁö + Ãæµ¹)
-    WATER,               // ¿¬ÆÄ¶õ»ö - ¹° (Åë°ú °¡´É, Æ¯¼ö È¿°ú)
-    LAVA,                // ÁÖÈ²»ö - ¿ë¾Ï (µ¥¹ÌÁö + Ãæµ¹)
-    ONE_WAY_PLATFORM,    // ¿¬ÃÊ·Ï»ö - ÀÏ¹æÅëÇà ÇÃ·§Æû
-    MOVING_PLATFORM,     // º¸¶ó»ö - ¿òÁ÷ÀÌ´Â ÇÃ·§Æû
-    BREAKABLE_BLOCK,     // È²Åä»ö - ºÎ¼­Áö´Â ºí·Ï
-    INVISIBLE_WALL,      // È¸»ö - º¸ÀÌÁö ¾Ê´Â º®
+    SOLID_GROUND ,        // íŒŒëž€ìƒ‰ - ê¸°ë³¸ ë•… (ë‹¨ë‹¨í•œ ì¶©ëŒ)
+    PLATFORM ,            // ì´ˆë¡ìƒ‰ - í”Œëž«í¼ (ìœ„ì—ì„œë§Œ ì¶©ëŒ)
+    SPIKE ,               // ë¹¨ê°„ìƒ‰ - ê°€ì‹œ (ë°ë¯¸ì§€ + ì¶©ëŒ)
+    WATER ,               // ì—°íŒŒëž€ìƒ‰ - ë¬¼ (í†µê³¼ ê°€ëŠ¥, íŠ¹ìˆ˜ íš¨ê³¼)
+    LAVA ,                // ì£¼í™©ìƒ‰ - ìš©ì•” (ë°ë¯¸ì§€ + ì¶©ëŒ)
+    ONE_WAY_PLATFORM ,    // ì—°ì´ˆë¡ìƒ‰ - ì¼ë°©í†µí–‰ í”Œëž«í¼
+    MOVING_PLATFORM ,     // ë³´ë¼ìƒ‰ - ì›€ì§ì´ëŠ” í”Œëž«í¼
+    BREAKABLE_BLOCK ,     // í™©í† ìƒ‰ - ë¶€ì„œì§€ëŠ” ë¸”ë¡
+    INVISIBLE_WALL ,      // íšŒìƒ‰ - ë³´ì´ì§€ ì•ŠëŠ” ë²½
 
     END
 };
 
-// ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Å¸ÀÔ
+// ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ íƒ€ìž…
 enum class STAGE_IMAGE_TYPE
 {
-    STAGE_01,           // Ã¹ ¹øÂ° ½ºÅ×ÀÌÁö (Green Hill ½ºÅ¸ÀÏ)
-    STAGE_02,           // µÎ ¹øÂ° ½ºÅ×ÀÌÁö (Castle ½ºÅ¸ÀÏ)
-    CUSTOM,             // »ç¿ëÀÚ Ä¿½ºÅÒ ½ºÅ×ÀÌÁö
+    STAGE_01 ,           // ì²« ë²ˆì§¸ ìŠ¤í…Œì´ì§€ (Green Hill ìŠ¤íƒ€ì¼)
+    STAGE_02 ,           // ë‘ ë²ˆì§¸ ìŠ¤í…Œì´ì§€ (Castle ìŠ¤íƒ€ì¼)
+    CUSTOM ,             // ì‚¬ìš©ìž ì»¤ìŠ¤í…€ ìŠ¤í…Œì´ì§€
 
     END
 };
 
 enum class TILE_VISUAL_TYPE
 {
-    TRANSPARENT_BLOCK,      // Åõ¸í Ãæµ¹ ºí·Ï (±âº»)
+    TRANSPARENT_BLOCK ,      // íˆ¬ëª… ì¶©ëŒ ë¸”ë¡ (ê¸°ë³¸)
 
-    // === ÇâÈÄ ±¸Çö ¿¹Á¤ (ÁÖ¼®Ã³¸®) ===
+    // === í–¥í›„ êµ¬í˜„ ì˜ˆì • (ì£¼ì„ì²˜ë¦¬) ===
     // GRASS_PLATFORM,        
     // DIRT_BLOCK,            
     // STONE_BLOCK,           
@@ -308,10 +308,31 @@ enum class TILE_VISUAL_TYPE
 
 enum class HOVER_SUBSTATE
 {
-    ENTER,          // ÃÖÃÊ ÁøÀÔ (°ø±â ¸Ó±Ý±â)
-    FLY_UP,         // ZÅ° ÀÔ·ÂÀ¸·Î À§·Î ¿Ã¶ó°¡±â (¹öµÕ°Å¸®±â)
-    FLOAT,          // ÃµÃµÈ÷ ³«ÇÏ Áß
-    GROUNDED,       // ¶¥ À§¿¡¼­ ¶°´Ù´Ï±â
+    ENTER ,          // ìµœì´ˆ ì§„ìž… (ê³µê¸° ë¨¸ê¸ˆê¸°)
+    FLY_UP ,         // Zí‚¤ ìž…ë ¥ìœ¼ë¡œ ìœ„ë¡œ ì˜¬ë¼ê°€ê¸° (ë²„ë‘¥ê±°ë¦¬ê¸°)
+    FLOAT ,          // ì²œì²œížˆ ë‚™í•˜ ì¤‘
+    GROUNDED ,       // ë•… ìœ„ì—ì„œ ë– ë‹¤ë‹ˆê¸°
+
+    END
+};
+
+enum class PROJECTILE_TYPE
+{
+    // === ì»¤ë¹„ ì „ìš© íˆ¬ì‚¬ì²´ ===
+    KIRBY_AIR_PUFF,         // ê¸°ë³¸ ê³µê¸° ë±‰ê¸° (HOVER_EXHALE)
+    KIRBY_STAR,             // ì  1ë§ˆë¦¬ ì‚¼í‚¤ê³  ë±‰ê¸°
+    KIRBY_STAR_ENHANCED,    // ì  2ë§ˆë¦¬ ì´ìƒ ì‚¼í‚¤ê³  ë±‰ê¸° (ê°•í™”ëœ ë³„)
+    KIRBY_FIRE,             // íŒŒì´ì–´ ëŠ¥ë ¥ íˆ¬ì‚¬ì²´
+    KIRBY_BEAM,             // ì›¨ì´ë“¤ë‘ ì¹´í”¼ ëŠ¥ë ¥ (ë¹”)
+    KIRBY_ELECTRIC_FIELD,   // ìŠ¤íŒŒí‚¤ ì¹´í”¼ ëŠ¥ë ¥ (ì „ê¸°ìž¥)
+
+    // === ëª¬ìŠ¤í„° ì „ìš© íˆ¬ì‚¬ì²´ ===
+    BOSS_AIR_PUFF,          // ìœ„ìŠ¤í”¼ ìš°ë“œ ê³µê¸°í¬
+
+    // === í–¥í›„ í™•ìž¥ ì˜ˆì • ===
+    // MONSTER_FIREBALL,    // í•«í—¤ë“œ í™”ì—¼êµ¬
+    // MONSTER_ELECTRIC,    // ìŠ¤íŒŒí‚¤ ì „ê¸°êµ¬ìŠ¬
+    // MONSTER_BEAM,        // ì›¨ì´ë“¤ë‘ ë¹”
 
     END
 };
