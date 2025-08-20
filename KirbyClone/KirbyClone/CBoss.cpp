@@ -20,19 +20,19 @@ CBoss::CBoss()
     , m_fInvincibleTime(0.f)
     , m_bInvincible(false)
 {
-    // º¸½º´Â Æ¯º°ÇÑ ÃÊ±â ¼³Á¤
-    m_fSpeed = 0.f;  // ±âº»ÀûÀ¸·Î ÀÌµ¿ÇÏÁö ¾ÊÀ½
+    // ë³´ìŠ¤ëŠ” íŠ¹ë³„í•œ ì´ˆê¸° ì„¤ì •
+    m_fSpeed = 0.f;  // ê¸°ë³¸ì ìœ¼ë¡œ ì´ë™í•˜ì§€ ì•ŠìŒ
 
-    // º¸½º´Â Áß·Â ¿µÇâ ¹ŞÁö ¾ÊÀ½
+    // ë³´ìŠ¤ëŠ” ì¤‘ë ¥ ì˜í–¥ ë°›ì§€ ì•ŠìŒ
     GetRigidBody()->SetUseGravity(false);
 
-    // º¸½º´Â ¸Å¿ì Å« Áú·®
+    // ë³´ìŠ¤ëŠ” ë§¤ìš° í° ì§ˆëŸ‰
     GetRigidBody()->SetMass(10.f);
 }
 
 CBoss::~CBoss()
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸® Ã³¸®
+    // ìƒìœ„ í´ë˜ìŠ¤ì—ì„œ ì •ë¦¬ ì²˜ë¦¬
 }
 
 void CBoss::SetBossPhase(BOSS_PHASE _ePhase)
@@ -54,14 +54,14 @@ void CBoss::TakeBossDamage(int _iDamage)
     if (m_iCurrentHP < 0)
         m_iCurrentHP = 0;
 
-    // µ¥¹ÌÁö ÈÄ ÂªÀº ¹«Àû ½Ã°£
+    // ë°ë¯¸ì§€ í›„ ì§§ì€ ë¬´ì  ì‹œê°„
     m_bInvincible = true;
     m_fInvincibleTime = 0.5f;
 
-    // ÆäÀÌÁî ÀüÈ¯ Ã¼Å©
+    // í˜ì´ì¦ˆ ì „í™˜ ì²´í¬
     CheckPhaseTransition();
 
-    // ÆĞ¹è Ã¼Å©
+    // íŒ¨ë°° ì²´í¬
     if (IsDefeated())
     {
         SetBossPhase(BOSS_PHASE::DEFEATED);
@@ -74,7 +74,7 @@ void CBoss::UpdateBossPhase()
     {
     case BOSS_PHASE::INTRO:
         m_fIntroTimer += CTimeMgr::GetInst()->GetfDT();
-        if (m_fIntroTimer >= 3.f)  // 3ÃÊ ÀÎÆ®·Î
+        if (m_fIntroTimer >= 3.f)  // 3ì´ˆ ì¸íŠ¸ë¡œ
         {
             SetBossPhase(BOSS_PHASE::PHASE_1);
             StartBossEvent();
@@ -89,7 +89,7 @@ void CBoss::UpdateBossPhase()
 
     case BOSS_PHASE::DEFEATED:
         m_fDefeatedTimer += CTimeMgr::GetInst()->GetfDT();
-        if (m_fDefeatedTimer >= 5.f)  // 5ÃÊ ÆĞ¹è ¿¬Ãâ
+        if (m_fDefeatedTimer >= 5.f)  // 5ì´ˆ íŒ¨ë°° ì—°ì¶œ
         {
             EndBossEvent();
             SetDead();
@@ -97,7 +97,7 @@ void CBoss::UpdateBossPhase()
         break;
     }
 
-    // ¹«Àû ½Ã°£ ¾÷µ¥ÀÌÆ®
+    // ë¬´ì  ì‹œê°„ ì—…ë°ì´íŠ¸
     if (m_bInvincible)
     {
         m_fInvincibleTime -= CTimeMgr::GetInst()->GetfDT();
@@ -121,28 +121,28 @@ void CBoss::UpdateAttackPattern()
 
 void CBoss::SelectNextAttackPattern()
 {
-    // ÇöÀç ÆäÀÌÁî¿¡ µû¸¥ ÆĞÅÏ ¼±ÅÃ
+    // í˜„ì¬ í˜ì´ì¦ˆì— ë”°ë¥¸ íŒ¨í„´ ì„ íƒ
     switch (m_eBossPhase)
     {
     case BOSS_PHASE::PHASE_1:
-        // 1ÆäÀÌÁî: ±âº» ÆĞÅÏµé
+        // 1í˜ì´ì¦ˆ: ê¸°ë³¸ íŒ¨í„´ë“¤
         m_eCurrentPattern = (BOSS_ATTACK_PATTERN)((int)m_eCurrentPattern + 1);
         if (m_eCurrentPattern >= BOSS_ATTACK_PATTERN::PATTERN_3)
             m_eCurrentPattern = BOSS_ATTACK_PATTERN::PATTERN_1;
         break;
 
     case BOSS_PHASE::PHASE_2:
-        // 2ÆäÀÌÁî: ´õ ´Ù¾çÇÑ ÆĞÅÏ
-        m_eCurrentPattern = (BOSS_ATTACK_PATTERN)(rand() % 4);  // ÆĞÅÏ 1~4
+        // 2í˜ì´ì¦ˆ: ë” ë‹¤ì–‘í•œ íŒ¨í„´
+        m_eCurrentPattern = (BOSS_ATTACK_PATTERN)(rand() % 4);  // íŒ¨í„´ 1~4
         break;
 
     case BOSS_PHASE::PHASE_3:
-        // 3ÆäÀÌÁî: ¸ğµç ÆĞÅÏ + ·£´ı
-        m_eCurrentPattern = (BOSS_ATTACK_PATTERN)(rand() % 5);  // ÆĞÅÏ 1~5
+        // 3í˜ì´ì¦ˆ: ëª¨ë“  íŒ¨í„´ + ëœë¤
+        m_eCurrentPattern = (BOSS_ATTACK_PATTERN)(rand() % 5);  // íŒ¨í„´ 1~5
         break;
     }
 
-    // ÆĞÅÏ ½ÇÇà
+    // íŒ¨í„´ ì‹¤í–‰
     ExecuteAttackPattern(m_eCurrentPattern);
     m_iPatternCount++;
 }
@@ -151,7 +151,7 @@ void CBoss::CheckPhaseTransition()
 {
     float hpRatio = GetHPRatio();
 
-    // Ã¼·Â¿¡ µû¸¥ ÆäÀÌÁî ÀüÈ¯
+    // ì²´ë ¥ì— ë”°ë¥¸ í˜ì´ì¦ˆ ì „í™˜
     if (hpRatio <= 0.25f && m_eBossPhase != BOSS_PHASE::PHASE_3)
     {
         SetBossPhase(BOSS_PHASE::PHASE_3);
@@ -164,27 +164,27 @@ void CBoss::CheckPhaseTransition()
 
 void CBoss::OnPhaseChanged(BOSS_PHASE _eNewPhase)
 {
-    // ÆäÀÌÁî º¯°æ ½Ã Ã³¸®
+    // í˜ì´ì¦ˆ ë³€ê²½ ì‹œ ì²˜ë¦¬
     ShowPhaseChangeEffect();
 
-    // ÆĞÅÏ Å¸ÀÌ¸Ó ¸®¼Â
+    // íŒ¨í„´ íƒ€ì´ë¨¸ ë¦¬ì…‹
     m_fPatternTimer = 0.f;
     m_iPatternCount = 0;
 
-    // ÆäÀÌÁîº° Æ¯º° Ã³¸®
+    // í˜ì´ì¦ˆë³„ íŠ¹ë³„ ì²˜ë¦¬
     switch (_eNewPhase)
     {
     case BOSS_PHASE::PHASE_1:
         PlayBossMusic();
-        m_fPatternDuration = 5.f;  // 5ÃÊ °£°İ
+        m_fPatternDuration = 5.f;  // 5ì´ˆ ê°„ê²©
         break;
 
     case BOSS_PHASE::PHASE_2:
-        m_fPatternDuration = 4.f;  // 4ÃÊ °£°İ (´õ ºü¸§)
+        m_fPatternDuration = 4.f;  // 4ì´ˆ ê°„ê²© (ë” ë¹ ë¦„)
         break;
 
     case BOSS_PHASE::PHASE_3:
-        m_fPatternDuration = 3.f;  // 3ÃÊ °£°İ (¸Å¿ì ºü¸§)
+        m_fPatternDuration = 3.f;  // 3ì´ˆ ê°„ê²© (ë§¤ìš° ë¹ ë¦„)
         break;
 
     case BOSS_PHASE::DEFEATED:
@@ -196,13 +196,13 @@ void CBoss::OnPhaseChanged(BOSS_PHASE _eNewPhase)
 
 void CBoss::UpdateIdle()
 {
-    // º¸½º´Â Idle »óÅÂ¿¡¼­µµ ÆäÀÌÁî ¾÷µ¥ÀÌÆ®
+    // ë³´ìŠ¤ëŠ” Idle ìƒíƒœì—ì„œë„ í˜ì´ì¦ˆ ì—…ë°ì´íŠ¸
     UpdateBossPhase();
 }
 
 void CBoss::UpdateAttackReady()
 {
-    // º¸½º´Â °ø°İ ÁØºñ ½Ã°£ÀÌ ÂªÀ½
+    // ë³´ìŠ¤ëŠ” ê³µê²© ì¤€ë¹„ ì‹œê°„ì´ ì§§ìŒ
     if (m_fStateTimer >= 0.5f)
     {
         ChangeState(MONSTER_STATE::ATTACK);
@@ -211,10 +211,10 @@ void CBoss::UpdateAttackReady()
 
 void CBoss::UpdateAttack()
 {
-    // º¸½º´Â °ø°İ Áß¿¡µµ ÆäÀÌÁî ¾÷µ¥ÀÌÆ®
+    // ë³´ìŠ¤ëŠ” ê³µê²© ì¤‘ì—ë„ í˜ì´ì¦ˆ ì—…ë°ì´íŠ¸
     UpdateBossPhase();
 
-    if (m_fStateTimer >= 2.f)  // 2ÃÊ °ø°İ Áö¼Ó
+    if (m_fStateTimer >= 2.f)  // 2ì´ˆ ê³µê²© ì§€ì†
     {
         ChangeState(MONSTER_STATE::IDLE);
     }
@@ -222,36 +222,36 @@ void CBoss::UpdateAttack()
 
 void CBoss::TakeDamage()
 {
-    // º¸½º´Â ÀÏ¹İ µ¥¹ÌÁö ¹«½Ã
-    // TakeBossDamage()¸¸ À¯È¿
+    // ë³´ìŠ¤ëŠ” ì¼ë°˜ ë°ë¯¸ì§€ ë¬´ì‹œ
+    // TakeBossDamage()ë§Œ ìœ íš¨
 }
 
 void CBoss::CreateBossIntroEffect()
 {
-    // º¸½º µîÀå ÀÌÆåÆ®
-    // TODO: µîÀå ÀÌÆåÆ® ±¸Çö
+    // ë³´ìŠ¤ ë“±ì¥ ì´í™íŠ¸
+    // TODO: ë“±ì¥ ì´í™íŠ¸ êµ¬í˜„
 }
 
 void CBoss::CreateBossDefeatedEffect()
 {
-    // º¸½º ÆĞ¹è ÀÌÆåÆ®
-    // TODO: ÆĞ¹è ÀÌÆåÆ® ±¸Çö
+    // ë³´ìŠ¤ íŒ¨ë°° ì´í™íŠ¸
+    // TODO: íŒ¨ë°° ì´í™íŠ¸ êµ¬í˜„
 }
 
 void CBoss::ShowPhaseChangeEffect()
 {
-    // ÆäÀÌÁî º¯°æ ÀÌÆåÆ®
-    // TODO: ÆäÀÌÁî º¯°æ ÀÌÆåÆ® ±¸Çö
+    // í˜ì´ì¦ˆ ë³€ê²½ ì´í™íŠ¸
+    // TODO: í˜ì´ì¦ˆ ë³€ê²½ ì´í™íŠ¸ êµ¬í˜„
 }
 
 void CBoss::PlayBossMusic()
 {
-    // º¸½º BGM Àç»ı
-    // TODO: »ç¿îµå ¸Å´ÏÀú¸¦ ÅëÇÑ º¸½º BGM Àç»ı
+    // ë³´ìŠ¤ BGM ì¬ìƒ
+    // TODO: ì‚¬ìš´ë“œ ë§¤ë‹ˆì €ë¥¼ í†µí•œ ë³´ìŠ¤ BGM ì¬ìƒ
 }
 
 void CBoss::StopBossMusic()
 {
-    // º¸½º BGM Á¤Áö
-    // TODO: »ç¿îµå ¸Å´ÏÀú¸¦ ÅëÇÑ º¸½º BGM Á¤Áö
+    // ë³´ìŠ¤ BGM ì •ì§€
+    // TODO: ì‚¬ìš´ë“œ ë§¤ë‹ˆì €ë¥¼ í†µí•œ ë³´ìŠ¤ BGM ì •ì§€
 }

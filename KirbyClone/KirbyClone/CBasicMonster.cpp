@@ -14,39 +14,45 @@ CBasicMonster::CBasicMonster()
     , m_vPlayerPos(Vec2(0.f, 0.f))
     , m_bPlayerDetected(false)
     , m_fDetectionRange(100.f)
+    , m_iHealth(1)                  // ê¸°ë³¸ ëª¬ìŠ¤í„° ì²´ë ¥ = 1
+    , m_iMaxHealth(1)               // ìµœëŒ€ ì²´ë ¥ = 1
+    , m_bIsDying(false)             // ì£½ëŠ” ì¤‘ ìƒíƒœ ì´ˆê¸°í™”
+    , m_fDeathEffectTimer(0.f)      // ì£½ìŒ íš¨ê³¼ íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+    , m_vKnockbackDir(Vec2(0.f, 0.f)) // ë„‰ë°± ë°©í–¥ ì´ˆê¸°í™”
+    , m_fKnockbackSpeed(0.f)        // ë„‰ë°± ì†ë„ ì´ˆê¸°í™”
 {
-    // ÀÏ¹İ ¸ó½ºÅÍ´Â »¡¾ÆµéÀÓ °¡´ÉÇÏ¹Ç·Î Æ¯º°ÇÑ ¼³Á¤ ºÒÇÊ¿ä
+    // ì¼ë°˜ ëª¬ìŠ¤í„°ëŠ” ë¹¨ì•„ë“¤ì„ ê°€ëŠ¥í•˜ë¯€ë¡œ íŠ¹ë³„í•œ ì„¤ì • ë¶ˆí•„ìš”
 }
 
 CBasicMonster::~CBasicMonster()
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸® Ã³¸®
+    // ìƒìœ„ í´ë˜ìŠ¤ì—ì„œ ì •ë¦¬ ì²˜ë¦¬
 }
 
 void CBasicMonster::OnInhaled()
 {
-    // ¸ó½ºÅÍ Á¦°Å
+    // ëª¬ìŠ¤í„° ì œê±°
     SetDead();
 
-    // TODO: ÀÌÆåÆ® »ı¼º
-    // TODO: »ç¿îµå Àç»ı
+    // TODO: ì´í™íŠ¸ ìƒì„±
+    // TODO: ì‚¬ìš´ë“œ ì¬ìƒ
 }
 
 void CBasicMonster::OnInhaleStart()
 {
-    // »¡¾ÆµéÀÓ ½ÃÀÛ ½Ã Ã³¸®
+    // ë¹¨ì•„ë“¤ì„ ì‹œì‘ ì‹œ ì²˜ë¦¬
     m_bBeingInhaled = true;
 
-    // »¡¾ÆµéÀÓ Áß¿¡´Â ÀÏ¹İ AI Á¤Áö
+    // ë¹¨ì•„ë“¤ì„ ì¤‘ì—ëŠ” ì¼ë°˜ AI ì •ì§€
     if (GetCurrentState() != MONSTER_STATE::DAMAGE)
     {
-        ChangeState(MONSTER_STATE::DAMAGE);  // ÀÓ½Ã·Î damage »óÅÂ »ç¿ë
+        ChangeState(MONSTER_STATE::DAMAGE);  // ì„ì‹œë¡œ damage ìƒíƒœ ì‚¬ìš©
     }
 }
 
 void CBasicMonster::CheckPlayerDistance()
 {
-    // ÇÃ·¹ÀÌ¾î¿ÍÀÇ °Å¸® Ã¼Å©
+    // í”Œë ˆì´ì–´ì™€ì˜ ê±°ë¦¬ ì²´í¬
     CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
     if (nullptr == pCurScene)
         return;
@@ -55,13 +61,13 @@ void CBasicMonster::CheckPlayerDistance()
     
     if (!vecPlayers.empty())
     {
-        CPlayer* pPlayer = (CPlayer*)vecPlayers[0];  // ÇÃ·¹ÀÌ¾î´Â 1¸í
+        CPlayer* pPlayer = (CPlayer*)vecPlayers[0];  // í”Œë ˆì´ì–´ëŠ” 1ëª…
         m_vPlayerPos = pPlayer->GetPos();
 
         Vec2 vDist = m_vPlayerPos - GetPos();
         float fDistance = vDist.Length();
 
-        // AI¿ë ÇÃ·¹ÀÌ¾î °¨Áö
+        // AIìš© í”Œë ˆì´ì–´ ê°ì§€
         m_bPlayerDetected = (fDistance <= m_fDetectionRange);
     }
 }
@@ -71,10 +77,10 @@ void CBasicMonster::HandleInhaleEffect()
     if (!m_bBeingInhaled)
         return;
 
-    // ÇÃ·¹ÀÌ¾î ÂÊÀ¸·Î ²ø·Á°¡´Â Ã³¸®
+    // í”Œë ˆì´ì–´ ìª½ìœ¼ë¡œ ëŒë ¤ê°€ëŠ” ì²˜ë¦¬
     ProcessInhaleMovement();
 
-    // ÇÃ·¹ÀÌ¾î¿Í ³Ê¹« °¡±î¿öÁö¸é Èí¼ö
+    // í”Œë ˆì´ì–´ì™€ ë„ˆë¬´ ê°€ê¹Œì›Œì§€ë©´ í¡ìˆ˜
     CheckInhaleDistance();
 }
 
@@ -90,57 +96,70 @@ void CBasicMonster::UpdateInhaleState()
     }
 }
 
+void CBasicMonster::Update()
+{
+    // ì£½ìŒ íš¨ê³¼ ì²˜ë¦¬ ë¨¼ì € (ìµœìš°ì„ )
+    UpdateDeathEffect();
+
+    // ì£½ëŠ” ì¤‘ì´ë©´ ë‹¤ë¥¸ ì—…ë°ì´íŠ¸ ì¤‘ë‹¨
+    if (m_bIsDying)
+        return;
+
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ ì¼ë°˜ ì—…ë°ì´íŠ¸ í˜¸ì¶œ
+    CMonster::Update();
+}
+
 void CBasicMonster::UpdateIdle()
 {
     if (m_bBeingInhaled)
-        return;  // »¡¾ÆµéÀÓ ÁßÀÌ¸é ÀÏ¹İ AI Áß´Ü
+        return;  // ë¹¨ì•„ë“¤ì„ ì¤‘ì´ë©´ ì¼ë°˜ AI ì¤‘ë‹¨
 
-    // ÇÃ·¹ÀÌ¾î °¨Áö (AI¿ë)
+    // í”Œë ˆì´ì–´ ê°ì§€ (AIìš©)
     CheckPlayerDistance();
 
-    // ºÎ¸ğ Å¬·¡½ºÀÇ ±âº» Idle Ã³¸®
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ ê¸°ë³¸ Idle ì²˜ë¦¬
     CMonster::UpdateIdle();
 }
 
 void CBasicMonster::UpdateWalk()
 {
-    // »¡¾ÆµéÀÓ »óÅÂ Ã¼Å© ¸ÕÀú
+    // ë¹¨ì•„ë“¤ì„ ìƒíƒœ ì²´í¬ ë¨¼ì €
     UpdateInhaleState();
 
     if (m_bBeingInhaled)
-        return;  // »¡¾ÆµéÀÓ ÁßÀÌ¸é ÀÏ¹İ AI Áß´Ü
+        return;  // ë¹¨ì•„ë“¤ì„ ì¤‘ì´ë©´ ì¼ë°˜ AI ì¤‘ë‹¨
 
-    // ºÎ¸ğ Å¬·¡½ºÀÇ ±âº» Walk Ã³¸®
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ ê¸°ë³¸ Walk ì²˜ë¦¬
     CMonster::UpdateWalk();
 }
 
 void CBasicMonster::UpdateFly()
 {
-    // »¡¾ÆµéÀÓ »óÅÂ Ã¼Å© ¸ÕÀú
+    // ë¹¨ì•„ë“¤ì„ ìƒíƒœ ì²´í¬ ë¨¼ì €
     UpdateInhaleState();
 
     if (m_bBeingInhaled)
-        return;  // »¡¾ÆµéÀÓ ÁßÀÌ¸é ÀÏ¹İ AI Áß´Ü
+        return;  // ë¹¨ì•„ë“¤ì„ ì¤‘ì´ë©´ ì¼ë°˜ AI ì¤‘ë‹¨
 
-    // ºÎ¸ğ Å¬·¡½ºÀÇ ±âº» Fly Ã³¸®
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ ê¸°ë³¸ Fly ì²˜ë¦¬
     CMonster::UpdateFly();
 }
 
 void CBasicMonster::UpdateTurn()
 {
-    // »¡¾ÆµéÀÓ »óÅÂ Ã¼Å© ¸ÕÀú
+    // ë¹¨ì•„ë“¤ì„ ìƒíƒœ ì²´í¬ ë¨¼ì €
     UpdateInhaleState();
 
     if (m_bBeingInhaled)
-        return;  // »¡¾ÆµéÀÓ ÁßÀÌ¸é ÀÏ¹İ AI Áß´Ü
+        return;  // ë¹¨ì•„ë“¤ì„ ì¤‘ì´ë©´ ì¼ë°˜ AI ì¤‘ë‹¨
 
-    // ºÎ¸ğ Å¬·¡½ºÀÇ ±âº» Turn Ã³¸®
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ ê¸°ë³¸ Turn ì²˜ë¦¬
     CMonster::UpdateTurn();
 }
 
 void CBasicMonster::ProcessInhaleMovement()
 {
-    // ÇÃ·¹ÀÌ¾î ÂÊÀ¸·Î ²ø·Á°¡´Â ÀÌµ¿ Ã³¸®
+    // í”Œë ˆì´ì–´ ìª½ìœ¼ë¡œ ëŒë ¤ê°€ëŠ” ì´ë™ ì²˜ë¦¬
     Vec2 vCurrentPos = GetPos();
     Vec2 vDirection = m_vPlayerPos - vCurrentPos;
 
@@ -148,11 +167,11 @@ void CBasicMonster::ProcessInhaleMovement()
     {
         vDirection.Normalize();
 
-        // »¡¾ÆµéÀÓ Èû Àû¿ë
-        m_fInhaleForce += 100.f * CTimeMgr::GetInst()->GetfDT();  // Á¡Á¡ °­ÇØÁü
+        // ë¹¨ì•„ë“¤ì„ í˜ ì ìš©
+        m_fInhaleForce += 100.f * CTimeMgr::GetInst()->GetfDT();  // ì ì  ê°•í•´ì§
         float fMoveSpeed = m_fInhaleForce;
 
-        // ¸®Áöµå¹Ùµğ¸¦ ÅëÇÑ ÀÌµ¿
+        // ë¦¬ì§€ë“œë°”ë””ë¥¼ í†µí•œ ì´ë™
         if (nullptr != GetRigidBody())
         {
             GetRigidBody()->SetVelocity(vDirection * fMoveSpeed);
@@ -165,9 +184,79 @@ void CBasicMonster::CheckInhaleDistance()
     Vec2 vDist = m_vPlayerPos - GetPos();
     float fDistance = vDist.Length();
 
-    // ÇÃ·¹ÀÌ¾î¿Í ¸Å¿ì °¡±î¿öÁö¸é Èí¼ö Ã³¸®
-    if (fDistance <= 30.f)  // Èí¼ö °Å¸®
+    // í”Œë ˆì´ì–´ì™€ ë§¤ìš° ê°€ê¹Œì›Œì§€ë©´ í¡ìˆ˜ ì²˜ë¦¬
+    if (fDistance <= 30.f)  // í¡ìˆ˜ ê±°ë¦¬
     {
         OnInhaled();
+    }
+}
+
+void CBasicMonster::TakeDamage()
+{
+    // ì´ë¯¸ ì£½ëŠ” ì¤‘ì´ê±°ë‚˜ ë¹¨ì•„ë“¤ì„ ì¤‘ì´ë©´ ë°ë¯¸ì§€ ë¬´ì‹œ
+    if (m_bIsDying || m_bBeingInhaled)
+        return;
+
+    // ì²´ë ¥ ê°ì†Œ
+    m_iHealth--;
+
+    // ì²´ë ¥ì´ 0 ì´í•˜ì´ë©´ ì£½ìŒ íš¨ê³¼ ì‹œì‘
+    if (m_iHealth <= 0)
+    {
+        // ë„‰ë°± ë°©í–¥ ê³„ì‚° (í”Œë ˆì´ì–´ ë°˜ëŒ€ ë°©í–¥)
+        Vec2 vKnockbackDir = GetPos() - m_vPlayerPos;
+        if (vKnockbackDir.Length() < 0.1f)  // ê±°ì˜ ê°™ì€ ìœ„ì¹˜ë©´ ëœë¤ ë°©í–¥
+        {
+            vKnockbackDir = Vec2(1.f, 0.f);  // ê¸°ë³¸ì ìœ¼ë¡œ ì˜¤ë¥¸ìª½
+        }
+        vKnockbackDir.Normalize();
+
+        StartDeathEffect(vKnockbackDir);
+    }
+    else
+    {
+        // ì²´ë ¥ì´ ë‚¨ì•„ìˆìœ¼ë©´ ì¼ë°˜ ë°ë¯¸ì§€ ì²˜ë¦¬
+        CMonster::TakeDamage();  // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ TakeDamage í˜¸ì¶œ
+    }
+}
+
+void CBasicMonster::StartDeathEffect(Vec2 _vKnockbackDir)
+{
+    m_bIsDying = true;
+    m_fDeathEffectTimer = 0.f;
+    m_vKnockbackDir = _vKnockbackDir;
+    m_fKnockbackSpeed = 300.f;  // ë„‰ë°± ì´ˆê¸° ì†ë„
+
+    // ì£½ìŒ ìƒíƒœë¡œ ë³€ê²½
+    ChangeState(MONSTER_STATE::DAMAGE);
+}
+
+void CBasicMonster::UpdateDeathEffect()
+{
+    if (!m_bIsDying)
+        return;
+
+    float fDT = CTimeMgr::GetInst()->GetfDT();
+    m_fDeathEffectTimer += fDT;
+
+    // ë„‰ë°± ì´ë™ ì²˜ë¦¬ (ê°ì†í•˜ë©´ì„œ)
+    if (m_fKnockbackSpeed > 0.f)
+    {
+        // ê°ì† ì ìš©
+        m_fKnockbackSpeed -= 800.f * fDT;  // ì´ˆë‹¹ 800í”½ì…€/ì´ˆì”© ê°ì†
+        if (m_fKnockbackSpeed < 0.f)
+            m_fKnockbackSpeed = 0.f;
+
+        // ë„‰ë°± ì´ë™
+        if (GetRigidBody())
+        {
+            GetRigidBody()->SetVelocity(m_vKnockbackDir * m_fKnockbackSpeed);
+        }
+    }
+
+    // 0.3ì´ˆ í›„ ì‹¤ì œë¡œ ì£½ìŒ ì²˜ë¦¬
+    if (m_fDeathEffectTimer >= 0.3f)
+    {
+        SetDead();
     }
 }

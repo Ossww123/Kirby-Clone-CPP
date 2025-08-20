@@ -87,6 +87,7 @@ enum class EVENT_TYPE
     PLAYER_SWALLOW ,         // 삼키기 (능력 획득)
     PLAYER_DAMAGE ,          // 플레이어 데미지
     PLAYER_DEATH ,           // 플레이어 사망
+    PLAYER_SLIDE_KICK_RECOIL , // 슬라이딩킥 반동
 
     // === 몬스터 관련 이벤트 ===
     MONSTER_DAMAGE ,         // 몬스터 데미지
@@ -132,32 +133,56 @@ enum class PLAYER_STATE
     WALK ,           // 걷기
     RUN ,            // 뛰기  
     JUMP ,           // 점프
-    FALL ,           // 낙하
+    FALL0 ,          // 낙하 초기 (점프 직후)
+    FALL1 ,          // 낙하 (일반)
     FALL2 ,          // 낙하 (장시간 - 바운스 예정)
     BOUNCE ,         // 땅에서 바운스
 
     // === 크라우치 관련 상태들 ===
     CROUCH ,         // 크라우치 (앉기) - DOWN 키, 방향변경만 가능
     SLIDE ,          // 슬라이드 킥 (크라우치에서 Z키 또는 X키)
+    SLIDE_KICK_RECOIL , // 슬라이드 킥 적중 후 반동
 
     // === 피격 상태 ===
     DAMAGE ,         // 데미지를 받는 상태
 
     // === 공중 부유 관련 상태들 ===
     HOVER ,          // 공기머금기 부유 (공중에서 A키)
-    HOVER_EXHALE ,     // 내뱉기
+    HOVER_EXHALE ,   // 내뱉기
 
-    INHALE_READY ,   // 빨아들이기 준비 (공기머금기)
-    INHALE_1 ,       // 빨아들이기 1단계
-    INHALE_2 ,       // 빨아들이기 2단계
-    INHALE_HOLD ,    // 숨참 (빨아들이기 유지)
-    EXHALE ,         // 공기뱉기
+    // === 빨아들이기 관련 상태들 ===
+    INHALE ,         // 빨아들이는 중
+    INHALE_SUCCESS , // 빨아들이기 성공 (INHALE과 MOUTHFUL_IDLE 사이)
+    EXHALE ,         // 뱉기
     SWALLOW ,        // 삼키기
+
+    // === 머금은 상태들 ===
     MOUTHFUL_IDLE ,  // 머금은 상태 대기
     MOUTHFUL_WALK ,  // 머금은 상태 걷기
     MOUTHFUL_RUN ,   // 머금은 상태 뛰기
     MOUTHFUL_JUMP ,  // 머금은 상태 점프
+    MOUTHFUL_FALL ,  // 머금은 상태 낙하
+    MOUTHFUL_DAMAGE ,// 머금은 상태 피격
 
+    END
+};
+
+// 빨아들이기 관련 정보
+enum class INHALE_COUNT
+{
+    NONE = 0,        // 아무것도 빨아들이지 않음
+    ONE = 1,         // 1마리 빨아들임
+    MULTIPLE = 2,    // 2마리 이상 빨아들임
+};
+
+// 카피 능력 타입
+enum class COPY_ABILITY
+{
+    NONE,            // 능력 없음
+    FIRE,            // 핫 헤드로부터
+    BEAM,            // 웨이들 두로부터  
+    SPARK,        // 스파키로부터
+    
     END
 };
 
@@ -320,6 +345,7 @@ enum class PROJECTILE_TYPE
 {
     // === 커비 전용 투사체 ===
     KIRBY_AIR_PUFF,         // 기본 공기 뱉기 (HOVER_EXHALE)
+    KIRBY_SLIDE_KICK,       // 슬라이딩 킥 공격 (투명 투사체)
     KIRBY_STAR,             // 적 1마리 삼키고 뱉기
     KIRBY_STAR_ENHANCED,    // 적 2마리 이상 삼키고 뱉기 (강화된 별)
     KIRBY_FIRE,             // 파이어 능력 투사체
@@ -328,11 +354,9 @@ enum class PROJECTILE_TYPE
 
     // === 몬스터 전용 투사체 ===
     BOSS_AIR_PUFF,          // 위스피 우드 공기포
-
-    // === 향후 확장 예정 ===
-    // MONSTER_FIREBALL,    // 핫헤드 화염구
-    // MONSTER_ELECTRIC,    // 스파키 전기구슬
-    // MONSTER_BEAM,        // 웨이들두 빔
+    MONSTER_FIREBALL,       // 핫헤드 화염구
+    MONSTER_ELECTRIC,       // 스파키 전기구슬
+    MONSTER_BEAM,           // 웨이들두 빔
 
     END
 };

@@ -14,7 +14,7 @@ CPlayerStateTransitionTable::~CPlayerStateTransitionTable()
 {
 }
 
-// === ÀüÈ¯ ±ÔÄ¢ °ü¸® ===
+// === ì „í™˜ ê·œì¹™ ê´€ë¦¬ ===
 
 void CPlayerStateTransitionTable::AddTransition(PLAYER_STATE from, InputFlags inputs,
     PLAYER_STATE to, ConditionFunc condition,
@@ -22,7 +22,7 @@ void CPlayerStateTransitionTable::AddTransition(PLAYER_STATE from, InputFlags in
 {
     TransitionRule rule(from, inputs, to, condition, priority, blockedInputs);
 
-    // À¯È¿¼º °Ë»ç
+    // ìœ íš¨ì„± ê²€ì‚¬
     if (!IsValidTransitionRule(rule))
     {
         char debugMsg[256];
@@ -32,7 +32,7 @@ void CPlayerStateTransitionTable::AddTransition(PLAYER_STATE from, InputFlags in
     }
 
     m_transitions.push_back(rule);
-    m_bSorted = false;  // ÀçÁ¤·Ä ÇÊ¿ä
+    m_bSorted = false;  // ì¬ì •ë ¬ í•„ìš”
 }
 
 void CPlayerStateTransitionTable::RemoveTransition(PLAYER_STATE from, PLAYER_STATE to)
@@ -48,10 +48,10 @@ void CPlayerStateTransitionTable::RemoveTransition(PLAYER_STATE from, PLAYER_STA
 void CPlayerStateTransitionTable::ClearAllTransitions()
 {
     m_transitions.clear();
-    m_bSorted = true;  // ºó »óÅÂ´Â Á¤·ÄµÈ °ÍÀ¸·Î °£ÁÖ
+    m_bSorted = true;  // ë¹ˆ ìƒíƒœëŠ” ì •ë ¬ëœ ê²ƒìœ¼ë¡œ ê°„ì£¼
 }
 
-// === »óÅÂ ÀüÈ¯ ·ÎÁ÷ ===
+// === ìƒíƒœ ì „í™˜ ë¡œì§ ===
 
 PLAYER_STATE CPlayerStateTransitionTable::GetNextState(PLAYER_STATE currentState,
     InputFlags currentInput,
@@ -60,20 +60,20 @@ PLAYER_STATE CPlayerStateTransitionTable::GetNextState(PLAYER_STATE currentState
     if (!player)
         return currentState;
 
-    // ¿ì¼±¼øÀ§ Á¤·ÄÀÌ ¾ÈµÇ¾î ÀÖÀ¸¸é Á¤·Ä
+    // ìš°ì„ ìˆœìœ„ ì •ë ¬ì´ ì•ˆë˜ì–´ ìˆìœ¼ë©´ ì •ë ¬
     if (!m_bSorted)
     {
         SortTransitionsByPriority();
     }
 
-    // ÇöÀç »óÅÂ¿¡¼­ ½ÃÀÛÇÏ´Â ÀüÈ¯ ±ÔÄ¢µéÀ» ¿ì¼±¼øÀ§ ¼øÀ¸·Î Ã¼Å©
+    // í˜„ì¬ ìƒíƒœì—ì„œ ì‹œì‘í•˜ëŠ” ì „í™˜ ê·œì¹™ë“¤ì„ ìš°ì„ ìˆœìœ„ ìˆœìœ¼ë¡œ ì²´í¬
     for (const auto& rule : m_transitions)
     {
         if (rule.fromState == currentState)
         {
             if (CheckTransitionCondition(rule, currentInput, player))
             {
-                // Á¶°ÇÀ» ¸¸Á·ÇÏ´Â Ã¹ ¹øÂ° ±ÔÄ¢ Àû¿ë
+                // ì¡°ê±´ì„ ë§Œì¡±í•˜ëŠ” ì²« ë²ˆì§¸ ê·œì¹™ ì ìš©
                 char debugMsg[256];
                 sprintf_s(debugMsg, "State transition: %d -> %d\n", (int)currentState, (int)rule.toState);
                 OutputDebugStringA(debugMsg);
@@ -83,11 +83,11 @@ PLAYER_STATE CPlayerStateTransitionTable::GetNextState(PLAYER_STATE currentState
         }
     }
 
-    // Àû¿ë °¡´ÉÇÑ ÀüÈ¯ÀÌ ¾øÀ¸¸é ÇöÀç »óÅÂ À¯Áö
+    // ì ìš© ê°€ëŠ¥í•œ ì „í™˜ì´ ì—†ìœ¼ë©´ í˜„ì¬ ìƒíƒœ ìœ ì§€
     return currentState;
 }
 
-// === µğ¹ö±ë/°³¹ß Áö¿ø ===
+// === ë””ë²„ê¹…/ê°œë°œ ì§€ì› ===
 
 std::vector<CPlayerStateTransitionTable::TransitionRule>
 CPlayerStateTransitionTable::GetPossibleTransitions(PLAYER_STATE currentState) const
@@ -117,24 +117,24 @@ bool CPlayerStateTransitionTable::HasTransition(PLAYER_STATE from, PLAYER_STATE 
     return false;
 }
 
-// === ÃÊ±âÈ­ (±âº» ÀüÈ¯ ±ÔÄ¢µé ¼³Á¤) ===
+// === ì´ˆê¸°í™” (ê¸°ë³¸ ì „í™˜ ê·œì¹™ë“¤ ì„¤ì •) ===
 
 void CPlayerStateTransitionTable::InitializeDefaultTransitions()
 {
     using INPUT = CPlayerInputManager::INPUT_TYPE;
 
-    // === ±âº» ÀÌµ¿ °ü·Ã ÀüÈ¯ ===
+    // === ê¸°ë³¸ ì´ë™ ê´€ë ¨ ì „í™˜ ===
 
-    // IDLE -> WALK (ÁÂ¿ì ÀÌµ¿)
+    // IDLE -> WALK (ì¢Œìš° ì´ë™)
     AddTransition(PLAYER_STATE::IDLE,
         (uint32_t)INPUT::MOVE_LEFT | (uint32_t)INPUT::MOVE_RIGHT,
         PLAYER_STATE::WALK,
         [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
         100);
 
-    // WALK -> IDLE (ÀÌµ¿ ÀÔ·Â ¾øÀ½)
+    // WALK -> IDLE (ì´ë™ ì…ë ¥ ì—†ìŒ)
     AddTransition(PLAYER_STATE::WALK,
-        0,  // Æ¯Á¤ ÀÔ·Â ¾øÀ½
+        0,  // íŠ¹ì • ì…ë ¥ ì—†ìŒ
         PLAYER_STATE::IDLE,
         [](CPlayer* p) {
             if (!p->GetMovement()) return false;
@@ -143,9 +143,9 @@ void CPlayerStateTransitionTable::InitializeDefaultTransitions()
         },
         50);
 
-    // === Á¡ÇÁ °ü·Ã ÀüÈ¯ ===
+    // === ì í”„ ê´€ë ¨ ì „í™˜ ===
 
-    // IDLE/WALK -> JUMP (Á¡ÇÁ ÀÔ·Â)
+    // IDLE/WALK -> JUMP (ì í”„ ì…ë ¥)
     AddTransition(PLAYER_STATE::IDLE,
         (uint32_t)INPUT::JUMP_TAP,
         PLAYER_STATE::JUMP,
@@ -158,26 +158,33 @@ void CPlayerStateTransitionTable::InitializeDefaultTransitions()
         [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
         200);
 
-    // JUMP -> FALL (ÇÏ°­ ½ÃÀÛ)
+    // JUMP -> FALL0 (ì í”„ í›„ í•˜ê°• ì‹œì‘)
     AddTransition(PLAYER_STATE::JUMP,
-        0,  // Æ¯Á¤ ÀÔ·Â ¾øÀ½
-        PLAYER_STATE::FALL,
+        0,  // íŠ¹ì • ì…ë ¥ ì—†ìŒ
+        PLAYER_STATE::FALL0,
         [](CPlayer* p) {
             if (!p->GetRigidBody()) return false;
             return p->GetRigidBody()->GetVelocity().y >= 0.f;
         },
         300);
 
-    // FALL -> IDLE (ÂøÁö)
-    AddTransition(PLAYER_STATE::FALL,
-        0,  // Æ¯Á¤ ÀÔ·Â ¾øÀ½
+    // FALL0 -> IDLE (ë¹ ë¥¸ ì°©ì§€)
+    AddTransition(PLAYER_STATE::FALL0,
+        0,  // íŠ¹ì • ì…ë ¥ ì—†ìŒ
         PLAYER_STATE::IDLE,
         [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
         300);
 
-    // === Å©¶ó¿ìÄ¡ °ü·Ã ÀüÈ¯ ===
+    // FALL1 -> IDLE (ì¼ë°˜ ì°©ì§€)
+    AddTransition(PLAYER_STATE::FALL1,
+        0,  // íŠ¹ì • ì…ë ¥ ì—†ìŒ
+        PLAYER_STATE::IDLE,
+        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
+        300);
 
-    // IDLE -> CROUCH (DOWN Å°)
+    // === í¬ë¼ìš°ì¹˜ ê´€ë ¨ ì „í™˜ ===
+
+    // IDLE -> CROUCH (DOWN í‚¤)
     AddTransition(PLAYER_STATE::IDLE,
         (uint32_t)INPUT::MOVE_DOWN,
         PLAYER_STATE::CROUCH,
@@ -187,9 +194,9 @@ void CPlayerStateTransitionTable::InitializeDefaultTransitions()
         },
         150);
 
-    // CROUCH -> IDLE (DOWN Å° ÇØÁ¦)
+    // CROUCH -> IDLE (DOWN í‚¤ í•´ì œ)
     AddTransition(PLAYER_STATE::CROUCH,
-        0,  // Æ¯Á¤ ÀÔ·Â ¾øÀ½
+        0,  // íŠ¹ì • ì…ë ¥ ì—†ìŒ
         PLAYER_STATE::IDLE,
         [](CPlayer* p) {
             if (!p->GetMovement()) return false;
@@ -198,32 +205,32 @@ void CPlayerStateTransitionTable::InitializeDefaultTransitions()
         },
         100);
 
-    // CROUCH -> SLIDE (Á¡ÇÁ ¶Ç´Â ¾×¼Ç Å°)
+    // CROUCH -> SLIDE (ì í”„ ë˜ëŠ” ì•¡ì…˜ í‚¤)
     AddTransition(PLAYER_STATE::CROUCH,
         (uint32_t)INPUT::JUMP_TAP | (uint32_t)INPUT::ACTION_TAP,
         PLAYER_STATE::SLIDE,
         [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
         250);
 
-    // === ÈíÀÔ °ü·Ã ÀüÈ¯ ===
+    // === í¡ì… ê´€ë ¨ ì „í™˜ ===
 
-    // IDLE -> INHALE_READY (¾×¼Ç Å°)
+    // IDLE -> INHALE (ì•¡ì…˜ í‚¤)
     AddTransition(PLAYER_STATE::IDLE,
         (uint32_t)INPUT::ACTION_TAP,
-        PLAYER_STATE::INHALE_READY,
+        PLAYER_STATE::INHALE,
         [](CPlayer* p) { return !p->HasMouthful(); },
         180);
 
-    // === ´õºíÅÇ RUN ÀüÈ¯ ===
+    // === ë”ë¸”íƒ­ RUN ì „í™˜ ===
 
-    // IDLE -> RUN (´õºíÅÇ)
+    // IDLE -> RUN (ë”ë¸”íƒ­)
     AddTransition(PLAYER_STATE::IDLE,
         (uint32_t)INPUT::DOUBLE_TAP_LEFT | (uint32_t)INPUT::DOUBLE_TAP_RIGHT,
         PLAYER_STATE::RUN,
         [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
         120);
 
-    // RUN -> WALK (´õºíÅÇ ¾Æ´Ñ ÀÏ¹İ ÀÌµ¿)
+    // RUN -> WALK (ë”ë¸”íƒ­ ì•„ë‹Œ ì¼ë°˜ ì´ë™)
     AddTransition(PLAYER_STATE::RUN,
         (uint32_t)INPUT::MOVE_LEFT | (uint32_t)INPUT::MOVE_RIGHT,
         PLAYER_STATE::WALK,
@@ -233,27 +240,27 @@ void CPlayerStateTransitionTable::InitializeDefaultTransitions()
         },
         80);
 
-    // Á¤·Ä ÇÃ·¡±× ¼³Á¤
+    // ì •ë ¬ í”Œë˜ê·¸ ì„¤ì •
     m_bSorted = false;
 }
 
-// === ³»ºÎ ·ÎÁ÷ ===
+// === ë‚´ë¶€ ë¡œì§ ===
 
 bool CPlayerStateTransitionTable::CheckTransitionCondition(const TransitionRule& rule,
     InputFlags currentInput,
     CPlayer* player) const
 {
-    // 1. ÇÊ¿äÇÑ ÀÔ·ÂÀÌ ÀÖ´ÂÁö Ã¼Å©
+    // 1. í•„ìš”í•œ ì…ë ¥ì´ ìˆëŠ”ì§€ ì²´í¬
     if (rule.requiredInputs != 0)
     {
-        // OR Á¶°Ç: ÇÊ¿äÇÑ ÀÔ·Â Áß ÇÏ³ª¶óµµ ÀÖÀ¸¸é µÊ
+        // OR ì¡°ê±´: í•„ìš”í•œ ì…ë ¥ ì¤‘ í•˜ë‚˜ë¼ë„ ìˆìœ¼ë©´ ë¨
         if ((currentInput & rule.requiredInputs) == 0)
         {
             return false;
         }
     }
 
-    // 2. ±İÁöµÈ ÀÔ·ÂÀÌ ¾ø´ÂÁö Ã¼Å©
+    // 2. ê¸ˆì§€ëœ ì…ë ¥ì´ ì—†ëŠ”ì§€ ì²´í¬
     if (rule.blockedInputs != 0)
     {
         if ((currentInput & rule.blockedInputs) != 0)
@@ -262,7 +269,7 @@ bool CPlayerStateTransitionTable::CheckTransitionCondition(const TransitionRule&
         }
     }
 
-    // 3. Ãß°¡ Á¶°Ç ÇÔ¼ö Ã¼Å©
+    // 3. ì¶”ê°€ ì¡°ê±´ í•¨ìˆ˜ ì²´í¬
     if (rule.condition)
     {
         if (!rule.condition(player))
@@ -278,24 +285,24 @@ void CPlayerStateTransitionTable::SortTransitionsByPriority()
 {
     std::sort(m_transitions.begin(), m_transitions.end(),
         [](const TransitionRule& a, const TransitionRule& b) {
-            // ¿ì¼±¼øÀ§°¡ ³ôÀº °ÍºÎÅÍ (³»¸²Â÷¼ø)
+            // ìš°ì„ ìˆœìœ„ê°€ ë†’ì€ ê²ƒë¶€í„° (ë‚´ë¦¼ì°¨ìˆœ)
             return a.priority > b.priority;
         });
 
     m_bSorted = true;
 }
 
-// === ÀüÈ¯ ±ÔÄ¢ °ËÁõ ===
+// === ì „í™˜ ê·œì¹™ ê²€ì¦ ===
 
 bool CPlayerStateTransitionTable::IsValidTransitionRule(const TransitionRule& rule) const
 {
-    // »óÅÂ°¡ À¯È¿ÇÑÁö Ã¼Å©
+    // ìƒíƒœê°€ ìœ íš¨í•œì§€ ì²´í¬
     if (rule.fromState == PLAYER_STATE::END || rule.toState == PLAYER_STATE::END)
     {
         return false;
     }
 
-    // ÀÚ±â ÀÚ½ÅÀ¸·ÎÀÇ ÀüÈ¯Àº ÀÏ¹İÀûÀ¸·Î ÀÇ¹Ì ¾øÀ½ (ÇÏÁö¸¸ Çã¿ë)
+    // ìê¸° ìì‹ ìœ¼ë¡œì˜ ì „í™˜ì€ ì¼ë°˜ì ìœ¼ë¡œ ì˜ë¯¸ ì—†ìŒ (í•˜ì§€ë§Œ í—ˆìš©)
     if (rule.fromState == rule.toState)
     {
         char debugMsg[128];

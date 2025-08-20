@@ -7,9 +7,11 @@
 #include "CPlayer.h"
 #include "CPlayerHealthSystem.h"
 #include "CMonster.h"
+#include "CBasicMonster.h"
 
 #include "CCollider.h"
 #include "CPlayerStateMachine.h"
+#include "CProjectile.h"
 
 CEventMgr::CEventMgr()
 {
@@ -21,21 +23,21 @@ CEventMgr::~CEventMgr()
 
 void CEventMgr::init()
 {
-    // ÃÊ±âÈ­ÇÒ ³»¿ëÀÌ ÀÖ´Ù¸é ¿©±â¿¡
+    // ì´ˆê¸°í™”í•  ë‚´ìš©ì´ ìˆë‹¤ë©´ ì—¬ê¸°ì—
 }
 
 void CEventMgr::update()
 {
-    // ÀÌÀü ÇÁ·¹ÀÓ¿¡¼­ »èÁ¦ ¿¹Á¤µÈ ¿ÀºêÁ§Æ®µé Á¤¸®
+    // ì´ì „ í”„ë ˆì„ì—ì„œ ì‚­ì œ ì˜ˆì •ëœ ì˜¤ë¸Œì íŠ¸ë“¤ ì •ë¦¬
     ClearGarbageObject();
 
-    // ÇöÀç ÇÁ·¹ÀÓÀÇ ¸ğµç ÀÌº¥Æ® Ã³¸®
+    // í˜„ì¬ í”„ë ˆì„ì˜ ëª¨ë“  ì´ë²¤íŠ¸ ì²˜ë¦¬
     for (size_t i = 0; i < m_vecEvent.size(); ++i)
     {
         Execute(m_vecEvent[i]);
     }
 
-    // Ã³¸®µÈ ÀÌº¥Æ®µé Å¬¸®¾î
+    // ì²˜ë¦¬ëœ ì´ë²¤íŠ¸ë“¤ í´ë¦¬ì–´
     m_vecEvent.clear();
 }
 
@@ -59,7 +61,7 @@ void CEventMgr::Execute(tEvent& _event)
         CObject* pObj = (CObject*)_event.lParam;
         pObj->SetDead();
 
-        // °¡ºñÁö ÄÃ·º¼Ç¿¡ Ãß°¡ (´ÙÀ½ ÇÁ·¹ÀÓ¿¡ ½ÇÁ¦ »èÁ¦)
+        // ê°€ë¹„ì§€ ì»¬ë ‰ì…˜ì— ì¶”ê°€ (ë‹¤ìŒ í”„ë ˆì„ì— ì‹¤ì œ ì‚­ì œ)
         m_vecGarbage.push_back(pObj);
     }
     break;
@@ -78,7 +80,7 @@ void CEventMgr::Execute(tEvent& _event)
         CCollider* pCol1 = (CCollider*)_event.wParam;
         CCollider* pCol2 = (CCollider*)_event.lParam;
 
-        // ½ÇÁ¦ Ãæµ¹ Äİ¹é È£Ãâ
+        // ì‹¤ì œ ì¶©ëŒ ì½œë°± í˜¸ì¶œ
         pCol1->GetOwner()->OnCollisionEnter(pCol2);
         pCol2->GetOwner()->OnCollisionEnter(pCol1);
     }
@@ -90,7 +92,7 @@ void CEventMgr::Execute(tEvent& _event)
         CCollider* pCol1 = (CCollider*)_event.wParam;
         CCollider* pCol2 = (CCollider*)_event.lParam;
 
-        // ½ÇÁ¦ Ãæµ¹ Á¾·á Äİ¹é È£Ãâ
+        // ì‹¤ì œ ì¶©ëŒ ì¢…ë£Œ ì½œë°± í˜¸ì¶œ
         pCol1->GetOwner()->OnCollisionExit(pCol2);
         pCol2->GetOwner()->OnCollisionExit(pCol1);
     }
@@ -98,6 +100,10 @@ void CEventMgr::Execute(tEvent& _event)
 
     case EVENT_TYPE::PLAYER_DAMAGE:
         ExecutePlayerDamage(_event);
+        break;
+
+    case EVENT_TYPE::PLAYER_SLIDE_KICK_RECOIL:
+        ExecutePlayerSlideKickRecoil(_event);
         break;
 
     case EVENT_TYPE::MONSTER_DAMAGE:
@@ -122,13 +128,13 @@ void CEventMgr::ExecutePlayerDamage(tEvent& _event)
 
     if (!pPlayer || pPlayer->IsDead())
     {
-        // ¸Ş¸ğ¸® Á¤¸®
+        // ë©”ëª¨ë¦¬ ì •ë¦¬
         if (pKnockbackDir)
             delete pKnockbackDir;
         return;
     }
 
-    // ¹«Àû »óÅÂ Ã¼Å© (ÀÌÁß Ã¼Å©)
+    // ë¬´ì  ìƒíƒœ ì²´í¬ (ì´ì¤‘ ì²´í¬)
     if (pPlayer->GetHealthSystem() &&
         pPlayer->GetHealthSystem()->IsInvincible())
     {
@@ -137,17 +143,44 @@ void CEventMgr::ExecutePlayerDamage(tEvent& _event)
         return;
     }
 
-    // === Ã¼·Â ½Ã½ºÅÛ¿¡¼­¸¸ µ¥¹ÌÁö Ã³¸® (¹«Àû½Ã°£, ³Ë¹é µî) ===
-    // »óÅÂ º¯°æÀº PLAYER_STATE_CHANGE ÀÌº¥Æ®¿¡¼­ º°µµ Ã³¸®
+    // === ì²´ë ¥ ì‹œìŠ¤í…œì—ì„œë§Œ ë°ë¯¸ì§€ ì²˜ë¦¬ (ë¬´ì ì‹œê°„, ë„‰ë°± ë“±) ===
+    // ìƒíƒœ ë³€ê²½ì€ PLAYER_STATE_CHANGE ì´ë²¤íŠ¸ì—ì„œ ë³„ë„ ì²˜ë¦¬
     Vec2 knockbackDir = pKnockbackDir ? *pKnockbackDir : Vec2(0.f, 0.f);
     if (pPlayer->GetHealthSystem())
     {
         pPlayer->GetHealthSystem()->TakeDamage(1, knockbackDir);
     }
 
-    // ¸Ş¸ğ¸® Á¤¸®
+    // ë©”ëª¨ë¦¬ ì •ë¦¬
     if (pKnockbackDir)
         delete pKnockbackDir;
+}
+
+void CEventMgr::ExecutePlayerSlideKickRecoil(tEvent& _event)
+{
+    CProjectile* pProjectile = (CProjectile*)_event.wParam;
+    CObject* pMonster = (CObject*)_event.lParam;
+    
+    if (!pProjectile || !pMonster)
+        return;
+
+    // í”Œë ˆì´ì–´ ì°¾ê¸°
+    CPlayer* pPlayer = nullptr;
+    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+    if (pCurScene)
+    {
+        const vector<CObject*>& playerObjs = pCurScene->GetGroupObject(GROUP_TYPE::PLAYER);
+        if (!playerObjs.empty())
+        {
+            pPlayer = dynamic_cast<CPlayer*>(playerObjs[0]);
+        }
+    }
+
+    if (!pPlayer)
+        return;
+
+    // í”Œë ˆì´ì–´ì—ê²Œ ìŠ¬ë¼ì´ë“œí‚¥ ë°˜ë™ ìš”ì²­
+    pPlayer->RequestSlideKickRecoil();
 }
 
 void CEventMgr::ExecuteMonsterDamage(tEvent& _event)
@@ -157,9 +190,21 @@ void CEventMgr::ExecuteMonsterDamage(tEvent& _event)
     if (!pMonster || pMonster->IsDead())
         return;
 
-    // === ¸ó½ºÅÍ µ¥¹ÌÁö Ã³¸® ===
+    // === CBasicMonsterì¸ì§€ í™•ì¸í•˜ê³  ë„‰ë°± ì •ë³´ ì „ë‹¬ ===
+    CBasicMonster* pBasicMonster = dynamic_cast<CBasicMonster*>(pMonster);
+    if (pBasicMonster && _event.lParam != 0)
+    {
+        // ë°ë¯¸ì§€ ì†ŒìŠ¤ ê°ì²´ì—ì„œ ìœ„ì¹˜ ì •ë³´ ê°€ì ¸ì˜¤ê¸°
+        CObject* pDamageSource = (CObject*)_event.lParam;
+        Vec2 vSourcePos = pDamageSource->GetPos();
+        
+        // ëª¬ìŠ¤í„°ì˜ TakeDamageì—ì„œ ë„‰ë°± ë°©í–¥ ê³„ì‚°ì„ ìœ„í•´ ë°ë¯¸ì§€ ì†ŒìŠ¤ ìœ„ì¹˜ ì„¤ì •
+        pBasicMonster->SetDamageSourcePos(vSourcePos);
+    }
+
+    // === ëª¬ìŠ¤í„° ë°ë¯¸ì§€ ì²˜ë¦¬ ===
     pMonster->TakeDamage();
 
-    // ¸ó½ºÅÍÀÇ °æ¿ì TakeDamage()¿¡¼­ ³»ºÎÀûÀ¸·Î DAMAGE »óÅÂ·Î ÀüÈ¯
-    // ¶Ç´Â Ãß°¡ÀûÀÎ »óÅÂ ÀüÈ¯ÀÌ ÇÊ¿äÇÏ´Ù¸é ¿©±â¼­ Ã³¸®
+    // ëª¬ìŠ¤í„°ì˜ ê²½ìš° TakeDamage()ì—ì„œ ë‚´ë¶€ì ìœ¼ë¡œ DAMAGE ìƒíƒœë¡œ ì „í™˜
+    // ë˜ëŠ” ì¶”ê°€ì ì¸ ìƒíƒœ ì „í™˜ì´ í•„ìš”í•˜ë‹¤ë©´ ì—¬ê¸°ì„œ ì²˜ë¦¬
 }

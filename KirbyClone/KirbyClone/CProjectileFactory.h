@@ -15,6 +15,7 @@ public:
 
     // === 커비 투사체 전용 생성 함수들 ===
     static CProjectile* CreateAirPuff(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
+    static CProjectile* CreateSlideKick(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
     static CProjectile* CreateStar(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
     static CProjectile* CreateStarEnhanced(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
     static CProjectile* CreateFire(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
@@ -23,6 +24,9 @@ public:
 
     // === 몬스터 투사체 전용 생성 함수들 ===
     static CProjectile* CreateBossAirPuff(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::MONSTER);
+    static CProjectile* CreateMonsterFireball(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::MONSTER);
+    static CProjectile* CreateMonsterElectric(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::MONSTER);
+    static CProjectile* CreateMonsterBeam(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::MONSTER);
 
     // === 호환성 유지 함수들 (deprecated) ===
     static CProjectile* CreateIce(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
@@ -40,7 +44,7 @@ public:
 public:
     // === 씬 연동 헬퍼 함수들 ===
     static GROUP_TYPE GetProjectileGroup(GROUP_TYPE _eOwner);
-    static void AddToScene(CProjectile* _pProjectile, GROUP_TYPE _eOwner);
+    static void AddToScene ( CProjectile* _pProjectile , GROUP_TYPE _eOwner );
 
 private:
     // === 내부 설정 함수들 ===

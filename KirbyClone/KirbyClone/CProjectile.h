@@ -44,12 +44,16 @@ private:
 private:
     // === 투사체 타입별 초기화 ===
     void InitializeByType();
+    void CreateAnimation();
+    void SetAnimationByType();
 
 private:
     // === 투사체 속성 ===
     PROJECTILE_TYPE m_eProjectileType;  // 투사체 종류
     Vec2 m_vDirection;                  // 이동 방향 (정규화된 벡터)
-    float m_fSpeed;                     // 이동 속도
+    float m_fSpeed;                     // 현재 이동 속도
+    float m_fInitialSpeed;              // 초기 속도 (감속 계산용)
+    float m_fDeceleration;              // 감속도 (속도 감소율)
     float m_fDamage;                    // 데미지
     
     // === 생명주기 관리 ===

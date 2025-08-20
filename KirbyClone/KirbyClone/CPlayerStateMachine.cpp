@@ -11,1484 +11,1896 @@
 #include "CPlayerInputManager.h"
 #include "CPlayerStateTransitionTable.h"
 #include "CPlayerHealthSystem.h"
+#include "CProjectileFactory.h"
 
-CPlayerStateMachine::CPlayerStateMachine(CPlayer* _pOwner)
-    : m_pOwner(_pOwner)
-    , m_pInputManager(nullptr)
-    , m_pTransitionTable(nullptr)
-    , m_eCurState(PLAYER_STATE::IDLE)
-    , m_ePrevState(PLAYER_STATE::END)
-    , m_fFallTime(0.0f)
-    , m_fFallToBounceThreshold(1.0f)
-    , m_fBounceHeight(0.6f)
-    , m_bWasGrounded(true)
-    , m_fSlideTimer(0.0f)
-    , m_fSlideDuration(0.8f)
-    , m_fSlideDistance(256.f)
-    , m_fSlideSpeed(320.f)
-    , m_vSlideStartPos(Vec2(0.f, 0.f))
-    , m_iSlideDirection(1)
-    , m_bSlideGroundCheck(true)
-    , m_eHoverSubState(HOVER_SUBSTATE::END)
-    , m_fHoverUpForce(300.f)            // »ó½Â·Â Á¶±İ ÁÙÀÓ
-    , m_fHoverFallSpeed(80.f)           // ÃµÃµÈ÷ ³«ÇÏÇÏ´Â ¼Óµµ
-    , m_fHoverMoveSpeed(120.f)          // °È±â ¼Óµµ Á¤µµ
-    , m_fHoverSubStateTimer(0.0f)
-    , m_fHoverEnterDuration(0.6f)       // ENTER Áö¼Ó ½Ã°£ ´Ã¸²
-    , m_fHoverFlyUpDuration(0.4f)       // FLY_UP Áö¼Ó ½Ã°£ ´Ã¸²
-    , m_fHoverAirFriction(5.0f)         // °øÁß ¸¶Âû °è¼ö
-    , m_bHoverCanMoveOnGround(true)     // ¶¥¿¡¼­µµ ÀÌµ¿ °¡´É
-    , m_fDamageTimer(0.0f)          // NEW!
-    , m_fDamageDuration(0.5f)       // NEW! 0.5ÃÊ ÇÇ°İ »óÅÂ
-    , m_bDamageCompleted(false)
+CPlayerStateMachine::CPlayerStateMachine ( CPlayer* _pOwner )
+    : m_pOwner ( _pOwner )
+    , m_pInputManager ( nullptr )
+    , m_pTransitionTable ( nullptr )
+    , m_eCurState ( PLAYER_STATE::IDLE )
+    , m_ePrevState ( PLAYER_STATE::END )
+    , m_fFallTime ( 0.0f )
+    , m_fFall0Duration ( 0.3f )
+    , m_fFallStartY ( 0.0f )
+    , m_fFallDistanceThreshold ( 224.0f )
+    , m_fBounceHeight ( 0.6f )
+    , m_bWasGrounded ( true )
+    , m_fSlideTimer ( 0.0f )
+    , m_fSlideDuration ( 0.8f )
+    , m_fSlideDistance ( 256.f )
+    , m_fSlideSpeed ( 320.f )
+    , m_vSlideStartPos ( Vec2 ( 0.f , 0.f ) )
+    , m_iSlideDirection ( 1 )
+    , m_bSlideGroundCheck ( true )
+    , m_bSlideKickCreated ( false )
+    , m_fRecoilTimer ( 0.0f )
+    , m_fRecoilDuration ( 0.3f )
+    , m_vRecoilVelocity ( Vec2 ( 0.f , 0.f ) )
+    , m_eHoverSubState ( HOVER_SUBSTATE::END )
+    , m_fHoverUpForce ( 300.f )            // ìƒìŠ¹ë ¥ ì¡°ê¸ˆ ì¤„ì„
+    , m_fHoverFallSpeed ( 80.f )           // ì²œì²œíˆ ë‚™í•˜í•˜ëŠ” ì†ë„
+    , m_fHoverMoveSpeed ( 120.f )          // ê±·ê¸° ì†ë„ ì •ë„
+    , m_fHoverSubStateTimer ( 0.0f )
+    , m_fHoverEnterDuration ( 0.6f )       // ENTER ì§€ì† ì‹œê°„ ëŠ˜ë¦¼
+    , m_fHoverFlyUpDuration ( 0.4f )       // FLY_UP ì§€ì† ì‹œê°„ ëŠ˜ë¦¼
+    , m_fHoverAirFriction ( 5.0f )         // ê³µì¤‘ ë§ˆì°° ê³„ìˆ˜
+    , m_bHoverCanMoveOnGround ( true )     // ë•…ì—ì„œë„ ì´ë™ ê°€ëŠ¥
+    , m_fDamageTimer ( 0.0f )              // í”¼ê²© íƒ€ì´ë¨¸
+    , m_fDamageDuration ( 0.5f )           // 0.5ì´ˆ í”¼ê²© ìƒíƒœ
+    , m_bDamageCompleted ( false )
+    , m_eInhaleCount ( INHALE_COUNT::NONE )
+    , m_eCopyAbility ( COPY_ABILITY::NONE )
+    , m_fInhaleTimer ( 0.0f )
+    , m_fInhaleDuration ( 1.0f )
+    , m_fInhaleSuccessTimer ( 0.0f )
+    , m_fInhaleSuccessDuration ( 0.3f )
+    , m_fExhaleTimer ( 0.0f )
+    , m_fExhaleDuration ( 0.5f )
+    , m_fSwallowTimer ( 0.0f )
+    , m_fSwallowDuration ( 0.8f )
 {
-    // »õ·Î¿î ½Ã½ºÅÛµé »ı¼º
-    m_pInputManager = new CPlayerInputManager();
-    m_pTransitionTable = new CPlayerStateTransitionTable();
+    // ìƒˆë¡œìš´ ì‹œìŠ¤í…œë“¤ ìƒì„±
+    m_pInputManager = new CPlayerInputManager ( );
+    m_pTransitionTable = new CPlayerStateTransitionTable ( );
 }
 
-CPlayerStateMachine::~CPlayerStateMachine()
+CPlayerStateMachine::~CPlayerStateMachine ( )
 {
-    if (m_pInputManager)
+    if ( m_pInputManager )
     {
         delete m_pInputManager;
         m_pInputManager = nullptr;
     }
 
-    if (m_pTransitionTable)
+    if ( m_pTransitionTable )
     {
         delete m_pTransitionTable;
         m_pTransitionTable = nullptr;
     }
 }
 
-void CPlayerStateMachine::Init()
+void CPlayerStateMachine::Init ( )
 {
-    // Movement ½Ã½ºÅÛ¿¡ InputManager ¿¬°á
-    if (m_pOwner && m_pOwner->GetMovement() && m_pInputManager)
+    // Movement ì‹œìŠ¤í…œì— InputManager ì—°ê²°
+    if ( m_pOwner && m_pOwner->GetMovement ( ) && m_pInputManager )
     {
-        m_pOwner->GetMovement()->SetInputManager(m_pInputManager);
+        m_pOwner->GetMovement ( )->SetInputManager ( m_pInputManager );
     }
 
-    // ÀüÈ¯ Å×ÀÌºí ÃÊ±âÈ­
-    InitializeTransitionTable();
+    // ì „í™˜ í…Œì´ë¸” ì´ˆê¸°í™”
+    InitializeTransitionTable ( );
 
-    // ÃÊ±â »óÅÂ ¼³Á¤
-    ChangeStateInternal(PLAYER_STATE::IDLE);
+    // ì´ˆê¸° ìƒíƒœ ì„¤ì •
+    ChangeStateInternal ( PLAYER_STATE::IDLE );
 }
 
-// === »õ·Î¿î ÇÙ½É ¾÷µ¥ÀÌÆ® ·ÎÁ÷ ===
-void CPlayerStateMachine::Update()
+void CPlayerStateMachine::Update ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!m_pOwner || !pRigidBody || !m_pInputManager || !m_pTransitionTable)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !m_pOwner || !pRigidBody || !m_pInputManager || !m_pTransitionTable )
         return;
 
-    // 1. ÀÔ·Â ¼öÁı
-    m_pInputManager->Update();
-    CPlayerInputManager::InputFlags currentInput = m_pInputManager->GetCurrentFrameInput();
+    // 1. ì…ë ¥ ìˆ˜ì§‘
+    m_pInputManager->Update ( );
+    CPlayerInputManager::InputFlags currentInput = m_pInputManager->GetCurrentFrameInput ( );
 
-    // 2. »óÅÂ ÀüÈ¯ Ã¼Å©
-    PLAYER_STATE nextState = m_pTransitionTable->GetNextState(m_eCurState, currentInput, m_pOwner);
+    // 2. ìƒíƒœ ì „í™˜ ì²´í¬
+    PLAYER_STATE nextState = m_pTransitionTable->GetNextState ( m_eCurState , currentInput , m_pOwner );
 
-    // 3. »óÅÂ º¯°æ
-    if (nextState != m_eCurState)
+    // 3. ìƒíƒœ ë³€ê²½
+    if ( nextState != m_eCurState )
     {
-        ChangeStateInternal(nextState);
+        ChangeStateInternal ( nextState );
     }
 
-    // 4. ÇöÀç »óÅÂ ½ÇÇà (ÀÔ·Â Ã³¸® ¾øÀ½, ¼ø¼ö ½ÇÇà¸¸)
-    ExecuteCurrentState();
+    // 4. í˜„ì¬ ìƒíƒœ ì‹¤í–‰ (ì…ë ¥ ì²˜ë¦¬ ì—†ìŒ, ìˆœìˆ˜ ì‹¤í–‰ë§Œ)
+    ExecuteCurrentState ( );
 
-    // 5. ÀÌÀü ÇÁ·¹ÀÓ Ground »óÅÂ ¾÷µ¥ÀÌÆ®
-    m_bWasGrounded = pRigidBody->IsGround();
+    // 5. ì´ì „ í”„ë ˆì„ Ground ìƒíƒœ ì—…ë°ì´íŠ¸
+    m_bWasGrounded = pRigidBody->IsGround ( );
 }
 
-void CPlayerStateMachine::ChangeStateInternal(PLAYER_STATE _eState)
+void CPlayerStateMachine::ChangeStateInternal ( PLAYER_STATE _eState )
 {
-    // À¯È¿¼º °Ë»ç
-    if (!CanChangeToState(_eState))
+    // ìœ íš¨ì„± ê²€ì‚¬
+    if ( !CanChangeToState ( _eState ) )
         return;
 
-    // ½ÇÁ¦ »óÅÂ º¯°æ
+    // ì‹¤ì œ ìƒíƒœ ë³€ê²½
     m_ePrevState = m_eCurState;
     m_eCurState = _eState;
 
-    OnStateEnter(_eState);
+    OnStateEnter ( _eState );
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ¼³Á¤
-    SetAnimationForState(_eState);
+    // ì• ë‹ˆë©”ì´ì…˜ ì„¤ì •
+    SetAnimationForState ( _eState );
 }
 
-// === »óÅÂ ½ÇÇà (ÀÔ·Â Ã³¸® ¾øÀ½) ===
-void CPlayerStateMachine::ExecuteCurrentState()
+void CPlayerStateMachine::ExecuteCurrentState ( )
 {
-    switch (m_eCurState)
+    switch ( m_eCurState )
     {
     case PLAYER_STATE::IDLE:
-        ExecuteIdleState();
+        ExecuteIdleState ( );
         break;
     case PLAYER_STATE::WALK:
     case PLAYER_STATE::RUN:
     case PLAYER_STATE::MOUTHFUL_IDLE:
     case PLAYER_STATE::MOUTHFUL_WALK:
     case PLAYER_STATE::MOUTHFUL_RUN:
-        ExecuteMovementState();
+        ExecuteMovementState ( );
         break;
     case PLAYER_STATE::JUMP:
     case PLAYER_STATE::MOUTHFUL_JUMP:
-        ExecuteJumpState();
+        ExecuteJumpState ( );
         break;
-    case PLAYER_STATE::FALL:
+    case PLAYER_STATE::FALL0:
+    case PLAYER_STATE::FALL1:
     case PLAYER_STATE::FALL2:
-        ExecuteFallState();
+    case PLAYER_STATE::MOUTHFUL_FALL:
+        ExecuteFallState ( );
         break;
     case PLAYER_STATE::CROUCH:
-        ExecuteCrouchState();
+        ExecuteCrouchState ( );
         break;
     case PLAYER_STATE::HOVER:
-        ExecuteHoverState();
+        ExecuteHoverState ( );
         break;
     case PLAYER_STATE::HOVER_EXHALE:
-        m_fHoverSubStateTimer += CTimeMgr::GetInst()->GetfDT();
-        ExecuteHoverExhaleState();
+        m_fHoverSubStateTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+        ExecuteHoverExhaleState ( );
         break;
     case PLAYER_STATE::SLIDE:
-        ExecuteSlideState();
+        ExecuteSlideState ( );
+        break;
+    case PLAYER_STATE::SLIDE_KICK_RECOIL:
+        ExecuteSlideKickRecoilState ( );
         break;
     case PLAYER_STATE::DAMAGE:
-        ExecuteDamageState();
+    case PLAYER_STATE::MOUTHFUL_DAMAGE:
+        ExecuteDamageState ( );
         break;
-    case PLAYER_STATE::INHALE_READY:
-    case PLAYER_STATE::INHALE_1:
-    case PLAYER_STATE::INHALE_2:
-    case PLAYER_STATE::INHALE_HOLD:
-        ExecuteInhaleStates();
+    case PLAYER_STATE::INHALE:
+        ExecuteInhaleState ( );
         break;
-    case PLAYER_STATE::BOUNCE:
-        ExecuteBounceState();
+    case PLAYER_STATE::INHALE_SUCCESS:
+        ExecuteInhaleSuccessState ( );
         break;
     case PLAYER_STATE::EXHALE:
+        ExecuteExhaleState ( );
+        break;
     case PLAYER_STATE::SWALLOW:
-        ExecuteSpecialStates();
+        ExecuteSwallowState ( );
+        break;
+    case PLAYER_STATE::BOUNCE:
+        ExecuteBounceState ( );
         break;
     }
 }
 
-void CPlayerStateMachine::ExecuteIdleState()
+void CPlayerStateMachine::ExecuteIdleState ( )
 {
-    // IDLE »óÅÂ¿¡¼­´Â Æ¯º°ÇÑ Ã³¸® ¾øÀ½
-    // ÀÌµ¿Àº Movement ½Ã½ºÅÛ¿¡¼­, »óÅÂ ÀüÈ¯Àº TransitionTable¿¡¼­ Ã³¸®
+    // IDLE ìƒíƒœì—ì„œëŠ” íŠ¹ë³„í•œ ì²˜ë¦¬ ì—†ìŒ
+    // ì´ë™ì€ Movement ì‹œìŠ¤í…œì—ì„œ, ìƒíƒœ ì „í™˜ì€ TransitionTableì—ì„œ ì²˜ë¦¬
 }
 
-void CPlayerStateMachine::ExecuteMovementState()
+void CPlayerStateMachine::ExecuteMovementState ( )
 {
-    // ÀÌµ¿ Ã³¸®´Â CPlayerMovement¿¡¼­ ´ã´ç
-    // ¿©±â¼­´Â »óÅÂ °ü·Ã ¹°¸®¸¸ Ã³¸®
-
-    // °øÁß¿¡ ÀÖÀ¸¸é ÀüÈ¯ Å×ÀÌºí¿¡¼­ Ã³¸®µÊ
+    // ì´ë™ ì²˜ë¦¬ëŠ” CPlayerMovementì—ì„œ ë‹´ë‹¹
+    // ì—¬ê¸°ì„œëŠ” ìƒíƒœ ê´€ë ¨ ë¬¼ë¦¬ë§Œ ì²˜ë¦¬
 }
 
-void CPlayerStateMachine::ExecuteJumpState()
+void CPlayerStateMachine::ExecuteJumpState ( )
 {
-    // Á¡ÇÁ ³ôÀÌ Á¶Àı
-    if (m_pInputManager && m_pInputManager->IsJumpHold())
+    // ì í”„ ë†’ì´ ì¡°ì ˆ
+    if ( m_pInputManager && m_pInputManager->IsJumpHold ( ) )
     {
-        float jumpRatio = m_pInputManager->GetJumpHoldRatio();
-        // Á¡ÇÁ ³ôÀÌ Á¶Àı ·ÎÁ÷ (ÇÊ¿ä½Ã ±¸Çö)
+        float jumpRatio = m_pInputManager->GetJumpHoldRatio ( );
+        // ì í”„ ë†’ì´ ì¡°ì ˆ ë¡œì§ (í•„ìš”ì‹œ êµ¬í˜„)
     }
 }
 
-void CPlayerStateMachine::ExecuteFallState()
+void CPlayerStateMachine::ExecuteFallState ( )
 {
-    // ³«ÇÏ ½Ã°£ ´©Àû
-    m_fFallTime += CTimeMgr::GetInst()->GetfDT();
+    // ë‚™í•˜ ì‹œê°„ ëˆ„ì 
+    m_fFallTime += CTimeMgr::GetInst ( )->GetfDT ( );
 }
 
-void CPlayerStateMachine::ExecuteCrouchState()
+void CPlayerStateMachine::ExecuteCrouchState ( )
 {
-    // Å©¶ó¿ìÄ¡ »óÅÂ¿¡¼­ °¨¼Ó Ã³¸®
-    if (m_pOwner->GetMovement())
+    // í¬ë¼ìš°ì¹˜ ìƒíƒœì—ì„œ ê°ì† ì²˜ë¦¬
+    if ( m_pOwner->GetMovement ( ) )
     {
-        // Movement ½Ã½ºÅÛ¿¡¼­ Å©¶ó¿ìÄ¡ °¨¼Ó Ã³¸®
+        // Movement ì‹œìŠ¤í…œì—ì„œ í¬ë¼ìš°ì¹˜ ê°ì† ì²˜ë¦¬
     }
 }
 
-void CPlayerStateMachine::ExecuteSlideState()
+void CPlayerStateMachine::ExecuteSlideState ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody )
         return;
 
-    // ½½¶óÀÌµå Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ®
-    m_fSlideTimer += CTimeMgr::GetInst()->GetfDT();
+    // ìŠ¬ë¼ì´ë“œ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fSlideTimer += CTimeMgr::GetInst ( )->GetfDT ( );
 
-    // ½½¶óÀÌµå ÀÌµ¿ Ã³¸®
-    UpdateSlideMovement();
+    // ìŠ¬ë¼ì´ë“œ í‚¥ íˆ¬ì‚¬ì²´ ìƒì„± (ì²« í”„ë ˆì„ì—ë§Œ)
+    UpdateSlideKickProjectile ( );
 
-    // ½½¶óÀÌµå ¿Ï·á Ã¼Å© (¼Óµµ Á¤¸®¸¸)
-    CheckSlideCompletion();
+    // ìŠ¬ë¼ì´ë“œ ì´ë™ ì²˜ë¦¬
+    UpdateSlideMovement ( );
 
-    // ÀüÈ¯Àº TransitionTable¿¡¼­ ÀÚµ¿ Ã³¸®µÊ
+    // ìŠ¬ë¼ì´ë“œ ì™„ë£Œ ì²´í¬ (ì†ë„ ì •ë¦¬ë§Œ)
+    CheckSlideCompletion ( );
 }
 
-void CPlayerStateMachine::ExecuteInhaleStates()
+void CPlayerStateMachine::ExecuteInhaleState ( )
 {
-    // ÈíÀÔ »óÅÂ´Â InhaleSystem¿¡¼­ Ã³¸®
-    // »óÅÂ ÀüÈ¯Àº TransitionTable¿¡¼­ Ã³¸®
+    // ë¹¨ì•„ë“¤ì´ê¸° ìƒíƒœ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fInhaleTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+
+    // ë¹¨ì•„ë“¤ì´ê¸° ìƒíƒœ ì‹œê°„ ì´ˆê³¼ì‹œ ì¢…ë£Œ
+    if ( m_fInhaleTimer >= m_fInhaleDuration )
+    {
+        // ë¹¨ì•„ë“¤ì´ê¸° ì‹¤íŒ¨ í›„ ê¸°ë³¸ ìƒíƒœë¡œ ë³µê·€
+        ChangeStateInternal ( PLAYER_STATE::IDLE );
+    }
 }
 
-void CPlayerStateMachine::ExecuteSpecialStates()
+void CPlayerStateMachine::ExecuteInhaleSuccessState ( )
+{
+    // ë¹¨ì•„ë“¤ì´ê¸° ì„±ê³µ ìƒíƒœ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fInhaleSuccessTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+
+    // ë¹¨ì•„ë“¤ì´ê¸° ì„±ê³µ ìƒíƒœ ì‹œê°„ ì´ˆê³¼ì‹œ ì¢…ë£Œ
+    if ( m_fInhaleSuccessTimer >= m_fInhaleSuccessDuration )
+    {
+        // ì…ê°€ë“í•œ ìƒíƒœë¡œ ì „ì´ë¨
+        ChangeStateInternal ( PLAYER_STATE::MOUTHFUL_IDLE );
+    }
+}
+
+void CPlayerStateMachine::ExecuteExhaleState ( )
+{
+    // ë‚´ë±‰ê¸° ìƒíƒœ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fExhaleTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+
+    // ë‚´ë±‰ê¸° ìƒíƒœ ì‹œê°„ ì´ˆê³¼ì‹œ ì¢…ë£Œ
+    if ( m_fExhaleTimer >= m_fExhaleDuration )
+    {
+        // ë¹¨ì•„ë“¤ì´ê¸° ì¹´ìš´íŠ¸ ì´ˆê¸°í™”
+        m_eInhaleCount = INHALE_COUNT::NONE;
+        m_eCopyAbility = COPY_ABILITY::NONE;
+
+        // ê¸°ë³¸ ìƒíƒœë¡œ ë³µê·€
+        ChangeStateInternal ( PLAYER_STATE::IDLE );
+    }
+}
+
+void CPlayerStateMachine::ExecuteSwallowState ( )
+{
+    // ì‚¼í‚¤ê¸° ìƒíƒœ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fSwallowTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+
+    // ì‚¼í‚¤ê¸° ìƒíƒœ ì‹œê°„ ì´ˆê³¼ì‹œ ì¢…ë£Œ
+    if ( m_fSwallowTimer >= m_fSwallowDuration )
+    {
+        // ì¹´í”¼ ëŠ¥ë ¥ íšë“ (í˜„ì¬ COPY_ABILITY ìœ ì§€)
+        // ë¹¨ì•„ë“¤ì´ê¸° ì¹´ìš´íŠ¸ ì´ˆê¸°í™”
+        m_eInhaleCount = INHALE_COUNT::NONE;
+
+        // ê¸°ë³¸ ìƒíƒœë¡œ ë³µê·€
+        ChangeStateInternal ( PLAYER_STATE::IDLE );
+    }
+}
+
+void CPlayerStateMachine::ExecuteBounceState ( )
 {
 }
 
-void CPlayerStateMachine::ExecuteBounceState()
+void CPlayerStateMachine::ExecuteHoverState ( )
 {
-}
-
-void CPlayerStateMachine::ExecuteHoverState()
-{
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody || !m_pInputManager)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody || !m_pInputManager )
         return;
 
-    // ¼­ºê½ºÅ×ÀÌÆ® Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ®
-    m_fHoverSubStateTimer += CTimeMgr::GetInst()->GetfDT();
+    // ì„œë¸ŒìŠ¤í…Œì´íŠ¸ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fHoverSubStateTimer += CTimeMgr::GetInst ( )->GetfDT ( );
 
-    // ÇöÀç ¼­ºê½ºÅ×ÀÌÆ®¿¡ µû¸¥ Ã³¸®
-    switch (m_eHoverSubState)
+    // í˜„ì¬ ì„œë¸ŒìŠ¤í…Œì´íŠ¸ì— ë”°ë¥¸ ì²˜ë¦¬
+    switch ( m_eHoverSubState )
     {
     case HOVER_SUBSTATE::ENTER:
-        UpdateHoverEnter();
+        UpdateHoverEnter ( );
         break;
     case HOVER_SUBSTATE::FLY_UP:
-        UpdateHoverFlyUp();
+        UpdateHoverFlyUp ( );
         break;
     case HOVER_SUBSTATE::FLOAT:
-        UpdateHoverFloat();
+        UpdateHoverFloat ( );
         break;
     case HOVER_SUBSTATE::GROUNDED:
-        UpdateHoverGrounded();
+        UpdateHoverGrounded ( );
         break;
     }
 
-    // °øÅë Ã³¸®
-    UpdateHoverMovement();
-    UpdateHoverPhysics();
+    // ê³µí†µ ì²˜ë¦¬
+    UpdateHoverMovement ( );
+    UpdateHoverPhysics ( );
 }
 
-void CPlayerStateMachine::ExecuteHoverExhaleState()
+void CPlayerStateMachine::ExecuteHoverExhaleState ( )
 {
+    // ì •í™•íˆ í•œ ë²ˆë§Œ íˆ¬ì‚¬ì²´ ìƒì„± (ìƒíƒœ ì§„ì… ì²« í”„ë ˆì„ì—ë§Œ)
+    static bool bProjectileFired = false;
+    static float lastTimer = -1.0f;
+
+    // íƒ€ì´ë¨¸ê°€ ë¦¬ì…‹ë˜ì—ˆì„ ë•Œ (ìƒˆë¡œìš´ HOVER_EXHALE ìƒíƒœ ì§„ì…)
+    if ( m_fHoverSubStateTimer < lastTimer )
+    {
+        bProjectileFired = false;
+    }
+    lastTimer = m_fHoverSubStateTimer;
+
+    // ì•„ì§ ë°œì‚¬í•˜ì§€ ì•Šì•˜ê³ , íƒ€ì´ë¨¸ê°€ ë§¤ìš° ì‘ì„ ë•Œë§Œ ë°œì‚¬
+    if ( !bProjectileFired && m_fHoverSubStateTimer <= 0.02f )
+    {
+        // í”Œë ˆì´ì–´ ìœ„ì¹˜ì™€ ë°©í–¥ ê°€ì ¸ì˜¤ê¸°
+        Vec2 vPlayerPos = m_pOwner->GetPos ( );
+        Vec2 vDirection;
+
+        // í”Œë ˆì´ì–´ê°€ ë³´ê³  ìˆëŠ” ë°©í–¥ í™•ì¸ (CPlayerMovementì˜ IsFacingRight ì‚¬ìš©)
+        CPlayerMovement* pMovement = m_pOwner->GetMovement ( );
+        if ( pMovement && !pMovement->IsFacingRight ( ) )
+        {
+            vDirection = Vec2 ( -1.f , 0.f );  // ì™¼ìª½
+            vPlayerPos.x -= 32.f;  // íˆ¬ì‚¬ì²´ ì‹œì‘ ìœ„ì¹˜ ì¡°ì •
+        }
+        else
+        {
+            vDirection = Vec2 ( 1.f , 0.f );   // ì˜¤ë¥¸ìª½  
+            vPlayerPos.x += 32.f;  // íˆ¬ì‚¬ì²´ ì‹œì‘ ìœ„ì¹˜ ì¡°ì •
+        }
+
+        // ê³µê¸° íˆ¬ì‚¬ì²´ ìƒì„±
+        CProjectile* pAirPuff = CProjectileFactory::CreateAirPuff (
+            vPlayerPos ,
+            vDirection ,
+            GROUP_TYPE::PLAYER
+        );
+
+        if ( pAirPuff )
+        {
+            // ì”¬ì— ì¶”ê°€
+            CREATE_OBJECT ( pAirPuff , GROUP_TYPE::PROJ_PLAYER );
+            bProjectileFired = true;  // ë°œì‚¬í–ˆìŒì„ í‘œì‹œ
+        }
+    }
 }
 
-void CPlayerStateMachine::ExecuteDamageState()
+void CPlayerStateMachine::ExecuteDamageState ( )
 {
-    // ÇÇ°İ Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ®
-    m_fDamageTimer += CTimeMgr::GetInst()->GetfDT();
+    // í”¼ê²© íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fDamageTimer += CTimeMgr::GetInst ( )->GetfDT ( );
 
-    // ÇÇ°İ ½Ã°£ÀÌ ³¡³ª¸é ¿Ï·á ÇÃ·¡±× ¼³Á¤ (ÀüÈ¯Àº Å×ÀÌºí¿¡¼­)
-    if (m_fDamageTimer >= m_fDamageDuration)
+    // í”¼ê²© ì‹œê°„ì´ ëë‚˜ë©´ ì™„ë£Œ í”Œë˜ê·¸ ì„¤ì • (ì „í™˜ì€ í…Œì´ë¸”ì—ì„œ)
+    if ( m_fDamageTimer >= m_fDamageDuration )
     {
         m_bDamageCompleted = true;
     }
 }
 
-void CPlayerStateMachine::OnStateEnter(PLAYER_STATE _eState)
+void CPlayerStateMachine::ExecuteSlideKickRecoilState ( )
 {
-    switch (_eState)
-    {
-    case PLAYER_STATE::JUMP:
-    case PLAYER_STATE::MOUTHFUL_JUMP:
-        OnEnterJumpState();
-        break;
-    case PLAYER_STATE::SLIDE:
-        OnEnterSlideState();
-        break;
-    case PLAYER_STATE::INHALE_READY:
-        OnEnterInhaleState();
-        break;
-    case PLAYER_STATE::BOUNCE:
-        OnEnterBounceState();
-        break;
-    case PLAYER_STATE::FALL:
-        OnEnterFallState();
-        break;
-    case PLAYER_STATE::HOVER:
-        OnEnterHoverState();
-        break;
-    case PLAYER_STATE::HOVER_EXHALE:
-        OnEnterHoverExhaleState();
-        break;
-    case PLAYER_STATE::DAMAGE:
-        OnEnterDamageState();
-        break;
-        // ÇÊ¿äÇÑ »óÅÂµé¸¸ Ãß°¡
-    }
-}
-
-void CPlayerStateMachine::OnEnterJumpState()
-{
-    if (m_pOwner && m_pOwner->GetMovement())
-    {
-        m_pOwner->GetMovement()->Jump();
-    }
-}
-
-void CPlayerStateMachine::OnEnterSlideState()
-{
-    InitiateSlide();
-}
-
-void CPlayerStateMachine::OnEnterInhaleState()
-{
-    if (m_pOwner && m_pOwner->GetInhaleSystem())
-    {
-        m_pOwner->GetInhaleSystem()->StartInhale();
-    }
-}
-
-void CPlayerStateMachine::OnEnterBounceState()
-{
-    PerformBounce();
-}
-
-void CPlayerStateMachine::OnEnterFallState()
-{
-    m_fFallTime = 0.f;
-}
-
-void CPlayerStateMachine::OnEnterHoverState()
-{
-    // HOVER »óÅÂ ÁøÀÔ ½Ã ÃÊ±âÈ­
-    m_eHoverSubState = HOVER_SUBSTATE::ENTER;
-    ResetHoverSubStateTimer();
-
-    // Áß·Â ºñÈ°¼ºÈ­
-    DisableGravityForHover();
-}
-
-void CPlayerStateMachine::OnEnterHoverExhaleState()
-{
-    // Å¸ÀÌ¸Ó ÃÊ±âÈ­ (¹é¾÷ ÀüÈ¯¿ë)
-    m_fHoverSubStateTimer = 0.0f;
-
-    // HOVER Á¾·á ½Ã Áß·Â ÀçÈ°¼ºÈ­
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (pRigidBody)
-    {
-        pRigidBody->SetUseGravity(true);
-    }
-}
-
-void CPlayerStateMachine::OnExitHoverState()
-{
-    // HOVER ¿ÏÀü Á¾·á ½Ã Á¤¸®
-    RestoreGravityFromHover();
-    m_eHoverSubState = HOVER_SUBSTATE::END;
-}
-
-void CPlayerStateMachine::OnEnterDamageState()
-{
-    m_fDamageTimer = 0.0f;          // Å¸ÀÌ¸Ó ÃÊ±âÈ­
-    m_bDamageCompleted = false;     // ¿Ï·á ÇÃ·¡±× ÃÊ±âÈ­
-
-    // ÇÇ°İ ÇÃ·¡±× Á¤¸®
-    if (m_pOwner)
-    {
-        m_pOwner->ClearDamageRequest();
-    }
-}
-
-// === ÀüÈ¯ Å×ÀÌºí ÃÊ±âÈ­ ===
-void CPlayerStateMachine::InitializeTransitionTable()
-{
-    if (!m_pTransitionTable)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody )
         return;
 
-    // ±âº» ÀüÈ¯µé Ãß°¡
-    AddBasicMovementTransitions();
-    AddJumpAndFallTransitions();
-    AddCrouchAndSlideTransitions();
-    AddInhaleTransitions();
-    AddSpecialTransitions();
-    AddHoverTransitions();
-    AddDamageTransitions();
+    // ë°˜ë™ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
+    m_fRecoilTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+
+    // ë°˜ë™ ë¬¼ë¦¬ ì²˜ë¦¬ (ê°ì† ì ìš©)
+    float decayFactor = 1.0f - ( m_fRecoilTimer / m_fRecoilDuration );
+    if ( decayFactor < 0.0f ) decayFactor = 0.0f;
+
+    Vec2 currentVelocity = m_vRecoilVelocity * decayFactor;
+    pRigidBody->SetVelocity ( currentVelocity );
 }
 
-void CPlayerStateMachine::AddBasicMovementTransitions()
+void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
+{
+    switch ( _eState )
+    {
+    case PLAYER_STATE::JUMP:
+        OnEnterJumpState ( );
+        break;
+    case PLAYER_STATE::SLIDE:
+        OnEnterSlideState ( );
+        break;
+    case PLAYER_STATE::SLIDE_KICK_RECOIL:
+        OnEnterSlideKickRecoilState ( );
+        break;
+    case PLAYER_STATE::INHALE:
+        OnEnterInhaleState ( );
+        break;
+    case PLAYER_STATE::INHALE_SUCCESS:
+        OnEnterInhaleSuccessState ( );
+        break;
+    case PLAYER_STATE::EXHALE:
+        OnEnterExhaleState ( );
+        break;
+    case PLAYER_STATE::SWALLOW:
+        OnEnterSwallowState ( );
+        break;
+    case PLAYER_STATE::MOUTHFUL_IDLE:
+    case PLAYER_STATE::MOUTHFUL_WALK:
+    case PLAYER_STATE::MOUTHFUL_RUN:
+    case PLAYER_STATE::MOUTHFUL_JUMP:
+    case PLAYER_STATE::MOUTHFUL_FALL:
+    case PLAYER_STATE::MOUTHFUL_DAMAGE:
+        OnEnterMouthfulState ( );
+        break;
+    case PLAYER_STATE::BOUNCE:
+        OnEnterBounceState ( );
+        break;
+    case PLAYER_STATE::FALL0:
+    case PLAYER_STATE::FALL1:
+        OnEnterFallState ( );
+        break;
+    case PLAYER_STATE::HOVER:
+        OnEnterHoverState ( );
+        break;
+    case PLAYER_STATE::HOVER_EXHALE:
+        OnEnterHoverExhaleState ( );
+        break;
+    case PLAYER_STATE::DAMAGE:
+        OnEnterDamageState ( );
+        break;
+    }
+}
+
+void CPlayerStateMachine::OnEnterJumpState ( )
+{
+    if ( m_pOwner && m_pOwner->GetMovement ( ) )
+    {
+        m_pOwner->GetMovement ( )->Jump ( );
+    }
+}
+
+void CPlayerStateMachine::OnEnterSlideState ( )
+{
+    InitiateSlide ( );
+}
+
+void CPlayerStateMachine::OnEnterSlideKickRecoilState ( )
+{
+    m_fRecoilTimer = 0.0f;
+
+    // ë°˜ë™ ìš”ì²­ í”Œë˜ê·¸ í´ë¦¬ì–´
+    if ( m_pOwner )
+    {
+        m_pOwner->ClearSlideKickRecoilRequest ( );
+    }
+
+    // ë°˜ë™ ì†ë„ ì„¤ì • (ë°˜ëŒ€ë°©í–¥ ëŒ€ê° ìœ„ë¡œ)
+    float recoilX = -m_iSlideDirection * 200.0f;
+    float recoilY = -200.0f;
+
+    m_vRecoilVelocity = Vec2 ( recoilX , recoilY );
+
+    if ( m_pOwner && m_pOwner->GetRigidBody ( ) )
+    {
+        m_pOwner->GetRigidBody ( )->SetVelocity ( m_vRecoilVelocity );
+        m_pOwner->GetRigidBody ( )->SetUseGravity ( true );
+    }
+}
+
+void CPlayerStateMachine::OnEnterInhaleState ( )
+{
+    // ë¹¨ì•„ë“¤ì´ê¸° íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+    m_fInhaleTimer = 0.0f;
+
+    // ë¹¨ì•„ë“¤ì´ê¸° ì‹œìŠ¤í…œ ì‹œì‘
+    if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
+    {
+        m_pOwner->GetInhaleSystem ( )->StartInhale ( );
+    }
+}
+
+void CPlayerStateMachine::OnEnterInhaleSuccessState ( )
+{
+    // ë¹¨ì•„ë“¤ì´ê¸° ì„±ê³µ íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+    m_fInhaleSuccessTimer = 0.0f;
+}
+
+void CPlayerStateMachine::OnEnterExhaleState ( )
+{
+    // ë‚´ë±‰ê¸° íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+    m_fExhaleTimer = 0.0f;
+
+    // íˆ¬ì‚¬ì²´ ìƒì„± (ë¹¨ì•„ë“¤ì¸ ê²ƒì´ ìˆì„ ê²½ìš°ì—ë§Œ)
+    if ( m_pOwner && m_eInhaleCount != INHALE_COUNT::NONE )
+    {
+        // TODO: CProjectileFactoryë¥¼ í†µí•œ íˆ¬ì‚¬ì²´ ìƒì„±
+        // KIRBY_STAR ë˜ëŠ” KIRBY_STAR_ENHANCED íƒ€ì… íˆ¬ì‚¬ì²´ ìƒì„±
+    }
+}
+
+void CPlayerStateMachine::OnEnterSwallowState ( )
+{
+    // ì‚¼í‚¤ê¸° íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+    m_fSwallowTimer = 0.0f;
+}
+
+void CPlayerStateMachine::OnEnterMouthfulState ( )
+{
+    // ì…ê°€ë“í•œ ìƒíƒœ ì§„ì… ì²˜ë¦¬
+}
+
+void CPlayerStateMachine::OnEnterBounceState ( )
+{
+    PerformBounce ( );
+}
+
+void CPlayerStateMachine::OnEnterFallState ( )
+{
+    // FALL0/FALL1 ì§„ì… ì‹œ: ë‚™í•˜ ì‹œì‘ ë†’ì´ ê¸°ë¡ + íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+    if ( m_pOwner )
+    {
+        m_fFallStartY = m_pOwner->GetPos ( ).y;
+        m_fFallTime = 0.f;
+    }
+}
+
+void CPlayerStateMachine::OnEnterHoverState ( )
+{
+    // HOVER ìƒíƒœ ì§„ì… ì‹œ ì´ˆê¸°í™”
+    m_eHoverSubState = HOVER_SUBSTATE::ENTER;
+    ResetHoverSubStateTimer ( );
+
+    // ì¤‘ë ¥ ë¹„í™œì„±í™”
+    DisableGravityForHover ( );
+}
+
+void CPlayerStateMachine::OnEnterHoverExhaleState ( )
+{
+    // íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+    m_fHoverSubStateTimer = 0.0f;
+
+    // HOVER ì¢…ë£Œ ì‹œ ì¤‘ë ¥ ì¬í™œì„±í™”
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( pRigidBody )
+    {
+        pRigidBody->SetUseGravity ( true );
+    }
+}
+
+void CPlayerStateMachine::OnEnterDamageState ( )
+{
+    m_fDamageTimer = 0.0f;
+    m_bDamageCompleted = false;
+
+    // í”¼ê²© í”Œë˜ê·¸ ì •ë¦¬
+    if ( m_pOwner )
+    {
+        m_pOwner->ClearDamageRequest ( );
+    }
+}
+
+void CPlayerStateMachine::InitializeTransitionTable ( )
+{
+    if ( !m_pTransitionTable )
+        return;
+
+    // ê¸°ë³¸ ì „í™˜ë“¤ ì¶”ê°€
+    AddBasicMovementTransitions ( );
+    AddJumpAndFallTransitions ( );
+    AddCrouchAndSlideTransitions ( );
+    AddInhaleTransitions ( );
+    AddSpecialTransitions ( );
+    AddHoverTransitions ( );
+    AddDamageTransitions ( );
+}
+
+void CPlayerStateMachine::AddBasicMovementTransitions ( )
 {
     using INPUT = CPlayerInputManager::INPUT_TYPE;
 
-    // IDLE <-> WALK ÀüÈ¯
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::MOVE_LEFT | (uint32_t)INPUT::MOVE_RIGHT,
-        PLAYER_STATE::WALK,
-        [](CPlayer* p) {
-            return p->GetRigidBody() && p->GetRigidBody()->IsGround();
-        },
+    // IDLE <-> WALK ì „í™˜
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::IDLE ,
+        ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT ,
+        PLAYER_STATE::WALK ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+        } ,
         100
     );
 
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::WALK,
-        0,  // ¾î¶² ÀÔ·Âµµ ÇÊ¿äÇÏÁö ¾ÊÀ½
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) {
-            if (!p->GetMovement()) return false;
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::WALK ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            if ( !p->GetMovement ( ) ) return false;
 
-            // ÀÔ·ÂÀÌ ¾ø°í, ½ÇÁ¦·Î ¿òÁ÷ÀÌÁö ¾Ê°í, °¨¼Óµµ ¿Ï·áµÇ¾úÀ» ¶§¸¸ IDLE·Î ÀüÈ¯
-            CPlayerInputManager* pInputMgr = p->GetStateMachine()->GetInputManager();
-            if (!pInputMgr) return false;
+            CPlayerInputManager* pInputMgr = p->GetStateMachine ( )->GetInputManager ( );
+            if ( !pInputMgr ) return false;
 
-            bool hasLeftInput = pInputMgr->IsMovingLeft();
-            bool hasRightInput = pInputMgr->IsMovingRight();
-            bool isMoving = p->GetMovement()->IsActuallyMoving();
-            bool isDecelerating = p->GetMovement()->IsDecelerating();
+            bool hasLeftInput = pInputMgr->IsMovingLeft ( );
+            bool hasRightInput = pInputMgr->IsMovingRight ( );
+            bool isMoving = p->GetMovement ( )->IsActuallyMoving ( );
+            bool isDecelerating = p->GetMovement ( )->IsDecelerating ( );
 
-            // ÇÙ½É: ÀÔ·Âµµ ¾ø°í, ¿òÁ÷ÀÌÁöµµ ¾Ê°í, °¨¼Óµµ ³¡³µÀ» ¶§¸¸ IDLE
             return !hasLeftInput && !hasRightInput && !isMoving && !isDecelerating;
-        },
-        50,
-        // ±İÁöµÈ ÀÔ·Â: ¹æÇâÅ°°¡ ´­·ÁÀÖÀ¸¸é ÀüÈ¯ÇÏÁö ¾ÊÀ½
-        (uint32_t)INPUT::MOVE_LEFT | (uint32_t)INPUT::MOVE_RIGHT
+        } ,
+        50 ,
+        ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT
     );
 
-    // ´õºíÅÇ RUN ÀüÈ¯
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::WALK,
-        (uint32_t)INPUT::DOUBLE_TAP_LEFT | (uint32_t)INPUT::DOUBLE_TAP_RIGHT,
-        PLAYER_STATE::RUN,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
+    // ë”ë¸”íƒ­ RUN ì „í™˜
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::WALK ,
+        ( uint32_t ) INPUT::DOUBLE_TAP_LEFT | ( uint32_t ) INPUT::DOUBLE_TAP_RIGHT ,
+        PLAYER_STATE::RUN ,
+        [ ] ( CPlayer* p ) { return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ); } ,
         150
     );
 
-    // RUN -> WALK (´õºíÅÇ ¸ğµå ÇØÁ¦)
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::RUN,
-        (uint32_t)INPUT::MOVE_LEFT | (uint32_t)INPUT::MOVE_RIGHT,
-        PLAYER_STATE::WALK,
-        [](CPlayer* p) {
-            if (!p->GetMovement()) return false;
-            return !p->GetMovement()->IsRunMode();
-        },
+    // RUN -> WALK
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::RUN ,
+        ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT ,
+        PLAYER_STATE::WALK ,
+        [ ] ( CPlayer* p ) {
+            if ( !p->GetMovement ( ) ) return false;
+            return !p->GetMovement ( )->IsRunMode ( );
+        } ,
         80
     );
 
-    // RUN -> IDLE (ÀÌµ¿ ÀÔ·Â ¾øÀ½)
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::RUN,
-        0,
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) {
-            if (!p->GetMovement()) return false;
-            // ½ÇÁ¦·Î ¿òÁ÷ÀÌÁö ¾ÊÀ» ¶§
-            return !p->GetMovement()->IsActuallyMoving() &&
-                !p->GetMovement()->IsDecelerating();
-        },
+    // RUN -> IDLE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::RUN ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            if ( !p->GetMovement ( ) ) return false;
+            return !p->GetMovement ( )->IsActuallyMoving ( ) &&
+                !p->GetMovement ( )->IsDecelerating ( );
+        } ,
         60
     );
 }
 
-void CPlayerStateMachine::AddJumpAndFallTransitions()
+void CPlayerStateMachine::AddJumpAndFallTransitions ( )
 {
     using INPUT = CPlayerInputManager::INPUT_TYPE;
 
-    // Á¡ÇÁ ½ÃÀÛ
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::JUMP,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        200
-    );
+    // ì í”„ ì‹œì‘
+    std::vector<PLAYER_STATE> jumpableStates = {
+        PLAYER_STATE::IDLE, PLAYER_STATE::WALK, PLAYER_STATE::RUN
+    };
 
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::WALK,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::JUMP,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        200
-    );
+    for ( PLAYER_STATE state : jumpableStates )
+    {
+        m_pTransitionTable->AddTransition (
+            state ,
+            ( uint32_t ) INPUT::JUMP_TAP ,
+            PLAYER_STATE::JUMP ,
+            [ ] ( CPlayer* p ) { return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ); } ,
+            200
+        );
+    }
 
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::RUN,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::JUMP,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        200
-    );
-
-    // Á¡ÇÁ -> ³«ÇÏ
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::JUMP,
-        0,
-        PLAYER_STATE::FALL,
-        [this](CPlayer* p) {
-            if (!p->GetRigidBody()) return false;
-            // Á¡ÇÁ ÈÄ ÃæºĞÇÑ ½Ã°£ÀÌ Áö³µ°í ÇÏ°­ ÁßÀÏ ¶§¸¸
-            return p->GetRigidBody()->GetVelocity().y > 50.f;
-        },
+    // ì í”„ -> FALL0
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::JUMP ,
+        0 ,
+        PLAYER_STATE::FALL0 ,
+        [ this ] ( CPlayer* p ) {
+            if ( !p->GetRigidBody ( ) ) return false;
+            return p->GetRigidBody ( )->GetVelocity ( ).y > 50.f;
+        } ,
         300
     );
 
-    // ³«ÇÏ -> ÂøÁö
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::FALL,
-        0,
-        PLAYER_STATE::IDLE,
-        [this](CPlayer* p) {
-            if (!p->GetRigidBody()) return false;
-            // ¶¥¿¡ ´ê¾Ò°í ÀÌÀü ÇÁ·¹ÀÓ¿¡´Â °øÁß¿¡ ÀÖ¾úÀ» ¶§¸¸
-            return p->GetRigidBody()->IsGround() && !m_bWasGrounded;
-        },
-        300
-    );
-
-    // === FALL -> FALL2 ÀüÈ¯ (½Ã°£ ±â¹İ) ===
-    m_pTransitionTable->AddTransition(PLAYER_STATE::FALL, 0, PLAYER_STATE::FALL2,
-        [this](CPlayer* p) {
-            // ³«ÇÏ ½Ã°£ÀÌ ÀÓ°è°ª¿¡ µµ´ŞÇßÀ» ¶§
-            return m_fFallTime >= m_fFallToBounceThreshold;
-        },
-        320);  // ÀÏ¹İ FALL ÀüÈ¯º¸´Ù ³ôÀº ¿ì¼±¼øÀ§
-
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::FALL2,
-        0,
-        PLAYER_STATE::BOUNCE,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
+    // FALL0 -> FALL1 (0.3ì´ˆ í›„)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::FALL0 ,
+        0 ,
+        PLAYER_STATE::FALL1 ,
+        [ this ] ( CPlayer* p ) {
+            return m_fFallTime >= m_fFall0Duration;
+        } ,
         350
     );
 
-    // Áö»ó -> ³«ÇÏ
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::CROUCH,
-        0,
-        PLAYER_STATE::FALL,
-        [](CPlayer* p) { return p->GetRigidBody() && !p->GetRigidBody()->IsGround(); },
-        400
-    );
-
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::IDLE,
-        0,
-        PLAYER_STATE::FALL,
-        [](CPlayer* p) { return p->GetRigidBody() && !p->GetRigidBody()->IsGround(); },
-        400
-    );
-
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::WALK,
-        0,
-        PLAYER_STATE::FALL,
-        [](CPlayer* p) { return p->GetRigidBody() && !p->GetRigidBody()->IsGround(); },
-        400
-    );
-
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::RUN,
-        0,
-        PLAYER_STATE::FALL,
-        [](CPlayer* p) { return p->GetRigidBody() && !p->GetRigidBody()->IsGround(); },
-        400
-    );
-
-    // Ground »óÅÂ ºÒÀÏÄ¡ °¨Áö ÀüÈ¯
-    std::vector<PLAYER_STATE> groundStates = {
-        PLAYER_STATE::IDLE, PLAYER_STATE::WALK, PLAYER_STATE::RUN,
-        PLAYER_STATE::CROUCH
-    };
-
-    for (PLAYER_STATE state : groundStates)
+    // FALL0/FALL1 -> ì°©ì§€
+    std::vector<PLAYER_STATE> fallStates = { PLAYER_STATE::FALL0, PLAYER_STATE::FALL1 };
+    for ( PLAYER_STATE state : fallStates )
     {
-        m_pTransitionTable->AddTransition(state, 0, PLAYER_STATE::FALL,
-            [](CPlayer* p) {
-                CRigidBody* pRB = p->GetRigidBody();
-                return pRB && !pRB->IsGround();
-            },
-            500);  // ³ôÀº ¿ì¼±¼øÀ§
+        m_pTransitionTable->AddTransition (
+            state ,
+            0 ,
+            PLAYER_STATE::IDLE ,
+            [ this ] ( CPlayer* p ) {
+                if ( !p->GetRigidBody ( ) ) return false;
+                return p->GetRigidBody ( )->IsGround ( ) && !m_bWasGrounded;
+            } ,
+            300
+        );
     }
-}
 
-void CPlayerStateMachine::AddCrouchAndSlideTransitions()
-{
-    using INPUT = CPlayerInputManager::INPUT_TYPE;
-
-    // Å©¶ó¿ìÄ¡ ÁøÀÔ
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::MOVE_DOWN,
-        PLAYER_STATE::CROUCH,
-        [](CPlayer* p) {
-            return p->GetRigidBody() && p->GetRigidBody()->IsGround() &&
-                !p->HasMouthful();
-        },
-        150
-    );
-
-    // Å©¶ó¿ìÄ¡ ÇØÁ¦
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::CROUCH,
-        0,  // DOWN Å°°¡ ¾øÀ» ¶§
-        PLAYER_STATE::IDLE,
-        [this](CPlayer* p) {
-            // InputManager¿¡¼­ Á÷Á¢ Ã¼Å©
-            if (!m_pInputManager) return false;
-            return !m_pInputManager->IsMovingDown();
-        },
-        100
-    );
-
-    // ½½¶óÀÌµå ½ÃÀÛ
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::CROUCH,
-        (uint32_t)INPUT::JUMP_TAP | (uint32_t)INPUT::ACTION_TAP,
-        PLAYER_STATE::SLIDE,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        250
-    );
-
-    // ½½¶óÀÌµå -> ³«ÇÏ (°øÁßÀ¸·Î ¶³¾îÁü)
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::SLIDE,
-        0,
-        PLAYER_STATE::FALL,
-        [](CPlayer* p) { return p->GetRigidBody() && !p->GetRigidBody()->IsGround(); },
-        400
-    );
-
-    // === ½½¶óÀÌµå ¿Ï·á ÀüÈ¯µé ===
-
-    // SLIDE -> CROUCH (DOWN Å° À¯Áö ÁßÀÌ°í ½½¶óÀÌµå ¿Ï·á)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::SLIDE, 0, PLAYER_STATE::CROUCH,
-        [this](CPlayer* p) {
-            if (!IsSlideCompleted()) return false;
-            return m_pInputManager && m_pInputManager->IsMovingDown();
-        },
-        280);
-
-    // SLIDE -> IDLE (½½¶óÀÌµå ¿Ï·á, DOWN Å° ¾øÀ½)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::SLIDE, 0, PLAYER_STATE::IDLE,
-        [this](CPlayer* p) {
-            if (!IsSlideCompleted()) return false;
-            return !m_pInputManager || !m_pInputManager->IsMovingDown();
-        },
-        270);
-
-    // SLIDE -> FALL (Áö¸é¿¡¼­ ¹ş¾î³²)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::SLIDE, 0, PLAYER_STATE::FALL,
-        [this](CPlayer* p) {
-            CRigidBody* pRB = p->GetRigidBody();
-            return pRB && !pRB->IsGround() && m_bSlideGroundCheck;
-        },
-        400);  // ³ôÀº ¿ì¼±¼øÀ§
-}
-
-void CPlayerStateMachine::AddInhaleTransitions()
-{
-    using INPUT = CPlayerInputManager::INPUT_TYPE;
-
-    // ÈíÀÔ ½ÃÀÛ
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::ACTION_TAP,
-        PLAYER_STATE::INHALE_READY,
-        [](CPlayer* p) { return !p->HasMouthful(); },
-        180
-    );
-
-    // ÈíÀÔ Á¾·á -> ³»¹ñ±â
-    m_pTransitionTable->AddTransition(
-        PLAYER_STATE::INHALE_HOLD,
-        (uint32_t)INPUT::ACTION_AWAY,
-        PLAYER_STATE::EXHALE,
-        nullptr,
-        300
-    );
-}
-
-void CPlayerStateMachine::AddSpecialTransitions()
-{
-    using INPUT = CPlayerInputManager::INPUT_TYPE;
-
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ±â¹İ ÀüÈ¯µé ===
-
-    // EXHALE -> IDLE (¾Ö´Ï¸ŞÀÌ¼Ç ¿Ï·á ½Ã)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::EXHALE, 0, PLAYER_STATE::IDLE,
-        [](CPlayer* p) {
-            CAnimator* pAnimator = p->GetAnimator();
-            if (!pAnimator) return false;
-            CAnimation* pCurAnim = pAnimator->GetCurAnim();
-            return pCurAnim && pCurAnim->IsFinish();
-        },
-        400);  // ³ôÀº ¿ì¼±¼øÀ§
-
-    // SWALLOW -> MOUTHFUL_IDLE (¾Ö´Ï¸ŞÀÌ¼Ç ¿Ï·á ½Ã)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::SWALLOW, 0, PLAYER_STATE::MOUTHFUL_IDLE,
-        [](CPlayer* p) {
-            CAnimator* pAnimator = p->GetAnimator();
-            if (!pAnimator) return false;
-            CAnimation* pCurAnim = pAnimator->GetCurAnim();
-            return pCurAnim && pCurAnim->IsFinish();
-        },
-        400);
-
-    // BOUNCE -> FALL (°øÁß¿¡¼­ »ó½Â ³¡³¯ ¶§)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::BOUNCE, 0, PLAYER_STATE::FALL,
-        [this](CPlayer* p) {
-            CRigidBody* pRB = p->GetRigidBody();
-            if (!pRB) return false;
-            Vec2 vVelocity = pRB->GetVelocity();
-            bool isGrounded = pRB->IsGround();
-
-            // °øÁß¿¡ ÀÖ°í ÇÏ°­ ½ÃÀÛÇßÀ» ¶§
-            return !isGrounded && vVelocity.y >= 0.f;
-        },
-        350);
-}
-
-void CPlayerStateMachine::AddHoverTransitions()
-{
-    using INPUT = CPlayerInputManager::INPUT_TYPE;
-
-    // === HOVER ÁøÀÔ ÀüÈ¯ ===
-
-    // JUMP -> HOVER (°øÁß¿¡¼­ ZÅ°)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::JUMP,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::HOVER,
-        [](CPlayer* p) {
-            return p->GetRigidBody() && !p->GetRigidBody()->IsGround();
-        },
-        250);
-
-    // FALL -> HOVER (³«ÇÏ Áß ZÅ°)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::FALL,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::HOVER,
-        nullptr,
-        250);
-
-    // FALL2 -> HOVER (Àå½Ã°£ ³«ÇÏ Áß ZÅ°)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::FALL2,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::HOVER,
-        nullptr,
-        250);
-
-    // HOVER -> HOVER_EXHALE (XÅ° ÀÔ·ÂÀ¸·Î ³»¹ñ±â)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::HOVER,
-        (uint32_t)INPUT::ACTION_TAP,
-        PLAYER_STATE::HOVER_EXHALE,
-        nullptr,
-        400);  // ³ôÀº ¿ì¼±¼øÀ§
-
-    // === HOVER Á¾·á ÀüÈ¯ ===
-
-    // HOVER_EXHALE -> IDLE (¸¶Áö¸· ÇÁ·¹ÀÓ Áï½Ã ÀüÈ¯)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::HOVER_EXHALE,
-        0,
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) {
-            CAnimator* pAnim = p->GetAnimator();
-            CRigidBody* pRigidBody = p->GetRigidBody();
-
-            if (!pAnim || !pRigidBody) return false;
-
-            CAnimation* pCurAnim = pAnim->GetCurAnim();
-            if (!pCurAnim) return false;
-
-            // === ÇÙ½É ¼öÁ¤: ¸¶Áö¸· ÇÁ·¹ÀÓ µµ´Ş ½Ã Áï½Ã ÀüÈ¯ ===
-            bool animFinished = pCurAnim->IsFinish();
-            bool lastFrameReached = (pCurAnim->GetCurFrame() >= pCurAnim->GetMaxFrame() - 1);
-            bool isGrounded = pRigidBody->IsGround();
-
-            // ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ³¡³µ°Å³ª ¸¶Áö¸· ÇÁ·¹ÀÓ¿¡ µµ´ŞÇßÀ¸¸é ÀüÈ¯
-            bool shouldTransition = (animFinished || lastFrameReached) && isGrounded;
-
-            return shouldTransition;
-        },
-        350);
-
-    // HOVER_EXHALE -> FALL (¸¶Áö¸· ÇÁ·¹ÀÓ Áï½Ã ÀüÈ¯)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::HOVER_EXHALE,
-        0,
-        PLAYER_STATE::FALL,
-        [](CPlayer* p) {
-            CAnimator* pAnim = p->GetAnimator();
-            CRigidBody* pRigidBody = p->GetRigidBody();
-
-            if (!pAnim || !pRigidBody) return false;
-
-            CAnimation* pCurAnim = pAnim->GetCurAnim();
-            if (!pCurAnim) return false;
-
-            // === ÇÙ½É ¼öÁ¤: ¸¶Áö¸· ÇÁ·¹ÀÓ µµ´Ş ½Ã Áï½Ã ÀüÈ¯ ===
-            bool animFinished = pCurAnim->IsFinish();
-            bool lastFrameReached = (pCurAnim->GetCurFrame() >= pCurAnim->GetMaxFrame() - 1);
-            bool isAirborne = !pRigidBody->IsGround();
-
-            // ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ³¡³µ°Å³ª ¸¶Áö¸· ÇÁ·¹ÀÓ¿¡ µµ´ŞÇßÀ¸¸é ÀüÈ¯
-            bool shouldTransition = (animFinished || lastFrameReached) && isAirborne;
-
-            return shouldTransition;
-        },
-        340);
-
-    // === ¹é¾÷ ÀüÈ¯ (½Ã°£ ±â¹İ) ===
-    // ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ Á¦´ë·Î ³¡³ªÁö ¾ÊÀ» °æ¿ì¸¦ ´ëºñÇÑ ½Ã°£ ±â¹İ ÀüÈ¯
-
-    // HOVER_EXHALE -> FALL (½Ã°£ ±â¹İ ¹é¾÷, ³·Àº ¿ì¼±¼øÀ§)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::HOVER_EXHALE,
-        0, // Æ¯Á¤ ÀÔ·Â ¾øÀ½
-        PLAYER_STATE::FALL,
-        [this](CPlayer* p) {
-            // 1ÃÊ ÀÌ»ó HOVER_EXHALE »óÅÂ¶ó¸é °­Á¦ ÀüÈ¯
-            if (m_fHoverSubStateTimer > 1.0f) {
-                return true;
-            }
-            return false;
-        },
-        100);  // ¸Å¿ì ³·Àº ¿ì¼±¼øÀ§ (¹é¾÷¿ë)
-}
-
-void CPlayerStateMachine::AddDamageTransitions()
-{
-    using INPUT = CPlayerInputManager::INPUT_TYPE;
-
-    // === ÇÇ°İ Á¶°Ç Á¤ÀÇ ===
-    auto damageCondition = [](CPlayer* p) -> bool {
-        if (!p) return false;
-
-        // °ÔÀÓ¿À¹ö »óÅÂ¸é ÇÇ°İ ºÒ°¡
-        
-        if (p->GetHealthSystem() && p->GetHealthSystem()->IsGameOver())
-            return false;
-
-        // ÇÇ°İ ¿äÃ» ÇÃ·¡±× Ã¼Å©
-        return p->IsDamageRequested();
-    };
-
-    // === ¸ğµç »óÅÂ¿¡¼­ DAMAGE·ÎÀÇ ÀüÈ¯ (±âÁ¸°ú µ¿ÀÏ) ===
-    m_pTransitionTable->AddTransition(PLAYER_STATE::IDLE, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::WALK, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::RUN, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::JUMP, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::FALL, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::FALL2, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::CROUCH, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::SLIDE, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::HOVER, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::INHALE_READY, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::INHALE_1, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::INHALE_2, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::INHALE_HOLD, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::MOUTHFUL_IDLE, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::MOUTHFUL_WALK, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::MOUTHFUL_RUN, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-    m_pTransitionTable->AddTransition(PLAYER_STATE::MOUTHFUL_JUMP, 0, PLAYER_STATE::DAMAGE, damageCondition, 2000);
-
-    // === DAMAGE »óÅÂ¿¡¼­ÀÇ ÀüÈ¯ (¿Ï·á ÇÃ·¡±× ±â¹İ) ===
-
-    // DAMAGE -> IDLE (¶¥¿¡ ÀÖ°í ½Ã°£ ¿Ï·á)
-    m_pTransitionTable->AddTransition(PLAYER_STATE::DAMAGE,
-        0,
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) -> bool {
-            if (!p || !p->GetRigidBody() || !p->GetStateMachine())
-                return false;
-
-            // ÇÇ°İ ½Ã°£ÀÌ ¿Ï·áµÇ°í ¶¥¿¡ ÀÖÀ» ¶§
-            return p->GetStateMachine()->IsDamageCompleted() &&
-                p->GetRigidBody()->IsGround();
-        },
-        1000
-    );
-
-    // DAMAGE -> FALL (°øÁß¿¡ ÀÖ°í ½Ã°£ ¿Ï·á)  
-    m_pTransitionTable->AddTransition(PLAYER_STATE::DAMAGE,
-        0,
-        PLAYER_STATE::FALL,
-        [](CPlayer* p) -> bool {
-            if (!p || !p->GetRigidBody() || !p->GetStateMachine())
-                return false;
-
-            // ÇÇ°İ ½Ã°£ÀÌ ¿Ï·áµÇ°í °øÁß¿¡ ÀÖÀ» ¶§
-            return p->GetStateMachine()->IsDamageCompleted() &&
-                !p->GetRigidBody()->IsGround();
-        },
-        1000
-    );
-
-    // === ÀÔ·Â ¹«½Ã ±ÔÄ¢µé ===
-    std::vector<uint32_t> ignoredInputs = {
-        (uint32_t)INPUT::JUMP_TAP,
-        (uint32_t)INPUT::ACTION_TAP,
-        (uint32_t)INPUT::MOVE_LEFT,
-        (uint32_t)INPUT::MOVE_RIGHT,
-        (uint32_t)INPUT::MOVE_DOWN,
-        (uint32_t)INPUT::DOUBLE_TAP_LEFT,
-        (uint32_t)INPUT::DOUBLE_TAP_RIGHT
-    };
-
-    for (uint32_t input : ignoredInputs)
+    // FALL0/FALL1 -> FALL2 (ê±°ë¦¬ ê¸°ë°˜)
+    for ( PLAYER_STATE state : fallStates )
     {
-        m_pTransitionTable->AddTransition(PLAYER_STATE::DAMAGE,
-            input,
-            PLAYER_STATE::DAMAGE,  // ÀÚ±â ÀÚ½ÅÀ¸·Î ÀüÈ¯ (ÀÔ·Â ¹«½Ã)
-            nullptr,
-            900  // IDLE/FALL ÀüÈ¯º¸´Ù´Â ³·Áö¸¸ ³ôÀº ¿ì¼±¼øÀ§
+        m_pTransitionTable->AddTransition (
+            state ,
+            0 ,
+            PLAYER_STATE::FALL2 ,
+            [ this ] ( CPlayer* p ) {
+                if ( !p ) return false;
+                float currentY = p->GetPos ( ).y;
+                float fallDistance = currentY - m_fFallStartY;
+                return fallDistance >= m_fFallDistanceThreshold;
+            } ,
+            330
+        );
+    }
+
+    // FALL2 -> BOUNCE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::FALL2 ,
+        0 ,
+        PLAYER_STATE::BOUNCE ,
+        [ ] ( CPlayer* p ) { return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ); } ,
+        350
+    );
+
+    // ì§€ìƒ -> ë‚™í•˜
+    std::vector<PLAYER_STATE> groundStates = {
+        PLAYER_STATE::IDLE, PLAYER_STATE::WALK, PLAYER_STATE::RUN, PLAYER_STATE::CROUCH
+    };
+
+    for ( PLAYER_STATE state : groundStates )
+    {
+        m_pTransitionTable->AddTransition (
+            state ,
+            0 ,
+            PLAYER_STATE::FALL1 ,
+            [ ] ( CPlayer* p ) {
+                CRigidBody* pRB = p->GetRigidBody ( );
+                return pRB && !pRB->IsGround ( );
+            } ,
+            500
         );
     }
 }
 
-// === ±âÁ¸ ½½¶óÀÌµå °ü·Ã ÇÔ¼öµé (º¯°æ ¾øÀ½) ===
-void CPlayerStateMachine::InitiateSlide()
+void CPlayerStateMachine::AddCrouchAndSlideTransitions ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!m_pOwner || !pRigidBody)
+    using INPUT = CPlayerInputManager::INPUT_TYPE;
+
+    // í¬ë¼ìš°ì¹˜ ì§„ì…
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::IDLE ,
+        ( uint32_t ) INPUT::MOVE_DOWN ,
+        PLAYER_STATE::CROUCH ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ) &&
+                !p->GetStateMachine ( )->IsMouthfulState ( );
+        } ,
+        150
+    );
+
+    // í¬ë¼ìš°ì¹˜ í•´ì œ
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::CROUCH ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ this ] ( CPlayer* p ) {
+            if ( !m_pInputManager ) return false;
+            return !m_pInputManager->IsMovingDown ( );
+        } ,
+        100
+    );
+
+    // ìŠ¬ë¼ì´ë“œ ì‹œì‘
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::CROUCH ,
+        ( uint32_t ) INPUT::JUMP_TAP | ( uint32_t ) INPUT::ACTION_TAP ,
+        PLAYER_STATE::SLIDE ,
+        [ ] ( CPlayer* p ) { return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ); } ,
+        250
+    );
+
+    // ìŠ¬ë¼ì´ë“œí‚¥ ë°˜ë™ ì „í™˜
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::SLIDE ,
+        0 ,
+        PLAYER_STATE::SLIDE_KICK_RECOIL ,
+        [ ] ( CPlayer* p ) {
+            return p && p->IsSlideKickRecoilRequested ( );
+        } ,
+        500
+    );
+
+    // ë°˜ë™ ì™„ë£Œ -> FALL1
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::SLIDE_KICK_RECOIL ,
+        0 ,
+        PLAYER_STATE::FALL1 ,
+        [ this ] ( CPlayer* p ) {
+            return m_fRecoilTimer >= m_fRecoilDuration ||
+                ( p->GetRigidBody ( ) && p->GetRigidBody ( )->GetVelocity ( ).Length ( ) < 50.0f );
+        } ,
+        400
+    );
+
+    // ìŠ¬ë¼ì´ë“œ ì™„ë£Œ ì „í™˜ë“¤
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::SLIDE ,
+        0 ,
+        PLAYER_STATE::CROUCH ,
+        [ this ] ( CPlayer* p ) {
+            if ( !IsSlideCompleted ( ) ) return false;
+            return m_pInputManager && m_pInputManager->IsMovingDown ( );
+        } ,
+        280
+    );
+
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::SLIDE ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ this ] ( CPlayer* p ) {
+            if ( !IsSlideCompleted ( ) ) return false;
+            return !m_pInputManager || !m_pInputManager->IsMovingDown ( );
+        } ,
+        270
+    );
+
+    // ìŠ¬ë¼ì´ë“œ -> ë‚™í•˜
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::SLIDE ,
+        0 ,
+        PLAYER_STATE::FALL1 ,
+        [ this ] ( CPlayer* p ) {
+            CRigidBody* pRB = p->GetRigidBody ( );
+            return pRB && !pRB->IsGround ( ) && m_bSlideGroundCheck;
+        } ,
+        400
+    );
+}
+
+void CPlayerStateMachine::AddInhaleTransitions ( )
+{
+    using INPUT = CPlayerInputManager::INPUT_TYPE;
+
+    // ë¹¨ì•„ë“¤ì´ê¸° ê°€ëŠ¥í•œ ìƒíƒœë“¤ì—ì„œ Xí‚¤ ëˆ„ë¥´ë©´ INHALEë¡œ ì „í™˜
+    std::vector<PLAYER_STATE> inhalableStates = {
+        PLAYER_STATE::IDLE, PLAYER_STATE::JUMP, 
+        PLAYER_STATE::FALL0, PLAYER_STATE::FALL1, PLAYER_STATE::FALL2,
+        PLAYER_STATE::BOUNCE
+    };
+
+    for ( PLAYER_STATE state : inhalableStates )
+    {
+        m_pTransitionTable->AddTransition (
+            state ,
+            ( uint32_t ) INPUT::ACTION_HOLD ,
+            PLAYER_STATE::INHALE ,
+            nullptr ,
+            200
+        );
+    }
+
+    // INHALE ìƒíƒœ ìœ ì§€ (Xí‚¤ ê³„ì† ëˆ„ë¥´ê³  ìˆìœ¼ë©´)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE ,
+        ( uint32_t ) INPUT::ACTION_HOLD ,
+        PLAYER_STATE::INHALE ,
+        nullptr ,
+        100
+    );
+
+    // INHALE -> INHALE_SUCCESS
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE ,
+        0 ,
+        PLAYER_STATE::INHALE_SUCCESS ,
+        [ ] ( CPlayer* p ) {
+            // TODO: ë¹¨ì•„ë“¤ì´ê¸° ì‹œìŠ¤í…œì—ì„œ ì„±ê³µ ìƒíƒœ ì²´í¬
+            // ì„ì‹œë¡œ StateMachineì˜ InhaleCountë¥¼ ì²´í¬
+            CPlayerStateMachine* pSM = p->GetStateMachine ( );
+            return pSM && pSM->GetInhaleCount ( ) != INHALE_COUNT::NONE;
+        } ,
+        300
+    );
+
+    // INHALE -> ì›ë˜ ìƒíƒœë¡œ ë³µê·€ (Xí‚¤ ë–¼ë©´)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE ,
+        ( uint32_t ) INPUT::ACTION_AWAY ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            // ë•…ì— ìˆìœ¼ë©´ IDLEë¡œ
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+        } ,
+        250
+    );
+
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE ,
+        ( uint32_t ) INPUT::ACTION_AWAY ,
+        PLAYER_STATE::FALL1 ,
+        [ ] ( CPlayer* p ) {
+            // ê³µì¤‘ì— ìˆìœ¼ë©´ FALL1ë¡œ
+            return p->GetRigidBody ( ) && !p->GetRigidBody ( )->IsGround ( );
+        } ,
+        250
+    );
+
+    // INHALE_SUCCESS -> MOUTHFUL_IDLE (ìë™ ì „í™˜)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE_SUCCESS ,
+        0 ,
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        [ this ] ( CPlayer* p ) {
+            // ì‹œê°„ ê²½ê³¼ì‹œ ìë™ ì „í™˜
+            return m_fInhaleSuccessTimer >= m_fInhaleSuccessDuration;
+        } ,
+        400
+    );
+
+    // MOUTHFUL_IDLE -> EXHALE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        ( uint32_t ) INPUT::ACTION_TAP ,
+        PLAYER_STATE::EXHALE ,
+        nullptr ,
+        300
+    );
+
+    // EXHALE -> IDLE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::EXHALE ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            return true;
+        } ,
+        400
+    );
+
+    // SWALLOW -> IDLE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::SWALLOW ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            return true;
+        } ,
+        400
+    );
+}
+
+void CPlayerStateMachine::AddSpecialTransitions ( )
+{
+    using INPUT = CPlayerInputManager::INPUT_TYPE;
+
+    // ì• ë‹ˆë©”ì´ì…˜ ê¸°ë°˜ ì „í™˜ë“¤
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::EXHALE ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            CAnimator* pAnimator = p->GetAnimator ( );
+            if ( !pAnimator ) return false;
+            CAnimation* pCurAnim = pAnimator->GetCurAnim ( );
+            return pCurAnim && pCurAnim->IsFinish ( );
+        } ,
+        400
+    );
+
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::SWALLOW ,
+        0 ,
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        [ ] ( CPlayer* p ) {
+            CAnimator* pAnimator = p->GetAnimator ( );
+            if ( !pAnimator ) return false;
+            CAnimation* pCurAnim = pAnimator->GetCurAnim ( );
+            return pCurAnim && pCurAnim->IsFinish ( );
+        } ,
+        400
+    );
+
+    // BOUNCE -> FALL
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::BOUNCE ,
+        0 ,
+        PLAYER_STATE::FALL1 ,
+        [ this ] ( CPlayer* p ) {
+            CRigidBody* pRB = p->GetRigidBody ( );
+            if ( !pRB ) return false;
+            Vec2 vVelocity = pRB->GetVelocity ( );
+            bool isGrounded = pRB->IsGround ( );
+            return !isGrounded && vVelocity.y >= 0.f;
+        } ,
+        350
+    );
+
+    // ì…ê°€ë“í•œ ìƒíƒœë“¤ ê°„ì˜ ì „í™˜
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT ,
+        PLAYER_STATE::MOUTHFUL_WALK ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+        } ,
+        100
+    );
+
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_WALK ,
+        0 ,
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        [ ] ( CPlayer* p ) {
+            CPlayerInputManager* pInputMgr = p->GetStateMachine ( )->GetInputManager ( );
+            if ( !pInputMgr ) return false;
+            return !pInputMgr->IsMovingLeft ( ) && !pInputMgr->IsMovingRight ( );
+        } ,
+        50
+    );
+
+    // MOUTHFUL_WALK -> MOUTHFUL_RUN (ë”ë¸”íƒ­ìœ¼ë¡œ ë‹¬ë¦¬ê¸°)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_WALK ,
+        ( uint32_t ) INPUT::DOUBLE_TAP_LEFT | ( uint32_t ) INPUT::DOUBLE_TAP_RIGHT ,
+        PLAYER_STATE::MOUTHFUL_RUN ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+        } ,
+        120
+    );
+
+    // MOUTHFUL_RUN -> MOUTHFUL_WALK (ë‹¬ë¦¬ê¸° í•´ì œ)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_RUN ,
+        ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT ,
+        PLAYER_STATE::MOUTHFUL_WALK ,
+        [ ] ( CPlayer* p ) {
+            if ( !p->GetMovement ( ) ) return false;
+            return !p->GetMovement ( )->IsRunMode ( );
+        } ,
+        100
+    );
+
+    // MOUTHFUL_RUN -> MOUTHFUL_IDLE (ì •ì§€)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_RUN ,
+        0 ,
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        [ ] ( CPlayer* p ) {
+            if ( !p->GetMovement ( ) ) return false;
+            return !p->GetMovement ( )->IsActuallyMoving ( ) &&
+                !p->GetMovement ( )->IsDecelerating ( );
+        } ,
+        60
+    );
+
+    // MOUTHFUL ì í”„ ì „í™˜ë“¤
+    std::vector<PLAYER_STATE> mouthfulGroundStates = {
+        PLAYER_STATE::MOUTHFUL_IDLE, PLAYER_STATE::MOUTHFUL_WALK, PLAYER_STATE::MOUTHFUL_RUN
+    };
+
+    for ( PLAYER_STATE state : mouthfulGroundStates )
+    {
+        m_pTransitionTable->AddTransition (
+            state ,
+            ( uint32_t ) INPUT::JUMP_TAP ,
+            PLAYER_STATE::MOUTHFUL_JUMP ,
+            [ ] ( CPlayer* p ) {
+                return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+            } ,
+            200
+        );
+    }
+
+    // MOUTHFUL_JUMP -> MOUTHFUL_FALL
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_JUMP ,
+        0 ,
+        PLAYER_STATE::MOUTHFUL_FALL ,
+        [ ] ( CPlayer* p ) {
+            CRigidBody* pRB = p->GetRigidBody ( );
+            return pRB && !pRB->IsGround ( ) && pRB->GetVelocity ( ).y >= 0.f;
+        } ,
+        150
+    );
+
+    // MOUTHFUL_FALL -> MOUTHFUL_IDLE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_FALL ,
+        0 ,
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+        } ,
+        180
+    );
+}
+
+void CPlayerStateMachine::AddHoverTransitions ( )
+{
+    using INPUT = CPlayerInputManager::INPUT_TYPE;
+
+    // HOVER ì§„ì… ì „í™˜
+    std::vector<PLAYER_STATE> hoverableStates = {
+        PLAYER_STATE::JUMP, PLAYER_STATE::FALL1, PLAYER_STATE::FALL2
+    };
+
+    for ( PLAYER_STATE state : hoverableStates )
+    {
+        m_pTransitionTable->AddTransition (
+            state ,
+            ( uint32_t ) INPUT::JUMP_TAP ,
+            PLAYER_STATE::HOVER ,
+            [ ] ( CPlayer* p ) {
+                return p->GetRigidBody ( ) && !p->GetRigidBody ( )->IsGround ( );
+            } ,
+            250
+        );
+    }
+
+    // HOVER -> HOVER_EXHALE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::HOVER ,
+        ( uint32_t ) INPUT::ACTION_TAP ,
+        PLAYER_STATE::HOVER_EXHALE ,
+        nullptr ,
+        400
+    );
+
+    // HOVER_EXHALE ì¢…ë£Œ ì „í™˜ë“¤
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::HOVER_EXHALE ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            CAnimator* pAnim = p->GetAnimator ( );
+            CRigidBody* pRigidBody = p->GetRigidBody ( );
+
+            if ( !pAnim || !pRigidBody ) return false;
+
+            CAnimation* pCurAnim = pAnim->GetCurAnim ( );
+            if ( !pCurAnim ) return false;
+
+            bool animFinished = pCurAnim->IsFinish ( );
+            bool lastFrameReached = ( pCurAnim->GetCurFrame ( ) >= pCurAnim->GetMaxFrame ( ) - 1 );
+            bool isGrounded = pRigidBody->IsGround ( );
+
+            return ( animFinished || lastFrameReached ) && isGrounded;
+        } ,
+        350
+    );
+
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::HOVER_EXHALE ,
+        0 ,
+        PLAYER_STATE::FALL1 ,
+        [ ] ( CPlayer* p ) {
+            CAnimator* pAnim = p->GetAnimator ( );
+            CRigidBody* pRigidBody = p->GetRigidBody ( );
+
+            if ( !pAnim || !pRigidBody ) return false;
+
+            CAnimation* pCurAnim = pAnim->GetCurAnim ( );
+            if ( !pCurAnim ) return false;
+
+            bool animFinished = pCurAnim->IsFinish ( );
+            bool lastFrameReached = ( pCurAnim->GetCurFrame ( ) >= pCurAnim->GetMaxFrame ( ) - 1 );
+            bool isAirborne = !pRigidBody->IsGround ( );
+
+            return ( animFinished || lastFrameReached ) && isAirborne;
+        } ,
+        340
+    );
+
+    // ë°±ì—… ì „í™˜ (ì‹œê°„ ê¸°ë°˜)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::HOVER_EXHALE ,
+        0 ,
+        PLAYER_STATE::FALL1 ,
+        [ this ] ( CPlayer* p ) {
+            return m_fHoverSubStateTimer > 1.0f;
+        } ,
+        100
+    );
+}
+
+void CPlayerStateMachine::AddDamageTransitions ( )
+{
+    using INPUT = CPlayerInputManager::INPUT_TYPE;
+
+    // í”¼ê²© ì¡°ê±´ ì •ì˜
+    auto damageCondition = [ ] ( CPlayer* p ) -> bool {
+        if ( !p ) return false;
+        if ( p->GetHealthSystem ( ) && p->GetHealthSystem ( )->IsGameOver ( ) )
+            return false;
+        return p->IsDamageRequested ( );
+        };
+
+    // ëª¨ë“  ìƒíƒœì—ì„œ DAMAGEë¡œì˜ ì „í™˜
+    std::vector<PLAYER_STATE> allStates = {
+        PLAYER_STATE::IDLE, PLAYER_STATE::WALK, PLAYER_STATE::RUN,
+        PLAYER_STATE::JUMP, PLAYER_STATE::FALL1, PLAYER_STATE::FALL2,
+        PLAYER_STATE::CROUCH, PLAYER_STATE::SLIDE, PLAYER_STATE::HOVER,
+        PLAYER_STATE::INHALE, PLAYER_STATE::INHALE_SUCCESS, PLAYER_STATE::EXHALE, PLAYER_STATE::SWALLOW
+    };
+
+    for ( PLAYER_STATE state : allStates )
+    {
+        m_pTransitionTable->AddTransition (
+            state ,
+            0 ,
+            PLAYER_STATE::DAMAGE ,
+            damageCondition ,
+            2000
+        );
+    }
+
+    // MOUTHFUL ìƒíƒœë“¤ì—ì„œ MOUTHFUL_DAMAGEë¡œì˜ ì „í™˜
+    std::vector<PLAYER_STATE> mouthfulStates = {
+        PLAYER_STATE::MOUTHFUL_IDLE, PLAYER_STATE::MOUTHFUL_WALK, PLAYER_STATE::MOUTHFUL_RUN,
+        PLAYER_STATE::MOUTHFUL_JUMP, PLAYER_STATE::MOUTHFUL_FALL
+    };
+
+    for ( PLAYER_STATE state : mouthfulStates )
+    {
+        m_pTransitionTable->AddTransition (
+            state ,
+            0 ,
+            PLAYER_STATE::MOUTHFUL_DAMAGE ,
+            damageCondition ,
+            2000
+        );
+    }
+
+    // DAMAGE ìƒíƒœì—ì„œì˜ ì „í™˜ (ì™„ë£Œ í”Œë˜ê·¸ ê¸°ë°˜)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::DAMAGE ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) -> bool {
+            if ( !p || !p->GetRigidBody ( ) || !p->GetStateMachine ( ) )
+                return false;
+            return p->GetStateMachine ( )->IsDamageCompleted ( ) &&
+                p->GetRigidBody ( )->IsGround ( );
+        } ,
+        1000
+    );
+
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_DAMAGE ,
+        0 ,
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        [ ] ( CPlayer* p ) -> bool {
+            if ( !p || !p->GetRigidBody ( ) || !p->GetStateMachine ( ) )
+                return false;
+            return p->GetStateMachine ( )->IsDamageCompleted ( ) &&
+                p->GetRigidBody ( )->IsGround ( );
+        } ,
+        1000
+    );
+
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::DAMAGE ,
+        0 ,
+        PLAYER_STATE::FALL1 ,
+        [ ] ( CPlayer* p ) -> bool {
+            if ( !p || !p->GetRigidBody ( ) || !p->GetStateMachine ( ) )
+                return false;
+            return p->GetStateMachine ( )->IsDamageCompleted ( ) &&
+                !p->GetRigidBody ( )->IsGround ( );
+        } ,
+        1000
+    );
+
+    // ì…ë ¥ ë¬´ì‹œ ê·œì¹™ë“¤
+    std::vector<uint32_t> ignoredInputs = {
+        ( uint32_t ) INPUT::JUMP_TAP, ( uint32_t ) INPUT::ACTION_TAP,
+        ( uint32_t ) INPUT::MOVE_LEFT, ( uint32_t ) INPUT::MOVE_RIGHT, ( uint32_t ) INPUT::MOVE_DOWN,
+        ( uint32_t ) INPUT::DOUBLE_TAP_LEFT, ( uint32_t ) INPUT::DOUBLE_TAP_RIGHT
+    };
+
+    for ( uint32_t input : ignoredInputs )
+    {
+        m_pTransitionTable->AddTransition (
+            PLAYER_STATE::DAMAGE ,
+            input ,
+            PLAYER_STATE::DAMAGE ,
+            nullptr ,
+            900
+        );
+    }
+}
+
+void CPlayerStateMachine::InitiateSlide ( )
+{
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !m_pOwner || !pRigidBody )
         return;
 
     m_fSlideTimer = 0.0f;
-    m_vSlideStartPos = m_pOwner->GetPos();
+    m_vSlideStartPos = m_pOwner->GetPos ( );
     m_bSlideGroundCheck = true;
+    m_bSlideKickCreated = false;
 
-    CPlayerMovement* pMovement = m_pOwner->GetMovement();
-    if (pMovement)
+    CPlayerMovement* pMovement = m_pOwner->GetMovement ( );
+    if ( pMovement )
     {
-        m_iSlideDirection = pMovement->IsFacingRight() ? 1 : -1;
+        m_iSlideDirection = pMovement->IsFacingRight ( ) ? 1 : -1;
     }
     else
     {
         m_iSlideDirection = 1;
     }
 
-    pRigidBody->SetVelocityX(m_fSlideSpeed * m_iSlideDirection);
+    pRigidBody->SetVelocityX ( m_fSlideSpeed * m_iSlideDirection );
 }
 
-void CPlayerStateMachine::UpdateSlideMovement()
+void CPlayerStateMachine::UpdateSlideMovement ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody )
         return;
 
     float slideProgress = m_fSlideTimer / m_fSlideDuration;
 
-    if (slideProgress <= 1.0f)
+    if ( slideProgress <= 1.0f )
     {
-        float speedMultiplier = 1.0f - (slideProgress * slideProgress);
+        float speedMultiplier = 1.0f - ( slideProgress * slideProgress );
         float currentSlideSpeed = m_fSlideSpeed * speedMultiplier;
-        currentSlideSpeed = max(currentSlideSpeed, m_fSlideSpeed * 0.3f);
+        currentSlideSpeed = max ( currentSlideSpeed , m_fSlideSpeed * 0.3f );
 
-        pRigidBody->SetVelocityX(currentSlideSpeed * m_iSlideDirection);
+        pRigidBody->SetVelocityX ( currentSlideSpeed * m_iSlideDirection );
     }
 }
 
-void CPlayerStateMachine::CheckSlideCompletion()
+void CPlayerStateMachine::CheckSlideCompletion ( )
 {
-    // ÀÌ ÇÔ¼ö´Â ´õ ÀÌ»ó »óÅÂ ÀüÈ¯À» ÇÏÁö ¾ÊÀ½
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody) return;
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody ) return;
 
-    // ½½¶óÀÌµå ¿Ï·á ½Ã ¼Óµµ¸¸ Á¤¸® (»óÅÂ ÀüÈ¯Àº TransitionTable¿¡¼­)
-    if (IsSlideCompleted())
+    if ( IsSlideCompleted ( ) )
     {
-        pRigidBody->SetVelocityX(0.f);
-        // »óÅÂ ÀüÈ¯Àº TransitionTable¿¡¼­ ÀÚµ¿À¸·Î Ã³¸®µÊ
+        pRigidBody->SetVelocityX ( 0.f );
     }
 }
 
-void CPlayerStateMachine::HandleSlideToFall()
+bool CPlayerStateMachine::IsSlideCompleted ( ) const
 {
-    // ÀÌ ÇÔ¼öµµ ´õ ÀÌ»ó »óÅÂ ÀüÈ¯À» ÇÏÁö ¾ÊÀ½
-    // ÇÊ¿äÇÑ ÇÃ·¡±×¸¸ ¼³Á¤
-    m_fFallTime = 0.0f;
-    m_fSlideTimer = 0.0f;
-    m_bSlideGroundCheck = false;
+    if ( m_eCurState != PLAYER_STATE::SLIDE ) return false;
 
-    // »óÅÂ ÀüÈ¯Àº TransitionTable¿¡¼­ ÀÚµ¿À¸·Î Ã³¸®µÊ
-}
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody ) return true;
 
-bool CPlayerStateMachine::IsSlideCompleted() const
-{
-    if (m_eCurState != PLAYER_STATE::SLIDE) return false;
+    bool timeCompleted = ( m_fSlideTimer >= m_fSlideDuration );
 
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody) return true;
+    Vec2 currentPos = m_pOwner->GetPos ( );
+    float distanceTraveled = abs ( currentPos.x - m_vSlideStartPos.x );
+    bool distanceCompleted = ( distanceTraveled >= m_fSlideDistance );
 
-    // ½½¶óÀÌµå ¿Ï·á Á¶°Çµé
-    bool timeCompleted = (m_fSlideTimer >= m_fSlideDuration);
-
-    Vec2 currentPos = m_pOwner->GetPos();
-    float distanceTraveled = abs(currentPos.x - m_vSlideStartPos.x);
-    bool distanceCompleted = (distanceTraveled >= m_fSlideDistance);
-
-    float currentSpeedX = abs(pRigidBody->GetVelocity().x);
-    bool speedTooSlow = (currentSpeedX < 50.f);
+    float currentSpeedX = abs ( pRigidBody->GetVelocity ( ).x );
+    bool speedTooSlow = ( currentSpeedX < 50.f );
 
     return timeCompleted || distanceCompleted || speedTooSlow;
 }
 
-// === ±âÁ¸ ÇÔ¼öµé (º¯°æ ¾øÀ½) ===
-bool CPlayerStateMachine::IsInhaleState() const
+void CPlayerStateMachine::UpdateSlideKickProjectile ( )
 {
-    return (m_eCurState >= PLAYER_STATE::INHALE_READY &&
-        m_eCurState <= PLAYER_STATE::INHALE_HOLD);
-}
+    if ( m_bSlideKickCreated || !m_pOwner )
+        return;
 
-bool CPlayerStateMachine::IsMovingState() const
-{
-    return (m_eCurState == PLAYER_STATE::WALK ||
-        m_eCurState == PLAYER_STATE::RUN ||
-        m_eCurState == PLAYER_STATE::MOUTHFUL_WALK ||
-        m_eCurState == PLAYER_STATE::MOUTHFUL_RUN);
-}
-
-bool CPlayerStateMachine::IsMouthfulState() const
-{
-    return (m_eCurState >= PLAYER_STATE::MOUTHFUL_IDLE &&
-        m_eCurState <= PLAYER_STATE::MOUTHFUL_JUMP);
-}
-
-bool CPlayerStateMachine::IsGroundedState() const
-{
-    return (m_eCurState != PLAYER_STATE::JUMP &&
-        m_eCurState != PLAYER_STATE::FALL &&
-        m_eCurState != PLAYER_STATE::FALL2 &&
-        m_eCurState != PLAYER_STATE::BOUNCE &&
-        m_eCurState != PLAYER_STATE::MOUTHFUL_JUMP);
-}
-
-bool CPlayerStateMachine::IsHoverState() const
-{
-    return (m_eCurState == PLAYER_STATE::HOVER ||
-        m_eCurState == PLAYER_STATE::HOVER_EXHALE);
-}
-
-bool CPlayerStateMachine::IsHoverGrounded() const
-{
-    return (m_eCurState == PLAYER_STATE::HOVER &&
-        m_eHoverSubState == HOVER_SUBSTATE::GROUNDED);
-}
-
-bool CPlayerStateMachine::IsHoverFloating() const
-{
-    return (m_eCurState == PLAYER_STATE::HOVER &&
-        (m_eHoverSubState == HOVER_SUBSTATE::FLOAT ||
-            m_eHoverSubState == HOVER_SUBSTATE::FLY_UP));
-}
-
-void CPlayerStateMachine::ForceStateChange(PLAYER_STATE _eState)
-{
-    // ¾ÈÀü °Ë»ç ÈÄ »óÅÂ º¯°æ
-    if (IsValidStateTransition(m_eCurState, _eState))
+    if ( m_fSlideTimer <= 0.02f )
     {
-        ChangeStateInternal(_eState);
-        // Áï½Ã ÇÑ ¹ø ½ÇÇàÀÌ ÇÊ¿äÇÏ´Ù¸é ¿©±â¼­¸¸
+        Vec2 vPlayerPos = m_pOwner->GetPos ( );
+        Vec2 vDirection = Vec2 ( static_cast< float >( m_iSlideDirection ) , 0.f );
+
+        Vec2 vKickPos = vPlayerPos;
+        vKickPos.x += ( 28.f * m_iSlideDirection );
+        vKickPos.y += 20.f;
+
+        CProjectile* pSlideKick = CProjectileFactory::CreateSlideKick (
+            vKickPos ,
+            vDirection ,
+            GROUP_TYPE::PLAYER
+        );
+
+        if ( pSlideKick )
+        {
+            CREATE_OBJECT ( pSlideKick , GROUP_TYPE::PROJ_PLAYER );
+            m_bSlideKickCreated = true;
+        }
     }
 }
 
-void CPlayerStateMachine::ForceStateForSystemReset(PLAYER_STATE _eState)
+// ê¸°ì¡´ í•¨ìˆ˜ë“¤
+bool CPlayerStateMachine::IsInhaleState ( ) const
 {
-    // ½Ã½ºÅÛ ¸®¼Â ½Ã¿¡¸¸ »ç¿ë (°ÔÀÓ¿À¹ö, ½ºÅ×ÀÌÁö Àç½ÃÀÛ µî)
-    if (_eState == PLAYER_STATE::IDLE ||
-        _eState == PLAYER_STATE::END)  // Çã¿ëµÈ ½Ã½ºÅÛ »óÅÂµé¸¸
-    {
-        ChangeStateInternal(_eState);
+    return ( m_eCurState == PLAYER_STATE::INHALE ||
+        m_eCurState == PLAYER_STATE::INHALE_SUCCESS );
+}
 
-        // ¸®¼Â ½Ã ÇÊ¿äÇÑ Ãß°¡ Ã³¸®
+bool CPlayerStateMachine::IsMovingState ( ) const
+{
+    return ( m_eCurState == PLAYER_STATE::WALK ||
+        m_eCurState == PLAYER_STATE::RUN ||
+        m_eCurState == PLAYER_STATE::MOUTHFUL_WALK ||
+        m_eCurState == PLAYER_STATE::MOUTHFUL_RUN );
+}
+
+bool CPlayerStateMachine::IsMouthfulState ( ) const
+{
+    return ( m_eCurState == PLAYER_STATE::MOUTHFUL_IDLE ||
+        m_eCurState == PLAYER_STATE::MOUTHFUL_WALK ||
+        m_eCurState == PLAYER_STATE::MOUTHFUL_RUN ||
+        m_eCurState == PLAYER_STATE::MOUTHFUL_JUMP ||
+        m_eCurState == PLAYER_STATE::MOUTHFUL_FALL ||
+        m_eCurState == PLAYER_STATE::MOUTHFUL_DAMAGE );
+}
+
+bool CPlayerStateMachine::IsGroundedState ( ) const
+{
+    return ( m_eCurState != PLAYER_STATE::JUMP &&
+        m_eCurState != PLAYER_STATE::FALL0 &&
+        m_eCurState != PLAYER_STATE::FALL1 &&
+        m_eCurState != PLAYER_STATE::FALL2 &&
+        m_eCurState != PLAYER_STATE::BOUNCE &&
+        m_eCurState != PLAYER_STATE::MOUTHFUL_JUMP &&
+        m_eCurState != PLAYER_STATE::MOUTHFUL_FALL &&
+        m_eCurState != PLAYER_STATE::HOVER &&
+        m_eCurState != PLAYER_STATE::HOVER_EXHALE );
+}
+
+bool CPlayerStateMachine::IsHoverState ( ) const
+{
+    return ( m_eCurState == PLAYER_STATE::HOVER ||
+        m_eCurState == PLAYER_STATE::HOVER_EXHALE );
+}
+
+bool CPlayerStateMachine::IsHoverGrounded ( ) const
+{
+    return ( m_eCurState == PLAYER_STATE::HOVER &&
+        m_eHoverSubState == HOVER_SUBSTATE::GROUNDED );
+}
+
+bool CPlayerStateMachine::IsHoverFloating ( ) const
+{
+    return ( m_eCurState == PLAYER_STATE::HOVER &&
+        ( m_eHoverSubState == HOVER_SUBSTATE::FLOAT ||
+            m_eHoverSubState == HOVER_SUBSTATE::FLY_UP ) );
+}
+
+void CPlayerStateMachine::ForceStateChange ( PLAYER_STATE _eState )
+{
+    if ( IsValidStateTransition ( m_eCurState , _eState ) )
+    {
+        ChangeStateInternal ( _eState );
+    }
+}
+
+void CPlayerStateMachine::ForceStateForSystemReset ( PLAYER_STATE _eState )
+{
+    if ( _eState == PLAYER_STATE::IDLE ||
+        _eState == PLAYER_STATE::END )
+    {
+        ChangeStateInternal ( _eState );
+
         m_fFallTime = 0.0f;
+        m_fFallStartY = 0.0f;
         m_fSlideTimer = 0.0f;
         m_fDamageTimer = 0.0f;
         m_bDamageCompleted = false;
-        // ±âÅ¸ Å¸ÀÌ¸Óµé ÃÊ±âÈ­
     }
 }
 
-bool CPlayerStateMachine::CanChangeToState(PLAYER_STATE _eState) const
+bool CPlayerStateMachine::CanChangeToState ( PLAYER_STATE _eState ) const
 {
-    return IsValidStateTransition(m_eCurState, _eState);
+    return IsValidStateTransition ( m_eCurState , _eState );
 }
 
-void CPlayerStateMachine::HandleLanding()
+void CPlayerStateMachine::PerformBounce ( )
 {
-    // ÀüÈ¯ Å×ÀÌºí¿¡¼­ Ã³¸®µÊ
-}
-
-void CPlayerStateMachine::PerformBounce()
-{
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!m_pOwner || !pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !m_pOwner || !pRigidBody )
         return;
 
-    CPlayerMovement* pMovement = m_pOwner->GetMovement();
-    if (pMovement)
+    CPlayerMovement* pMovement = m_pOwner->GetMovement ( );
+    if ( pMovement )
     {
-        float baseJumpPower = pMovement->GetJumpPower();
+        float baseJumpPower = pMovement->GetJumpPower ( );
         float bounceJumpPower = baseJumpPower * m_fBounceHeight;
 
-        pRigidBody->SetVelocityY(-bounceJumpPower);
-        pRigidBody->SetGround(false);
+        pRigidBody->SetVelocityY ( -bounceJumpPower );
+        pRigidBody->SetGround ( false );
     }
 }
 
-void CPlayerStateMachine::UpdateHoverEnter()
+// HOVER ê´€ë ¨ í•¨ìˆ˜ë“¤
+void CPlayerStateMachine::UpdateHoverEnter ( )
 {
-    // ÃÊ±â »ó½Â·Â Àû¿ë (Á¤È®È÷ ÇÑ ¹ø¸¸)
-    if (m_fHoverSubStateTimer < 0.05f)
+    if ( m_fHoverSubStateTimer < 0.05f )
     {
-        ApplyHoverUpForce();
+        ApplyHoverUpForce ( );
     }
 
-    // ÀÏÁ¤ ½Ã°£ ÈÄ ¶Ç´Â »ó½ÂÀÌ ¸ØÃß¸é FLOAT·Î ÀüÈ¯
-    if (m_fHoverSubStateTimer >= m_fHoverEnterDuration)
+    if ( m_fHoverSubStateTimer >= m_fHoverEnterDuration )
     {
-        ChangeHoverSubState(HOVER_SUBSTATE::FLOAT);
+        ChangeHoverSubState ( HOVER_SUBSTATE::FLOAT );
     }
     else
     {
-        // »ó½Â ¼Óµµ°¡ 0¿¡ °¡±î¿öÁö¸é Á¶±â¿¡ FLOAT·Î ÀüÈ¯
-        CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
-        if (pRigidBody)
+        CRigidBody* pRigidBody = m_pOwner->GetRigidBody ( );
+        if ( pRigidBody )
         {
-            Vec2 vVelocity = pRigidBody->GetVelocity();
-            if (vVelocity.y >= -10.f && m_fHoverSubStateTimer > 0.2f) // °ÅÀÇ ¸ØÃè°í ÃÖ¼Ò ½Ã°£ Áö³²
+            Vec2 vVelocity = pRigidBody->GetVelocity ( );
+            if ( vVelocity.y >= -10.f && m_fHoverSubStateTimer > 0.2f )
             {
-                ChangeHoverSubState(HOVER_SUBSTATE::FLOAT);
+                ChangeHoverSubState ( HOVER_SUBSTATE::FLOAT );
             }
         }
     }
 }
 
-void CPlayerStateMachine::UpdateHoverFlyUp()
+void CPlayerStateMachine::UpdateHoverFlyUp ( )
 {
-    // »ó½Â·Â Àû¿ë (Á¤È®È÷ ÇÑ ¹ø¸¸)
-    if (m_fHoverSubStateTimer < 0.05f)
+    if ( m_fHoverSubStateTimer < 0.05f )
     {
-        ApplyHoverUpForce();
+        ApplyHoverUpForce ( );
     }
 
-    // ÀÏÁ¤ ½Ã°£ ÈÄ ¶Ç´Â »ó½ÂÀÌ ¸ØÃß¸é FLOAT·Î ÀüÈ¯
-    if (m_fHoverSubStateTimer >= m_fHoverFlyUpDuration)
+    if ( m_fHoverSubStateTimer >= m_fHoverFlyUpDuration )
     {
-        ChangeHoverSubState(HOVER_SUBSTATE::FLOAT);
+        ChangeHoverSubState ( HOVER_SUBSTATE::FLOAT );
     }
     else
     {
-        // »ó½Â ¼Óµµ°¡ 0¿¡ °¡±î¿öÁö¸é Á¶±â¿¡ FLOAT·Î ÀüÈ¯
-        CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
-        if (pRigidBody)
+        CRigidBody* pRigidBody = m_pOwner->GetRigidBody ( );
+        if ( pRigidBody )
         {
-            Vec2 vVelocity = pRigidBody->GetVelocity();
-            if (vVelocity.y >= -10.f && m_fHoverSubStateTimer > 0.1f)
+            Vec2 vVelocity = pRigidBody->GetVelocity ( );
+            if ( vVelocity.y >= -10.f && m_fHoverSubStateTimer > 0.1f )
             {
-                ChangeHoverSubState(HOVER_SUBSTATE::FLOAT);
+                ChangeHoverSubState ( HOVER_SUBSTATE::FLOAT );
             }
         }
     }
 }
 
-void CPlayerStateMachine::UpdateHoverFloat()
+void CPlayerStateMachine::UpdateHoverFloat ( )
 {
-    // ZÅ° ÀÔ·Â ½Ã FLY_UPÀ¸·Î ÀüÈ¯
-    if (m_pInputManager->IsJumpTap())
+    if ( m_pInputManager->IsJumpTap ( ) )
     {
-        ChangeHoverSubState(HOVER_SUBSTATE::FLY_UP);
+        ChangeHoverSubState ( HOVER_SUBSTATE::FLY_UP );
     }
 
-    // ¶¥¿¡ ´êÀ¸¸é GROUNDED·Î ÀüÈ¯
-    CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
-    if (pRigidBody && pRigidBody->IsGround())
+    CRigidBody* pRigidBody = m_pOwner->GetRigidBody ( );
+    if ( pRigidBody && pRigidBody->IsGround ( ) )
     {
-        ChangeHoverSubState(HOVER_SUBSTATE::GROUNDED);
+        ChangeHoverSubState ( HOVER_SUBSTATE::GROUNDED );
     }
 }
 
-void CPlayerStateMachine::UpdateHoverGrounded()
+void CPlayerStateMachine::UpdateHoverGrounded ( )
 {
-    // ZÅ° ÀÔ·ÂÀÌ ÀÖÀ¸¸é FLY_UPÀ¸·Î ÀüÈ¯
-    if (m_pInputManager->IsJumpTap())
+    if ( m_pInputManager->IsJumpTap ( ) )
     {
-        CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
-        if (pRigidBody)
+        CRigidBody* pRigidBody = m_pOwner->GetRigidBody ( );
+        if ( pRigidBody )
         {
-            pRigidBody->SetGround(false); // ¶¥¿¡¼­ ¶°¿À¸£±â
+            pRigidBody->SetGround ( false );
         }
-        ChangeHoverSubState(HOVER_SUBSTATE::FLY_UP);
+        ChangeHoverSubState ( HOVER_SUBSTATE::FLY_UP );
     }
 }
 
-void CPlayerStateMachine::UpdateHoverMovement()
+void CPlayerStateMachine::UpdateHoverMovement ( )
 {
-    if (!m_pInputManager) return;
+    if ( !m_pInputManager ) return;
 
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody) return;
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody ) return;
 
-    // ¶¥¿¡¼­ ÀÌµ¿ ºÒ°¡ ¼³Á¤ÀÌ¸é GROUNDED »óÅÂ¿¡¼­ ÀÌµ¿ Á¦ÇÑ
-    if (!m_bHoverCanMoveOnGround && m_eHoverSubState == HOVER_SUBSTATE::GROUNDED)
+    // ë•…ì—ì„œ ì´ë™ ë¶ˆê°€ ì„¤ì •ì´ë©´ GROUNDED ìƒíƒœì—ì„œ ì´ë™ ì œí•œ
+    if ( !m_bHoverCanMoveOnGround && m_eHoverSubState == HOVER_SUBSTATE::GROUNDED )
         return;
 
-    // ÁÂ¿ì ÀÌµ¿ ÀÔ·Â Ã³¸®
-    int horizontalInput = m_pInputManager->GetHorizontalInput();
-    if (horizontalInput != 0)
+    // ì¢Œìš° ì´ë™ ì…ë ¥ ì²˜ë¦¬
+    int horizontalInput = m_pInputManager->GetHorizontalInput ( );
+    if ( horizontalInput != 0 )
     {
         float moveVelocity = m_fHoverMoveSpeed * horizontalInput;
-        pRigidBody->SetVelocityX(moveVelocity);
+        pRigidBody->SetVelocityX ( moveVelocity );
 
-        // ¹æÇâ ¾÷µ¥ÀÌÆ®
-        if (m_pOwner->GetMovement())
+        // ë°©í–¥ ì—…ë°ì´íŠ¸
+        if ( m_pOwner->GetMovement ( ) )
         {
-            m_pOwner->GetMovement()->SetFacingDirection(horizontalInput > 0);
+            m_pOwner->GetMovement ( )->SetFacingDirection ( horizontalInput > 0 );
         }
     }
     else
     {
-        // ÀÔ·ÂÀÌ ¾øÀ¸¸é XÃà ¼Óµµ °¨¼Ó (°øÁß ¸¶Âû)
-        Vec2 vVel = pRigidBody->GetVelocity();
-        float deltaTime = CTimeMgr::GetInst()->GetfDT();
-        float newVelX = vVel.x * (1.0f - m_fHoverAirFriction * deltaTime);
+        // ì…ë ¥ì´ ì—†ìœ¼ë©´ Xì¶• ì†ë„ ê°ì† (ê³µì¤‘ ë§ˆì°°)
+        Vec2 vVel = pRigidBody->GetVelocity ( );
+        float deltaTime = CTimeMgr::GetInst ( )->GetfDT ( );
+        float newVelX = vVel.x * ( 1.0f - m_fHoverAirFriction * deltaTime );
 
-        if (abs(newVelX) < 10.f) newVelX = 0.f;
-        pRigidBody->SetVelocityX(newVelX);
+        if ( abs ( newVelX ) < 10.f ) newVelX = 0.f;
+        pRigidBody->SetVelocityX ( newVelX );
     }
 }
 
-void CPlayerStateMachine::UpdateHoverPhysics()
+void CPlayerStateMachine::UpdateHoverPhysics ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody) return;
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody ) return;
 
-    // ¼­ºê½ºÅ×ÀÌÆ®¿¡ µû¸¥ ¹°¸® Ã³¸®
-    switch (m_eHoverSubState)
+    // ì„œë¸ŒìŠ¤í…Œì´íŠ¸ì— ë”°ë¥¸ ë¬¼ë¦¬ ì²˜ë¦¬
+    switch ( m_eHoverSubState )
     {
     case HOVER_SUBSTATE::ENTER:
-        // ENTER »óÅÂ¿¡¼­´Â ÃÊ±â »ó½Â ÈÄ ¼­¼­È÷ °¨¼Ó
+        // ENTER ìƒíƒœì—ì„œëŠ” ì´ˆê¸° ìƒìŠ¹ í›„ ì„œì„œíˆ ê°ì†
     {
-        Vec2 vVelocity = pRigidBody->GetVelocity();
-        if (vVelocity.y < 0 && m_fHoverSubStateTimer > 0.1f) // »ó½Â ÁßÀÌ°í ÃÊ±â ½Ã°£ Áö³²
+        Vec2 vVelocity = pRigidBody->GetVelocity ( );
+        if ( vVelocity.y < 0 && m_fHoverSubStateTimer > 0.1f )
         {
-            // »ó½Â ¼Óµµ¸¦ ¼­¼­È÷ °¨¼Ò½ÃÅ´
-            float deceleration = 600.f; // °¨¼Óµµ
-            float deltaTime = CTimeMgr::GetInst()->GetfDT();
+            // ìƒìŠ¹ ì†ë„ë¥¼ ì„œì„œíˆ ê°ì†Œì‹œí‚´
+            float deceleration = 600.f;
+            float deltaTime = CTimeMgr::GetInst ( )->GetfDT ( );
             float newVelY = vVelocity.y + deceleration * deltaTime;
 
-            if (newVelY > 0) newVelY = 0; // ÇÏ°­Àº ÇÏÁö ¾ÊÀ½
-            pRigidBody->SetVelocityY(newVelY);
+            if ( newVelY > 0 ) newVelY = 0;
+            pRigidBody->SetVelocityY ( newVelY );
         }
     }
     break;
 
     case HOVER_SUBSTATE::FLY_UP:
-        // FLY_UP »óÅÂ¿¡¼­µµ °°Àº Ã³¸®
+        // FLY_UP ìƒíƒœì—ì„œë„ ê°™ì€ ì²˜ë¦¬
     {
-        Vec2 vVelocity = pRigidBody->GetVelocity();
-        if (vVelocity.y < 0 && m_fHoverSubStateTimer > 0.1f)
+        Vec2 vVelocity = pRigidBody->GetVelocity ( );
+        if ( vVelocity.y < 0 && m_fHoverSubStateTimer > 0.1f )
         {
             float deceleration = 600.f;
-            float deltaTime = CTimeMgr::GetInst()->GetfDT();
+            float deltaTime = CTimeMgr::GetInst ( )->GetfDT ( );
             float newVelY = vVelocity.y + deceleration * deltaTime;
 
-            if (newVelY > 0) newVelY = 0;
-            pRigidBody->SetVelocityY(newVelY);
+            if ( newVelY > 0 ) newVelY = 0;
+            pRigidBody->SetVelocityY ( newVelY );
         }
     }
     break;
 
     case HOVER_SUBSTATE::FLOAT:
-        // FLOAT »óÅÂ¿¡¼­´Â ÃµÃµÈ÷ ³«ÇÏ
-        ApplyHoverFallSpeed();
+        // FLOAT ìƒíƒœì—ì„œëŠ” ì²œì²œíˆ ë‚™í•˜
+        ApplyHoverFallSpeed ( );
         break;
 
     case HOVER_SUBSTATE::GROUNDED:
-        // GROUNDED »óÅÂ¿¡¼­´Â ³«ÇÏ ¾øÀ½ (¶¥¿¡ ºÙ¾îÀÖÀ½)
+        // GROUNDED ìƒíƒœì—ì„œëŠ” ë‚™í•˜ ì—†ìŒ (ë•…ì— ë¶™ì–´ìˆìŒ)
     {
-        Vec2 vVelocity = pRigidBody->GetVelocity();
-        if (vVelocity.y > 0) // ÇÏ°­ ÁßÀÌ¸é ¸ØÃã
+        Vec2 vVelocity = pRigidBody->GetVelocity ( );
+        if ( vVelocity.y > 0 )
         {
-            pRigidBody->SetVelocityY(0);
+            pRigidBody->SetVelocityY ( 0 );
         }
     }
     break;
     }
 }
 
-void CPlayerStateMachine::ApplyHoverUpForce()
+void CPlayerStateMachine::ApplyHoverUpForce ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( pRigidBody )
     {
-        pRigidBody->SetVelocityY(-m_fHoverUpForce);
+        pRigidBody->SetVelocityY ( -m_fHoverUpForce );
     }
 }
 
-void CPlayerStateMachine::ApplyHoverFallSpeed()
+void CPlayerStateMachine::ApplyHoverFallSpeed ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody) return;
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( !pRigidBody ) return;
 
-    Vec2 vVelocity = pRigidBody->GetVelocity();
+    Vec2 vVelocity = pRigidBody->GetVelocity ( );
 
-    // ÇöÀç Y ¼Óµµ°¡ HOVER ³«ÇÏ ¼Óµµº¸´Ù ÀÛÀ¸¸é (´À¸®¸é) ³«ÇÏ ¼Óµµ·Î ¼³Á¤
-    if (vVelocity.y < m_fHoverFallSpeed)
+    // í˜„ì¬ Y ì†ë„ê°€ HOVER ë‚™í•˜ ì†ë„ë³´ë‹¤ ì‘ìœ¼ë©´ ë‚™í•˜ ì†ë„ë¡œ ì„¤ì •
+    if ( vVelocity.y < m_fHoverFallSpeed )
     {
-        // ¼­¼­È÷ ³«ÇÏ ¼Óµµ±îÁö Áõ°¡
-        float deltaTime = CTimeMgr::GetInst()->GetfDT();
-        float acceleration = 200.f; // ³«ÇÏ °¡¼Óµµ
+        // ì„œì„œíˆ ë‚™í•˜ ì†ë„ê¹Œì§€ ì¦ê°€
+        float deltaTime = CTimeMgr::GetInst ( )->GetfDT ( );
+        float acceleration = 200.f;
         float newVelY = vVelocity.y + acceleration * deltaTime;
 
-        // ÃÖ´ë ³«ÇÏ ¼Óµµ Á¦ÇÑ
-        if (newVelY > m_fHoverFallSpeed)
+        // ìµœëŒ€ ë‚™í•˜ ì†ë„ ì œí•œ
+        if ( newVelY > m_fHoverFallSpeed )
         {
             newVelY = m_fHoverFallSpeed;
         }
 
-        pRigidBody->SetVelocityY(newVelY);
+        pRigidBody->SetVelocityY ( newVelY );
     }
 }
 
-void CPlayerStateMachine::DisableGravityForHover()
+void CPlayerStateMachine::DisableGravityForHover ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( pRigidBody )
     {
-        pRigidBody->SetUseGravity(false);
+        pRigidBody->SetUseGravity ( false );
     }
 }
 
-void CPlayerStateMachine::RestoreGravityFromHover()
+void CPlayerStateMachine::RestoreGravityFromHover ( )
 {
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (pRigidBody)
+    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody ( ) : nullptr;
+    if ( pRigidBody )
     {
-        pRigidBody->SetUseGravity(true);
+        pRigidBody->SetUseGravity ( true );
     }
 }
 
-void CPlayerStateMachine::ChangeHoverSubState(HOVER_SUBSTATE _eNewSubState)
+void CPlayerStateMachine::ChangeHoverSubState ( HOVER_SUBSTATE _eNewSubState )
 {
-    if (m_eHoverSubState == _eNewSubState)
+    if ( m_eHoverSubState == _eNewSubState )
         return;
 
     m_eHoverSubState = _eNewSubState;
-    ResetHoverSubStateTimer();
+    ResetHoverSubStateTimer ( );
 
-    // ÇöÀç HOVER »óÅÂ¶ó¸é ¾Ö´Ï¸ŞÀÌ¼Ç Àç¼³Á¤
-    if (m_eCurState == PLAYER_STATE::HOVER)
+    // í˜„ì¬ HOVER ìƒíƒœë¼ë©´ ì• ë‹ˆë©”ì´ì…˜ ì¬ì„¤ì •
+    if ( m_eCurState == PLAYER_STATE::HOVER )
     {
-        SetAnimationForState(PLAYER_STATE::HOVER);
+        SetAnimationForState ( PLAYER_STATE::HOVER );
     }
 }
 
-void CPlayerStateMachine::SetAnimationForState(PLAYER_STATE _eState)
+void CPlayerStateMachine::SetAnimationForState ( PLAYER_STATE _eState )
 {
-    CAnimator* pAnimator = m_pOwner ? m_pOwner->GetAnimator() : nullptr;
-    if (!pAnimator)
+    CAnimator* pAnimator = m_pOwner ? m_pOwner->GetAnimator ( ) : nullptr;
+    if ( !pAnimator )
         return;
 
-    switch (_eState)
+    switch ( _eState )
     {
     case PLAYER_STATE::IDLE:
-        pAnimator->Play(L"IDLE", true);
+        pAnimator->Play ( L"IDLE" , true );
         break;
     case PLAYER_STATE::WALK:
-        pAnimator->Play(L"WALK", true);
+        pAnimator->Play ( L"WALK" , true );
         break;
     case PLAYER_STATE::RUN:
-        pAnimator->Play(L"RUN", true);
+        pAnimator->Play ( L"RUN" , true );
         break;
     case PLAYER_STATE::CROUCH:
-        pAnimator->Play(L"CROUCH", true);
+        pAnimator->Play ( L"CROUCH" , true );
         break;
     case PLAYER_STATE::SLIDE:
-        pAnimator->Play(L"SLIDE", false);
+        pAnimator->Play ( L"SLIDE" , false );
+        break;
+    case PLAYER_STATE::SLIDE_KICK_RECOIL:
+        pAnimator->Play ( L"FALL1" , true );  // FALL1ê³¼ ë™ì¼í•œ ì• ë‹ˆë©”ì´ì…˜
         break;
     case PLAYER_STATE::JUMP:
-        pAnimator->Play(L"JUMP", false);
+        pAnimator->Play ( L"JUMP" , false );
         break;
-    case PLAYER_STATE::FALL:
-        pAnimator->Play(L"FALL", true);
+    case PLAYER_STATE::FALL0:
+        pAnimator->Play ( L"FALL0" , true );
+        break;
+    case PLAYER_STATE::FALL1:
+        pAnimator->Play ( L"FALL1" , true );
         break;
     case PLAYER_STATE::FALL2:
-        pAnimator->Play(L"FALL2", true);
+        pAnimator->Play ( L"FALL2" , true );
         break;
     case PLAYER_STATE::BOUNCE:
-        pAnimator->Play(L"BOUNCE", false);
+        pAnimator->Play ( L"BOUNCE" , false );
         break;
     case PLAYER_STATE::HOVER_EXHALE:
-        pAnimator->Play(L"HOVER_EXHALE", false);          // HOVER Á¾·á (³»¹ñ±â)
+        pAnimator->Play ( L"HOVER_EXHALE" , false );
         break;
     case PLAYER_STATE::HOVER:
-        switch (m_eHoverSubState)
+        switch ( m_eHoverSubState )
         {
         case HOVER_SUBSTATE::ENTER:
-            pAnimator->Play(L"HOVER_ENTER", false);     // °ø±â ¸Ó±İ±â (ÇÑ ¹ø¸¸)
+            pAnimator->Play ( L"HOVER_ENTER" , false );
             break;
         case HOVER_SUBSTATE::FLY_UP:
-            pAnimator->Play(L"HOVER_FLY", false);       // ¹öµÕ°Å¸®±â (ÇÑ ¹ø¸¸)
+            pAnimator->Play ( L"HOVER_FLY" , false );
             break;
         case HOVER_SUBSTATE::FLOAT:
-            pAnimator->Play(L"HOVER_FLOAT", true);      // ¶°´Ù´Ï±â (¹İº¹)
+            pAnimator->Play ( L"HOVER_FLOAT" , true );
             break;
         case HOVER_SUBSTATE::GROUNDED:
-            pAnimator->Play(L"HOVER_GROUND", true);     // ¶¥¿¡¼­ ¶°´Ù´Ï±â (¹İº¹)
+            pAnimator->Play ( L"HOVER_GROUND" , true );
             break;
         default:
-            pAnimator->Play(L"HOVER_FLOAT", true);      // ±âº»°ª
+            pAnimator->Play ( L"HOVER_FLOAT" , true );
             break;
         }
         break;
     case PLAYER_STATE::DAMAGE:
-        pAnimator->Play(L"DAMAGE", false);
+    case PLAYER_STATE::MOUTHFUL_DAMAGE:
+        pAnimator->Play ( L"DAMAGE" , false );
         break;
-    case PLAYER_STATE::INHALE_READY:
-        pAnimator->Play(L"INHALE_READY", false);
+    case PLAYER_STATE::INHALE:
+        pAnimator->Play ( L"INHALE" , true );
         break;
-    case PLAYER_STATE::INHALE_1:
-        pAnimator->Play(L"INHALE_1", true);
-        break;
-    case PLAYER_STATE::INHALE_2:
-        pAnimator->Play(L"INHALE_2", true);
-        break;
-    case PLAYER_STATE::INHALE_HOLD:
-        pAnimator->Play(L"INHALE_HOLD", true);
+    case PLAYER_STATE::INHALE_SUCCESS:
+        pAnimator->Play ( L"INHALE_SUCCESS" , false );
         break;
     case PLAYER_STATE::EXHALE:
-        pAnimator->Play(L"EXHALE", false);
+        pAnimator->Play ( L"EXHALE" , false );
         break;
     case PLAYER_STATE::SWALLOW:
-        pAnimator->Play(L"SWALLOW", false);
+        pAnimator->Play ( L"SWALLOW" , false );
         break;
     case PLAYER_STATE::MOUTHFUL_IDLE:
-        pAnimator->Play(L"MOUTHFUL_IDLE", true);
+        pAnimator->Play ( L"MOUTHFUL_IDLE" , true );
         break;
     case PLAYER_STATE::MOUTHFUL_WALK:
-        pAnimator->Play(L"MOUTHFUL_WALK", true);
+        pAnimator->Play ( L"MOUTHFUL_WALK" , true );
         break;
     case PLAYER_STATE::MOUTHFUL_RUN:
-        pAnimator->Play(L"MOUTHFUL_RUN", true);
+        pAnimator->Play ( L"MOUTHFUL_RUN" , true );
         break;
     case PLAYER_STATE::MOUTHFUL_JUMP:
-        pAnimator->Play(L"MOUTHFUL_JUMP", false);
+        pAnimator->Play ( L"MOUTHFUL_JUMP" , false );
+        break;
+    case PLAYER_STATE::MOUTHFUL_FALL:
+        pAnimator->Play ( L"MOUTHFUL_FALL" , true );
         break;
     default:
-        char buffer[256];
-        sprintf_s(buffer, "WARNING: No animation case for state: %d\n", (int)_eState);
-        OutputDebugStringA(buffer);
+        char buffer[ 256 ];
+        sprintf_s ( buffer , "WARNING: No animation case for state: %d\n" , ( int ) _eState );
+        OutputDebugStringA ( buffer );
         break;
     }
 }
 
-// IsValidStateTransition - HOVER_EXHALE Á¦ÇÑ ¿ÏÀü Á¦°Å
-bool CPlayerStateMachine::IsValidStateTransition(PLAYER_STATE _from, PLAYER_STATE _to) const
+bool CPlayerStateMachine::IsValidStateTransition ( PLAYER_STATE _from , PLAYER_STATE _to ) const
 {
-    // °°Àº »óÅÂ·ÎÀÇ ÀüÈ¯Àº Çã¿ëÇÏÁö ¾ÊÀ½
-    if (_from == _to)
+    // ê°™ì€ ìƒíƒœë¡œì˜ ì „í™˜ì€ í—ˆìš©í•˜ì§€ ì•ŠìŒ
+    if ( _from == _to )
         return false;
 
-    // Æ¯Á¤ »óÅÂ¿¡¼­´Â Æ¯Á¤ »óÅÂ·Î¸¸ ÀüÈ¯ °¡´É
-    switch (_from)
+    // íŠ¹ì • ìƒíƒœì—ì„œëŠ” íŠ¹ì • ìƒíƒœë¡œë§Œ ì „í™˜ ê°€ëŠ¥
+    switch ( _from )
     {
     case PLAYER_STATE::SWALLOW:
         return false;
@@ -1497,19 +1909,20 @@ bool CPlayerStateMachine::IsValidStateTransition(PLAYER_STATE _from, PLAYER_STAT
         return false;
 
     case PLAYER_STATE::SLIDE:
-        return (_to == PLAYER_STATE::FALL ||
+        return ( _to == PLAYER_STATE::FALL0 ||
+            _to == PLAYER_STATE::FALL1 ||
             _to == PLAYER_STATE::CROUCH ||
-            _to == PLAYER_STATE::IDLE);
+            _to == PLAYER_STATE::IDLE ||
+            _to == PLAYER_STATE::SLIDE_KICK_RECOIL );
 
     case PLAYER_STATE::HOVER:
-        return (_to == PLAYER_STATE::HOVER_EXHALE);
+        return ( _to == PLAYER_STATE::HOVER_EXHALE );
 
-        // HOVER_EXHALE¿¡¼­ÀÇ Á¦ÇÑ ¿ÏÀü Á¦°Å
     case PLAYER_STATE::HOVER_EXHALE:
-        // ¸ğµç ÀüÈ¯ Çã¿ë - ÀüÈ¯ Å×ÀÌºí¿¡¼­ Á¶°Ç °ü¸®
+        // ëª¨ë“  ì „í™˜ í—ˆìš© - ì „í™˜ í…Œì´ë¸”ì—ì„œ ì¡°ê±´ ê´€ë¦¬
         return true;
     }
 
-    // ±âº»ÀûÀ¸·Î ¸ğµç ÀüÈ¯ Çã¿ë
+    // ê¸°ë³¸ì ìœ¼ë¡œ ëª¨ë“  ì „í™˜ í—ˆìš©
     return true;
 }

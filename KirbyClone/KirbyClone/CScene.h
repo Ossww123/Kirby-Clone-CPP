@@ -9,22 +9,23 @@ public:
     virtual ~CScene();
 
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
-    virtual void Enter() = 0;           // ¼ø¼ö °¡»ó ÇÔ¼ö - ÀÚ½Ä Å¬·¡½º¿¡¼­ ¹İµå½Ã ±¸Çö
-    virtual void Exit() = 0;            // ¼ø¼ö °¡»ó ÇÔ¼ö - ÀÚ½Ä Å¬·¡½º¿¡¼­ ¹İµå½Ã ±¸Çö
-    virtual void Update();              // ¸ğµç ¿ÀºêÁ§Æ® ¾÷µ¥ÀÌÆ®
-    virtual void Render(HDC _dc);       // ¸ğµç ¿ÀºêÁ§Æ® ·»´õ¸µ
+    // === ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
+    virtual void Enter() = 0;           // ìˆœìˆ˜ ê°€ìƒ í•¨ìˆ˜ - ìì‹ í´ë˜ìŠ¤ì—ì„œ ë°˜ë“œì‹œ êµ¬í˜„
+    virtual void Exit() = 0;            // ìˆœìˆ˜ ê°€ìƒ í•¨ìˆ˜ - ìì‹ í´ë˜ìŠ¤ì—ì„œ ë°˜ë“œì‹œ êµ¬í˜„
+    virtual void Update();              // ëª¨ë“  ì˜¤ë¸Œì íŠ¸ ì—…ë°ì´íŠ¸
+    virtual void Render(HDC _dc);       // ëª¨ë“  ì˜¤ë¸Œì íŠ¸ ë Œë”ë§
 
 public:
-    // === ¿ÀºêÁ§Æ® °ü¸® ===
+    // === ì˜¤ë¸Œì íŠ¸ ê´€ë¦¬ ===
     void AddObject(CObject* _pObj, GROUP_TYPE _eType);
     const vector<CObject*>& GetGroupObject(GROUP_TYPE _eType) { return m_arrObj[(UINT)_eType]; }
 
 protected:
-    // === ¿ÀºêÁ§Æ® °ü¸® ³»ºÎ ±¸Çö ===
-    void DeleteAllObject();             // ¸ğµç ¿ÀºêÁ§Æ® »èÁ¦
+    // === ì˜¤ë¸Œì íŠ¸ ê´€ë¦¬ ë‚´ë¶€ êµ¬í˜„ ===
+    void DeleteAllObject();             // ëª¨ë“  ì˜¤ë¸Œì íŠ¸ ì‚­ì œ
+    void DeleteDeadObjects();           // Dead ì˜¤ë¸Œì íŠ¸ë“¤ ì •ë¦¬
 
 private:
-    // === ¸â¹ö º¯¼ö ===
-    vector<CObject*> m_arrObj[(UINT)GROUP_TYPE::END];  // ±×·ìº°·Î ¿ÀºêÁ§Æ® °ü¸®
+    // === ë©¤ë²„ ë³€ìˆ˜ ===
+    vector<CObject*> m_arrObj[(UINT)GROUP_TYPE::END];  // ê·¸ë£¹ë³„ë¡œ ì˜¤ë¸Œì íŠ¸ ê´€ë¦¬
 };

@@ -16,39 +16,39 @@ CGordo::CGordo()
     , m_fCircularAngle(0.f)
     , m_fCircularSpeed(1.f)
 {
-    // ¿ÀºêÁ§Æ® Å¸ÀÔ ¼³Á¤
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì… ì„¤ì •
     SetType(OBJECT_TYPE::MONSTER_GORDOS);
 
-    // °í¸£µµ Àü¿ë ¼³Á¤
-    m_fSpeed = 120.f;                       // ºü¸¥ ÀÌµ¿
+    // ê³ ë¥´ë„ ì „ìš© ì„¤ì •
+    m_fSpeed = 120.f;                       // ë¹ ë¥¸ ì´ë™
 
-    // ¹«ÀûÀÌ¹Ç·Î Áß·Â ºñÈ°¼ºÈ­ (ÀÚÀ¯·Ó°Ô ÀÌµ¿)
+    // ë¬´ì ì´ë¯€ë¡œ ì¤‘ë ¥ ë¹„í™œì„±í™” (ììœ ë¡­ê²Œ ì´ë™)
     GetRigidBody()->SetUseGravity(false);
 
-    // ½ÃÀÛ À§Ä¡ ÀúÀå
+    // ì‹œì‘ ìœ„ì¹˜ ì €ì¥
     m_vStartPos = GetPos();
 
-    // °æ°è ¼³Á¤ (½ÃÀÛÁ¡ ±âÁØ ¡¾¹üÀ§)
+    // ê²½ê³„ ì„¤ì • (ì‹œì‘ì  ê¸°ì¤€ Â±ë²”ìœ„)
     m_vMinBound = Vec2(m_vStartPos.x - m_fMoveRange, m_vStartPos.y - m_fMoveRange);
     m_vMaxBound = Vec2(m_vStartPos.x + m_fMoveRange, m_vStartPos.y + m_fMoveRange);
 
-    // ¿øÇü ÀÌµ¿ Áß½ÉÁ¡ ¼³Á¤
+    // ì›í˜• ì´ë™ ì¤‘ì‹¬ì  ì„¤ì •
     m_vCircularCenter = m_vStartPos;
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç »ı¼º
+    // ì• ë‹ˆë©”ì´ì…˜ ìƒì„±
     
-    // ÃÊ±â »óÅÂ ¼³Á¤ (°í¸£µµ´Â °è¼Ó ÀÌµ¿)
+    // ì´ˆê¸° ìƒíƒœ ì„¤ì • (ê³ ë¥´ë„ëŠ” ê³„ì† ì´ë™)
     ChangeState(MONSTER_STATE::FLY);
 }
 
 CGordo::~CGordo()
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸®
+    // ìƒìœ„ í´ë˜ìŠ¤ì—ì„œ ì •ë¦¬
 }
 
 void CGordo::Move()
 {
-    // ÀÌµ¿ Å¸ÀÔ¿¡ µû¸¥ ÀÌµ¿ ÆĞÅÏ ½ÇÇà
+    // ì´ë™ íƒ€ì…ì— ë”°ë¥¸ ì´ë™ íŒ¨í„´ ì‹¤í–‰
     switch (m_eMoveType)
     {
     case GORDO_MOVE_TYPE::HORIZONTAL:
@@ -65,7 +65,7 @@ void CGordo::Move()
         break;
     }
 
-    // °æ°è Ãæµ¹ Ã³¸®
+    // ê²½ê³„ ì¶©ëŒ ì²˜ë¦¬
     HandleBoundaryCollision();
 }
 
@@ -75,13 +75,13 @@ void CGordo::SetupAnimationMapping()
 
 void CGordo::MoveHorizontal()
 {
-    // ÁÂ¿ì Á÷¼± ÀÌµ¿
+    // ì¢Œìš° ì§ì„  ì´ë™
     Vec2 currentPos = GetPos();
     float newX = currentPos.x + (m_fSpeed * m_vMoveDirection.x * CTimeMgr::GetInst()->GetfDT());
 
     SetPos(Vec2(newX, currentPos.y));
 
-    // ¸®Áöµå¹Ùµğ ¼Óµµ ¼³Á¤
+    // ë¦¬ì§€ë“œë°”ë”” ì†ë„ ì„¤ì •
     if (nullptr != GetRigidBody())
     {
         GetRigidBody()->SetVelocity(Vec2(m_fSpeed * m_vMoveDirection.x, 0.f));
@@ -90,13 +90,13 @@ void CGordo::MoveHorizontal()
 
 void CGordo::MoveVertical()
 {
-    // »óÇÏ Á÷¼± ÀÌµ¿
+    // ìƒí•˜ ì§ì„  ì´ë™
     Vec2 currentPos = GetPos();
     float newY = currentPos.y + (m_fSpeed * m_vMoveDirection.y * CTimeMgr::GetInst()->GetfDT());
 
     SetPos(Vec2(currentPos.x, newY));
 
-    // ¸®Áöµå¹Ùµğ ¼Óµµ ¼³Á¤
+    // ë¦¬ì§€ë“œë°”ë”” ì†ë„ ì„¤ì •
     if (nullptr != GetRigidBody())
     {
         GetRigidBody()->SetVelocity(Vec2(0.f, m_fSpeed * m_vMoveDirection.y));
@@ -105,13 +105,13 @@ void CGordo::MoveVertical()
 
 void CGordo::MoveDiagonal()
 {
-    // ´ë°¢¼± ÀÌµ¿
+    // ëŒ€ê°ì„  ì´ë™
     Vec2 currentPos = GetPos();
     Vec2 newPos = currentPos + (m_vMoveDirection * m_fSpeed * CTimeMgr::GetInst()->GetfDT());
 
     SetPos(newPos);
 
-    // ¸®Áöµå¹Ùµğ ¼Óµµ ¼³Á¤
+    // ë¦¬ì§€ë“œë°”ë”” ì†ë„ ì„¤ì •
     if (nullptr != GetRigidBody())
     {
         GetRigidBody()->SetVelocity(m_vMoveDirection * m_fSpeed);
@@ -120,20 +120,20 @@ void CGordo::MoveDiagonal()
 
 void CGordo::MoveCircular()
 {
-    // ¿øÇü ÀÌµ¿
+    // ì›í˜• ì´ë™
     m_fCircularAngle += m_fCircularSpeed * CTimeMgr::GetInst()->GetfDT();
 
-    // °¢µµ Á¤±ÔÈ­
+    // ê°ë„ ì •ê·œí™”
     if (m_fCircularAngle >= 2 * 3.14159f)
         m_fCircularAngle -= 2 * 3.14159f;
 
-    // ¿øÇü ÁÂÇ¥ °è»ê
+    // ì›í˜• ì¢Œí‘œ ê³„ì‚°
     float x = m_vCircularCenter.x + cosf(m_fCircularAngle) * m_fCircularRadius;
     float y = m_vCircularCenter.y + sinf(m_fCircularAngle) * m_fCircularRadius;
 
     SetPos(Vec2(x, y));
 
-    // ¿øÇü ÀÌµ¿ÀÇ ¼Óµµ º¤ÅÍ °è»ê (Á¢¼± ¹æÇâ)
+    // ì›í˜• ì´ë™ì˜ ì†ë„ ë²¡í„° ê³„ì‚° (ì ‘ì„  ë°©í–¥)
     Vec2 velocity = Vec2(-sinf(m_fCircularAngle), cosf(m_fCircularAngle)) * m_fSpeed;
 
     if (nullptr != GetRigidBody())
@@ -147,7 +147,7 @@ void CGordo::HandleBoundaryCollision()
     Vec2 currentPos = GetPos();
     bool needReverse = false;
 
-    // ÀÌµ¿ Å¸ÀÔº° °æ°è Ã¼Å©
+    // ì´ë™ íƒ€ì…ë³„ ê²½ê³„ ì²´í¬
     switch (m_eMoveType)
     {
     case GORDO_MOVE_TYPE::HORIZONTAL:
@@ -167,7 +167,7 @@ void CGordo::HandleBoundaryCollision()
         break;
 
     case GORDO_MOVE_TYPE::CIRCULAR:
-        // ¿øÇü ÀÌµ¿Àº °æ°è Ã¼Å© ºÒÇÊ¿ä
+        // ì›í˜• ì´ë™ì€ ê²½ê³„ ì²´í¬ ë¶ˆí•„ìš”
         break;
     }
 
@@ -179,10 +179,10 @@ void CGordo::HandleBoundaryCollision()
 
 void CGordo::ReverseDirection()
 {
-    // ¹æÇâ ¹İÀü
+    // ë°©í–¥ ë°˜ì „
     m_vMoveDirection = m_vMoveDirection * -1.f;
 
-    // ÀÌµ¿ ¹æÇâ¿¡ µû¸¥ ½ºÇÁ¶óÀÌÆ® ¹æÇâ º¯°æ
+    // ì´ë™ ë°©í–¥ì— ë”°ë¥¸ ìŠ¤í”„ë¼ì´íŠ¸ ë°©í–¥ ë³€ê²½
     if (m_eMoveType == GORDO_MOVE_TYPE::HORIZONTAL)
     {
         m_iDir *= -1;

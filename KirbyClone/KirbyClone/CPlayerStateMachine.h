@@ -1,6 +1,6 @@
 #pragma once
 
-// Àü¹æ ¼±¾ð
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 class CPlayer;
 class CPlayerInputManager;
 class CPlayerStateTransitionTable;
@@ -8,49 +8,55 @@ class CPlayerStateTransitionTable;
 class CPlayerStateMachine
 {
 public:
-    // === »ý¼ºÀÚ & ¼Ò¸êÀÚ ===
+    // === ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ & ï¿½Ò¸ï¿½ï¿½ï¿½ ===
     CPlayerStateMachine(CPlayer* _pOwner);
     ~CPlayerStateMachine();
 
 public:
-    // === ÇÙ½É »ý¸íÁÖ±â ÇÔ¼öµé ===
+    // === ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ===
     void Init();
     void Update();
 
 private:
-    // === »óÅÂ °ü¸® ÀÎÅÍÆäÀÌ½º ===
+    // === ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ ===
     void ChangeStateInternal(PLAYER_STATE _eState);
 
 public:
-    // Á¤¸» ÇÊ¿äÇÑ °æ¿ì¿¡¸¸ »ç¿ë (¿¹: °ÔÀÓ¿À¹ö, ¾À ÀüÈ¯ µî)
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ì¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ (ï¿½ï¿½: ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½ï¿½)
     void ForceStateChange(PLAYER_STATE _eState);
     void ForceStateForSystemReset(PLAYER_STATE _eState);
 
     bool CanChangeToState(PLAYER_STATE _eState) const;
 
 public:
-    // === »óÅÂ Ã¼Å© ÇÔ¼öµé ===
+    // === ï¿½ï¿½ï¿½ï¿½ Ã¼Å© ï¿½Ô¼ï¿½ï¿½ï¿½ ===
     bool IsInhaleState() const;
     bool IsMovingState() const;
     bool IsMouthfulState() const;
     bool IsGroundedState() const;
-    bool IsHoverState() const;          // ÇöÀç HOVER »óÅÂÀÎÁö
-    bool IsHoverGrounded() const;       // HOVER Áß ¶¥¿¡ ÀÖ´ÂÁö
-    bool IsHoverFloating() const;       // HOVER Áß °øÁß¿¡ ÀÖ´ÂÁö
+    bool IsHoverState() const;          // ï¿½ï¿½ï¿½ï¿½ HOVER ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    bool IsHoverGrounded() const;       // HOVER ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½
+    bool IsHoverFloating() const;       // HOVER ï¿½ï¿½ ï¿½ï¿½ï¿½ß¿ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½
     HOVER_SUBSTATE GetHoverSubState() const { return m_eHoverSubState; }
 
 public:
-    // === DAMAGE »óÅÂ Ã¼Å© ÇÔ¼ö ===
+    // === DAMAGE ï¿½ï¿½ï¿½ï¿½ Ã¼Å© ï¿½Ô¼ï¿½ ===
     bool IsDamageCompleted() const { return m_bDamageCompleted; }
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter ï¿½Ô¼ï¿½ï¿½ï¿½ ===
     PLAYER_STATE GetCurrentState() const { return m_eCurState; }
     PLAYER_STATE GetPreviousState() const { return m_ePrevState; }
     CPlayerInputManager* GetInputManager() const { return m_pInputManager; }
+    INHALE_COUNT GetInhaleCount() const { return m_eInhaleCount; }
+    COPY_ABILITY GetCopyAbility() const { return m_eCopyAbility; }
+    
+    // === Setter í•¨ìˆ˜ë“¤ ===
+    void SetInhaleCount(INHALE_COUNT _eCount) { m_eInhaleCount = _eCount; }
+    void SetCopyAbility(COPY_ABILITY _eAbility) { m_eCopyAbility = _eAbility; }
 
 private:
-    // === »óÅÂ ½ÇÇà (ÀÔ·Â Ã³¸® ¾øÀ½, ¼ø¼ö ½ÇÇà¸¸) ===
+    // === ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ô·ï¿½ Ã³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½à¸¸) ===
     void ExecuteCurrentState();
     void ExecuteIdleState();
     void ExecuteMovementState();
@@ -58,68 +64,81 @@ private:
     void ExecuteFallState();
     void ExecuteCrouchState();
     void ExecuteSlideState();
-    void ExecuteInhaleStates();
+    void ExecuteInhaleState();
+    void ExecuteInhaleSuccessState();
+    void ExecuteExhaleState();
+    void ExecuteSwallowState();
+    void ExecuteMouthfulStates();
     void ExecuteSpecialStates();
     void ExecuteBounceState();
     void ExecuteHoverState();
     void ExecuteHoverExhaleState();
     void ExecuteDamageState();
 
-    // === »óÅÂ º¯°æ ½Ã ½ÇÇà ===
+    // === ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ===
     void OnStateEnter(PLAYER_STATE _eState);
     void OnEnterJumpState();
     void OnEnterSlideState();
     void OnEnterInhaleState();
+    void OnEnterInhaleSuccessState();
+    void OnEnterExhaleState();
+    void OnEnterSwallowState();
+    void OnEnterMouthfulState();
     void OnEnterBounceState();
     void OnEnterFallState();
-    void OnEnterHoverState();           // HOVER ÁøÀÔ ½Ã Ã³¸®
-    void OnEnterHoverExhaleState();     // HOVER_EXHALE ÁøÀÔ ½Ã Ã³¸®
-    void OnExitHoverState();            // HOVER Á¾·á ½Ã Ã³¸®
+    void OnEnterHoverState();           // HOVER ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ã³ï¿½ï¿½
+    void OnEnterHoverExhaleState();     // HOVER_EXHALE ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ã³ï¿½ï¿½
+    void OnExitHoverState();            // HOVER ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ã³ï¿½ï¿½
     void OnEnterDamageState();
 
 private:
-    // === ½½¶óÀÌµå »óÅÂ Ã³¸® ===
-    void InitiateSlide();           // ½½¶óÀÌµå ½ÃÀÛ Ã³¸®
-    void UpdateSlideMovement();     // ½½¶óÀÌµå ÀÌµ¿ Ã³¸®
-    void CheckSlideCompletion();    // ½½¶óÀÌµå ¿Ï·á Ã¼Å©
-    void HandleSlideToFall();       // ½½¶óÀÌµå Áß ³«ÇÏ Ã³¸®
+    // === ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ===
+    void InitiateSlide();           // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
+    void UpdateSlideMovement();     // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Ìµï¿½ Ã³ï¿½ï¿½
+    void UpdateSlideKickProjectile(); // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ Å³ ï¿½ï¿½ï¿½ï¿½Ã¼ Ã³ï¿½ï¿½
+    void CheckSlideCompletion();    // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Ï·ï¿½ Ã¼Å©
+    void HandleSlideToFall();       // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
     bool IsSlideCompleted() const;
+    
+    // === ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½Å³ ï¿½Ýµï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ===
+    void ExecuteSlideKickRecoilState(); // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½Å³ ï¿½Ýµï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
+    void OnEnterSlideKickRecoilState(); // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½Å³ ï¿½Ýµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 private:
-    // === °øÁß »óÅÂ Ã³¸® ===
+    // === ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ===
     void HandleLanding();
     void PerformBounce();
 
-    // === HOVER ¼­ºê½ºÅ×ÀÌÆ® ¾÷µ¥ÀÌÆ® ÇÔ¼öµé ===
-    void UpdateHoverEnter();            // ENTER ¼­ºê½ºÅ×ÀÌÆ® Ã³¸®
-    void UpdateHoverFlyUp();            // FLY_UP ¼­ºê½ºÅ×ÀÌÆ® Ã³¸®
-    void UpdateHoverFloat();            // FLOAT ¼­ºê½ºÅ×ÀÌÆ® Ã³¸®
-    void UpdateHoverGrounded();         // GROUNDED ¼­ºê½ºÅ×ÀÌÆ® Ã³¸®
+    // === HOVER ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ô¼ï¿½ï¿½ï¿½ ===
+    void UpdateHoverEnter();            // ENTER ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ® Ã³ï¿½ï¿½
+    void UpdateHoverFlyUp();            // FLY_UP ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ® Ã³ï¿½ï¿½
+    void UpdateHoverFloat();            // FLOAT ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ® Ã³ï¿½ï¿½
+    void UpdateHoverGrounded();         // GROUNDED ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ® Ã³ï¿½ï¿½
 
-    // === HOVER °øÅë Ã³¸® ÇÔ¼öµé ===
-    void UpdateHoverMovement();         // HOVER Áß ÁÂ¿ì ÀÌµ¿ Ã³¸®
-    void UpdateHoverPhysics();          // HOVER ¹°¸® Ã³¸®
+    // === HOVER ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ===
+    void UpdateHoverMovement();         // HOVER ï¿½ï¿½ ï¿½Â¿ï¿½ ï¿½Ìµï¿½ Ã³ï¿½ï¿½
+    void UpdateHoverPhysics();          // HOVER ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
 
-    // === HOVER À¯Æ¿¸®Æ¼ ÇÔ¼öµé ===
-    void ApplyHoverUpForce();           // »ó½Â·Â Àû¿ë
-    void ApplyHoverFallSpeed();         // ´À¸° ³«ÇÏ Àû¿ë
-    void DisableGravityForHover();      // HOVER¿ë Áß·Â ºñÈ°¼ºÈ­
-    void RestoreGravityFromHover();     // HOVER Á¾·á ½Ã Áß·Â º¹±¸
+    // === HOVER ï¿½ï¿½Æ¿ï¿½ï¿½Æ¼ ï¿½Ô¼ï¿½ï¿½ï¿½ ===
+    void ApplyHoverUpForce();           // ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½
+    void ApplyHoverFallSpeed();         // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    void DisableGravityForHover();      // HOVERï¿½ï¿½ ï¿½ß·ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­
+    void RestoreGravityFromHover();     // HOVER ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ß·ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    // === HOVER ¼­ºê½ºÅ×ÀÌÆ® °ü¸® ===
+    // === HOVER ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ===
     void ChangeHoverSubState(HOVER_SUBSTATE _eNewSubState);
     void ResetHoverSubStateTimer() { m_fHoverSubStateTimer = 0.0f; }
 
 private:
-    // === ¾Ö´Ï¸ÞÀÌ¼Ç ¼³Á¤ ===
+    // === ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ ===
     void SetAnimationForState(PLAYER_STATE _eState);
 
 private:
-    // === »óÅÂ ÀüÈ¯ À¯È¿¼º °Ë»ç ===
+    // === ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½ï¿½È¿ï¿½ï¿½ ï¿½Ë»ï¿½ ===
     bool IsValidStateTransition(PLAYER_STATE _from, PLAYER_STATE _to) const;
 
 private:
-    // === ÀüÈ¯ Å×ÀÌºí ÃÊ±âÈ­ ===
+    // === ï¿½ï¿½È¯ ï¿½ï¿½ï¿½Ìºï¿½ ï¿½Ê±ï¿½È­ ===
     void InitializeTransitionTable();
     void AddBasicMovementTransitions();
     void AddJumpAndFallTransitions();
@@ -130,44 +149,64 @@ private:
     void AddDamageTransitions();
 
 private:
-    // === Á¡ÇÁ/³«ÇÏ °ü·Ã º¯¼öµé ===
-    float m_fFallTime;              // ÇöÀç ³«ÇÏ Áö¼Ó ½Ã°£
-    float m_fFallToBounceThreshold; // FALL2·Î ÀüÈ¯µÇ´Â ½Ã°£ (1.0ÃÊ)
-    float m_fBounceHeight;          // ¹Ù¿î½º ½Ã Á¡ÇÁ ³ôÀÌ (ÀÏ¹Ý Á¡ÇÁÀÇ 70%)
-    bool m_bWasGrounded;            // ÀÌÀü ÇÁ·¹ÀÓ¿¡ ¶¥¿¡ ÀÖ¾ú´ÂÁö
+    // === ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
+    float m_fFallTime;              // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    float m_fFall0Duration;         // FALL0 ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ (0.3ï¿½ï¿½)
+    float m_fFallStartY;            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Yï¿½ï¿½Ä¡
+    float m_fFallDistanceThreshold; // FALL2ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ (224px = 3.5Å¸ï¿½ï¿½)
+    float m_fBounceHeight;          // ï¿½Ù¿î½º ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ï¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 70%)
+    bool m_bWasGrounded;            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // === ½½¶óÀÌµå °ü·Ã º¯¼öµé ===
-    float m_fSlideTimer;            // ½½¶óÀÌµå Áö¼Ó ½Ã°£ Å¸ÀÌ¸Ó
-    float m_fSlideDuration;         // ½½¶óÀÌµå ÃÑ Áö¼Ó ½Ã°£
-    float m_fSlideDistance;         // ½½¶óÀÌµå ÀÌµ¿ÇÒ ÃÑ °Å¸®
-    float m_fSlideSpeed;            // ½½¶óÀÌµå ¼Óµµ
-    Vec2 m_vSlideStartPos;          // ½½¶óÀÌµå ½ÃÀÛ À§Ä¡
-    int m_iSlideDirection;          // ½½¶óÀÌµå ¹æÇâ (1: ¿À¸¥ÂÊ, -1: ¿ÞÂÊ)
-    bool m_bSlideGroundCheck;       // ½½¶óÀÌµå Áß Áö¸é Ã¼Å© ¿©ºÎ
+    // === ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
+    float m_fSlideTimer;            // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ Å¸ï¿½Ì¸ï¿½
+    float m_fSlideDuration;         // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    float m_fSlideDistance;         // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Å¸ï¿½
+    float m_fSlideSpeed;            // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Óµï¿½
+    Vec2 m_vSlideStartPos;          // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
+    int m_iSlideDirection;          // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ (1: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, -1: ï¿½ï¿½ï¿½ï¿½)
+    bool m_bSlideGroundCheck;       // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã¼Å© ï¿½ï¿½ï¿½ï¿½
+    bool m_bSlideKickCreated;       // ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ Å³ ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    
+    // === ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½Å³ ï¿½Ýµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
+    float m_fRecoilTimer;           // ï¿½Ýµï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½
+    float m_fRecoilDuration;        // ï¿½Ýµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ (0.3ï¿½ï¿½)
+    Vec2 m_vRecoilVelocity;         // ï¿½Ýµï¿½ ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    // === HOVER »óÅÂ °ü¸® ¸â¹ö º¯¼öµé ===
-    HOVER_SUBSTATE  m_eHoverSubState;       // ÇöÀç HOVER ¼­ºê½ºÅ×ÀÌÆ®
-    float           m_fHoverUpForce;        // HOVER »ó½Â·Â
-    float           m_fHoverFallSpeed;      // HOVER ³«ÇÏ ¼Óµµ
-    float           m_fHoverMoveSpeed;      // HOVER ÀÌµ¿ ¼Óµµ
-    float           m_fHoverSubStateTimer;  // ¼­ºê½ºÅ×ÀÌÆ® Å¸ÀÌ¸Ó
-    float           m_fHoverEnterDuration;  // ENTER »óÅÂ Áö¼Ó ½Ã°£
-    float           m_fHoverFlyUpDuration;  // FLY_UP »óÅÂ Áö¼Ó ½Ã°£
-    float           m_fHoverAirFriction;    // °øÁß ¸¶Âû °è¼ö
-    bool            m_bHoverCanMoveOnGround; // ¶¥¿¡¼­µµ ÀÌµ¿ °¡´É ¿©ºÎ
+    // === HOVER ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
+    HOVER_SUBSTATE  m_eHoverSubState;       // ï¿½ï¿½ï¿½ï¿½ HOVER ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ®
+    float           m_fHoverUpForce;        // HOVER ï¿½ï¿½Â·ï¿½
+    float           m_fHoverFallSpeed;      // HOVER ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½
+    float           m_fHoverMoveSpeed;      // HOVER ï¿½Ìµï¿½ ï¿½Óµï¿½
+    float           m_fHoverSubStateTimer;  // ï¿½ï¿½ï¿½ê½ºï¿½ï¿½ï¿½ï¿½Æ® Å¸ï¿½Ì¸ï¿½
+    float           m_fHoverEnterDuration;  // ENTER ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    float           m_fHoverFlyUpDuration;  // FLY_UP ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    float           m_fHoverAirFriction;    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+    bool            m_bHoverCanMoveOnGround; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    // === DAMAGE »óÅÂ °ü·Ã º¯¼öµé ===
-    float m_fDamageTimer;           // ÇÇ°Ý »óÅÂ Å¸ÀÌ¸Ó
-    float m_fDamageDuration;        // ÇÇ°Ý »óÅÂ Áö¼Ó ½Ã°£ (0.5ÃÊ)
-    bool m_bDamageCompleted;        // ÇÇ°Ý ½Ã°£ ¿Ï·á ÇÃ·¡±×
+    // === DAMAGE ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
+    float m_fDamageTimer;           // ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½
+    float m_fDamageDuration;        // ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ (0.5ï¿½ï¿½)
+    bool m_bDamageCompleted;        // ï¿½Ç°ï¿½ ï¿½Ã°ï¿½ ï¿½Ï·ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½
 
-    // === ¸â¹ö º¯¼öµé ===
-    CPlayer* m_pOwner;                              // ÇÃ·¹ÀÌ¾î ÂüÁ¶
-    CPlayerInputManager* m_pInputManager;           // ÀÔ·Â ¸Å´ÏÀú (»õ·Î Ãß°¡)
-    CPlayerStateTransitionTable* m_pTransitionTable; // ÀüÈ¯ Å×ÀÌºí (»õ·Î Ãß°¡)
+    // === ï¿½ï¿½ï¿½È´ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
+    INHALE_COUNT m_eInhaleCount;        // ï¿½ï¿½ï¿½È´ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½
+    COPY_ABILITY m_eCopyAbility;        // Ä«ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½
+    float m_fInhaleTimer;               // ï¿½ï¿½ï¿½È´ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½
+    float m_fInhaleDuration;            // ï¿½ï¿½ï¿½È´ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    float m_fInhaleSuccessTimer;        // ï¿½ï¿½ï¿½È´ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½
+    float m_fInhaleSuccessDuration;     // ï¿½ï¿½ï¿½È´ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    float m_fExhaleTimer;               // ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½
+    float m_fExhaleDuration;            // ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    float m_fSwallowTimer;              // ï¿½ï¿½Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½
+    float m_fSwallowDuration;           // ï¿½ï¿½Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
 
-    PLAYER_STATE    m_eCurState;    // ÇöÀç »óÅÂ
-    PLAYER_STATE    m_ePrevState;   // ÀÌÀü »óÅÂ
+    // === ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===
+    CPlayer* m_pOwner;                              // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½
+    CPlayerInputManager* m_pInputManager;           // ï¿½Ô·ï¿½ ï¿½Å´ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½)
+    CPlayerStateTransitionTable* m_pTransitionTable; // ï¿½ï¿½È¯ ï¿½ï¿½ï¿½Ìºï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½)
+
+    PLAYER_STATE    m_eCurState;    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    PLAYER_STATE    m_ePrevState;   // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 
 

@@ -8,49 +8,77 @@ public:
     virtual ~CBasicMonster();
 
 public:
-    // === »¡¾ÆµéÀÓ °ü·Ã (final·Î ÇÏÀ§ Å¬·¡½º¿¡¼­ º¯°æ ºÒ°¡) ===
+    // === ë¹¨ì•„ë“¤ì„ ê´€ë ¨ (finalë¡œ í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ ë³€ê²½ ë¶ˆê°€) ===
     bool CanBeInhaled() const override final { return true; }
 
-    // === »¡¾ÆµéÀÓ Ã³¸® ===
-    virtual void OnInhaled();               // »¡¾ÆµéÀÓ ´çÇßÀ» ¶§ Ã³¸®
-    virtual void OnInhaleStart();           // »¡¾ÆµéÀÓ ½ÃÀÛ\
+    // === ë¹¨ì•„ë“¤ì„ ì²˜ë¦¬ ===
+    virtual void OnInhaled();               // ë¹¨ì•„ë“¤ì„ ë‹¹í–ˆì„ ë•Œ ì²˜ë¦¬
+    virtual void OnInhaleStart();           // ë¹¨ì•„ë“¤ì„ ì‹œì‘\
 
 public:
-    // === »¡¾ÆµéÀÓ »óÅÂ È®ÀÎ ===
+    // === ë¹¨ì•„ë“¤ì„ ìƒíƒœ í™•ì¸ ===
     bool IsBeingInhaled() const { return m_bBeingInhaled; }
     void SetInhaled(bool _bInhaled) { m_bBeingInhaled = _bInhaled; }
 
 protected:
-    // === ÀÏ¹İ ¸ó½ºÅÍ °øÅë ±â´Éµé ===
-    void CheckPlayerDistance();             // ÇÃ·¹ÀÌ¾î¿ÍÀÇ °Å¸® Ã¼Å©
-    void HandleInhaleEffect();              // »¡¾ÆµéÀÓ ÀÌÆåÆ® Ã³¸®
-    void UpdateInhaleState();               // »¡¾ÆµéÀÓ »óÅÂ ¾÷µ¥ÀÌÆ®
+    // === ì¼ë°˜ ëª¬ìŠ¤í„° ê³µí†µ ê¸°ëŠ¥ë“¤ ===
+    void CheckPlayerDistance();             // í”Œë ˆì´ì–´ì™€ì˜ ê±°ë¦¬ ì²´í¬
+    void HandleInhaleEffect();              // ë¹¨ì•„ë“¤ì„ ì´í™íŠ¸ ì²˜ë¦¬
+    void UpdateInhaleState();               // ë¹¨ì•„ë“¤ì„ ìƒíƒœ ì—…ë°ì´íŠ¸
 
-    // === ÀÏ¹İ ¸ó½ºÅÍ °øÅë »óÅÂ ¾÷µ¥ÀÌÆ® ===
+    // === ì¼ë°˜ ëª¬ìŠ¤í„° ê³µí†µ ìƒíƒœ ì—…ë°ì´íŠ¸ ===
+    void Update() override;             // ë©”ì¸ ì—…ë°ì´íŠ¸ (ì£½ìŒ íš¨ê³¼ ì²˜ë¦¬ í¬í•¨)
     void UpdateIdle() override;
     void UpdateWalk() override;
-    void UpdateFly() override;          // ºñÇà »óÅÂµµ Ãß°¡
+    void UpdateFly() override;          // ë¹„í–‰ ìƒíƒœë„ ì¶”ê°€
     void UpdateTurn() override;
 
 public:
-    // === °¨Áö °ü·Ã Getter/Setter ===
+    // === ê°ì§€ ê´€ë ¨ Getter/Setter ===
     bool IsPlayerDetected() const { return m_bPlayerDetected; }
     float GetDetectionRange() const { return m_fDetectionRange; }
     void SetDetectionRange(float _fRange) { m_fDetectionRange = _fRange; }
     const Vec2& GetPlayerPos() const { return m_vPlayerPos; }
 
 protected:
-    // === ÇÃ·¹ÀÌ¾î °¨Áö °ü·Ã ===
-    bool    m_bPlayerDetected;      // ÇÃ·¹ÀÌ¾î °¨Áö ¿©ºÎ
-    float   m_fDetectionRange;      // ÇÃ·¹ÀÌ¾î °¨Áö ¹üÀ§
-    Vec2    m_vPlayerPos;           // ÇÃ·¹ÀÌ¾î À§Ä¡
+    // === í”Œë ˆì´ì–´ ê°ì§€ ê´€ë ¨ ===
+    bool    m_bPlayerDetected;      // í”Œë ˆì´ì–´ ê°ì§€ ì—¬ë¶€
+    float   m_fDetectionRange;      // í”Œë ˆì´ì–´ ê°ì§€ ë²”ìœ„
+    Vec2    m_vPlayerPos;           // í”Œë ˆì´ì–´ ìœ„ì¹˜
 
-    // === »¡¾ÆµéÀÓ °ü·Ã ³»ºÎ Ã³¸® ===
-    void ProcessInhaleMovement();           // »¡¾ÆµéÀÓ Áß ÀÌµ¿ Ã³¸®
-    void CheckInhaleDistance();             // »¡¾ÆµéÀÓ °Å¸® Ã¼Å©
+    // === ë¹¨ì•„ë“¤ì„ ê´€ë ¨ ë‚´ë¶€ ì²˜ë¦¬ ===
+    void ProcessInhaleMovement();           // ë¹¨ì•„ë“¤ì„ ì¤‘ ì´ë™ ì²˜ë¦¬
+    void CheckInhaleDistance();             // ë¹¨ì•„ë“¤ì„ ê±°ë¦¬ ì²´í¬
 
 protected:
-    // === »¡¾ÆµéÀÓ »óÅÂ ===
-    bool    m_bBeingInhaled;        // »¡¾ÆµéÀÓ Áß »óÅÂ
-    float   m_fInhaleForce;         // »¡¾ÆµéÀÓ Èû
+    // === ë¹¨ì•„ë“¤ì„ ìƒíƒœ ===
+    bool    m_bBeingInhaled;        // ë¹¨ì•„ë“¤ì„ ì¤‘ ìƒíƒœ
+    float   m_fInhaleForce;         // ë¹¨ì•„ë“¤ì„ í˜
+
+    // === ì²´ë ¥ ì‹œìŠ¤í…œ ===
+    int     m_iHealth;              // í˜„ì¬ ì²´ë ¥
+    int     m_iMaxHealth;           // ìµœëŒ€ ì²´ë ¥
+
+    // === ì£½ìŒ íš¨ê³¼ ê´€ë ¨ ===
+    bool    m_bIsDying;             // ì£½ëŠ” ì¤‘ì¸ì§€ ì—¬ë¶€
+    float   m_fDeathEffectTimer;    // ì£½ìŒ íš¨ê³¼ íƒ€ì´ë¨¸
+    Vec2    m_vKnockbackDir;        // ë„‰ë°± ë°©í–¥
+    float   m_fKnockbackSpeed;      // ë„‰ë°± ì†ë„
+
+public:
+    // === ì²´ë ¥ ê´€ë ¨ í•¨ìˆ˜ ===
+    int GetHealth() const { return m_iHealth; }
+    int GetMaxHealth() const { return m_iMaxHealth; }
+    void SetHealth(int _iHealth) { m_iHealth = _iHealth; }
+    bool IsDying() const { return m_bIsDying; }
+    
+    // === ì£½ìŒ íš¨ê³¼ ì²˜ë¦¬ ===
+    void StartDeathEffect(Vec2 _vKnockbackDir);
+    void UpdateDeathEffect();
+
+    // === ë°ë¯¸ì§€ ì²˜ë¦¬ ì˜¤ë²„ë¼ì´ë“œ ===
+    void TakeDamage() override;
+    
+    // === ë°ë¯¸ì§€ ì†ŒìŠ¤ ìœ„ì¹˜ ì„¤ì • (ì´ë²¤íŠ¸ ì‹œìŠ¤í…œìš©) ===
+    void SetDamageSourcePos(Vec2 _vPos) { m_vPlayerPos = _vPos; }
 };

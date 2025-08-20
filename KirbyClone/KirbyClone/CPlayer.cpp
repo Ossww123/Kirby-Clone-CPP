@@ -29,46 +29,47 @@ CPlayer::CPlayer()
     , m_pCollisionSystem(nullptr)
     , m_bDamageRequested(false)
     , m_vDamageKnockback(Vec2(0.f, 0.f))
+    , m_bSlideKickRecoilRequested(false)
 {
     SetType(OBJECT_TYPE::PLAYER);
 
-    // === ÄÄÆ÷³ÍÆ®µé »ý¼º ===
+    // === ì»´í¬ë„ŒíŠ¸ë“¤ ìƒì„± ===
     CreateAnimator();
     CreateRigidBody();
 
-    // ¸®Áöµå¹Ùµð ¼³Á¤
+    // ë¦¬ì§€ë“œë°”ë”” ì„¤ì •
     CRigidBody* pRigidBody = GetRigidBody();
     pRigidBody->SetMass(1.f);
     pRigidBody->SetMaxVelocity(640.f);
     pRigidBody->SetFriction(0.1f);
     pRigidBody->SetUseGravity(true);
 
-    // ÄÝ¶óÀÌ´õ »ý¼º ¹× ¼³Á¤
+    // ì½œë¼ì´ë” ìƒì„± ë° ì„¤ì •
     CreateCollider();
     GetCollider()->SetOffsetPos(Vec2(0.f, 0.f));
 
-    // === Ãæµ¹Ã¼ Å©±â ¼³Á¤ ===
+    // === ì¶©ëŒì²´ í¬ê¸° ì„¤ì • ===
     m_vNormalColliderScale = Vec2(56.f, 56.f);
     m_vCrouchColliderScale = Vec2(56.f, 28.f);
     GetCollider()->SetScale(m_vNormalColliderScale);
 
-    // === ½Ã½ºÅÛµé »ý¼º ===
+    // === ì‹œìŠ¤í…œë“¤ ìƒì„± ===
     m_pStateMachine = new CPlayerStateMachine(this);
     m_pInhaleSystem = new CPlayerInhaleSystem(this);
     m_pMovement = new CPlayerMovement(this);
     m_pHealthSystem = new CPlayerHealthSystem(this);
     m_pCollisionSystem = new CPlayerCollisionSystem(this);
 
-    // === ½Ã½ºÅÛµé ÃÊ±âÈ­ ===
+    // === ì‹œìŠ¤í…œë“¤ ì´ˆê¸°í™” ===
     m_pStateMachine->Init();
     m_pInhaleSystem->Init();
     m_pMovement->Init();
     m_pHealthSystem->Init();
 
-    // === ¾Ö´Ï¸ÞÀÌ¼Ç »ý¼º ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ìƒì„± ===
     CreateAnimation();
 
-    // === ±âº» ¼³Á¤ ===
+    // === ê¸°ë³¸ ì„¤ì • ===
     SetPos(Vec2(640.f, 384.f));
     SetScale(Vec2(64.f, 64.f));
 }
@@ -108,39 +109,39 @@ CPlayer::~CPlayer()
 
 void CPlayer::Update()
 {
-    // === Ã¼·Â ½Ã½ºÅÛ ¾÷µ¥ÀÌÆ® ===
+    // === ì²´ë ¥ ì‹œìŠ¤í…œ ì—…ë°ì´íŠ¸ ===
     if (m_pHealthSystem)
         m_pHealthSystem->Update();
 
-    // °ÔÀÓ¿À¹ö »óÅÂ¶ó¸é ´Ù¸¥ ¾÷µ¥ÀÌÆ® ÁßÁö
+    // ê²Œìž„ì˜¤ë²„ ìƒíƒœë¼ë©´ ë‹¤ë¥¸ ì—…ë°ì´íŠ¸ ì¤‘ì§€
     if (m_pHealthSystem && m_pHealthSystem->IsGameOver())
         return;
 
-    // === Ãæµ¹Ã¼ Å©±â ¾÷µ¥ÀÌÆ® ===
+    // === ì¶©ëŒì²´ í¬ê¸° ì—…ë°ì´íŠ¸ ===
     UpdateColliderSize();
 
-    // === Ground »óÅÂ ¾÷µ¥ÀÌÆ® ===
+    // === Ground ìƒíƒœ ì—…ë°ì´íŠ¸ ===
     if (m_pCollisionSystem)
         m_pCollisionSystem->UpdateGroundState();
 
-    // === »óÅÂ ¸Ó½Å ¾÷µ¥ÀÌÆ® (ÀÔ·Â Ã³¸® + »óÅÂ ÀüÈ¯ + »óÅÂ ½ÇÇà) ===
+    // === ìƒíƒœ ë¨¸ì‹  ì—…ë°ì´íŠ¸ (ìž…ë ¥ ì²˜ë¦¬ + ìƒíƒœ ì „í™˜ + ìƒíƒœ ì‹¤í–‰) ===
     if (m_pStateMachine)
         m_pStateMachine->Update();
 
-    // === ÀÌµ¿ ½Ã½ºÅÛ ¾÷µ¥ÀÌÆ® (¹°¸®Àû ÀÌµ¿¸¸) ===
+    // === ì´ë™ ì‹œìŠ¤í…œ ì—…ë°ì´íŠ¸ (ë¬¼ë¦¬ì  ì´ë™ë§Œ) ===
     if (m_pMovement)
         m_pMovement->Update();
 
-    // === ÈíÀÔ ½Ã½ºÅÛ ¾÷µ¥ÀÌÆ® ===
+    // === í¡ìž… ì‹œìŠ¤í…œ ì—…ë°ì´íŠ¸ ===
     if (m_pInhaleSystem)
         m_pInhaleSystem->Update();
 
-    // === ¸®Áöµå¹Ùµð ¾÷µ¥ÀÌÆ® ===
+    // === ë¦¬ì§€ë“œë°”ë”” ì—…ë°ì´íŠ¸ ===
     CRigidBody* pRigidBody = GetRigidBody();
     if (pRigidBody)
         pRigidBody->Update();
 
-    // === ¾Ö´Ï¸ÞÀÌÅÍ ¾÷µ¥ÀÌÆ® ===
+    // === ì• ë‹ˆë©”ì´í„° ì—…ë°ì´íŠ¸ ===
     CAnimator* pAnimator = GetAnimator();
     if (pAnimator)
         pAnimator->Update();
@@ -148,14 +149,14 @@ void CPlayer::Update()
 
 void CPlayer::Render(HDC _dc)
 {
-    // ¹«Àû »óÅÂ¿¡¼­´Â ±ôºý°Å¸®´Â ·»´õ¸µ
+    // ë¬´ì  ìƒíƒœì—ì„œëŠ” ê¹œë¹¡ê±°ë¦¬ëŠ” ë Œë”ë§
     if (m_pHealthSystem && m_pHealthSystem->ShouldRenderBlink())
     {
         RenderInvincible(_dc);
         return;
     }
 
-    // ±âº» ·»´õ¸µ
+    // ê¸°ë³¸ ë Œë”ë§
     CAnimator* pAnimator = GetAnimator();
     if (pAnimator)
     {
@@ -163,19 +164,19 @@ void CPlayer::Render(HDC _dc)
     }
     else
     {
-        // ¾Ö´Ï¸ÞÀÌÅÍ°¡ ¾øÀ¸¸é ±âº» ¿ÀºêÁ§Æ® ·»´õ¸µ
+        // ì• ë‹ˆë©”ì´í„°ê°€ ì—†ìœ¼ë©´ ê¸°ë³¸ ì˜¤ë¸Œì íŠ¸ ë Œë”ë§
         CObject::Render(_dc);
     }
 
-    // Ãæµ¹Ã¼ ·»´õ¸µ Ãß°¡
+    // ì¶©ëŒì²´ ë Œë”ë§ ì¶”ê°€
     if (GetCollider())
     {
-        //GetCollider()->Render(_dc);  // Ç×»ó º¸ÀÌ´Â ÃÊ·Ï»ö
-        // ¶Ç´Â
-        GetCollider()->RenderScaled(_dc, 1.0f);  // TABÅ° ÇÊ¿ä
+        //GetCollider()->Render(_dc);  // í•­ìƒ ë³´ì´ëŠ” ì´ˆë¡ìƒ‰
+        // ë˜ëŠ”
+        GetCollider()->RenderScaled(_dc, 1.0f);  // TABí‚¤ í•„ìš”
     }
 
-    // ÈíÀÔ ½Ã½ºÅÛ ÀÌÆåÆ® ·»´õ¸µ
+    // í¡ìž… ì‹œìŠ¤í…œ ì´íŽ™íŠ¸ ë Œë”ë§
     if (m_pInhaleSystem)
     {
         m_pInhaleSystem->RenderInhaleEffect(_dc);
@@ -200,7 +201,7 @@ void CPlayer::OnCollisionExit(CCollider* _pOther)
         m_pCollisionSystem->HandleCollisionExit(_pOther);
 }
 
-// === »óÅÂ °ü·Ã ÀÎÅÍÆäÀÌ½º ±¸Çö ===
+// === ìƒíƒœ ê´€ë ¨ ì¸í„°íŽ˜ì´ìŠ¤ êµ¬í˜„ ===
 PLAYER_STATE CPlayer::GetCurrentState() const
 {
     return m_pStateMachine ? m_pStateMachine->GetCurrentState() : PLAYER_STATE::IDLE;
@@ -211,9 +212,9 @@ PLAYER_STATE CPlayer::GetPreviousState() const
     return m_pStateMachine ? m_pStateMachine->GetPreviousState() : PLAYER_STATE::END;
 }
 
-// === ÇÊ¼ö ·¡ÆÛ ÇÔ¼öµé ±¸Çö ===
+// === í•„ìˆ˜ ëž˜í¼ í•¨ìˆ˜ë“¤ êµ¬í˜„ ===
 
-// ÈíÀÔ °ü·Ã ÇÊ¼ö ±â´É
+// í¡ìž… ê´€ë ¨ í•„ìˆ˜ ê¸°ëŠ¥
 bool CPlayer::IsInhaling() const
 {
     return m_pInhaleSystem ? m_pInhaleSystem->IsInhaling() : false;
@@ -242,13 +243,13 @@ void CPlayer::SpitOut()
         m_pInhaleSystem->SpitOut();
 }
 
-// ÀÌµ¿ °ü·Ã ÇÊ¼ö ±â´É
+// ì´ë™ ê´€ë ¨ í•„ìˆ˜ ê¸°ëŠ¥
 bool CPlayer::IsFacingRight() const
 {
     return m_pMovement ? m_pMovement->IsFacingRight() : true;
 }
 
-// Ã¼·Â °ü·Ã ÇÊ¼ö ±â´É
+// ì²´ë ¥ ê´€ë ¨ í•„ìˆ˜ ê¸°ëŠ¥
 void CPlayer::TakeDamage(int _iDamage, Vec2 _vKnockbackDir)
 {
     if (m_pHealthSystem)
@@ -277,18 +278,28 @@ void CPlayer::ClearDamageRequest()
     m_vDamageKnockback = Vec2(0.f, 0.f);
 }
 
-// === ·»´õ¸µ ÇïÆÛ ÇÔ¼öµé ===
+void CPlayer::RequestSlideKickRecoil()
+{
+    m_bSlideKickRecoilRequested = true;
+}
+
+void CPlayer::ClearSlideKickRecoilRequest()
+{
+    m_bSlideKickRecoilRequested = false;
+}
+
+// === ë Œë”ë§ í—¬í¼ í•¨ìˆ˜ë“¤ ===
 void CPlayer::RenderInvincible(HDC _dc)
 {
-    // ¹«Àû »óÅÂ È®ÀÎ
+    // ë¬´ì  ìƒíƒœ í™•ì¸
     bool bShouldRender = true;
     if (m_pHealthSystem && m_pHealthSystem->ShouldRenderBlink())
     {
-        // ±ôºý°Å¸®´Â È¿°ú - ÀÏÁ¤ ½Ã°£¸¶´Ù ·»´õ¸µ °Ç³Ê¶Ù±â
+        // ê¹œë¹¡ê±°ë¦¬ëŠ” íš¨ê³¼ - ì¼ì • ì‹œê°„ë§ˆë‹¤ ë Œë”ë§ ê±´ë„ˆë›°ê¸°
         static float fBlinkTime = 0.f;
         fBlinkTime += CTimeMgr::GetInst()->GetfDT();
 
-        if (fBlinkTime > 0.1f)  // 0.1ÃÊ¸¶´Ù Åä±Û
+        if (fBlinkTime > 0.1f)  // 0.1ì´ˆë§ˆë‹¤ í† ê¸€
         {
             bShouldRender = !bShouldRender;
             fBlinkTime = 0.f;
@@ -297,7 +308,7 @@ void CPlayer::RenderInvincible(HDC _dc)
 
     if (bShouldRender)
     {
-        // ±âº» ·»´õ¸µ
+        // ê¸°ë³¸ ë Œë”ë§
         CAnimator* pAnimator = GetAnimator();
         if (pAnimator)
         {
@@ -310,7 +321,7 @@ void CPlayer::RenderInvincible(HDC _dc)
     }
 }
 
-// === Ãæµ¹Ã¼ Å©±â ¾÷µ¥ÀÌÆ® ÇÔ¼ö ===
+// === ì¶©ëŒì²´ í¬ê¸° ì—…ë°ì´íŠ¸ í•¨ìˆ˜ ===
 void CPlayer::UpdateColliderSize()
 {
     if (!GetCollider())
@@ -319,54 +330,54 @@ void CPlayer::UpdateColliderSize()
     PLAYER_STATE currentState = GetCurrentState();
     Vec2 targetScale = m_vNormalColliderScale;
 
-    // Å©¶ó¿ìÄ¡ »óÅÂ¿¡¼­´Â Ãæµ¹Ã¼ Å©±â Ãà¼Ò
+    // í¬ë¼ìš°ì¹˜ ìƒíƒœì—ì„œëŠ” ì¶©ëŒì²´ í¬ê¸° ì¶•ì†Œ
     if (currentState == PLAYER_STATE::CROUCH || currentState == PLAYER_STATE::SLIDE)
     {
         targetScale = m_vCrouchColliderScale;
     }
 
-    // ÇöÀç Ãæµ¹Ã¼ Å©±â¿Í ´Ù¸£¸é ¾÷µ¥ÀÌÆ®
+    // í˜„ìž¬ ì¶©ëŒì²´ í¬ê¸°ì™€ ë‹¤ë¥´ë©´ ì—…ë°ì´íŠ¸
     Vec2 currentScale = GetCollider()->GetScale();
     if (currentScale != targetScale)
     {
         GetCollider()->SetScale(targetScale);
 
-        // Å©±â º¯°æ ½Ã À§Ä¡ º¸Á¤ (¹Ù´Ú¿¡ ¸ÂÃã)
+        // í¬ê¸° ë³€ê²½ ì‹œ ìœ„ì¹˜ ë³´ì • (ë°”ë‹¥ì— ë§žì¶¤)
         AdjustPositionForColliderResize(currentScale, targetScale);
     }
 }
 
-// === Ãæµ¹Ã¼ Å©±â º¯°æ ½Ã À§Ä¡ º¸Á¤ ===
+// === ì¶©ëŒì²´ í¬ê¸° ë³€ê²½ ì‹œ ìœ„ì¹˜ ë³´ì • ===
 void CPlayer::AdjustPositionForColliderResize(const Vec2& _vOldScale, const Vec2& _vNewScale)
 {
     if (!GetRigidBody() || !GetRigidBody()->IsGround())
         return;
 
-    // YÃà Å©±â º¯È­·® °è»ê
+    // Yì¶• í¬ê¸° ë³€í™”ëŸ‰ ê³„ì‚°
     float scaleDifference = _vOldScale.y - _vNewScale.y;
 
-    if (abs(scaleDifference) > 0.1f)  // À¯ÀÇ¹ÌÇÑ º¯È­¸¸ Ã³¸®
+    if (abs(scaleDifference) > 0.1f)  // ìœ ì˜ë¯¸í•œ ë³€í™”ë§Œ ì²˜ë¦¬
     {
-        // Å©±â°¡ ÀÛ¾ÆÁö¸é (Å©¶ó¿ìÄ¡) ¾Æ·¡·Î ÀÌµ¿
-        // Å©±â°¡ Ä¿Áö¸é (ÀÏ¹Ý»óÅÂ) À§·Î ÀÌµ¿
+        // í¬ê¸°ê°€ ìž‘ì•„ì§€ë©´ (í¬ë¼ìš°ì¹˜) ì•„ëž˜ë¡œ ì´ë™
+        // í¬ê¸°ê°€ ì»¤ì§€ë©´ (ì¼ë°˜ìƒíƒœ) ìœ„ë¡œ ì´ë™
         Vec2 currentPos = GetPos();
-        currentPos.y += scaleDifference * 0.5f;  // Àý¹Ý¸¸Å­ ÀÌµ¿ (Áß½ÉÁ¡ ±âÁØ)
+        currentPos.y += scaleDifference * 0.5f;  // ì ˆë°˜ë§Œí¼ ì´ë™ (ì¤‘ì‹¬ì  ê¸°ì¤€)
         SetPos(currentPos);
     }
 }
 
-// === ¾Ö´Ï¸ÞÀÌ¼Ç »ý¼º ÇÔ¼ö ===
+// === ì• ë‹ˆë©”ì´ì…˜ ìƒì„± í•¨ìˆ˜ ===
 void CPlayer::CreateAnimation()
 {
-    // ¾Ö´Ï¸ÞÀÌ¼Ç ¸Å´ÏÀú¸¦ ÅëÇÑ ÆÄÀÏ ±â¹Ý ·Îµù
+    // ì• ë‹ˆë©”ì´ì…˜ ë§¤ë‹ˆì €ë¥¼ í†µí•œ íŒŒì¼ ê¸°ë°˜ ë¡œë”©
     CAnimator* pAnimator = GetAnimator();
     if (!pAnimator)
         return;
 
-    // ÇÃ·¹ÀÌ¾î ¾Ö´Ï¸ÞÀÌ¼Ç ÆÄÀÏ ·Îµå
+    // í”Œë ˆì´ì–´ ì• ë‹ˆë©”ì´ì…˜ íŒŒì¼ ë¡œë“œ
     wstring animationFilePath = L"player_animations.json";
     CAnimationDataMgr::GetInst()->LoadAnimationsIntoAnimator(pAnimator, animationFilePath);
 
-    // ±âº» ¾Ö´Ï¸ÞÀÌ¼Ç ¼³Á¤
+    // ê¸°ë³¸ ì• ë‹ˆë©”ì´ì…˜ ì„¤ì •
     pAnimator->Play(L"IDLE", true);
 }

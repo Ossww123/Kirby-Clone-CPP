@@ -1,14 +1,6 @@
 #pragma once
 #include "CBasicMonster.h"
 
-enum class COPY_ABILITY
-{
-    NONE,
-    BEAM,           // ¿şÀÌµé µÎ
-    FIRE,           // ÇÖ Çìµå  
-    SPARK,          // ½ºÆÄÅ°
-};
-
 class CCopyMonster : public CBasicMonster
 {
 public:
@@ -16,58 +8,58 @@ public:
     virtual ~CCopyMonster();
 
 public:
-    // === °ø°İ ½Ã½ºÅÛ (final·Î ÇÏÀ§ Å¬·¡½º¿¡¼­ º¯°æ ºÒ°¡) ===
+    // === ê³µê²© ì‹œìŠ¤í…œ (finalë¡œ í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ ë³€ê²½ ë¶ˆê°€) ===
     bool HasAttack() const override final { return true; }
 
-    // === ¼ø¼ö °¡»ó ÇÔ¼ö (ÇÏÀ§ Å¬·¡½º¿¡¼­ ¹İµå½Ã ±¸Çö) ===
-    virtual void Attack() = 0;                          // °ø°İ ÆĞÅÏ
-    virtual COPY_ABILITY GetCopyAbility() const = 0;    // Ä«ÇÇ ´É·Â ¹İÈ¯
+    // === ìˆœìˆ˜ ê°€ìƒ í•¨ìˆ˜ (í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ ë°˜ë“œì‹œ êµ¬í˜„) ===
+    virtual void Attack() = 0;                          // ê³µê²© íŒ¨í„´
+    virtual COPY_ABILITY GetCopyAbility() const = 0;    // ì¹´í”¼ ëŠ¥ë ¥ ë°˜í™˜
 
 public:
-    // === °ø°İ °ü·Ã ÀÎÅÍÆäÀÌ½º ===
-    bool CanAttack() const;                             // °ø°İ °¡´É ¿©ºÎ
-    void StartAttack();                                 // °ø°İ ½ÃÀÛ
-    void EndAttack();                                   // °ø°İ Á¾·á
+    // === ê³µê²© ê´€ë ¨ ì¸í„°í˜ì´ìŠ¤ ===
+    bool CanAttack() const;                             // ê³µê²© ê°€ëŠ¥ ì—¬ë¶€
+    void StartAttack();                                 // ê³µê²© ì‹œì‘
+    void EndAttack();                                   // ê³µê²© ì¢…ë£Œ
 
-    // === Ä«ÇÇ ´É·Â °ü·Ã ===
-    virtual void OnCopyAbilityGiven();                  // Ä«ÇÇ ´É·Â Á¦°ø ½Ã Ã³¸®
+    // === ì¹´í”¼ ëŠ¥ë ¥ ê´€ë ¨ ===
+    virtual void OnCopyAbilityGiven();                  // ì¹´í”¼ ëŠ¥ë ¥ ì œê³µ ì‹œ ì²˜ë¦¬
 
 public:
-    // === °ø°İ »óÅÂ È®ÀÎ ===
+    // === ê³µê²© ìƒíƒœ í™•ì¸ ===
     bool IsAttacking() const { return m_bAttacking; }
     float GetAttackCooldown() const { return m_fAttackCooldown; }
 
 protected:
-    // === °ø°İ ½Ã½ºÅÛ °ü¸® ===
-    void UpdateAttackCooldown();                        // °ø°İ ÄğÅ¸ÀÓ ¾÷µ¥ÀÌÆ®
-    void CheckAttackCondition();                        // °ø°İ Á¶°Ç Ã¼Å©
+    // === ê³µê²© ì‹œìŠ¤í…œ ê´€ë¦¬ ===
+    void UpdateAttackCooldown();                        // ê³µê²© ì¿¨íƒ€ì„ ì—…ë°ì´íŠ¸
+    void CheckAttackCondition();                        // ê³µê²© ì¡°ê±´ ì²´í¬
     void SetAttackCooldown(float _fCooldown) { m_fMaxAttackCooldown = _fCooldown; }
 
-    // === »óÅÂ ¾÷µ¥ÀÌÆ® ¿À¹ö¶óÀÌµå ===
+    // === ìƒíƒœ ì—…ë°ì´íŠ¸ ì˜¤ë²„ë¼ì´ë“œ ===
     void UpdateWalk() override;
     void UpdateAttackReady() override;
     void UpdateAttack() override;
 
 protected:
-    // === °ø°İ °ü·Ã ÇïÆÛ ÇÔ¼öµé ===
-    bool IsPlayerInRange() const;                       // ÇÃ·¹ÀÌ¾î°¡ °ø°İ ¹üÀ§ ³»¿¡ ÀÖ´ÂÁö
-    Vec2 GetPlayerDirection() const;                    // ÇÃ·¹ÀÌ¾î ¹æÇâ º¤ÅÍ
-    void AimAtPlayer();                                 // ÇÃ·¹ÀÌ¾î Á¶ÁØ
+    // === ê³µê²© ê´€ë ¨ í—¬í¼ í•¨ìˆ˜ë“¤ ===
+    bool IsPlayerInRange() const;                       // í”Œë ˆì´ì–´ê°€ ê³µê²© ë²”ìœ„ ë‚´ì— ìˆëŠ”ì§€
+    Vec2 GetPlayerDirection() const;                    // í”Œë ˆì´ì–´ ë°©í–¥ ë²¡í„°
+    void AimAtPlayer();                                 // í”Œë ˆì´ì–´ ì¡°ì¤€
 
 private:
-    // === °ø°İ ½Ã½ºÅÛ ³»ºÎ Ã³¸® ===
-    void ProcessAttackLogic();                          // °ø°İ ·ÎÁ÷ Ã³¸®
+    // === ê³µê²© ì‹œìŠ¤í…œ ë‚´ë¶€ ì²˜ë¦¬ ===
+    void ProcessAttackLogic();                          // ê³µê²© ë¡œì§ ì²˜ë¦¬
 
 protected:
-    // === °ø°İ °ü·Ã º¯¼öµé ===
-    bool    m_bAttacking;           // °ø°İ Áß »óÅÂ
-    float   m_fAttackCooldown;      // ÇöÀç °ø°İ ÄğÅ¸ÀÓ
-    float   m_fMaxAttackCooldown;   // ÃÖ´ë °ø°İ ÄğÅ¸ÀÓ
-    float   m_fAttackRange;         // °ø°İ ¹üÀ§
-    float   m_fAttackReadyTime;     // °ø°İ ÁØºñ ½Ã°£
-    float   m_fAttackDuration;      // °ø°İ Áö¼Ó ½Ã°£
+    // === ê³µê²© ê´€ë ¨ ë³€ìˆ˜ë“¤ ===
+    bool    m_bAttacking;           // ê³µê²© ì¤‘ ìƒíƒœ
+    float   m_fAttackCooldown;      // í˜„ì¬ ê³µê²© ì¿¨íƒ€ì„
+    float   m_fMaxAttackCooldown;   // ìµœëŒ€ ê³µê²© ì¿¨íƒ€ì„
+    float   m_fAttackRange;         // ê³µê²© ë²”ìœ„
+    float   m_fAttackReadyTime;     // ê³µê²© ì¤€ë¹„ ì‹œê°„
+    float   m_fAttackDuration;      // ê³µê²© ì§€ì† ì‹œê°„
 
-    // === ÇÃ·¹ÀÌ¾î ÃßÀû ===
-    Vec2    m_vPlayerPos;           // ÇÃ·¹ÀÌ¾î À§Ä¡
-    bool    m_bPlayerDetected;      // ÇÃ·¹ÀÌ¾î °¨Áö ¿©ºÎ
+    // === í”Œë ˆì´ì–´ ì¶”ì  ===
+    Vec2    m_vPlayerPos;           // í”Œë ˆì´ì–´ ìœ„ì¹˜
+    bool    m_bPlayerDetected;      // í”Œë ˆì´ì–´ ê°ì§€ ì—¬ë¶€
 };

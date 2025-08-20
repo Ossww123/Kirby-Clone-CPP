@@ -11,13 +11,13 @@ CInvincibleMonster::CInvincibleMonster()
     , m_fEffectTimer(0.f)
     , m_bShowingEffect(false)
 {
-    // ¹«Àû ¸ó½ºÅÍ´Â Æ¯º°ÇÑ ÃÊ±â ¼³Á¤ ºÒÇÊ¿ä
-    // ÀÚ½Ä Å¬·¡½º¿¡¼­ °³º° ¼³Á¤
+    // ë¬´ì  ëª¬ìŠ¤í„°ëŠ” íŠ¹ë³„í•œ ì´ˆê¸° ì„¤ì • ë¶ˆí•„ìš”
+    // ìžì‹ í´ëž˜ìŠ¤ì—ì„œ ê°œë³„ ì„¤ì •
 }
 
 CInvincibleMonster::~CInvincibleMonster()
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸® Ã³¸®
+    // ìƒìœ„ í´ëž˜ìŠ¤ì—ì„œ ì •ë¦¬ ì²˜ë¦¬
 }
 
 void CInvincibleMonster::OnCollisionEnter(CCollider* _pOther)
@@ -32,7 +32,7 @@ void CInvincibleMonster::OnCollision(CCollider* _pOther)
 
 void CInvincibleMonster::OnCollisionExit(CCollider* _pOther)
 {
-    // Ãæµ¹ Á¾·á ½Ã Æ¯º°ÇÑ Ã³¸® ¾øÀ½
+    // ì¶©ëŒ ì¢…ë£Œ ì‹œ íŠ¹ë³„í•œ ì²˜ë¦¬ ì—†ìŒ
 }
 
 void CInvincibleMonster::HandleInvincibleCollision(CCollider* _pOther)
@@ -41,7 +41,7 @@ void CInvincibleMonster::HandleInvincibleCollision(CCollider* _pOther)
     if (nullptr == pOtherObj)
         return;
 
-    // ÇÃ·¹ÀÌ¾î¿Í Ãæµ¹ ½Ã
+    // í”Œë ˆì´ì–´ì™€ ì¶©ëŒ ì‹œ
     if (pOtherObj->GetType() == OBJECT_TYPE::PLAYER)
     {
         PushAwayPlayer(_pOther);
@@ -49,11 +49,11 @@ void CInvincibleMonster::HandleInvincibleCollision(CCollider* _pOther)
         PlayInvincibleSound();
     }
 
-    // ÇÃ·¹ÀÌ¾îÀÇ °ø°Ý°ú Ãæµ¹ ½Ã (Åõ»çÃ¼ µî)
-    // TODO: Åõ»çÃ¼ Å¸ÀÔ Ã¼Å© ÈÄ ¹«È¿È­ Ã³¸®
+    // í”Œë ˆì´ì–´ì˜ ê³µê²©ê³¼ ì¶©ëŒ ì‹œ (íˆ¬ì‚¬ì²´ ë“±)
+    // TODO: íˆ¬ì‚¬ì²´ íƒ€ìž… ì²´í¬ í›„ ë¬´íš¨í™” ì²˜ë¦¬
     // if (pOtherObj->GetType() == OBJECT_TYPE::PLAYER_PROJECTILE)
     // {
-    //     pOtherObj->SetDead();  // Åõ»çÃ¼ Á¦°Å
+    //     pOtherObj->SetDead();  // íˆ¬ì‚¬ì²´ ì œê±°
     //     CreateInvincibleEffect();
     // }
 }
@@ -64,7 +64,7 @@ void CInvincibleMonster::PushAwayPlayer(CCollider* _pOther)
     if (nullptr == pPlayer)
         return;
 
-    // ÇÃ·¹ÀÌ¾î¸¦ ¹Ð¾î³»´Â ¹æÇâ °è»ê
+    // í”Œë ˆì´ì–´ë¥¼ ë°€ì–´ë‚´ëŠ” ë°©í–¥ ê³„ì‚°
     Vec2 vPlayerPos = pPlayer->GetPos();
     Vec2 vMyPos = GetPos();
     Vec2 vDirection = vPlayerPos - vMyPos;
@@ -73,26 +73,26 @@ void CInvincibleMonster::PushAwayPlayer(CCollider* _pOther)
     {
         vDirection.Normalize();
 
-        // ÇÃ·¹ÀÌ¾î¿¡°Ô ¹Ð¾î³»´Â Èû Àû¿ë
+        // í”Œë ˆì´ì–´ì—ê²Œ ë°€ì–´ë‚´ëŠ” íž˜ ì ìš©
         CRigidBody* pPlayerRigidBody = pPlayer->GetRigidBody();
         if (nullptr != pPlayerRigidBody)
         {
-            Vec2 pushForce = vDirection * 300.f;  // ¹Ð¾î³»´Â Èû
+            Vec2 pushForce = vDirection * 300.f;  // ë°€ì–´ë‚´ëŠ” íž˜
             pPlayerRigidBody->AddForce(pushForce);
         }
 
-        // TODO: ÇÃ·¹ÀÌ¾î¿¡°Ô µ¥¹ÌÁö ÁÖ±â
+        // TODO: í”Œë ˆì´ì–´ì—ê²Œ ë°ë¯¸ì§€ ì£¼ê¸°
         // pPlayer->TakeDamage(1);
     }
 }
 
 void CInvincibleMonster::CreateInvincibleEffect()
 {
-    // ¹«Àû ÀÌÆåÆ® »ý¼º
+    // ë¬´ì  ì´íŽ™íŠ¸ ìƒì„±
     m_bShowingEffect = true;
-    m_fEffectTimer = 0.5f;  // 0.5ÃÊ°£ ÀÌÆåÆ® Ç¥½Ã
+    m_fEffectTimer = 0.5f;  // 0.5ì´ˆê°„ ì´íŽ™íŠ¸ í‘œì‹œ
 
-    // TODO: ½ºÆÄÅ© ÀÌÆåÆ® »ý¼º
+    // TODO: ìŠ¤íŒŒí¬ ì´íŽ™íŠ¸ ìƒì„±
     // CSparkEffect* pEffect = new CSparkEffect;
     // pEffect->SetPos(GetPos());
     // pEffect->SetLifetime(0.5f);
@@ -103,7 +103,7 @@ void CInvincibleMonster::CreateInvincibleEffect()
 
 void CInvincibleMonster::TakeDamage()
 {
-    // ¹«Àû ¸ó½ºÅÍ´Â µ¥¹ÌÁö¸¦ ¹ÞÁö ¾ÊÀ½
+    // ë¬´ì  ëª¬ìŠ¤í„°ëŠ” ë°ë¯¸ì§€ë¥¼ ë°›ì§€ ì•ŠìŒ
     ShowInvincibleFeedback();
     PlayInvincibleSound();
     CreateInvincibleEffect();
@@ -111,17 +111,17 @@ void CInvincibleMonster::TakeDamage()
 
 void CInvincibleMonster::ShowInvincibleFeedback()
 {
-    // ¹«Àû ÇÇµå¹é Ç¥½Ã (±ôºýÀÓ µî)
+    // ë¬´ì  í”¼ë“œë°± í‘œì‹œ (ê¹œë¹¡ìž„ ë“±)
     m_bShowingEffect = true;
     m_fEffectTimer = 0.3f;
 
-    // TODO: ±ôºýÀÓ È¿°ú
-    // TODO: ¹«Àû Ç¥½Ã UI
+    // TODO: ê¹œë¹¡ìž„ íš¨ê³¼
+    // TODO: ë¬´ì  í‘œì‹œ UI
 }
 
 void CInvincibleMonster::PlayInvincibleSound()
 {
-    // ¹«Àû »ç¿îµå Àç»ý
-    // TODO: »ç¿îµå ¸Å´ÏÀú¸¦ ÅëÇÑ ¹«Àû »ç¿îµå Àç»ý
+    // ë¬´ì  ì‚¬ìš´ë“œ ìž¬ìƒ
+    // TODO: ì‚¬ìš´ë“œ ë§¤ë‹ˆì €ë¥¼ í†µí•œ ë¬´ì  ì‚¬ìš´ë“œ ìž¬ìƒ
     // CSoundMgr::GetInst()->PlaySFX(L"InvincibleHit");
 }

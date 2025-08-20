@@ -36,7 +36,7 @@ CObject::CObject(OBJECT_TYPE _eType)
 
 CObject::~CObject()
 {
-    // ÄÄÆ÷³ÍÆ®µé ¾ÈÀüÇÏ°Ô ÇØÁ¦
+    // ì»´í¬ë„ŒíŠ¸ë“¤ ì•ˆì „í•˜ê²Œ í•´ì œ
 	if (nullptr != m_pCollider)
 	{
 		delete m_pCollider;
@@ -58,13 +58,13 @@ CObject::~CObject()
 
 void CObject::Render(HDC _dc)
 {
-    // ·»´õ¸µ À§Ä¡ °è»ê
+    // ë Œë”ë§ ìœ„ì¹˜ ê³„ì‚°
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_vPos);
 
-    // ½ºÄÉÀÏ ÆÑÅÍ °áÁ¤
+    // ìŠ¤ì¼€ì¼ íŒ©í„° ê²°ì •
     float fScale = GetRenderScale();
 
-    // === µğ¹ö±ë: ¸ó½ºÅÍ ·»´õ¸µ È®ÀÎ ===
+    // === ë””ë²„ê¹…: ëª¬ìŠ¤í„° ë Œë”ë§ í™•ì¸ ===
     if (m_eObjectType >= OBJECT_TYPE::MONSTER_WADDLE_DEE &&
         m_eObjectType <= OBJECT_TYPE::MONSTER_SPARKY)
     {
@@ -76,10 +76,10 @@ void CObject::Render(HDC _dc)
         }
     }
 
-    // ¸ŞÀÎ ·»´õ¸µ ¼öÇà
+    // ë©”ì¸ ë Œë”ë§ ìˆ˜í–‰
     RenderMain(_dc, vRenderPos, fScale);
 
-    // Äİ¶óÀÌ´õ ·»´õ¸µ
+    // ì½œë¼ì´ë” ë Œë”ë§
     RenderCollider(_dc);
 }
 
@@ -103,12 +103,12 @@ void CObject::CreateRigidBody()
 
 float CObject::GetRenderScale() const
 {
-    return 0.0f;
+    return 4.0f;
 }
 
 void CObject::RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 {
-    // ¿ì¼±¼øÀ§: ¾Ö´Ï¸ŞÀÌÅÍ ¡æ ÅØ½ºÃ³ ¡æ ±âº» »ç°¢Çü
+    // ìš°ì„ ìˆœìœ„: ì• ë‹ˆë©”ì´í„° â†’ í…ìŠ¤ì²˜ â†’ ê¸°ë³¸ ì‚¬ê°í˜•
     if (nullptr != m_pAnimator)
     {
         RenderWithAnimator(_dc, _fScale);
@@ -125,25 +125,25 @@ void CObject::RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 
 void CObject::RenderWithAnimator(HDC _dc, float _fScale)
 {
-    // ¾Ö´Ï¸ŞÀÌÅÍÀÇ ½ºÄÉÀÏ ·»´õ¸µ ±â´É È°¿ë
+    // ì• ë‹ˆë©”ì´í„°ì˜ ìŠ¤ì¼€ì¼ ë Œë”ë§ ê¸°ëŠ¥ í™œìš©
     m_pAnimator->RenderScaled(_dc, _fScale);
 }
 
 void CObject::RenderWithTexture(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 {
-    // ÅØ½ºÃ³ Á¤º¸ °¡Á®¿À±â
+    // í…ìŠ¤ì²˜ ì •ë³´ ê°€ì ¸ì˜¤ê¸°
     UINT width = m_pTex->GetWidth();
     UINT height = m_pTex->GetHeight();
 
-    // ½ºÄÉÀÏµÈ Å©±â °è»ê
+    // ìŠ¤ì¼€ì¼ëœ í¬ê¸° ê³„ì‚°
     int scaledWidth = (int)(width * _fScale);
     int scaledHeight = (int)(height * _fScale);
 
-    // ·»´õ¸µ À§Ä¡ °è»ê (Áß¾Ó ±âÁØ)
+    // ë Œë”ë§ ìœ„ì¹˜ ê³„ì‚° (ì¤‘ì•™ ê¸°ì¤€)
     int renderX = (int)(_vRenderPos.x - scaledWidth / 2.f);
     int renderY = (int)(_vRenderPos.y - scaledHeight / 2.f);
 
-    // ½ºÄÉÀÏµÈ ÅØ½ºÃ³ ·»´õ¸µ
+    // ìŠ¤ì¼€ì¼ëœ í…ìŠ¤ì²˜ ë Œë”ë§
     StretchBlt(_dc,
         renderX, renderY,
         scaledWidth, scaledHeight,
@@ -154,10 +154,10 @@ void CObject::RenderWithTexture(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 
 void CObject::RenderDefaultShape(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 {
-    // ½ºÄÉÀÏµÈ Å©±â °è»ê
+    // ìŠ¤ì¼€ì¼ëœ í¬ê¸° ê³„ì‚°
     Vec2 vScaledSize = m_vScale * _fScale;
 
-    // ±âº» »ç°¢Çü ·»´õ¸µ
+    // ê¸°ë³¸ ì‚¬ê°í˜• ë Œë”ë§
     Rectangle(_dc,
         (int)(_vRenderPos.x - vScaledSize.x / 2.f),
         (int)(_vRenderPos.y - vScaledSize.y / 2.f),

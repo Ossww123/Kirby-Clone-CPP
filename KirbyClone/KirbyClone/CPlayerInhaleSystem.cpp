@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CPlayerInhaleSystem.h"
+#include "CPlayerStateMachine.h"
 #include "CPlayer.h"
 #include "CRigidBody.h"
 #include "CMonster.h"
@@ -28,7 +29,7 @@ CPlayerInhaleSystem::~CPlayerInhaleSystem()
 
 void CPlayerInhaleSystem::Init()
 {
-    // ÃÊ±âÈ­ ÄÚµå (ÇÊ¿ä½Ã Ãß°¡)
+    // ì´ˆê¸°í™” ì½”ë“œ (í•„ìš”ì‹œ ì¶”ê°€)
     m_vecInhaleTargets.clear();
     UpdateInhaleDirection();
 }
@@ -40,7 +41,7 @@ void CPlayerInhaleSystem::Update()
         UpdateInhale();
     }
 
-    // »¡¾ÆµéÀÌ±â ¹æÇâ ¾÷µ¥ÀÌÆ®
+    // ë¹¨ì•„ë“¤ì´ê¸° ë°©í–¥ ì—…ë°ì´íŠ¸
     UpdateInhaleDirection();
 }
 
@@ -50,7 +51,7 @@ void CPlayerInhaleSystem::StartInhale()
     m_fInhaleTime = 0.f;
     m_vecInhaleTargets.clear();
 
-    // »óÅÂ ¸Ó½ÅÀ» ÅëÇÑ »óÅÂ º¯°æ - ÀÌº¥Æ® ±â¹İ
+    // ìƒíƒœ ë¨¸ì‹ ì„ í†µí•œ ìƒíƒœ ë³€ê²½ - ì´ë²¤íŠ¸ ê¸°ë°˜
     if (m_pOwner)
     {
         //m_pOwner->ChangeState(PLAYER_STATE::INHALE_READY);
@@ -64,10 +65,10 @@ void CPlayerInhaleSystem::UpdateInhale()
 
     m_fInhaleTime += CTimeMgr::GetInst()->GetfDT();
 
-    // »¡¾ÆµéÀÌ±â ¹üÀ§ ³»ÀÇ °Íµé Ã£±â
+    // ë¹¨ì•„ë“¤ì´ê¸° ë²”ìœ„ ë‚´ì˜ ê²ƒë“¤ ì°¾ê¸°
     UpdateInhaleTargets();
 
-    // °¢ ´ë»ó¿¡ »¡¾ÆµéÀÌ±â Èû Àû¿ë
+    // ê° ëŒ€ìƒì— ë¹¨ì•„ë“¤ì´ê¸° í˜ ì ìš©
     for (CObject* pTarget : m_vecInhaleTargets)
     {
         if (pTarget && !pTarget->IsDead())
@@ -75,34 +76,27 @@ void CPlayerInhaleSystem::UpdateInhale()
             ApplyInhaleForce(pTarget);
         }
     }
-
-    // ÈíÀÔ ½Ã°£¿¡ µû¸¥ »óÅÂ º¯°æ - ÀÌº¥Æ® ±â¹İ
-    PLAYER_STATE currentState = m_pOwner->GetCurrentState();
-    PLAYER_STATE newState = currentState;
-
-    if (m_fInhaleTime < 0.5f)
-    {
-        newState = PLAYER_STATE::INHALE_1;
-    }
-    else if (m_fInhaleTime < 1.0f)
-    {
-        newState = PLAYER_STATE::INHALE_2;
-    }
-    else
-    {
-        newState = PLAYER_STATE::INHALE_HOLD;
-    }
-
-    if (newState != m_pOwner->GetCurrentState())
-    {
-        //m_pOwner->ChangeState(newState);  // ÀÌº¥Æ® ±â¹İ
-    }
 }
 
 void CPlayerInhaleSystem::StopInhale()
 {
     m_bInhaling = false;
     m_fInhaleTime = 0.f;
+    
+    // ë¹¨ì•„ë“¤ì´ëŠ” ì¤‘ì¸ ëª¬ìŠ¤í„°ë“¤ì˜ ìƒíƒœ í•´ì œ
+    for (CObject* pTarget : m_vecInhaleTargets)
+    {
+        CMonster* pMonster = dynamic_cast<CMonster*>(pTarget);
+        if (pMonster)
+        {
+            CBasicMonster* pBasic = dynamic_cast<CBasicMonster*>(pMonster);
+            if (pBasic)
+            {
+                pBasic->SetInhaled(false);
+            }
+        }
+    }
+    
     m_vecInhaleTargets.clear();
 }
 
@@ -126,16 +120,16 @@ void CPlayerInhaleSystem::UpdateInhaleTargets()
             Vec2 vDiff = vMonsterPos - vPlayerPos;
             float fDistance = vDiff.Length();
 
-            // »¡¾ÆµéÀÌ±â ¹üÀ§ ¾È¿¡ ÀÖ´ÂÁö È®ÀÎ
+            // ë¹¨ì•„ë“¤ì´ê¸° ë²”ìœ„ ì•ˆì— ìˆëŠ”ì§€ í™•ì¸
             if (fDistance <= m_fInhaleRange && fDistance > 0.1f)
             {
-                // ¸ó½ºÅÍ ¹æÇâÀ¸·ÎÀÇ ´ÜÀ§ º¤ÅÍ
+                // ëª¬ìŠ¤í„° ë°©í–¥ìœ¼ë¡œì˜ ë‹¨ìœ„ ë²¡í„°
                 Vec2 vToMonster = vDiff.GetNormalized();
 
-                // ³» ¾ÕÀ» ÀÌ¿ëÇÑ ¹æÇâ È®ÀÎ (»¡¾ÆµéÀÌ±â ¹æÇâ°ú ¸ó½ºÅÍ ¹æÇâÀÇ °¢µµ)
+                // ë‚´ ì•ì„ ì´ìš©í•œ ë°©í–¥ í™•ì¸ (ë¹¨ì•„ë“¤ì´ê¸° ë°©í–¥ê³¼ ëª¬ìŠ¤í„° ë°©í–¥ì˜ ê°ë„)
                 float fDot = vToMonster.Dot(m_vInhaleDir);
 
-                // cos(60µµ) = 0.5ÀÌ¹Ç·Î, 0.5º¸´Ù Å©¸é ´ë·« 120µµ ¹üÀ§ ³»
+                // cos(60ë„) = 0.5ì´ë¯€ë¡œ, 0.5ë³´ë‹¤ í¬ë©´ ëŒ€ëµ 120ë„ ë²”ìœ„ ë‚´
                 if (fDot > 0.5f)
                 {
                     m_vecInhaleTargets.push_back(pObj);
@@ -158,27 +152,28 @@ void CPlayerInhaleSystem::UpdateInhaleTargets()
 
 void CPlayerInhaleSystem::SwallowTarget(CObject* _pTarget)
 {
-    if (!_pTarget || m_bHasMouthful)
+    if (!_pTarget || m_bHasMouthful || _pTarget->IsDead())
         return;
 
-    // »ïÅ°±â »óÅÂ·Î ÀüÈ¯
+    // ì´ë¯¸ ì‚­ì œ ì˜ˆì •ì¸ ì˜¤ë¸Œì íŠ¸ë¼ë©´ ë¬´ì‹œ
+    if (_pTarget->IsDead())
+        return;
+
+    // ì‚¼í‚¤ê¸° ìƒíƒœë¡œ ì „í™˜
     if (m_pOwner)
     {
         //m_pOwner->ChangeState(PLAYER_STATE::SWALLOW);
     }
 
-    // ¹°°í ÀÖ´Â »óÅÂ·Î ¼³Á¤
+    // ë¬¼ê³  ìˆëŠ” ìƒíƒœë¡œ ì„¤ì •
     m_bHasMouthful = true;
     m_pMouthfulTarget = _pTarget;
     m_eMouthfulType = _pTarget->GetType();
 
-    // ´ë»ó ¿ÀºêÁ§Æ® Á¦°Å ÀÌº¥Æ® ¹ß»ı
-    tEvent event = {};
-    event.eType = EVENT_TYPE::DELETE_OBJECT;
-    event.lParam = (DWORD_PTR)_pTarget;
-    CEventMgr::GetInst()->AddEvent(event);
+    // ì˜¤ë¸Œì íŠ¸ë¥¼ Dead ìƒíƒœë¡œ ì„¤ì • (ì˜¤ë¸Œì íŠ¸ í’€ ì‹œìŠ¤í…œ)
+    _pTarget->SetDead();
 
-    // »¡¾ÆµéÀÌ±â ÁßÁö
+    // ë¹¨ì•„ë“¤ì´ê¸° ì¤‘ì§€
     StopInhale();
 }
 
@@ -187,14 +182,14 @@ void CPlayerInhaleSystem::SpitOut()
     if (!m_bHasMouthful || !m_pOwner)
         return;
 
-    // ¹ñ±â ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı
+    // ë±‰ê¸° ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ
     //m_pOwner->ChangeState(PLAYER_STATE::EXHALE);
 
-    // Åõ»çÃ¼ »ı¼º (³ªÁß¿¡ ±¸Çö °¡´É)
+    // íˆ¬ì‚¬ì²´ ìƒì„± (ë‚˜ì¤‘ì— êµ¬í˜„ ê°€ëŠ¥)
     // Vec2 vSpitPos = m_pOwner->GetPos() + m_vInhaleDir * 50.f;
     // CreateSpitProjectile(vSpitPos, m_vInhaleDir);
 
-    // ¹°°í ÀÖ´Â »óÅÂ ÇØÁ¦
+    // ë¬¼ê³  ìˆëŠ” ìƒíƒœ í•´ì œ
     ReleaseMouthful();
 }
 
@@ -203,6 +198,13 @@ void CPlayerInhaleSystem::ReleaseMouthful()
     m_bHasMouthful = false;
     m_pMouthfulTarget = nullptr;
     m_eMouthfulType = OBJECT_TYPE::END;
+    
+    // StateMachineì˜ ë¹¨ì•„ë“¤ì´ê¸° ìƒíƒœë„ ì´ˆê¸°í™”
+    if (m_pOwner && m_pOwner->GetStateMachine())
+    {
+        m_pOwner->GetStateMachine()->SetInhaleCount(INHALE_COUNT::NONE);
+        // ë±‰ì„ ë•Œë§Œ ì¹´í”¼ ëŠ¥ë ¥ì„ ìœ ì§€í•˜ê³ , ì‚¼í‚¬ ë•ŒëŠ” ìœ ì§€
+    }
 }
 
 void CPlayerInhaleSystem::RenderInhaleEffect(HDC _dc)
@@ -212,22 +214,22 @@ void CPlayerInhaleSystem::RenderInhaleEffect(HDC _dc)
 
     Vec2 vPlayerPos = CCamera::GetInst()->GetRenderPos(m_pOwner->GetPos());
 
-    // »¡¾ÆµéÀÌ±â ¹æÇâÀ¸·Î ÀÌÆåÆ® ±×¸®±â
-    Vec2 vEffectStart = vPlayerPos + m_vInhaleDir * 30.f; // ÇÃ·¹ÀÌ¾î ¾ÕÂÊ¿¡¼­ ½ÃÀÛ
+    // ë¹¨ì•„ë“¤ì´ê¸° ë°©í–¥ìœ¼ë¡œ ì´í™íŠ¸ ê·¸ë¦¬ê¸°
+    Vec2 vEffectStart = vPlayerPos + m_vInhaleDir * 30.f; // í”Œë ˆì´ì–´ ì•ìª½ì—ì„œ ì‹œì‘
     Vec2 vEffectEnd = vPlayerPos + m_vInhaleDir * m_fInhaleRange;
 
-    // »¡¾ÆµéÀÌ±â ¹üÀ§ Ç¥½Ã (ºÎÃ¤²Ã ¸ğ¾ç)
+    // ë¹¨ì•„ë“¤ì´ê¸° ë²”ìœ„ í‘œì‹œ (ë¶€ì±„ê¼´ ëª¨ì–‘)
     HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 150, 255));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
-    // »¡¾ÆµéÀÌ±â Áß½É¼±
+    // ë¹¨ì•„ë“¤ì´ê¸° ì¤‘ì‹¬ì„ 
     MoveToEx(_dc, (int)vEffectStart.x, (int)vEffectStart.y, nullptr);
     LineTo(_dc, (int)vEffectEnd.x, (int)vEffectEnd.y);
 
-    // »¡¾ÆµéÀÌ±â ¹üÀ§ÀÇ »óÇÏ °æ°è¼± (´ë·« 60µµ °¢µµ)
-    float fAngle = 0.52f; // ¾à 30µµ (¶óµğ¾È)
+    // ë¹¨ì•„ë“¤ì´ê¸° ë²”ìœ„ì˜ ìƒí•˜ ê²½ê³„ì„  (ëŒ€ëµ 60ë„ ê°ë„)
+    float fAngle = 0.52f; // ì•½ 30ë„ (ë¼ë””ì•ˆ)
 
-    // »ó´Ü °æ°è¼±
+    // ìƒë‹¨ ê²½ê³„ì„ 
     Vec2 vUpperDir = Vec2(
         m_vInhaleDir.x * cos(-fAngle) - m_vInhaleDir.y * sin(-fAngle),
         m_vInhaleDir.x * sin(-fAngle) + m_vInhaleDir.y * cos(-fAngle)
@@ -236,7 +238,7 @@ void CPlayerInhaleSystem::RenderInhaleEffect(HDC _dc)
     MoveToEx(_dc, (int)vEffectStart.x, (int)vEffectStart.y, nullptr);
     LineTo(_dc, (int)vUpperEnd.x, (int)vUpperEnd.y);
 
-    // ÇÏ´Ü °æ°è¼±
+    // í•˜ë‹¨ ê²½ê³„ì„ 
     Vec2 vLowerDir = Vec2(
         m_vInhaleDir.x * cos(fAngle) - m_vInhaleDir.y * sin(fAngle),
         m_vInhaleDir.x * sin(fAngle) + m_vInhaleDir.y * cos(fAngle)
@@ -245,7 +247,7 @@ void CPlayerInhaleSystem::RenderInhaleEffect(HDC _dc)
     MoveToEx(_dc, (int)vEffectStart.x, (int)vEffectStart.y, nullptr);
     LineTo(_dc, (int)vLowerEnd.x, (int)vLowerEnd.y);
 
-    // ¿ø·¡ ÆæÀ¸·Î º¹±¸
+    // ì›ë˜ íœìœ¼ë¡œ ë³µêµ¬
     SelectObject(_dc, hOldPen);
     DeleteObject(hPen);
 }
@@ -255,7 +257,7 @@ void CPlayerInhaleSystem::UpdateInhaleDirection()
     if (!m_pOwner)
         return;
 
-    // ÇÃ·¹ÀÌ¾î°¡ ¹Ù¶óº¸´Â ¹æÇâ¿¡ µû¶ó »¡¾ÆµéÀÌ±â ¹æÇâ ¼³Á¤
+    // í”Œë ˆì´ì–´ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥ì— ë”°ë¼ ë¹¨ì•„ë“¤ì´ê¸° ë°©í–¥ ì„¤ì •
     m_vInhaleDir = m_pOwner->IsFacingRight() ? Vec2(1.f, 0.f) : Vec2(-1.f, 0.f);
 }
 
@@ -264,7 +266,7 @@ bool CPlayerInhaleSystem::IsValidInhaleTarget(CObject* _pTarget)
     if (!_pTarget || _pTarget->IsDead())
         return false;
 
-    // ¸ó½ºÅÍ¸¸ »¡¾ÆµéÀÌ±â °¡´É
+    // ëª¬ìŠ¤í„°ë§Œ ë¹¨ì•„ë“¤ì´ê¸° ê°€ëŠ¥
     CMonster* pMonster = dynamic_cast<CMonster*>(_pTarget);
     if (!pMonster)
         return false;
@@ -274,7 +276,7 @@ bool CPlayerInhaleSystem::IsValidInhaleTarget(CObject* _pTarget)
 
 void CPlayerInhaleSystem::ApplyInhaleForce(CObject* _pTarget)
 {
-    if (!_pTarget || !m_pOwner)
+    if (!_pTarget || !m_pOwner || _pTarget->IsDead())
         return;
 
     Vec2 vPlayerPos = m_pOwner->GetPos();
@@ -285,25 +287,65 @@ void CPlayerInhaleSystem::ApplyInhaleForce(CObject* _pTarget)
     if (fDistance < 0.1f)
         return;
 
-    // ¸ó½ºÅÍ¸¦ ÇÃ·¹ÀÌ¾î ÂÊÀ¸·Î ²ø¾î´ç±â´Â Èû
+    // ëª¬ìŠ¤í„°ë¥¼ í”Œë ˆì´ì–´ ìª½ìœ¼ë¡œ ëŒì–´ë‹¹ê¸°ëŠ” í˜
     Vec2 vToTarget = vDiff.GetNormalized();
-    Vec2 vPullDirection = -vToTarget; // ÇÃ·¹ÀÌ¾î ÂÊÀ¸·Î
+    Vec2 vPullDirection = -vToTarget; // í”Œë ˆì´ì–´ ìª½ìœ¼ë¡œ
     Vec2 vForce = vPullDirection * 200.f;
 
-    // ¸ó½ºÅÍÀÇ RigidBody¿¡ Èû Àû¿ë (RigidBody°¡ ÀÖ´Ù¸é)
+    // ëª¬ìŠ¤í„°ì˜ RigidBodyì— í˜ ì ìš© (RigidBodyê°€ ìˆë‹¤ë©´)
     CRigidBody* pTargetRigidBody = _pTarget->GetRigidBody();
     if (pTargetRigidBody)
     {
-        // ÇöÀç ¼Óµµ¿¡ ²ø¾î´ç±â´Â Èû Ãß°¡
+        // í˜„ì¬ ì†ë„ì— ëŒì–´ë‹¹ê¸°ëŠ” í˜ ì¶”ê°€
         Vec2 vCurrentVel = pTargetRigidBody->GetVelocity();
         Vec2 vNewVel = vCurrentVel + vForce * CTimeMgr::GetInst()->GetfDT();
         pTargetRigidBody->SetVelocity(vNewVel);
     }
 
-    // ¸Å¿ì °¡±î¿öÁö¸é »ïÅ°±â
+    // ë§¤ìš° ê°€ê¹Œì›Œì§€ë©´ ë¹¨ì•„ë“¤ì´ê¸° ì„±ê³µ
     if (fDistance < 30.f)
     {
         SwallowTarget(_pTarget);
+        
+        // StateMachineì— ë¹¨ì•„ë“¤ì´ê¸° ì„±ê³µ ì•Œë¦¼
+        if (m_pOwner && m_pOwner->GetStateMachine())
+        {
+            // ë¹¨ì•„ë“¤ì¸ ê°œìˆ˜ ì—…ë°ì´íŠ¸
+            if (m_vecInhaleTargets.size() == 1)
+            {
+                m_pOwner->GetStateMachine()->SetInhaleCount(INHALE_COUNT::ONE);
+            }
+            else if (m_vecInhaleTargets.size() >= 2)
+            {
+                m_pOwner->GetStateMachine()->SetInhaleCount(INHALE_COUNT::MULTIPLE);
+            }
+            
+            // ì¹´í”¼ ëŠ¥ë ¥ í™•ì¸ ë° ì„¤ì •
+            CMonster* pMonster = dynamic_cast<CMonster*>(_pTarget);
+            if (pMonster)
+            {
+                OBJECT_TYPE monsterType = pMonster->GetType();
+                COPY_ABILITY ability = COPY_ABILITY::NONE;
+                
+                switch (monsterType)
+                {
+                case OBJECT_TYPE::MONSTER_HOT_HEAD:
+                    ability = COPY_ABILITY::FIRE;
+                    break;
+                case OBJECT_TYPE::MONSTER_WADDLE_DOO:
+                    ability = COPY_ABILITY::BEAM;
+                    break;
+                case OBJECT_TYPE::MONSTER_SPARKY:
+                    ability = COPY_ABILITY::SPARK;
+                    break;
+                default:
+                    ability = COPY_ABILITY::NONE;
+                    break;
+                }
+                
+                m_pOwner->GetStateMachine()->SetCopyAbility(ability);
+            }
+        }
     }
 }
 

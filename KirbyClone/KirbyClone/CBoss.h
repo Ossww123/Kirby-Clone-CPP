@@ -3,11 +3,11 @@
 
 enum class BOSS_PHASE
 {
-    INTRO,          // µîÀå ¿¬Ãâ
-    PHASE_1,        // 1ÆäÀÌÁî
-    PHASE_2,        // 2ÆäÀÌÁî (Ã¼·Â 50% ÀÌÇÏ)
-    PHASE_3,        // 3ÆäÀÌÁî (Ã¼·Â 25% ÀÌÇÏ)
-    DEFEATED,       // ÆĞ¹è ¿¬Ãâ
+    INTRO,          // ë“±ì¥ ì—°ì¶œ
+    PHASE_1,        // 1í˜ì´ì¦ˆ
+    PHASE_2,        // 2í˜ì´ì¦ˆ (ì²´ë ¥ 50% ì´í•˜)
+    PHASE_3,        // 3í˜ì´ì¦ˆ (ì²´ë ¥ 25% ì´í•˜)
+    DEFEATED,       // íŒ¨ë°° ì—°ì¶œ
     END
 };
 
@@ -28,76 +28,76 @@ public:
     virtual ~CBoss();
 
 public:
-    // === º¸½º Æ¯¼º (final·Î ÇÏÀ§ Å¬·¡½º¿¡¼­ º¯°æ ºÒ°¡) ===
+    // === ë³´ìŠ¤ íŠ¹ì„± (finalë¡œ í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ ë³€ê²½ ë¶ˆê°€) ===
     bool CanBeInhaled() const override final { return false; }
     bool HasAttack() const override { return true; }
 
 public:
-    // === ¼ø¼ö °¡»ó ÇÔ¼ö (ÇÏÀ§ Å¬·¡½º¿¡¼­ ¹İµå½Ã ±¸Çö) ===
-    virtual void StartBossEvent() = 0;                      // º¸½ºÀü ½ÃÀÛ
-    virtual void EndBossEvent() = 0;                        // º¸½ºÀü Á¾·á
-    virtual void ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern) = 0;  // °ø°İ ÆĞÅÏ ½ÇÇà
+    // === ìˆœìˆ˜ ê°€ìƒ í•¨ìˆ˜ (í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ ë°˜ë“œì‹œ êµ¬í˜„) ===
+    virtual void StartBossEvent() = 0;                      // ë³´ìŠ¤ì „ ì‹œì‘
+    virtual void EndBossEvent() = 0;                        // ë³´ìŠ¤ì „ ì¢…ë£Œ
+    virtual void ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern) = 0;  // ê³µê²© íŒ¨í„´ ì‹¤í–‰
 
 public:
-    // === º¸½º »óÅÂ °ü¸® ===
+    // === ë³´ìŠ¤ ìƒíƒœ ê´€ë¦¬ ===
     void SetBossPhase(BOSS_PHASE _ePhase);
     BOSS_PHASE GetBossPhase() const { return m_eBossPhase; }
 
-    // === º¸½º Ã¼·Â °ü¸® ===
+    // === ë³´ìŠ¤ ì²´ë ¥ ê´€ë¦¬ ===
     void SetBossHP(int _iHP) { m_iMaxHP = _iHP; m_iCurrentHP = _iHP; }
     int GetCurrentHP() const { return m_iCurrentHP; }
     int GetMaxHP() const { return m_iMaxHP; }
     float GetHPRatio() const { return (float)m_iCurrentHP / (float)m_iMaxHP; }
 
-    // === º¸½º µ¥¹ÌÁö Ã³¸® ===
+    // === ë³´ìŠ¤ ë°ë¯¸ì§€ ì²˜ë¦¬ ===
     void TakeBossDamage(int _iDamage);
     bool IsDefeated() const { return m_iCurrentHP <= 0; }
 
 protected:
-    // === º¸½º ½Ã½ºÅÛ °ü¸® ===
-    void UpdateBossPhase();                                 // º¸½º ÆäÀÌÁî °ü¸®
-    void UpdateAttackPattern();                             // °ø°İ ÆĞÅÏ °ü¸®
-    void SelectNextAttackPattern();                         // ´ÙÀ½ °ø°İ ÆĞÅÏ ¼±ÅÃ
+    // === ë³´ìŠ¤ ì‹œìŠ¤í…œ ê´€ë¦¬ ===
+    void UpdateBossPhase();                                 // ë³´ìŠ¤ í˜ì´ì¦ˆ ê´€ë¦¬
+    void UpdateAttackPattern();                             // ê³µê²© íŒ¨í„´ ê´€ë¦¬
+    void SelectNextAttackPattern();                         // ë‹¤ìŒ ê³µê²© íŒ¨í„´ ì„ íƒ
 
-    // === ÆäÀÌÁî ÀüÈ¯ Ã³¸® ===
-    void CheckPhaseTransition();                            // ÆäÀÌÁî ÀüÈ¯ Ã¼Å©
-    void OnPhaseChanged(BOSS_PHASE _eNewPhase);            // ÆäÀÌÁî º¯°æ ½Ã Ã³¸®
+    // === í˜ì´ì¦ˆ ì „í™˜ ì²˜ë¦¬ ===
+    void CheckPhaseTransition();                            // í˜ì´ì¦ˆ ì „í™˜ ì²´í¬
+    void OnPhaseChanged(BOSS_PHASE _eNewPhase);            // í˜ì´ì¦ˆ ë³€ê²½ ì‹œ ì²˜ë¦¬
 
-    // === »óÅÂ ¾÷µ¥ÀÌÆ® ¿À¹ö¶óÀÌµå ===
+    // === ìƒíƒœ ì—…ë°ì´íŠ¸ ì˜¤ë²„ë¼ì´ë“œ ===
     void UpdateIdle() override;
     void UpdateAttackReady() override;
     void UpdateAttack() override;
 
-    // === º¸½º Àü¿ë µ¥¹ÌÁö Ã³¸® ===
-    void TakeDamage() override;                             // ÀÏ¹İ µ¥¹ÌÁö´Â ¹«½Ã
+    // === ë³´ìŠ¤ ì „ìš© ë°ë¯¸ì§€ ì²˜ë¦¬ ===
+    void TakeDamage() override;                             // ì¼ë°˜ ë°ë¯¸ì§€ëŠ” ë¬´ì‹œ
 
 protected:
-    // === º¸½º À¯Æ¿¸®Æ¼ ÇÔ¼öµé ===
-    void CreateBossIntroEffect();                           // µîÀå ÀÌÆåÆ®
-    void CreateBossDefeatedEffect();                        // ÆĞ¹è ÀÌÆåÆ®
-    void ShowPhaseChangeEffect();                           // ÆäÀÌÁî º¯°æ ÀÌÆåÆ®
-    void PlayBossMusic();                                   // º¸½º BGM Àç»ı
-    void StopBossMusic();                                   // º¸½º BGM Á¤Áö
+    // === ë³´ìŠ¤ ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ë“¤ ===
+    void CreateBossIntroEffect();                           // ë“±ì¥ ì´í™íŠ¸
+    void CreateBossDefeatedEffect();                        // íŒ¨ë°° ì´í™íŠ¸
+    void ShowPhaseChangeEffect();                           // í˜ì´ì¦ˆ ë³€ê²½ ì´í™íŠ¸
+    void PlayBossMusic();                                   // ë³´ìŠ¤ BGM ì¬ìƒ
+    void StopBossMusic();                                   // ë³´ìŠ¤ BGM ì •ì§€
 
 private:
-    // === º¸½º ±âº» Á¤º¸ ===
-    BOSS_PHASE          m_eBossPhase;                       // ÇöÀç º¸½º ÆäÀÌÁî
-    int                 m_iCurrentHP;                       // ÇöÀç Ã¼·Â
-    int                 m_iMaxHP;                           // ÃÖ´ë Ã¼·Â
+    // === ë³´ìŠ¤ ê¸°ë³¸ ì •ë³´ ===
+    BOSS_PHASE          m_eBossPhase;                       // í˜„ì¬ ë³´ìŠ¤ í˜ì´ì¦ˆ
+    int                 m_iCurrentHP;                       // í˜„ì¬ ì²´ë ¥
+    int                 m_iMaxHP;                           // ìµœëŒ€ ì²´ë ¥
 
-    // === °ø°İ ÆĞÅÏ °ü¸® ===
-    BOSS_ATTACK_PATTERN m_eCurrentPattern;                 // ÇöÀç °ø°İ ÆĞÅÏ
-    float               m_fPatternTimer;                    // ÆĞÅÏ Å¸ÀÌ¸Ó
-    float               m_fPatternDuration;                 // ÆĞÅÏ Áö¼Ó ½Ã°£
-    int                 m_iPatternCount;                    // ÆĞÅÏ ½ÇÇà È½¼ö
+    // === ê³µê²© íŒ¨í„´ ê´€ë¦¬ ===
+    BOSS_ATTACK_PATTERN m_eCurrentPattern;                 // í˜„ì¬ ê³µê²© íŒ¨í„´
+    float               m_fPatternTimer;                    // íŒ¨í„´ íƒ€ì´ë¨¸
+    float               m_fPatternDuration;                 // íŒ¨í„´ ì§€ì† ì‹œê°„
+    int                 m_iPatternCount;                    // íŒ¨í„´ ì‹¤í–‰ íšŸìˆ˜
 
-    // === º¸½º ÀÌº¥Æ® °ü¸® ===
-    bool                m_bBossEventStarted;               // º¸½ºÀü ½ÃÀÛ ¿©ºÎ
-    bool                m_bBossEventEnded;                 // º¸½ºÀü Á¾·á ¿©ºÎ
-    float               m_fIntroTimer;                      // ÀÎÆ®·Î Å¸ÀÌ¸Ó
-    float               m_fDefeatedTimer;                   // ÆĞ¹è ¿¬Ãâ Å¸ÀÌ¸Ó
+    // === ë³´ìŠ¤ ì´ë²¤íŠ¸ ê´€ë¦¬ ===
+    bool                m_bBossEventStarted;               // ë³´ìŠ¤ì „ ì‹œì‘ ì—¬ë¶€
+    bool                m_bBossEventEnded;                 // ë³´ìŠ¤ì „ ì¢…ë£Œ ì—¬ë¶€
+    float               m_fIntroTimer;                      // ì¸íŠ¸ë¡œ íƒ€ì´ë¨¸
+    float               m_fDefeatedTimer;                   // íŒ¨ë°° ì—°ì¶œ íƒ€ì´ë¨¸
 
-    // === ¹«Àû ½Ã°£ °ü¸® ===
-    float               m_fInvincibleTime;                  // ¹«Àû ½Ã°£
-    bool                m_bInvincible;                      // ¹«Àû »óÅÂ
+    // === ë¬´ì  ì‹œê°„ ê´€ë¦¬ ===
+    float               m_fInvincibleTime;                  // ë¬´ì  ì‹œê°„
+    bool                m_bInvincible;                      // ë¬´ì  ìƒíƒœ
 };

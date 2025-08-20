@@ -8,31 +8,31 @@ public:
     virtual ~CInvincibleMonster();
 
 public:
-    // === ¹«Àû °ü·Ã (final·Î ÇÏÀ§ Å¬·¡½º¿¡¼­ º¯°æ ºÒ°¡) ===
+    // === ë¬´ì  ê´€ë ¨ (finalë¡œ í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ ë³€ê²½ ë¶ˆê°€) ===
     bool CanBeInhaled() const override final { return false; }
 
 public:
-    // === Ãæµ¹ Äİ¹é ¿À¹ö¶óÀÌµå ===
+    // === ì¶©ëŒ ì½œë°± ì˜¤ë²„ë¼ì´ë“œ ===
     void OnCollisionEnter(CCollider* _pOther) override;
     void OnCollision(CCollider* _pOther) override;
     void OnCollisionExit(CCollider* _pOther) override;
 
 protected:
-    // === ¹«Àû ¸ó½ºÅÍ °øÅë ±â´É ===
-    void HandleInvincibleCollision(CCollider* _pOther);     // ¹«Àû Ãæµ¹ Ã³¸®
-    void PushAwayPlayer(CCollider* _pOther);                // ÇÃ·¹ÀÌ¾î ¹Ğ¾î³»±â
-    void CreateInvincibleEffect();                          // ¹«Àû ÀÌÆåÆ® »ı¼º
+    // === ë¬´ì  ëª¬ìŠ¤í„° ê³µí†µ ê¸°ëŠ¥ ===
+    void HandleInvincibleCollision(CCollider* _pOther);     // ë¬´ì  ì¶©ëŒ ì²˜ë¦¬
+    void PushAwayPlayer(CCollider* _pOther);                // í”Œë ˆì´ì–´ ë°€ì–´ë‚´ê¸°
+    void CreateInvincibleEffect();                          // ë¬´ì  ì´í™íŠ¸ ìƒì„±
 
-    // === µ¥¹ÌÁö ¹«È¿È­ ===
-    void TakeDamage() override;                             // µ¥¹ÌÁö ¹«È¿È­
+    // === ë°ë¯¸ì§€ ë¬´íš¨í™” ===
+    void TakeDamage() override;                             // ë°ë¯¸ì§€ ë¬´íš¨í™”
 
 protected:
-    // === ¹«Àû »óÅÂ °ü¸® ===
-    void ShowInvincibleFeedback();                          // ¹«Àû ÇÇµå¹é Ç¥½Ã
-    void PlayInvincibleSound();                             // ¹«Àû »ç¿îµå Àç»ı
+    // === ë¬´ì  ìƒíƒœ ê´€ë¦¬ ===
+    void ShowInvincibleFeedback();                          // ë¬´ì  í”¼ë“œë°± í‘œì‹œ
+    void PlayInvincibleSound();                             // ë¬´ì  ì‚¬ìš´ë“œ ì¬ìƒ
 
 private:
-    // === ÀÌÆåÆ® °ü·Ã ===
-    float   m_fEffectTimer;                                 // ÀÌÆåÆ® Å¸ÀÌ¸Ó
-    bool    m_bShowingEffect;                               // ÀÌÆåÆ® Ç¥½Ã Áß
+    // === ì´í™íŠ¸ ê´€ë ¨ ===
+    float   m_fEffectTimer;                                 // ì´í™íŠ¸ íƒ€ì´ë¨¸
+    bool    m_bShowingEffect;                               // ì´í™íŠ¸ í‘œì‹œ ì¤‘
 };

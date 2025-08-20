@@ -7,20 +7,21 @@ class CEventMgr
 {
     SINGLE(CEventMgr);
 private:
-    vector<tEvent>  m_vecEvent;         // ÇöÀç ÇÁ·¹ÀÓ¿¡ ¹ß»ıÇÑ ÀÌº¥Æ®µé
-    vector<CObject*> m_vecGarbage;      // »èÁ¦ ¿¹Á¤ ¿ÀºêÁ§Æ®µé
+    vector<tEvent>  m_vecEvent;         // í˜„ì¬ í”„ë ˆì„ì— ë°œìƒí•œ ì´ë²¤íŠ¸ë“¤
+    vector<CObject*> m_vecGarbage;      // ì‚­ì œ ì˜ˆì • ì˜¤ë¸Œì íŠ¸ë“¤
 
 public:
     void init();
-    void update();  // ¸ğµç ÀÌº¥Æ® Ã³¸® (ÇÁ·¹ÀÓ ¸¶Áö¸·¿¡ È£Ãâ)
+    void update();  // ëª¨ë“  ì´ë²¤íŠ¸ ì²˜ë¦¬ (í”„ë ˆì„ ë§ˆì§€ë§‰ì— í˜¸ì¶œ)
 
     void AddEvent(const tEvent& _event) { m_vecEvent.push_back(_event); }
 
 private:
-    void Execute(tEvent& _event);       // °³º° ÀÌº¥Æ® ½ÇÇà
-    void ClearGarbageObject();          // »èÁ¦ ¿¹Á¤ ¿ÀºêÁ§Æ®µé Á¤¸®
+    void Execute(tEvent& _event);       // ê°œë³„ ì´ë²¤íŠ¸ ì‹¤í–‰
+    void ClearGarbageObject();          // ì‚­ì œ ì˜ˆì • ì˜¤ë¸Œì íŠ¸ë“¤ ì •ë¦¬
 
-    // === ÇÃ·¹ÀÌ¾î ÀÌº¥Æ® Ã³¸® ÇÔ¼ö ===
+    // === í”Œë ˆì´ì–´ ì´ë²¤íŠ¸ ì²˜ë¦¬ í•¨ìˆ˜ ===
     void ExecutePlayerDamage(tEvent& _event);
+    void ExecutePlayerSlideKickRecoil(tEvent& _event);
     void ExecuteMonsterDamage(tEvent& _event);
 };

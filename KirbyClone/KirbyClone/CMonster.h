@@ -7,7 +7,7 @@ class CTexture;
 class CMonster : public CObject
 {
 public:
-    // === Á¤Àû »ó¼öµé ===
+    // === ì •ì  ìƒìˆ˜ë“¤ ===
     static constexpr float DEFAULT_SPEED = 80.f;
     static constexpr float DEFAULT_IDLE_TIME = 1.f;
     static constexpr float DAMAGE_DURATION = 0.5f;
@@ -18,59 +18,59 @@ public:
     virtual ~CMonster();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
     void Update() override;
     void Render(HDC _dc) override;
 
 public:
-    // === Ãæµ¹ Äİ¹é ÇÔ¼öµé ===
+    // === ì¶©ëŒ ì½œë°± í•¨ìˆ˜ë“¤ ===
     void OnCollisionEnter(CCollider* _pOther) override;
     void OnCollision(CCollider* _pOther) override;
     void OnCollisionExit(CCollider* _pOther) override;
 
 private:
-    // === Ãæµ¹ Ã³¸® ÇïÆÛ ÇÔ¼ö ===
+    // === ì¶©ëŒ ì²˜ë¦¬ í—¬í¼ í•¨ìˆ˜ ===
     void HandleTileCollision(CObject* _pTile);
 
 public:
-    // === °¡»ó ÀÎÅÍÆäÀÌ½º (ÀÚ½Ä Å¬·¡½º¿¡¼­ ±¸Çö) ===
-    virtual void Move() = 0;                    // ÀÌµ¿ ÆĞÅÏ (¼ø¼ö °¡»ó)
-    virtual bool CanBeInhaled() const = 0;      // »¡¾ÆµéÀÓ °¡´É ¿©ºÎ (¼ø¼ö °¡»ó)
-    virtual bool HasAttack() const { return false; }   // °ø°İ °¡´É ¿©ºÎ
+    // === ê°€ìƒ ì¸í„°í˜ì´ìŠ¤ (ìì‹ í´ë˜ìŠ¤ì—ì„œ êµ¬í˜„) ===
+    virtual void Move() = 0;                    // ì´ë™ íŒ¨í„´ (ìˆœìˆ˜ ê°€ìƒ)
+    virtual bool CanBeInhaled() const = 0;      // ë¹¨ì•„ë“¤ì„ ê°€ëŠ¥ ì—¬ë¶€ (ìˆœìˆ˜ ê°€ìƒ)
+    virtual bool HasAttack() const { return false; }   // ê³µê²© ê°€ëŠ¥ ì—¬ë¶€
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ½Ã½ºÅÛ (ÀÚ½Ä Å¬·¡½º¿¡¼­ »ç¿ë) ===
-    void LoadAnimationsFromFile(const wstring& _strFileName);   // JSON ÆÄÀÏ¿¡¼­ ¾Ö´Ï¸ŞÀÌ¼Ç ·Îµå
-    virtual void SetupAnimationMapping() = 0;                   // ÀÚ½Ä Å¬·¡½º¿¡¼­ ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤
+    // === ì• ë‹ˆë©”ì´ì…˜ ì‹œìŠ¤í…œ (ìì‹ í´ë˜ìŠ¤ì—ì„œ ì‚¬ìš©) ===
+    void LoadAnimationsFromFile(const wstring& _strFileName);   // JSON íŒŒì¼ì—ì„œ ì• ë‹ˆë©”ì´ì…˜ ë¡œë“œ
+    virtual void SetupAnimationMapping() = 0;                   // ìì‹ í´ë˜ìŠ¤ì—ì„œ ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì •
 
 public:
-    // === ¸ó½ºÅÍ ±âº» ÀÎÅÍÆäÀÌ½º ===
+    // === ëª¬ìŠ¤í„° ê¸°ë³¸ ì¸í„°í˜ì´ìŠ¤ ===
     OBJECT_TYPE GetMonsterType() const { return GetType(); }
 
-    // === »óÅÂ °ü¸® ===
+    // === ìƒíƒœ ê´€ë¦¬ ===
     void ChangeState(MONSTER_STATE _eState);
     MONSTER_STATE GetCurrentState() const { return m_eCurState; }
     MONSTER_STATE GetPreviousState() const { return m_ePrevState; }
 
-    // === ¾×¼Ç ÇÔ¼öµé ===
+    // === ì•¡ì…˜ í•¨ìˆ˜ë“¤ ===
     virtual void TakeDamage();
     void TurnAround();
 
 protected:
-    // === °øÅë ÀÌµ¿ ÇÔ¼öµé (ÀÚ½Ä Å¬·¡½º¿¡¼­ »ç¿ë) ===
-    void MoveHorizontal(float speed);          // ÁÂ¿ì ÀÌµ¿
-    void HandleWallCollision();                // º® Ãæµ¹ Ã³¸®
+    // === ê³µí†µ ì´ë™ í•¨ìˆ˜ë“¤ (ìì‹ í´ë˜ìŠ¤ì—ì„œ ì‚¬ìš©) ===
+    void MoveHorizontal(float speed);          // ì¢Œìš° ì´ë™
+    void HandleWallCollision();                // ë²½ ì¶©ëŒ ì²˜ë¦¬
 
-    // === °øÅë ¾Ö´Ï¸ŞÀÌ¼Ç À¯Æ¿¸®Æ¼ ===
-    void LoadEnemySpriteSheet();               // °øÅë ½ºÇÁ¶óÀÌÆ® ½ÃÆ® ·Îµå
+    // === ê³µí†µ ì• ë‹ˆë©”ì´ì…˜ ìœ í‹¸ë¦¬í‹° ===
+    void LoadEnemySpriteSheet();               // ê³µí†µ ìŠ¤í”„ë¼ì´íŠ¸ ì‹œíŠ¸ ë¡œë“œ
 
 private:
-    // === »óÅÂ ¾÷µ¥ÀÌÆ® ===
+    // === ìƒíƒœ ì—…ë°ì´íŠ¸ ===
     void UpdateState();
     void UpdateMove();
 
 protected:
-    // === °³º° »óÅÂ ¾÷µ¥ÀÌÆ® ÇÔ¼öµé ===
+    // === ê°œë³„ ìƒíƒœ ì—…ë°ì´íŠ¸ í•¨ìˆ˜ë“¤ ===
     virtual void UpdateIdle();
     virtual void UpdateWalk();
     virtual void UpdateFly();
@@ -80,31 +80,31 @@ protected:
     virtual void UpdateAttack();
 
 public:
-    // === Ãæµ¹ Ã¼Å© À¯Æ¿¸®Æ¼ ===
+    // === ì¶©ëŒ ì²´í¬ ìœ í‹¸ë¦¬í‹° ===
     bool CheckWallAhead();
     bool CheckGroundAhead();
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ (ÀÚ½Ä Å¬·¡½º¿¡¼­ ¼³Á¤) ===
-    map<MONSTER_STATE, wstring> m_mapStateToAnimation;  // »óÅÂ ¡æ ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌ¸§ ¸ÅÇÎ
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ (ìì‹ í´ë˜ìŠ¤ì—ì„œ ì„¤ì •) ===
+    map<MONSTER_STATE, wstring> m_mapStateToAnimation;  // ìƒíƒœ â†’ ì• ë‹ˆë©”ì´ì…˜ ì´ë¦„ ë§¤í•‘
 
 protected:
-    // === »óÅÂ °ü¸® ===
-    MONSTER_STATE   m_eCurState;        // ÇöÀç »óÅÂ
-    MONSTER_STATE   m_ePrevState;       // ÀÌÀü »óÅÂ
-    float           m_fStateTimer;      // »óÅÂ Å¸ÀÌ¸Ó
+    // === ìƒíƒœ ê´€ë¦¬ ===
+    MONSTER_STATE   m_eCurState;        // í˜„ì¬ ìƒíƒœ
+    MONSTER_STATE   m_ePrevState;       // ì´ì „ ìƒíƒœ
+    float           m_fStateTimer;      // ìƒíƒœ íƒ€ì´ë¨¸
 
 protected:
-    // === ÀÌµ¿ °ü·Ã (ÀÚ½Ä Å¬·¡½º¿¡¼­ Á¢±Ù °¡´É) ===
-    float   m_fSpeed;           // ÀÌµ¿ ¼Óµµ
-    int     m_iDir;             // ÀÌµ¿ ¹æÇâ (-1: ¿ŞÂÊ, 1: ¿À¸¥ÂÊ)
-    float   m_fIdleTime;        // ´ë±â ½Ã°£
+    // === ì´ë™ ê´€ë ¨ (ìì‹ í´ë˜ìŠ¤ì—ì„œ ì ‘ê·¼ ê°€ëŠ¥) ===
+    float   m_fSpeed;           // ì´ë™ ì†ë„
+    int     m_iDir;             // ì´ë™ ë°©í–¥ (-1: ì™¼ìª½, 1: ì˜¤ë¥¸ìª½)
+    float   m_fIdleTime;        // ëŒ€ê¸° ì‹œê°„
 
-    // === Ãæµ¹ Ã¼Å© °ü·Ã ===
-    bool    m_bHitWall;         // º® Ãæµ¹ ¿©ºÎ
-    float   m_fGroundCheckDist; // ¹Ù´Ú Ã¼Å© °Å¸®
-    float   m_fWallCheckDist;   // º® Ã¼Å© °Å¸®
+    // === ì¶©ëŒ ì²´í¬ ê´€ë ¨ ===
+    bool    m_bHitWall;         // ë²½ ì¶©ëŒ ì—¬ë¶€
+    float   m_fGroundCheckDist; // ë°”ë‹¥ ì²´í¬ ê±°ë¦¬
+    float   m_fWallCheckDist;   // ë²½ ì²´í¬ ê±°ë¦¬
 
-    // === °øÅë ÅØ½ºÃ³ ===
-    CTexture* m_pEnemyTex;      // enemies.bmp ÅØ½ºÃ³
+    // === ê³µí†µ í…ìŠ¤ì²˜ ===
+    CTexture* m_pEnemyTex;      // enemies.bmp í…ìŠ¤ì²˜
 };

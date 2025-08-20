@@ -13,32 +13,32 @@ public:
     CPlayerCollisionSystem(CPlayer* _pOwner);
     ~CPlayerCollisionSystem();
 
-    // === ÃÊ±âÈ­ ===
+    // === ì´ˆê¸°í™” ===
     void Init();
 
-    // === Ground »óÅÂ ¾÷µ¥ÀÌÆ® ===
-    void UpdateGroundState();           // ¸Å ÇÁ·¹ÀÓ Ground »óÅÂ Ã¼Å©
+    // === Ground ìƒíƒœ ì—…ë°ì´íŠ¸ ===
+    void UpdateGroundState();           // ë§¤ í”„ë ˆì„ Ground ìƒíƒœ ì²´í¬
 
 private:
-    // === Ground Ã¼Å© ÇïÆÛ ÇÔ¼öµé ===
-    bool IsPlayerOnGround() const;      // ÇÃ·¹ÀÌ¾î°¡ ½ÇÁ¦·Î ¶¥ À§¿¡ ÀÖ´ÂÁö Ã¼Å©
-    bool CheckGroundBelow() const;      // ÇÃ·¹ÀÌ¾î ¹ß ¾Æ·¡ Å¸ÀÏÀÌ ÀÖ´ÂÁö Ã¼Å©
-    CTile* FindSupportingTile() const;  // ÇöÀç ÁöÁöÇÏ°í ÀÖ´Â Å¸ÀÏ Ã£±â
+    // === Ground ì²´í¬ í—¬í¼ í•¨ìˆ˜ë“¤ ===
+    bool IsPlayerOnGround() const;      // í”Œë ˆì´ì–´ê°€ ì‹¤ì œë¡œ ë•… ìœ„ì— ìˆëŠ”ì§€ ì²´í¬
+    bool CheckGroundBelow() const;      // í”Œë ˆì´ì–´ ë°œ ì•„ë˜ íƒ€ì¼ì´ ìˆëŠ”ì§€ ì²´í¬
+    CTile* FindSupportingTile() const;  // í˜„ì¬ ì§€ì§€í•˜ê³  ìˆëŠ” íƒ€ì¼ ì°¾ê¸°
 
 public:
 
-    // === Ãæµ¹ Ã³¸® ¸ŞÀÎ ÀÎÅÍÆäÀÌ½º ===
+    // === ì¶©ëŒ ì²˜ë¦¬ ë©”ì¸ ì¸í„°í˜ì´ìŠ¤ ===
     void HandleCollisionEnter(CCollider* _pOther);
     void HandleCollision(CCollider* _pOther);
     void HandleCollisionExit(CCollider* _pOther);
 
 private:
-    // === Ãæµ¹ »ó¼öµé ===
-    static constexpr float TILE_COLLISION_THRESHOLD = 8.f;      // Å¸ÀÏ Ãæµ¹ °¨Áö ÀÓ°è°ª
-    static constexpr float POSITION_CORRECTION_THRESHOLD = 5.f; // À§Ä¡ º¸Á¤ ÀÓ°è°ª
-    static constexpr float JUMP_VELOCITY_THRESHOLD = -50.f;     // Á¡ÇÁ ¼Óµµ ÀÓ°è°ª
+    // === ì¶©ëŒ ìƒìˆ˜ë“¤ ===
+    static constexpr float TILE_COLLISION_THRESHOLD = 8.f;      // íƒ€ì¼ ì¶©ëŒ ê°ì§€ ì„ê³„ê°’
+    static constexpr float POSITION_CORRECTION_THRESHOLD = 5.f; // ìœ„ì¹˜ ë³´ì • ì„ê³„ê°’
+    static constexpr float JUMP_VELOCITY_THRESHOLD = -50.f;     // ì í”„ ì†ë„ ì„ê³„ê°’
 
-    // === Å¸ÀÔº° Ãæµ¹ Ã³¸® ÇÔ¼öµé ===
+    // === íƒ€ì…ë³„ ì¶©ëŒ ì²˜ë¦¬ í•¨ìˆ˜ë“¤ ===
     void HandleTileCollisionEnter(CTile* _pTile);
     void HandleTileCollision(CTile* _pTile);
     void HandleTileCollisionExit(CTile* _pTile);
@@ -47,28 +47,28 @@ private:
     void HandleItemCollisionEnter(CObject* _pItem);
     void HandleSpecialObjectCollisionEnter(CObject* _pSpecialObject);
 
-    // === Å¸ÀÏ Ãæµ¹ ¼¼ºÎ Ã³¸® ===
+    // === íƒ€ì¼ ì¶©ëŒ ì„¸ë¶€ ì²˜ë¦¬ ===
     bool ShouldSetGroundState(CTile* _pTile) const;
     void CorrectPlayerPosition(CTile* _pTile);
     void ResetVerticalVelocity();
 
-    // === Ãæµ¹ °è»ê ÇïÆÛ ÇÔ¼öµé ===
+    // === ì¶©ëŒ ê³„ì‚° í—¬í¼ í•¨ìˆ˜ë“¤ ===
     bool IsPlayerAboveTile(CTile* _pTile) const;
     float GetTileTopPosition(CTile* _pTile) const;
     float GetPlayerBottomPosition() const;
     Vec2 GetPlayerColliderScale() const;
     Vec2 GetTileColliderScale(CTile* _pTile) const;
 
-    // === ¹«Àû »óÅÂ Ã¼Å© ===
+    // === ë¬´ì  ìƒíƒœ ì²´í¬ ===
     bool IsInvincibleState() const;
 
-    // === ¿ÀºêÁ§Æ® Å¸ÀÔ À¯Æ¿¸®Æ¼ ÇÔ¼öµé ===
+    // === ì˜¤ë¸Œì íŠ¸ íƒ€ì… ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ë“¤ ===
     static bool IsMonsterType(OBJECT_TYPE _eType);
     static bool IsTileType(OBJECT_TYPE _eType);
     static bool IsItemType(OBJECT_TYPE _eType);
     static bool IsSpecialObjectType(OBJECT_TYPE _eType);
 
 private:
-    // === ¸â¹ö º¯¼ö ===
-    CPlayer* m_pOwner;              // ÇÃ·¹ÀÌ¾î ÂüÁ¶
+    // === ë©¤ë²„ ë³€ìˆ˜ ===
+    CPlayer* m_pOwner;              // í”Œë ˆì´ì–´ ì°¸ì¡°
 };

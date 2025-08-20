@@ -8,41 +8,41 @@ public:
     virtual ~CWhispyWoods();
 
 public:
-    // === °¡»ó ÇÔ¼ö ±¸Çö ===
-    void Move() override;                                   // °íÁ¤ (ÀÌµ¿ ¾øÀ½)
-    void StartBossEvent() override;                         // º¸½ºÀü ½ÃÀÛ
-    void EndBossEvent() override;                           // º¸½ºÀü Á¾·á
-    void ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern) override;  // °ø°İ ÆĞÅÏ ½ÇÇà
+    // === ê°€ìƒ í•¨ìˆ˜ êµ¬í˜„ ===
+    void Move() override;                                   // ê³ ì • (ì´ë™ ì—†ìŒ)
+    void StartBossEvent() override;                         // ë³´ìŠ¤ì „ ì‹œì‘
+    void EndBossEvent() override;                           // ë³´ìŠ¤ì „ ì¢…ë£Œ
+    void ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern) override;  // ê³µê²© íŒ¨í„´ ì‹¤í–‰
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤ ±¸Çö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì • êµ¬í˜„ ===
     void SetupAnimationMapping() override;
 
 public:
-    // === À§½ºÇÇ ¿ìµå °ø°İ ÆĞÅÏµé ===
-    void AttackPattern1_AppleDrop();                        // »ç°ú ¶³¾î¶ß¸®±â
-    void AttackPattern2_AirPuff();                          // ¹Ù¶÷ ºÒ±â
-    void AttackPattern3_RootAttack();                       // »Ñ¸® °ø°İ
-    void AttackPattern4_LeafStorm();                        // ÀÙ»ç±Í ÆøÇ³ (2ÆäÀÌÁî)
-    void AttackPattern5_FinalAttack();                      // ÃÖÁ¾ °ø°İ (3ÆäÀÌÁî)
+    // === ìœ„ìŠ¤í”¼ ìš°ë“œ ê³µê²© íŒ¨í„´ë“¤ ===
+    void AttackPattern1_AppleDrop();                        // ì‚¬ê³¼ ë–¨ì–´ëœ¨ë¦¬ê¸°
+    void AttackPattern2_AirPuff();                          // ë°”ëŒ ë¶ˆê¸°
+    void AttackPattern3_RootAttack();                       // ë¿Œë¦¬ ê³µê²©
+    void AttackPattern4_LeafStorm();                        // ìì‚¬ê·€ í­í’ (2í˜ì´ì¦ˆ)
+    void AttackPattern5_FinalAttack();                      // ìµœì¢… ê³µê²© (3í˜ì´ì¦ˆ)
 
 private:
-    // === °ø°İ ÆĞÅÏ ±¸Çö ÇÔ¼öµé ===
-    void CreateApple(Vec2 _vPos);                           // »ç°ú »ı¼º
-    void CreateAirPuff(Vec2 _vDirection);                   // ¹Ù¶÷ »ı¼º
-    void CreateRoot(Vec2 _vPos);                            // »Ñ¸® »ı¼º
-    void CreateLeaf(Vec2 _vPos, Vec2 _vDirection);          // ÀÙ»ç±Í »ı¼º
+    // === ê³µê²© íŒ¨í„´ êµ¬í˜„ í•¨ìˆ˜ë“¤ ===
+    void CreateApple(Vec2 _vPos);                           // ì‚¬ê³¼ ìƒì„±
+    void CreateAirPuff(Vec2 _vDirection);                   // ë°”ëŒ ìƒì„±
+    void CreateRoot(Vec2 _vPos);                            // ë¿Œë¦¬ ìƒì„±
+    void CreateLeaf(Vec2 _vPos, Vec2 _vDirection);          // ìì‚¬ê·€ ìƒì„±
 
-    // === º¸½º Àü¿ë ±â´Éµé ===
-    void ShakeScreen();                                     // È­¸é Áøµ¿
-    void CreateBossArena();                                 // º¸½º ÀüÅõ °ø°£ »ı¼º
-    void DestroyBossArena();                                // º¸½º ÀüÅõ °ø°£ Á¦°Å
+    // === ë³´ìŠ¤ ì „ìš© ê¸°ëŠ¥ë“¤ ===
+    void ShakeScreen();                                     // í™”ë©´ ì§„ë™
+    void CreateBossArena();                                 // ë³´ìŠ¤ ì „íˆ¬ ê³µê°„ ìƒì„±
+    void DestroyBossArena();                                // ë³´ìŠ¤ ì „íˆ¬ ê³µê°„ ì œê±°
 
 private:
-    // === À§½ºÇÇ ¿ìµå Àü¿ë º¯¼öµé ===
-    Vec2    m_vRootPositions[5];                           // »Ñ¸® °ø°İ À§Ä¡µé
-    int     m_iCurrentRootIndex;                           // ÇöÀç »Ñ¸® ÀÎµ¦½º
-    float   m_fAppleDropTimer;                             // »ç°ú ¶³¾î¶ß¸®±â Å¸ÀÌ¸Ó
-    float   m_fAirPuffTimer;                               // ¹Ù¶÷ ºÒ±â Å¸ÀÌ¸Ó
-    bool    m_bFinalPhaseStarted;                          // ÃÖÁ¾ ÆäÀÌÁî ½ÃÀÛ ¿©ºÎ
+    // === ìœ„ìŠ¤í”¼ ìš°ë“œ ì „ìš© ë³€ìˆ˜ë“¤ ===
+    Vec2    m_vRootPositions[5];                           // ë¿Œë¦¬ ê³µê²© ìœ„ì¹˜ë“¤
+    int     m_iCurrentRootIndex;                           // í˜„ì¬ ë¿Œë¦¬ ì¸ë±ìŠ¤
+    float   m_fAppleDropTimer;                             // ì‚¬ê³¼ ë–¨ì–´ëœ¨ë¦¬ê¸° íƒ€ì´ë¨¸
+    float   m_fAirPuffTimer;                               // ë°”ëŒ ë¶ˆê¸° íƒ€ì´ë¨¸
+    bool    m_bFinalPhaseStarted;                          // ìµœì¢… í˜ì´ì¦ˆ ì‹œì‘ ì—¬ë¶€
 };

@@ -1,7 +1,7 @@
 #pragma once
 #include "CObject.h"
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CPlayerStateMachine;
 class CPlayerInhaleSystem;
 class CPlayerMovement;
@@ -11,77 +11,85 @@ class CPlayerCollisionSystem;
 class CPlayer : public CObject
 {
 public:
-    // === »ı¼ºÀÚ & ¼Ò¸êÀÚ ===
+    // === ìƒì„±ì & ì†Œë©¸ì ===
     CPlayer();
     ~CPlayer();
 
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     virtual void Update() override;
     virtual void Render(HDC _dc) override;
 
-    // === Ãæµ¹ Ã³¸® ===
+    // === ì¶©ëŒ ì²˜ë¦¬ ===
     virtual void OnCollisionEnter(CCollider* _pOther) override;
     virtual void OnCollision(CCollider* _pOther) override;
     virtual void OnCollisionExit(CCollider* _pOther) override;
 
-    // === »óÅÂ °ü¸® ÀÎÅÍÆäÀÌ½º ===
+    // === ìƒíƒœ ê´€ë¦¬ ì¸í„°í˜ì´ìŠ¤ ===
     PLAYER_STATE GetCurrentState() const;
     PLAYER_STATE GetPreviousState() const;
 
-    // === ÇÊ¼ö ·¡ÆÛ ÇÔ¼öµé ===
-    // ÈíÀÔ °ü·Ã ÇÊ¼ö ±â´É
+    // === í•„ìˆ˜ ë˜í¼ í•¨ìˆ˜ë“¤ ===
+    // í¡ì… ê´€ë ¨ í•„ìˆ˜ ê¸°ëŠ¥
     bool IsInhaling() const;
     bool HasMouthful() const;
     void StartInhale();
     void StopInhale();
     void SpitOut();
 
-    // ÀÌµ¿ °ü·Ã ÇÊ¼ö ±â´É
+    // ì´ë™ ê´€ë ¨ í•„ìˆ˜ ê¸°ëŠ¥
     bool IsFacingRight() const;
 
-    // Ã¼·Â °ü·Ã ÇÊ¼ö ±â´É
+    // ì²´ë ¥ ê´€ë ¨ í•„ìˆ˜ ê¸°ëŠ¥
     void TakeDamage(int _iDamage = 1, Vec2 _vKnockbackDir = Vec2(0.f, 0.f));
     bool IsGameOver() const;
     bool ShouldRenderBlink() const;
 
-    // === µ¥¹ÌÁö °ü·Ã ÀÎÅÍÆäÀÌ½º ===
+    // === ë°ë¯¸ì§€ ê´€ë ¨ ì¸í„°í˜ì´ìŠ¤ ===
     void RequestDamage(Vec2 _vKnockbackDir = Vec2(0.f, 0.f));
     bool IsDamageRequested() const { return m_bDamageRequested; }
     Vec2 GetDamageKnockback() const { return m_vDamageKnockback; }
     void ClearDamageRequest();
+    
+    // === ìŠ¬ë¼ì´ë”©í‚¥ ë°˜ë™ ê´€ë ¨ ì¸í„°í˜ì´ìŠ¤ ===
+    void RequestSlideKickRecoil();
+    bool IsSlideKickRecoilRequested() const { return m_bSlideKickRecoilRequested; }
+    void ClearSlideKickRecoilRequest();
 
-    // === ½Ã½ºÅÛ Á¢±ÙÀÚµé ===
+    // === ì‹œìŠ¤í…œ ì ‘ê·¼ìë“¤ ===
     CPlayerInhaleSystem* GetInhaleSystem() const { return m_pInhaleSystem; }
     CPlayerMovement* GetMovement() const { return m_pMovement; }
     CPlayerHealthSystem* GetHealthSystem() const { return m_pHealthSystem; }
     CPlayerStateMachine* GetStateMachine() const { return m_pStateMachine; }
 
 private:
-    // === ·»´õ¸µ ÇïÆÛ ÇÔ¼ö ===
+    // === ë Œë”ë§ í—¬í¼ í•¨ìˆ˜ ===
     void RenderInvincible(HDC _dc);
 
-    // === Å©¶ó¿ìÄ¡ °ü·Ã ÇïÆÛ ÇÔ¼öµé ===
+    // === í¬ë¼ìš°ì¹˜ ê´€ë ¨ í—¬í¼ í•¨ìˆ˜ë“¤ ===
     void UpdateColliderSize(); 
     void AdjustPositionForColliderResize(const Vec2& _vOldScale, const Vec2& _vNewScale);
 
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç »ı¼º ÇÔ¼ö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ìƒì„± í•¨ìˆ˜ ===
     void CreateAnimation();
 
-    // === ÄÄÆ÷³ÍÆ®µé ===
-    CPlayerStateMachine* m_pStateMachine;   // »óÅÂ °ü¸® ½Ã½ºÅÛ
-    CPlayerInhaleSystem* m_pInhaleSystem;   // ÈíÀÔµéÀÌ±â ½Ã½ºÅÛ
-    CPlayerMovement* m_pMovement;           // ÀÌµ¿ ½Ã½ºÅÛ
-    CPlayerHealthSystem* m_pHealthSystem;   // Ã¼·Â ½Ã½ºÅÛ
-    CPlayerCollisionSystem* m_pCollisionSystem; // Ãæµ¹ Ã³¸® ½Ã½ºÅÛ
+    // === ì»´í¬ë„ŒíŠ¸ë“¤ ===
+    CPlayerStateMachine* m_pStateMachine;   // ìƒíƒœ ê´€ë¦¬ ì‹œìŠ¤í…œ
+    CPlayerInhaleSystem* m_pInhaleSystem;   // í¡ì…ë“¤ì´ê¸° ì‹œìŠ¤í…œ
+    CPlayerMovement* m_pMovement;           // ì´ë™ ì‹œìŠ¤í…œ
+    CPlayerHealthSystem* m_pHealthSystem;   // ì²´ë ¥ ì‹œìŠ¤í…œ
+    CPlayerCollisionSystem* m_pCollisionSystem; // ì¶©ëŒ ì²˜ë¦¬ ì‹œìŠ¤í…œ
 
-    // === Å©¶ó¿ìÄ¡ °ü·Ã ¸â¹ö º¯¼öµé (»õ·Î Ãß°¡) ===
-    Vec2 m_vNormalColliderScale;            // ÀÏ¹İ »óÅÂ Ãæµ¹Ã¼ Å©±â
-    Vec2 m_vCrouchColliderScale;            // Å©¶ó¿ìÄ¡ »óÅÂ Ãæµ¹Ã¼ Å©±â
+    // === í¬ë¼ìš°ì¹˜ ê´€ë ¨ ë©¤ë²„ ë³€ìˆ˜ë“¤ (ìƒˆë¡œ ì¶”ê°€) ===
+    Vec2 m_vNormalColliderScale;            // ì¼ë°˜ ìƒíƒœ ì¶©ëŒì²´ í¬ê¸°
+    Vec2 m_vCrouchColliderScale;            // í¬ë¼ìš°ì¹˜ ìƒíƒœ ì¶©ëŒì²´ í¬ê¸°
 
 private:
-    // === µ¥¹ÌÁö °ü·Ã ÇÃ·¡±× ===
-    bool m_bDamageRequested;     // ÇÇ°İ ¿äÃ» ÇÃ·¡±×
-    Vec2 m_vDamageKnockback;     // ÇÇ°İ ³Ë¹é ¹æÇâ
+    // === ë°ë¯¸ì§€ ê´€ë ¨ í”Œë˜ê·¸ ===
+    bool m_bDamageRequested;     // í”¼ê²© ìš”ì²­ í”Œë˜ê·¸
+    Vec2 m_vDamageKnockback;     // í”¼ê²© ë„‰ë°± ë°©í–¥
+    
+    // === ìŠ¬ë¼ì´ë”©í‚¥ ë°˜ë™ í”Œë˜ê·¸ ===
+    bool m_bSlideKickRecoilRequested; // ìŠ¬ë¼ì´ë”©í‚¥ ë°˜ë™ ìš”ì²­ í”Œë˜ê·¸
 
     friend class CPlayerStateMachine;
 };

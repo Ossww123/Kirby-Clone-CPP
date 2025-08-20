@@ -10,52 +10,54 @@ class CObject
 public:
     CObject();
     CObject(OBJECT_TYPE _eType);
-    virtual ~CObject();  // °¡»ó ¼Ò¸êÀÚ
+    virtual ~CObject();  // ê°€ìƒ ì†Œë©¸ì
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
-    virtual void Update() = 0;              // ¼ø¼ö °¡»ó ÇÔ¼ö - ÀÚ½ÄÀÌ ¹İµå½Ã ±¸Çö
-    virtual void Render(HDC _dc);           // ±âº» ·»´õ¸µ Á¦°ø
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
+    virtual void Update() = 0;              // ìˆœìˆ˜ ê°€ìƒ í•¨ìˆ˜ - ìì‹ì´ ë°˜ë“œì‹œ êµ¬í˜„
+    virtual void Render(HDC _dc);           // ê¸°ë³¸ ë Œë”ë§ ì œê³µ
 
 public:
-    // === Ãæµ¹ Äİ¹é ÇÔ¼öµé ===
-    virtual void OnCollisionEnter(CCollider* _pOther) {}   // Ãæµ¹ ½ÃÀÛ
-    virtual void OnCollision(CCollider* _pOther) {}        // Ãæµ¹ Áß
-    virtual void OnCollisionExit(CCollider* _pOther) {}    // Ãæµ¹ Á¾·á
+    // === ì¶©ëŒ ì½œë°± í•¨ìˆ˜ë“¤ ===
+    virtual void OnCollisionEnter(CCollider* _pOther) {}   // ì¶©ëŒ ì‹œì‘
+    virtual void OnCollision(CCollider* _pOther) {}        // ì¶©ëŒ ì¤‘
+    virtual void OnCollisionExit(CCollider* _pOther) {}    // ì¶©ëŒ ì¢…ë£Œ
 
 private:
-    // === Ãæµ¹ Äİ¹é ÇÔ¼öµé ±¸ÇöºÎ´Â ÀÚ½Ä¿¡¼­ ÇÊ¿ä½Ã ÀçÁ¤ÀÇ ===
+    // === ì¶©ëŒ ì½œë°± í•¨ìˆ˜ë“¤ êµ¬í˜„ë¶€ëŠ” ìì‹ì—ì„œ í•„ìš”ì‹œ ì¬ì •ì˜ ===
 
 public:
-    // === ÄÄÆ÷³ÍÆ® »ı¼º ÇÔ¼öµé ===
+    // === ì»´í¬ë„ŒíŠ¸ ìƒì„± í•¨ìˆ˜ë“¤ ===
     void CreateCollider();
     void CreateAnimator();
     void CreateRigidBody();
 
 public:
-    // === À§Ä¡ ¹× Å©±â °ü¸® ===
+    // === ìœ„ì¹˜ ë° í¬ê¸° ê´€ë¦¬ ===
     void SetPos(Vec2 _vPos) { m_vPos = _vPos; }
     void SetScale(Vec2 _vScale) { m_vScale = _vScale; }
     Vec2 GetPos() const { return m_vPos; }
     Vec2 GetScale() const { return m_vScale; }
 
 public:
-    // === ÅØ½ºÃ³ °ü¸® ===
+    // === í…ìŠ¤ì²˜ ê´€ë¦¬ ===
     void SetTexture(CTexture* _pTex) { m_pTex = _pTex; }
     CTexture* GetTexture() const { return m_pTex; }
 
 public:
-    // === »ı¸í »óÅÂ °ü¸® ===
+    // === ìƒëª… ìƒíƒœ ê´€ë¦¬ ===
     bool IsDead() const { return !m_bAlive; }
     void SetDead() { m_bAlive = false; }
+    bool IsActive() const { return m_bAlive; }
+    void Revive() { m_bAlive = true; }
 
 public:
-    // === ¿ÀºêÁ§Æ® Å¸ÀÔ °ü¸® ===
+    // === ì˜¤ë¸Œì íŠ¸ íƒ€ì… ê´€ë¦¬ ===
     void SetType(OBJECT_TYPE _eType) { m_eObjectType = _eType; }
     OBJECT_TYPE GetType() const { return m_eObjectType; }
 
 private:
-    // === ·»´õ¸µ ³»ºÎ ÇÔ¼öµé ===
+    // === ë Œë”ë§ ë‚´ë¶€ í•¨ìˆ˜ë“¤ ===
     float GetRenderScale() const;
     void RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale);
     void RenderWithAnimator(HDC _dc, float _fScale);
@@ -64,23 +66,23 @@ private:
     void RenderCollider(HDC _dc);
 
 public:
-    // === ÄÄÆ÷³ÍÆ® Á¢±ÙÀÚµé ===
+    // === ì»´í¬ë„ŒíŠ¸ ì ‘ê·¼ìë“¤ ===
     CCollider* GetCollider() const { return m_pCollider; }
     CAnimator* GetAnimator() const { return m_pAnimator; }
     CRigidBody* GetRigidBody() const { return m_pRigidBody; }
 
 private:
-    // === ±âº» ¼Ó¼ºµé ===
-    Vec2 m_vPos;                    // À§Ä¡
-    Vec2 m_vScale;                  // Å©±â
-    bool m_bAlive;                  // »ıÁ¸ »óÅÂ
-    OBJECT_TYPE m_eObjectType;      // ¿ÀºêÁ§Æ® Å¸ÀÔ
+    // === ê¸°ë³¸ ì†ì„±ë“¤ ===
+    Vec2 m_vPos;                    // ìœ„ì¹˜
+    Vec2 m_vScale;                  // í¬ê¸°
+    bool m_bAlive;                  // ìƒì¡´ ìƒíƒœ
+    OBJECT_TYPE m_eObjectType;      // ì˜¤ë¸Œì íŠ¸ íƒ€ì…
 
-    // === ÅØ½ºÃ³ ===
-    CTexture* m_pTex;               // ÅØ½ºÃ³
+    // === í…ìŠ¤ì²˜ ===
+    CTexture* m_pTex;               // í…ìŠ¤ì²˜
 
-    // === ÄÄÆ÷³ÍÆ®µé ===
-    CCollider* m_pCollider;         // Ãæµ¹Ã¼ ÄÄÆ÷³ÍÆ®
-    CAnimator* m_pAnimator;         // ¾Ö´Ï¸ŞÀÌÅÍ ÄÄÆ÷³ÍÆ®
-    CRigidBody* m_pRigidBody;       // ¸®Áöµå¹Ùµğ ÄÄÆ÷³ÍÆ®
+    // === ì»´í¬ë„ŒíŠ¸ë“¤ ===
+    CCollider* m_pCollider;         // ì¶©ëŒì²´ ì»´í¬ë„ŒíŠ¸
+    CAnimator* m_pAnimator;         // ì• ë‹ˆë©”ì´í„° ì»´í¬ë„ŒíŠ¸
+    CRigidBody* m_pRigidBody;       // ë¦¬ì§€ë“œë°”ë”” ì»´í¬ë„ŒíŠ¸
 };

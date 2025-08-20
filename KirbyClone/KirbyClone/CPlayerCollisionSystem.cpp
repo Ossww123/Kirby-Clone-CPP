@@ -24,7 +24,7 @@ CPlayerCollisionSystem::~CPlayerCollisionSystem()
 
 void CPlayerCollisionSystem::Init()
 {
-    // ÇÊ¿ä½Ã ÃÊ±âÈ­ ·ÎÁ÷ Ãß°¡
+    // í•„ìš”ì‹œ ì´ˆê¸°í™” ë¡œì§ ì¶”ê°€
 }
 
 // CPlayerCollisionSystem.cpp
@@ -40,10 +40,10 @@ void CPlayerCollisionSystem::UpdateGroundState()
 
     if (isCurrentlyGrounded && !isActuallyOnGround)
     {
-        // Ground »óÅÂ¸¸ ¼öÁ¤ (»óÅÂ º¯°æÀº TransitionTableÀÌ ÀÚµ¿ Ã³¸®)
+        // Ground ìƒíƒœë§Œ ìˆ˜ì • (ìƒíƒœ ë³€ê²½ì€ TransitionTableì´ ìë™ ì²˜ë¦¬)
         pRigidBody->SetGround(false);
 
-        // »óÅÂ º¯°æÀº ´ÙÀ½ ÇÁ·¹ÀÓ StateMachine::Update()¿¡¼­ ÀÚµ¿À¸·Î Ã³¸®µÊ
+        // ìƒíƒœ ë³€ê²½ì€ ë‹¤ìŒ í”„ë ˆì„ StateMachine::Update()ì—ì„œ ìë™ìœ¼ë¡œ ì²˜ë¦¬ë¨
     }
 }
 
@@ -51,7 +51,7 @@ bool CPlayerCollisionSystem::IsPlayerOnGround() const
 {
     if (!m_pOwner) return false;
 
-    // ¹ß ¾Æ·¡ Å¸ÀÏÀÌ ÀÖ´ÂÁö Ã¼Å©
+    // ë°œ ì•„ë˜ íƒ€ì¼ì´ ìˆëŠ”ì§€ ì²´í¬
     return CheckGroundBelow();
 }
 
@@ -70,16 +70,16 @@ CTile* CPlayerCollisionSystem::FindSupportingTile() const
     Vec2 vPlayerPos = m_pOwner->GetPos();
     Vec2 vPlayerScale = GetPlayerColliderScale();
 
-    // ÇÃ·¹ÀÌ¾î ¹ß ¾Æ·¡ ¿µ¿ª Á¤ÀÇ
+    // í”Œë ˆì´ì–´ ë°œ ì•„ë˜ ì˜ì—­ ì •ì˜
     float playerLeft = vPlayerPos.x - vPlayerScale.x / 2.f;
     float playerRight = vPlayerPos.x + vPlayerScale.x / 2.f;
     float playerBottom = vPlayerPos.y + vPlayerScale.y / 2.f;
 
-    // ¹ß ¾Æ·¡ ¾à°£ÀÇ ¿©À¯ °ø°£ (ÇÈ¼¿ ´ÜÀ§)
+    // ë°œ ì•„ë˜ ì•½ê°„ì˜ ì—¬ìœ  ê³µê°„ (í”½ì…€ ë‹¨ìœ„)
     float groundCheckDistance = 8.f;
     float checkY = playerBottom + groundCheckDistance;
 
-    // ÇöÀç ¾ÀÀÇ ¸ğµç Å¸ÀÏ °Ë»ç
+    // í˜„ì¬ ì”¬ì˜ ëª¨ë“  íƒ€ì¼ ê²€ì‚¬
     CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
     if (!pCurScene) return nullptr;
 
@@ -95,13 +95,13 @@ CTile* CPlayerCollisionSystem::FindSupportingTile() const
         Vec2 vTilePos = pTile->GetPos();
         Vec2 vTileScale = GetTileColliderScale(pTile);
 
-        // Å¸ÀÏ ¿µ¿ª °è»ê
+        // íƒ€ì¼ ì˜ì—­ ê³„ì‚°
         float tileLeft = vTilePos.x - vTileScale.x / 2.f;
         float tileRight = vTilePos.x + vTileScale.x / 2.f;
         float tileTop = vTilePos.y - vTileScale.y / 2.f;
         float tileBottom = vTilePos.y + vTileScale.y / 2.f;
 
-        // ÇÃ·¹ÀÌ¾î°¡ Å¸ÀÏ À§¿¡ ÀÖ°í, ¹ß ¾Æ·¡ ¿µ¿ªÀÌ Å¸ÀÏ°ú °ãÄ¡´ÂÁö Ã¼Å©
+        // í”Œë ˆì´ì–´ê°€ íƒ€ì¼ ìœ„ì— ìˆê³ , ë°œ ì•„ë˜ ì˜ì—­ì´ íƒ€ì¼ê³¼ ê²¹ì¹˜ëŠ”ì§€ ì²´í¬
         bool horizontalOverlap = (playerRight > tileLeft) && (playerLeft < tileRight);
         bool isAboveTile = (playerBottom <= tileTop + TILE_COLLISION_THRESHOLD);
         bool isWithinCheckRange = (checkY >= tileTop) && (playerBottom <= tileTop + groundCheckDistance);
@@ -115,7 +115,7 @@ CTile* CPlayerCollisionSystem::FindSupportingTile() const
     return nullptr;
 }
 
-// === Ãæµ¹ Ã³¸® ¸ŞÀÎ ÀÎÅÍÆäÀÌ½º ===
+// === ì¶©ëŒ ì²˜ë¦¬ ë©”ì¸ ì¸í„°í˜ì´ìŠ¤ ===
 
 void CPlayerCollisionSystem::HandleCollisionEnter(CCollider* _pOther)
 {
@@ -124,13 +124,13 @@ void CPlayerCollisionSystem::HandleCollisionEnter(CCollider* _pOther)
     CObject* pOtherObj = _pOther->GetOwner();
     if (!pOtherObj) return;
 
-    // ¹«Àû »óÅÂ È®ÀÎ
+    // ë¬´ì  ìƒíƒœ í™•ì¸
     if (IsInvincibleState())
     {
         return;
     }
 
-    // ¿ÀºêÁ§Æ® Å¸ÀÔº° Ã³¸®
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì…ë³„ ì²˜ë¦¬
     OBJECT_TYPE eType = pOtherObj->GetType();
 
     if (IsTileType(eType))
@@ -162,7 +162,7 @@ void CPlayerCollisionSystem::HandleCollision(CCollider* _pOther)
     CObject* pOtherObj = _pOther->GetOwner();
     if (!pOtherObj) return;
 
-    // Áö¼ÓÀûÀÎ Ãæµ¹ Ã³¸® (ÁÖ·Î Å¸ÀÏ)
+    // ì§€ì†ì ì¸ ì¶©ëŒ ì²˜ë¦¬ (ì£¼ë¡œ íƒ€ì¼)
     OBJECT_TYPE eType = pOtherObj->GetType();
 
     if (IsTileType(eType))
@@ -180,7 +180,7 @@ void CPlayerCollisionSystem::HandleCollisionExit(CCollider* _pOther)
     CObject* pOtherObj = _pOther->GetOwner();
     if (!pOtherObj) return;
 
-    // Å¸ÀÏ¿¡¼­ ¹ş¾î³¯ ¶§ Ground »óÅÂ Ã³¸®
+    // íƒ€ì¼ì—ì„œ ë²—ì–´ë‚  ë•Œ Ground ìƒíƒœ ì²˜ë¦¬
     OBJECT_TYPE eType = pOtherObj->GetType();
 
     if (IsTileType(eType))
@@ -191,13 +191,13 @@ void CPlayerCollisionSystem::HandleCollisionExit(CCollider* _pOther)
     }
 }
 
-// === Å¸ÀÔº° Ãæµ¹ Ã³¸® ÇÔ¼öµé ===
+// === íƒ€ì…ë³„ ì¶©ëŒ ì²˜ë¦¬ í•¨ìˆ˜ë“¤ ===
 
 void CPlayerCollisionSystem::HandleTileCollisionEnter(CTile* _pTile)
 {
     if (!_pTile || !_pTile->IsSolid()) return;
 
-    // Å¸ÀÏ ÁøÀÔ ½Ã Æ¯º°ÇÑ Ã³¸®°¡ ÇÊ¿äÇÏ¸é ¿©±â¿¡ Ãß°¡
+    // íƒ€ì¼ ì§„ì… ì‹œ íŠ¹ë³„í•œ ì²˜ë¦¬ê°€ í•„ìš”í•˜ë©´ ì—¬ê¸°ì— ì¶”ê°€
 }
 
 void CPlayerCollisionSystem::HandleTileCollision(CTile* _pTile)
@@ -215,14 +215,14 @@ void CPlayerCollisionSystem::HandleTileCollision(CTile* _pTile)
     Vec2 vMyScale = GetPlayerColliderScale();
     Vec2 vTileScale = GetTileColliderScale(pTile);
 
-    // ÇöÀç ¼Óµµ ±â¹İÀ¸·Î Ãæµ¹ ¹æÇâ ÃßÁ¤
+    // í˜„ì¬ ì†ë„ ê¸°ë°˜ìœ¼ë¡œ ì¶©ëŒ ë°©í–¥ ì¶”ì •
     Vec2 vVelocity = pRigidBody->GetVelocity();
     float deltaTime = CTimeMgr::GetInst()->GetfDT();
 
-    // ÀÌÀü ÇÁ·¹ÀÓ À§Ä¡ ÃßÁ¤
+    // ì´ì „ í”„ë ˆì„ ìœ„ì¹˜ ì¶”ì •
     Vec2 vPrevPos = vMyPos - vVelocity * deltaTime;
 
-    // Ãæµ¹ ¹Ú½º °æ°è °è»ê
+    // ì¶©ëŒ ë°•ìŠ¤ ê²½ê³„ ê³„ì‚°
     float myLeft = vMyPos.x - vMyScale.x / 2.f;
     float myRight = vMyPos.x + vMyScale.x / 2.f;
     float myTop = vMyPos.y - vMyScale.y / 2.f;
@@ -233,23 +233,23 @@ void CPlayerCollisionSystem::HandleTileCollision(CTile* _pTile)
     float tileTop = vTilePos.y - vTileScale.y / 2.f;
     float tileBottom = vTilePos.y + vTileScale.y / 2.f;
 
-    // °ãÄ§ °è»ê
+    // ê²¹ì¹¨ ê³„ì‚°
     float overlapX = min(myRight, tileRight) - max(myLeft, tileLeft);
     float overlapY = min(myBottom, tileBottom) - max(myTop, tileTop);
 
     if (overlapX <= 0 || overlapY <= 0)
         return;
 
-    // ¼Óµµ ¹æÇâÀ» °í·ÁÇÑ Ãæµ¹ Ã³¸®
+    // ì†ë„ ë°©í–¥ì„ ê³ ë ¤í•œ ì¶©ëŒ ì²˜ë¦¬
     bool collisionFromLeft = vVelocity.x > 0 && vPrevPos.x < tileLeft;
     bool collisionFromRight = vVelocity.x < 0 && vPrevPos.x > tileRight;
     bool collisionFromTop = vVelocity.y > 0 && vPrevPos.y < tileTop;
     bool collisionFromBottom = vVelocity.y < 0 && vPrevPos.y > tileBottom;
 
-    // ¿ì¼±¼øÀ§: ¼öÁ÷ Ãæµ¹À» ¸ÕÀú Ã³¸® (ÂøÁö¿Í ÃµÀå Ãæµ¹)
+    // ìš°ì„ ìˆœìœ„: ìˆ˜ì§ ì¶©ëŒì„ ë¨¼ì € ì²˜ë¦¬ (ì°©ì§€ì™€ ì²œì¥ ì¶©ëŒ)
     if (collisionFromTop && overlapY <= overlapX)
     {
-        // À§¿¡¼­ ¾Æ·¡·Î ¶³¾îÁ®¼­ ÂøÁö
+        // ìœ„ì—ì„œ ì•„ë˜ë¡œ ë–¨ì–´ì ¸ì„œ ì°©ì§€
         float correctedY = tileTop - vMyScale.y / 2.f;
         m_pOwner->SetPos(Vec2(vMyPos.x, correctedY));
         pRigidBody->SetGround(true);
@@ -257,31 +257,31 @@ void CPlayerCollisionSystem::HandleTileCollision(CTile* _pTile)
     }
     else if (collisionFromBottom && overlapY <= overlapX)
     {
-        // ¾Æ·¡¿¡¼­ À§·Î ¿Ã¶ó¿Í¼­ ÃµÀå Ãæµ¹
+        // ì•„ë˜ì—ì„œ ìœ„ë¡œ ì˜¬ë¼ì™€ì„œ ì²œì¥ ì¶©ëŒ
         float correctedY = tileBottom + vMyScale.y / 2.f;
         m_pOwner->SetPos(Vec2(vMyPos.x, correctedY));
         pRigidBody->SetVelocityY(0.f);
     }
     else if (collisionFromLeft)
     {
-        // ¿ŞÂÊ¿¡¼­ ¿À¸¥ÂÊÀ¸·Î ÀÌµ¿ÇØ¼­ º® Ãæµ¹
+        // ì™¼ìª½ì—ì„œ ì˜¤ë¥¸ìª½ìœ¼ë¡œ ì´ë™í•´ì„œ ë²½ ì¶©ëŒ
         float correctedX = tileLeft - vMyScale.x / 2.f;
         m_pOwner->SetPos(Vec2(correctedX, vMyPos.y));
         pRigidBody->SetVelocityX(0.f);
     }
     else if (collisionFromRight)
     {
-        // ¿À¸¥ÂÊ¿¡¼­ ¿ŞÂÊÀ¸·Î ÀÌµ¿ÇØ¼­ º® Ãæµ¹
+        // ì˜¤ë¥¸ìª½ì—ì„œ ì™¼ìª½ìœ¼ë¡œ ì´ë™í•´ì„œ ë²½ ì¶©ëŒ
         float correctedX = tileRight + vMyScale.x / 2.f;
         m_pOwner->SetPos(Vec2(correctedX, vMyPos.y));
         pRigidBody->SetVelocityX(0.f);
     }
     else
     {
-        // ¹æÇâÀ» Á¤È®È÷ ¾Ë ¼ö ¾ø´Â °æ¿ì - ÃÖ¼Ò °ãÄ§ ¹æÇâÀ¸·Î Ã³¸®
+        // ë°©í–¥ì„ ì •í™•íˆ ì•Œ ìˆ˜ ì—†ëŠ” ê²½ìš° - ìµœì†Œ ê²¹ì¹¨ ë°©í–¥ìœ¼ë¡œ ì²˜ë¦¬
         if (overlapX < overlapY)
         {
-            // ¼öÆò ºĞ¸®
+            // ìˆ˜í‰ ë¶„ë¦¬
             if (vMyPos.x < vTilePos.x)
             {
                 float correctedX = tileLeft - vMyScale.x / 2.f;
@@ -297,7 +297,7 @@ void CPlayerCollisionSystem::HandleTileCollision(CTile* _pTile)
         }
         else
         {
-            // ¼öÁ÷ ºĞ¸®
+            // ìˆ˜ì§ ë¶„ë¦¬
             if (vMyPos.y < vTilePos.y)
             {
                 float correctedY = tileTop - vMyScale.y / 2.f;
@@ -324,7 +324,7 @@ void CPlayerCollisionSystem::HandleTileCollisionExit(CTile* _pTile)
 
     Vec2 vVelocity = pRigidBody->GetVelocity();
 
-    // À§ÂÊÀ¸·Î ¹ş¾î³ª´Â ÀÌµ¿(Á¡ÇÁ) ÁßÀÏ ¶§¸¸ Ground ÇØÁ¦
+    // ìœ„ìª½ìœ¼ë¡œ ë²—ì–´ë‚˜ëŠ” ì´ë™(ì í”„) ì¤‘ì¼ ë•Œë§Œ Ground í•´ì œ
     if (vVelocity.y < JUMP_VELOCITY_THRESHOLD)
     {
         pRigidBody->SetGround(false);
@@ -335,13 +335,13 @@ void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
 {
     if (!_pMonster) return;
 
-    // ÈíÀÔ ÁßÀÎÁö È®ÀÎ
+    // í¡ì… ì¤‘ì¸ì§€ í™•ì¸
     if (m_pOwner->IsInhaling())
     {
         Vec2 vDiff = m_pOwner->GetPos() - _pMonster->GetPos();
-        if (vDiff.Length() < 60.f) // ÈíÀÔ ¹üÀ§ ³»
+        if (vDiff.Length() < 60.f) // í¡ì… ë²”ìœ„ ë‚´
         {
-            // ¸ó½ºÅÍ Èí¼ö Ã³¸® (Á÷Á¢ ½Ã½ºÅÛ Á¢±Ù)
+            // ëª¬ìŠ¤í„° í¡ìˆ˜ ì²˜ë¦¬ (ì§ì ‘ ì‹œìŠ¤í…œ ì ‘ê·¼)
             if (m_pOwner->GetInhaleSystem())
             {
                 m_pOwner->GetInhaleSystem()->SwallowTarget(_pMonster);
@@ -350,33 +350,33 @@ void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
         }
     }
 
-    // ÀÔ¿¡ ¹°°í ÀÖ°Å³ª ÈíÀÔ ÁßÀÌ ¾Æ´Ï¸é µ¥¹ÌÁö Ã³¸®
+    // ì…ì— ë¬¼ê³  ìˆê±°ë‚˜ í¡ì… ì¤‘ì´ ì•„ë‹ˆë©´ ë°ë¯¸ì§€ ì²˜ë¦¬
     if (!m_pOwner->HasMouthful() && !m_pOwner->IsInhaling())
     {
-        // ³Ë¹é ¹æÇâ °è»ê
+        // ë„‰ë°± ë°©í–¥ ê³„ì‚°
         Vec2 vMonsterPos = _pMonster->GetPos();
         Vec2 vPlayerPos = m_pOwner->GetPos();
         Vec2 vKnockbackDir = vPlayerPos - vMonsterPos;
         vKnockbackDir.Normalize();
 
-        // === 1. ÇÃ·¹ÀÌ¾î¿¡°Ô ÇÇ°İ ¿äÃ» (Áï½Ã) ===
+        // === 1. í”Œë ˆì´ì–´ì—ê²Œ í”¼ê²© ìš”ì²­ (ì¦‰ì‹œ) ===
         m_pOwner->RequestDamage(vKnockbackDir);
 
-        // === 2. ½ÇÁ¦ µ¥¹ÌÁö Ã³¸®´Â ÀÌº¥Æ®·Î µî·Ï ===
+        // === 2. ì‹¤ì œ ë°ë¯¸ì§€ ì²˜ë¦¬ëŠ” ì´ë²¤íŠ¸ë¡œ ë“±ë¡ ===
         tEvent playerDamageEvent;
         playerDamageEvent.eType = EVENT_TYPE::PLAYER_DAMAGE;
         playerDamageEvent.wParam = (DWORD_PTR)m_pOwner;
         playerDamageEvent.lParam = (DWORD_PTR)new Vec2(vKnockbackDir);
         CEventMgr::GetInst()->AddEvent(playerDamageEvent);
 
-        // === 3. ¸ó½ºÅÍ µ¥¹ÌÁö ÀÌº¥Æ® µî·Ï ===
+        // === 3. ëª¬ìŠ¤í„° ë°ë¯¸ì§€ ì´ë²¤íŠ¸ ë“±ë¡ ===
         tEvent monsterDamageEvent;
         monsterDamageEvent.eType = EVENT_TYPE::MONSTER_DAMAGE;
         monsterDamageEvent.wParam = (DWORD_PTR)_pMonster;
-        monsterDamageEvent.lParam = 0;
+        monsterDamageEvent.lParam = (DWORD_PTR)m_pOwner;  // í”Œë ˆì´ì–´ ê°ì²´ ì „ë‹¬ (ìœ„ì¹˜ ì •ë³´ í¬í•¨)
         CEventMgr::GetInst()->AddEvent(monsterDamageEvent);
 
-        // === »óÅÂ ÀüÈ¯Àº ÀüÈ¯ Å×ÀÌºí¿¡¼­ ÀÚµ¿À¸·Î °¨Áö! ===
+        // === ìƒíƒœ ì „í™˜ì€ ì „í™˜ í…Œì´ë¸”ì—ì„œ ìë™ìœ¼ë¡œ ê°ì§€! ===
     }
 }
 
@@ -384,19 +384,19 @@ void CPlayerCollisionSystem::HandleItemCollisionEnter(CObject* _pItem)
 {
     if (!_pItem) return;
 
-    // TODO: ¾ÆÀÌÅÛº° Ã³¸® ·ÎÁ÷ Ãß°¡
-    // ¿¹: Ã¼·Â È¸º¹, ÆÄ¿ö¾÷ µî
+    // TODO: ì•„ì´í…œë³„ ì²˜ë¦¬ ë¡œì§ ì¶”ê°€
+    // ì˜ˆ: ì²´ë ¥ íšŒë³µ, íŒŒì›Œì—… ë“±
 }
 
 void CPlayerCollisionSystem::HandleSpecialObjectCollisionEnter(CObject* _pSpecialObject)
 {
     if (!_pSpecialObject) return;
 
-    // TODO: Æ¯¼ö ¿ÀºêÁ§Æ® Ã³¸® ·ÎÁ÷ Ãß°¡
-    // ¿¹: ¹®, ½ºÀ§Ä¡, ÀÌµ¿ ÇÃ·§Æû µî
+    // TODO: íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ ì²˜ë¦¬ ë¡œì§ ì¶”ê°€
+    // ì˜ˆ: ë¬¸, ìŠ¤ìœ„ì¹˜, ì´ë™ í”Œë«í¼ ë“±
 }
 
-// === Å¸ÀÏ Ãæµ¹ ¼¼ºÎ Ã³¸® ===
+// === íƒ€ì¼ ì¶©ëŒ ì„¸ë¶€ ì²˜ë¦¬ ===
 
 bool CPlayerCollisionSystem::ShouldSetGroundState(CTile* _pTile) const
 {
@@ -405,7 +405,7 @@ bool CPlayerCollisionSystem::ShouldSetGroundState(CTile* _pTile) const
     float tileTop = GetTileTopPosition(_pTile);
     float playerBottom = GetPlayerBottomPosition();
 
-    // ÇÃ·¹ÀÌ¾î ¹Ù´Ú°ú Å¸ÀÏ À­¸éÀÌ °ÅÀÇ ¸Â´ê¾Æ ÀÖ°í, ÇÃ·¹ÀÌ¾î°¡ À§¿¡ ÀÖ´ÂÁö È®ÀÎ
+    // í”Œë ˆì´ì–´ ë°”ë‹¥ê³¼ íƒ€ì¼ ìœ—ë©´ì´ ê±°ì˜ ë§ë‹¿ì•„ ìˆê³ , í”Œë ˆì´ì–´ê°€ ìœ„ì— ìˆëŠ”ì§€ í™•ì¸
     return (abs(playerBottom - tileTop) < TILE_COLLISION_THRESHOLD &&
         IsPlayerAboveTile(_pTile));
 }
@@ -417,7 +417,7 @@ void CPlayerCollisionSystem::CorrectPlayerPosition(CTile* _pTile)
     float tileTop = GetTileTopPosition(_pTile);
     float playerBottom = GetPlayerBottomPosition();
 
-    // ¹Ì¼¼ÇÑ À§Ä¡ º¸Á¤ÀÌ ÇÊ¿äÇÑ °æ¿ì
+    // ë¯¸ì„¸í•œ ìœ„ì¹˜ ë³´ì •ì´ í•„ìš”í•œ ê²½ìš°
     if (playerBottom > tileTop + POSITION_CORRECTION_THRESHOLD)
     {
         Vec2 vPlayerColliderScale = GetPlayerColliderScale();
@@ -439,14 +439,14 @@ void CPlayerCollisionSystem::ResetVerticalVelocity()
 
     Vec2 vVelocity = pRigidBody->GetVelocity();
 
-    // ¾Æ·¡·Î ¶³¾îÁö´Â ¼Óµµ°¡ ÀÖ´Ù¸é Á¦°Å
+    // ì•„ë˜ë¡œ ë–¨ì–´ì§€ëŠ” ì†ë„ê°€ ìˆë‹¤ë©´ ì œê±°
     if (vVelocity.y > 0.f)
     {
         pRigidBody->SetVelocityY(0.f);
     }
 }
 
-// === Ãæµ¹ °è»ê ÇïÆÛ ÇÔ¼öµé ===
+// === ì¶©ëŒ ê³„ì‚° í—¬í¼ í•¨ìˆ˜ë“¤ ===
 
 bool CPlayerCollisionSystem::IsPlayerAboveTile(CTile* _pTile) const
 {
@@ -494,13 +494,13 @@ Vec2 CPlayerCollisionSystem::GetTileColliderScale(CTile* _pTile) const
     return pCollider ? pCollider->GetScale() : Vec2(0.f, 0.f);
 }
 
-// === ¹«Àû »óÅÂ Ã¼Å© ===
+// === ë¬´ì  ìƒíƒœ ì²´í¬ ===
 
 bool CPlayerCollisionSystem::IsInvincibleState() const
 {
     if (!m_pOwner) return false;
 
-    // Ã¼·Â ½Ã½ºÅÛÀ» ÅëÇÑ ¹«Àû »óÅÂ È®ÀÎ
+    // ì²´ë ¥ ì‹œìŠ¤í…œì„ í†µí•œ ë¬´ì  ìƒíƒœ í™•ì¸
     if (m_pOwner->GetHealthSystem())
     {
         return m_pOwner->GetHealthSystem()->IsInvincible();
@@ -509,7 +509,7 @@ bool CPlayerCollisionSystem::IsInvincibleState() const
     return false;
 }
 
-// === ¿ÀºêÁ§Æ® Å¸ÀÔ À¯Æ¿¸®Æ¼ ÇÔ¼öµé ===
+// === ì˜¤ë¸Œì íŠ¸ íƒ€ì… ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ë“¤ ===
 
 bool CPlayerCollisionSystem::IsMonsterType(OBJECT_TYPE _eType)
 {

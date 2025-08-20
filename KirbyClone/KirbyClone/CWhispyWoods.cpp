@@ -12,20 +12,20 @@ CWhispyWoods::CWhispyWoods()
     , m_fAirPuffTimer(0.f)
     , m_bFinalPhaseStarted(false)
 {
-    // ¿ÀºêÁ§Æ® Å¸ÀÔ ¼³Á¤
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ìž… ì„¤ì •
     SetType(OBJECT_TYPE::MONSTER_WHISPY_WOODS);
 
-    // À§½ºÇÇ ¿ìµå Àü¿ë ¼³Á¤
-    m_fSpeed = 0.f;                         // ÀÌµ¿ÇÏÁö ¾ÊÀ½
-    SetBossHP(1500);                        // ³ôÀº Ã¼·Â
+    // ìœ„ìŠ¤í”¼ ìš°ë“œ ì „ìš© ì„¤ì •
+    m_fSpeed = 0.f;                         // ì´ë™í•˜ì§€ ì•ŠìŒ
+    SetBossHP(1500);                        // ë†’ì€ ì²´ë ¥
 
-    // ¸Å¿ì Å« Å©±â
+    // ë§¤ìš° í° í¬ê¸°
     SetScale(Vec2(128.f, 160.f));
 
-    // Ãæµ¹Ã¼ Å©±â Á¶Á¤
+    // ì¶©ëŒì²´ í¬ê¸° ì¡°ì •
     GetCollider()->SetScale(Vec2(100.f, 140.f));
 
-    // »Ñ¸® °ø°Ý À§Ä¡ ¼³Á¤ (º¸½º ÁÖº¯)
+    // ë¿Œë¦¬ ê³µê²© ìœ„ì¹˜ ì„¤ì • (ë³´ìŠ¤ ì£¼ë³€)
     Vec2 bossPos = GetPos();
     m_vRootPositions[0] = Vec2(bossPos.x - 200.f, bossPos.y + 100.f);
     m_vRootPositions[1] = Vec2(bossPos.x - 100.f, bossPos.y + 100.f);
@@ -33,47 +33,47 @@ CWhispyWoods::CWhispyWoods()
     m_vRootPositions[3] = Vec2(bossPos.x + 100.f, bossPos.y + 100.f);
     m_vRootPositions[4] = Vec2(bossPos.x + 200.f, bossPos.y + 100.f);
 
-    // ¾Ö´Ï¸ÞÀÌ¼Ç »ý¼º
+    // ì• ë‹ˆë©”ì´ì…˜ ìƒì„±
 
-    // º¸½º ÀÎÆ®·Î »óÅÂ·Î ½ÃÀÛ
+    // ë³´ìŠ¤ ì¸íŠ¸ë¡œ ìƒíƒœë¡œ ì‹œìž‘
     SetBossPhase(BOSS_PHASE::INTRO);
     ChangeState(MONSTER_STATE::IDLE);
 }
 
 CWhispyWoods::~CWhispyWoods()
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸®
+    // ìƒìœ„ í´ëž˜ìŠ¤ì—ì„œ ì •ë¦¬
 }
 
 void CWhispyWoods::Move()
 {
-    // À§½ºÇÇ ¿ìµå´Â ÀÌµ¿ÇÏÁö ¾ÊÀ½ (°íÁ¤Çü º¸½º)
-    // ´ë½Å º¸½º ÆäÀÌÁî ¾÷µ¥ÀÌÆ®
+    // ìœ„ìŠ¤í”¼ ìš°ë“œëŠ” ì´ë™í•˜ì§€ ì•ŠìŒ (ê³ ì •í˜• ë³´ìŠ¤)
+    // ëŒ€ì‹  ë³´ìŠ¤ íŽ˜ì´ì¦ˆ ì—…ë°ì´íŠ¸
     UpdateBossPhase();
 }
 
 void CWhispyWoods::StartBossEvent()
 {
-    // º¸½ºÀü ½ÃÀÛ Ã³¸®
+    // ë³´ìŠ¤ì „ ì‹œìž‘ ì²˜ë¦¬
     CreateBossArena();
     CreateBossIntroEffect();
     PlayBossMusic();
 
-    // TODO: Ä«¸Þ¶ó °íÁ¤
-    // TODO: ÇÃ·¹ÀÌ¾î ÀÌµ¿ Á¦ÇÑ
-    // TODO: UI Ç¥½Ã (º¸½º Ã¼·Â¹Ù µî)
+    // TODO: ì¹´ë©”ë¼ ê³ ì •
+    // TODO: í”Œë ˆì´ì–´ ì´ë™ ì œí•œ
+    // TODO: UI í‘œì‹œ (ë³´ìŠ¤ ì²´ë ¥ë°” ë“±)
 }
 
 void CWhispyWoods::EndBossEvent()
 {
-    // º¸½ºÀü Á¾·á Ã³¸®
+    // ë³´ìŠ¤ì „ ì¢…ë£Œ ì²˜ë¦¬
     DestroyBossArena();
     StopBossMusic();
 
-    // TODO: Ä«¸Þ¶ó ÇØÁ¦
-    // TODO: ÇÃ·¹ÀÌ¾î ÀÌµ¿ ÇØÁ¦
-    // TODO: UI ¼û±â±â
-    // TODO: º¸»ó ¾ÆÀÌÅÛ »ý¼º
+    // TODO: ì¹´ë©”ë¼ í•´ì œ
+    // TODO: í”Œë ˆì´ì–´ ì´ë™ í•´ì œ
+    // TODO: UI ìˆ¨ê¸°ê¸°
+    // TODO: ë³´ìƒ ì•„ì´í…œ ìƒì„±
 }
 
 void CWhispyWoods::ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern)
@@ -104,13 +104,13 @@ void CWhispyWoods::SetupAnimationMapping()
 
 void CWhispyWoods::AttackPattern1_AppleDrop()
 {
-    // »ç°ú ¶³¾î¶ß¸®±â °ø°Ý
+    // ì‚¬ê³¼ ë–¨ì–´ëœ¨ë¦¬ê¸° ê³µê²©
     Vec2 bossPos = GetPos();
 
-    // ÇÃ·¹ÀÌ¾î À§Ä¡ ÃßÁ¤ (TODO: ½ÇÁ¦ ÇÃ·¹ÀÌ¾î À§Ä¡ °¡Á®¿À±â)
+    // í”Œë ˆì´ì–´ ìœ„ì¹˜ ì¶”ì • (TODO: ì‹¤ì œ í”Œë ˆì´ì–´ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°)
     Vec2 playerPos = Vec2(bossPos.x, bossPos.y + 200.f);
 
-    // ÇÃ·¹ÀÌ¾î ÁÖº¯¿¡ »ç°úµé »ý¼º
+    // í”Œë ˆì´ì–´ ì£¼ë³€ì— ì‚¬ê³¼ë“¤ ìƒì„±
     for (int i = 0; i < 5; ++i)
     {
         float offsetX = (i - 2) * 50.f;  // -100, -50, 0, 50, 100
@@ -118,89 +118,89 @@ void CWhispyWoods::AttackPattern1_AppleDrop()
         CreateApple(applePos);
     }
 
-    // °ø°Ý ¾Ö´Ï¸ÞÀÌ¼Ç Àç»ý
+    // ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ìž¬ìƒ
     ChangeState(MONSTER_STATE::ATTACK);
 }
 
 void CWhispyWoods::AttackPattern2_AirPuff()
 {
-    // ¹Ù¶÷ ºÒ±â °ø°Ý
+    // ë°”ëžŒ ë¶ˆê¸° ê³µê²©
     Vec2 bossPos = GetPos();
 
-    // ÁÂ¿ì·Î ¹Ù¶÷ »ý¼º
-    CreateAirPuff(Vec2(-1.f, 0.f));  // ¿ÞÂÊÀ¸·Î
-    CreateAirPuff(Vec2(1.f, 0.f));   // ¿À¸¥ÂÊÀ¸·Î
+    // ì¢Œìš°ë¡œ ë°”ëžŒ ìƒì„±
+    CreateAirPuff(Vec2(-1.f, 0.f));  // ì™¼ìª½ìœ¼ë¡œ
+    CreateAirPuff(Vec2(1.f, 0.f));   // ì˜¤ë¥¸ìª½ìœ¼ë¡œ
 
-    // ÆäÀÌÁî¿¡ µû¶ó Ãß°¡ ¹Ù¶÷
+    // íŽ˜ì´ì¦ˆì— ë”°ë¼ ì¶”ê°€ ë°”ëžŒ
     if (GetBossPhase() >= BOSS_PHASE::PHASE_2)
     {
-        CreateAirPuff(Vec2(-0.7f, -0.7f));  // ´ë°¢¼±
-        CreateAirPuff(Vec2(0.7f, -0.7f));   // ´ë°¢¼±
+        CreateAirPuff(Vec2(-0.7f, -0.7f));  // ëŒ€ê°ì„ 
+        CreateAirPuff(Vec2(0.7f, -0.7f));   // ëŒ€ê°ì„ 
     }
 
-    // °ø°Ý ¾Ö´Ï¸ÞÀÌ¼Ç Àç»ý
+    // ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ìž¬ìƒ
     ChangeState(MONSTER_STATE::ATTACK);
 }
 
 void CWhispyWoods::AttackPattern3_RootAttack()
 {
-    // »Ñ¸® °ø°Ý (¼øÂ÷ÀûÀ¸·Î »Ñ¸®°¡ ¿Ã¶ó¿È)
+    // ë¿Œë¦¬ ê³µê²© (ìˆœì°¨ì ìœ¼ë¡œ ë¿Œë¦¬ê°€ ì˜¬ë¼ì˜´)
     for (int i = 0; i < 5; ++i)
     {
-        // 0.3ÃÊ °£°ÝÀ¸·Î »Ñ¸® »ý¼º
-        // TODO: Å¸ÀÌ¸Ó¸¦ ÀÌ¿ëÇÑ ¼øÂ÷ »ý¼º ±¸Çö
+        // 0.3ì´ˆ ê°„ê²©ìœ¼ë¡œ ë¿Œë¦¬ ìƒì„±
+        // TODO: íƒ€ì´ë¨¸ë¥¼ ì´ìš©í•œ ìˆœì°¨ ìƒì„± êµ¬í˜„
         CreateRoot(m_vRootPositions[i]);
     }
 
     m_iCurrentRootIndex = 0;
 
-    // °ø°Ý ¾Ö´Ï¸ÞÀÌ¼Ç Àç»ý
+    // ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ìž¬ìƒ
     ChangeState(MONSTER_STATE::ATTACK);
 }
 
 void CWhispyWoods::AttackPattern4_LeafStorm()
 {
-    // ÀÙ»ç±Í ÆøÇ³ (2ÆäÀÌÁîºÎÅÍ »ç¿ë)
+    // ìžŽì‚¬ê·€ í­í’ (2íŽ˜ì´ì¦ˆë¶€í„° ì‚¬ìš©)
     Vec2 bossPos = GetPos();
 
-    // ¿øÇüÀ¸·Î ÀÙ»ç±Í ¹ß»ç
+    // ì›í˜•ìœ¼ë¡œ ìžŽì‚¬ê·€ ë°œì‚¬
     for (int i = 0; i < 12; ++i)
     {
-        float angle = (i * 30.f) * 3.14159f / 180.f;  // 30µµ¾¿
+        float angle = (i * 30.f) * 3.14159f / 180.f;  // 30ë„ì”©
         Vec2 direction = Vec2(cosf(angle), sinf(angle));
         CreateLeaf(bossPos, direction);
     }
 
-    // °ø°Ý ¾Ö´Ï¸ÞÀÌ¼Ç Àç»ý
+    // ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ìž¬ìƒ
     ChangeState(MONSTER_STATE::ATTACK);
 }
 
 void CWhispyWoods::AttackPattern5_FinalAttack()
 {
-    // ÃÖÁ¾ °ø°Ý (3ÆäÀÌÁî Àü¿ë)
+    // ìµœì¢… ê³µê²© (3íŽ˜ì´ì¦ˆ ì „ìš©)
     if (!m_bFinalPhaseStarted)
     {
         m_bFinalPhaseStarted = true;
         ShakeScreen();
     }
 
-    // ¸ðµç °ø°ÝÀ» µ¿½Ã¿¡ ½ÇÇà
+    // ëª¨ë“  ê³µê²©ì„ ë™ì‹œì— ì‹¤í–‰
     AttackPattern1_AppleDrop();
     AttackPattern2_AirPuff();
     AttackPattern3_RootAttack();
     AttackPattern4_LeafStorm();
 
-    // °ø°Ý ¾Ö´Ï¸ÞÀÌ¼Ç Àç»ý
+    // ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ìž¬ìƒ
     ChangeState(MONSTER_STATE::ATTACK);
 }
 
 void CWhispyWoods::CreateApple(Vec2 _vPos)
 {
-    // »ç°ú Åõ»çÃ¼ »ý¼º
-    // TODO: CApple Å¬·¡½º ±¸Çö ÈÄ »ý¼º
+    // ì‚¬ê³¼ íˆ¬ì‚¬ì²´ ìƒì„±
+    // TODO: CApple í´ëž˜ìŠ¤ êµ¬í˜„ í›„ ìƒì„±
     // CApple* pApple = new CApple;
     // pApple->SetPos(_vPos);
-    // pApple->SetGravity(true);  // Áß·Â Àû¿ë
+    // pApple->SetGravity(true);  // ì¤‘ë ¥ ì ìš©
     // pApple->SetDamage(1);
     // 
     // CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
@@ -209,13 +209,13 @@ void CWhispyWoods::CreateApple(Vec2 _vPos)
 
 void CWhispyWoods::CreateAirPuff(Vec2 _vDirection)
 {
-    // ¹Ù¶÷ Åõ»çÃ¼ »ý¼º
-    // TODO: CAirPuff Å¬·¡½º ±¸Çö ÈÄ »ý¼º
+    // ë°”ëžŒ íˆ¬ì‚¬ì²´ ìƒì„±
+    // TODO: CAirPuff í´ëž˜ìŠ¤ êµ¬í˜„ í›„ ìƒì„±
     // CAirPuff* pAirPuff = new CAirPuff;
     // pAirPuff->SetPos(GetPos());
     // pAirPuff->SetDirection(_vDirection);
     // pAirPuff->SetSpeed(200.f);
-    // pAirPuff->SetPushForce(400.f);  // ÇÃ·¹ÀÌ¾î¸¦ ¹Ð¾î³»´Â Èû
+    // pAirPuff->SetPushForce(400.f);  // í”Œë ˆì´ì–´ë¥¼ ë°€ì–´ë‚´ëŠ” íž˜
     // 
     // CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
     // pCurScene->AddObject(pAirPuff, GROUP_TYPE::BOSS_PROJECTILE);
@@ -223,11 +223,11 @@ void CWhispyWoods::CreateAirPuff(Vec2 _vDirection)
 
 void CWhispyWoods::CreateRoot(Vec2 _vPos)
 {
-    // »Ñ¸® °ø°Ý »ý¼º
-    // TODO: CRoot Å¬·¡½º ±¸Çö ÈÄ »ý¼º
+    // ë¿Œë¦¬ ê³µê²© ìƒì„±
+    // TODO: CRoot í´ëž˜ìŠ¤ êµ¬í˜„ í›„ ìƒì„±
     // CRoot* pRoot = new CRoot;
     // pRoot->SetPos(_vPos);
-    // pRoot->SetWarningTime(1.f);   // 1ÃÊ °æ°í ÈÄ °ø°Ý
+    // pRoot->SetWarningTime(1.f);   // 1ì´ˆ ê²½ê³  í›„ ê³µê²©
     // pRoot->SetDamage(2);
     // 
     // CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
@@ -236,8 +236,8 @@ void CWhispyWoods::CreateRoot(Vec2 _vPos)
 
 void CWhispyWoods::CreateLeaf(Vec2 _vPos, Vec2 _vDirection)
 {
-    // ÀÙ»ç±Í Åõ»çÃ¼ »ý¼º
-    // TODO: CLeaf Å¬·¡½º ±¸Çö ÈÄ »ý¼º
+    // ìžŽì‚¬ê·€ íˆ¬ì‚¬ì²´ ìƒì„±
+    // TODO: CLeaf í´ëž˜ìŠ¤ êµ¬í˜„ í›„ ìƒì„±
     // CLeaf* pLeaf = new CLeaf;
     // pLeaf->SetPos(_vPos);
     // pLeaf->SetDirection(_vDirection);
@@ -251,19 +251,19 @@ void CWhispyWoods::CreateLeaf(Vec2 _vPos, Vec2 _vDirection)
 
 void CWhispyWoods::ShakeScreen()
 {
-    // È­¸é Áøµ¿ È¿°ú
-    // TODO: Ä«¸Þ¶ó ¸Å´ÏÀú¸¦ ÅëÇÑ È­¸é Áøµ¿
-    // CCameraMgr::GetInst()->StartShake(2.f, 10.f);  // 2ÃÊ°£ Áøµ¿
+    // í™”ë©´ ì§„ë™ íš¨ê³¼
+    // TODO: ì¹´ë©”ë¼ ë§¤ë‹ˆì €ë¥¼ í†µí•œ í™”ë©´ ì§„ë™
+    // CCameraMgr::GetInst()->StartShake(2.f, 10.f);  // 2ì´ˆê°„ ì§„ë™
 }
 
 void CWhispyWoods::CreateBossArena()
 {
-    // º¸½º ÀüÅõ °ø°£ »ý¼º (º® »ý¼º µî)
-    // TODO: º¸½º ¾Æ·¹³ª º® »ý¼º
+    // ë³´ìŠ¤ ì „íˆ¬ ê³µê°„ ìƒì„± (ë²½ ìƒì„± ë“±)
+    // TODO: ë³´ìŠ¤ ì•„ë ˆë‚˜ ë²½ ìƒì„±
 }
 
 void CWhispyWoods::DestroyBossArena()
 {
-    // º¸½º ÀüÅõ °ø°£ Á¦°Å
-    // TODO: º¸½º ¾Æ·¹³ª º® Á¦°Å
+    // ë³´ìŠ¤ ì „íˆ¬ ê³µê°„ ì œê±°
+    // TODO: ë³´ìŠ¤ ì•„ë ˆë‚˜ ë²½ ì œê±°
 }

@@ -3,10 +3,10 @@
 
 enum class GORDO_MOVE_TYPE
 {
-    HORIZONTAL,     // ÁÂ¿ì ÀÌµ¿
-    VERTICAL,       // »óÇÏ ÀÌµ¿
-    DIAGONAL,       // ´ë°¢¼± ÀÌµ¿
-    CIRCULAR,       // ¿øÇü ÀÌµ¿
+    HORIZONTAL,     // ì¢Œìš° ì´ë™
+    VERTICAL,       // ìƒí•˜ ì´ë™
+    DIAGONAL,       // ëŒ€ê°ì„  ì´ë™
+    CIRCULAR,       // ì›í˜• ì´ë™
 };
 
 class CGordo : public CInvincibleMonster
@@ -16,44 +16,44 @@ public:
     virtual ~CGordo();
 
 public:
-    // === °¡»ó ÇÔ¼ö ±¸Çö ===
-    void Move() override;                                   // Á÷¼±/¿øÇü ÀÌµ¿
+    // === ê°€ìƒ í•¨ìˆ˜ êµ¬í˜„ ===
+    void Move() override;                                   // ì§ì„ /ì›í˜• ì´ë™
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤ ±¸Çö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì • êµ¬í˜„ ===
     void SetupAnimationMapping() override;
 
 public:
-    // === °í¸£µµ Àü¿ë ¼³Á¤ ===
+    // === ê³ ë¥´ë„ ì „ìš© ì„¤ì • ===
     void SetMoveType(GORDO_MOVE_TYPE _eType) { m_eMoveType = _eType; }
     void SetMoveRange(float _fRange) { m_fMoveRange = _fRange; }
     void SetCircularCenter(Vec2 _vCenter) { m_vCircularCenter = _vCenter; }
 
 private:
-    // === ÀÌµ¿ ÆĞÅÏº° ÇÔ¼öµé ===
-    void MoveHorizontal();                                  // ÁÂ¿ì ÀÌµ¿
-    void MoveVertical();                                    // »óÇÏ ÀÌµ¿
-    void MoveDiagonal();                                    // ´ë°¢¼± ÀÌµ¿
-    void MoveCircular();                                    // ¿øÇü ÀÌµ¿
+    // === ì´ë™ íŒ¨í„´ë³„ í•¨ìˆ˜ë“¤ ===
+    void MoveHorizontal();                                  // ì¢Œìš° ì´ë™
+    void MoveVertical();                                    // ìƒí•˜ ì´ë™
+    void MoveDiagonal();                                    // ëŒ€ê°ì„  ì´ë™
+    void MoveCircular();                                    // ì›í˜• ì´ë™
 
-    // === °æ°è Ã³¸® ===
-    void HandleBoundaryCollision();                         // °æ°è Ãæµ¹ Ã³¸®
-    void ReverseDirection();                                // ¹æÇâ ¹İÀü
+    // === ê²½ê³„ ì²˜ë¦¬ ===
+    void HandleBoundaryCollision();                         // ê²½ê³„ ì¶©ëŒ ì²˜ë¦¬
+    void ReverseDirection();                                // ë°©í–¥ ë°˜ì „
 
 private:
-    // === ÀÌµ¿ ÆĞÅÏ °ü·Ã ===
-    GORDO_MOVE_TYPE m_eMoveType;                           // ÀÌµ¿ Å¸ÀÔ
-    Vec2            m_vMoveDirection;                       // ÀÌµ¿ ¹æÇâ
-    float           m_fMoveRange;                           // ÀÌµ¿ ¹üÀ§
+    // === ì´ë™ íŒ¨í„´ ê´€ë ¨ ===
+    GORDO_MOVE_TYPE m_eMoveType;                           // ì´ë™ íƒ€ì…
+    Vec2            m_vMoveDirection;                       // ì´ë™ ë°©í–¥
+    float           m_fMoveRange;                           // ì´ë™ ë²”ìœ„
 
-    // === °æ°è °ü·Ã ===
-    Vec2            m_vStartPos;                            // ½ÃÀÛ À§Ä¡
-    Vec2            m_vMinBound;                            // ÃÖ¼Ò °æ°è
-    Vec2            m_vMaxBound;                            // ÃÖ´ë °æ°è
+    // === ê²½ê³„ ê´€ë ¨ ===
+    Vec2            m_vStartPos;                            // ì‹œì‘ ìœ„ì¹˜
+    Vec2            m_vMinBound;                            // ìµœì†Œ ê²½ê³„
+    Vec2            m_vMaxBound;                            // ìµœëŒ€ ê²½ê³„
 
-    // === ¿øÇü ÀÌµ¿ °ü·Ã ===
-    Vec2            m_vCircularCenter;                      // ¿øÇü ÀÌµ¿ Áß½ÉÁ¡
-    float           m_fCircularRadius;                      // ¿øÇü ÀÌµ¿ ¹İÁö¸§
-    float           m_fCircularAngle;                       // ÇöÀç °¢µµ
-    float           m_fCircularSpeed;                       // °¢¼Óµµ
+    // === ì›í˜• ì´ë™ ê´€ë ¨ ===
+    Vec2            m_vCircularCenter;                      // ì›í˜• ì´ë™ ì¤‘ì‹¬ì 
+    float           m_fCircularRadius;                      // ì›í˜• ì´ë™ ë°˜ì§€ë¦„
+    float           m_fCircularAngle;                       // í˜„ì¬ ê°ë„
+    float           m_fCircularSpeed;                       // ê°ì†ë„
 };

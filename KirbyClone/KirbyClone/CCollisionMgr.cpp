@@ -19,16 +19,18 @@ CCollisionMgr::~CCollisionMgr()
 
 void CCollisionMgr::init()
 {
-    // Ãæµ¹ Ã¼Å©ÇÒ ±×·ì ¼³Á¤
+    // ì¶©ëŒ ì²´í¬í•  ê·¸ë£¹ ì„¤ì •
     CheckGroup(GROUP_TYPE::PLAYER, GROUP_TYPE::MONSTER);
     CheckGroup(GROUP_TYPE::PLAYER, GROUP_TYPE::TILE);
     CheckGroup(GROUP_TYPE::MONSTER, GROUP_TYPE::TILE);
     CheckGroup(GROUP_TYPE::PLAYER, GROUP_TYPE::SPECIAL);
+    CheckGroup ( GROUP_TYPE::PLAYER , GROUP_TYPE::PROJ_MONSTER );
+    CheckGroup ( GROUP_TYPE::MONSTER , GROUP_TYPE::PROJ_PLAYER );
 }
 
 void CCollisionMgr::update()
 {
-    // µî·ÏµÈ ±×·ì °£ÀÇ Ãæµ¹ Ã¼Å©
+    // ë“±ë¡ëœ ê·¸ë£¹ ê°„ì˜ ì¶©ëŒ ì²´í¬
     for (UINT iRow = 0; iRow < (UINT)GROUP_TYPE::END; ++iRow)
     {
         for (UINT iCol = iRow; iCol < (UINT)GROUP_TYPE::END; ++iCol)
@@ -43,7 +45,7 @@ void CCollisionMgr::update()
 
 void CCollisionMgr::CheckGroup(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
 {
-    // ´õ ÀÛÀº °ªÀ» ÇàÀ¸·Î, Å« °ªÀ» ¿­·Î »ç¿ë
+    // ë” ìž‘ì€ ê°’ì„ í–‰ìœ¼ë¡œ, í° ê°’ì„ ì—´ë¡œ ì‚¬ìš©
     UINT iRow = (UINT)_eLeft;
     UINT iCol = (UINT)_eRight;
 
@@ -53,13 +55,13 @@ void CCollisionMgr::CheckGroup(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
         iCol = (UINT)_eLeft;
     }
 
-    // ºñÆ® ¿¬»êÀ¸·Î Ã¼Å©
+    // ë¹„íŠ¸ ì—°ì‚°ìœ¼ë¡œ ì²´í¬
     m_arrCheck[iRow] |= (1 << iCol);
 }
 
 void CCollisionMgr::UnCheckGroup(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
 {
-    // ´õ ÀÛÀº °ªÀ» ÇàÀ¸·Î, Å« °ªÀ» ¿­·Î »ç¿ë
+    // ë” ìž‘ì€ ê°’ì„ í–‰ìœ¼ë¡œ, í° ê°’ì„ ì—´ë¡œ ì‚¬ìš©
     UINT iRow = (UINT)_eLeft;
     UINT iCol = (UINT)_eRight;
 
@@ -69,7 +71,7 @@ void CCollisionMgr::UnCheckGroup(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
         iCol = (UINT)_eLeft;
     }
 
-    // ºñÆ® ¿¬»êÀ¸·Î Ã¼Å© ÇØÁ¦
+    // ë¹„íŠ¸ ì—°ì‚°ìœ¼ë¡œ ì²´í¬ í•´ì œ
     m_arrCheck[iRow] &= ~(1 << iCol);
 }
 
@@ -82,66 +84,66 @@ void CCollisionMgr::CollisionGroupUpdate(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
 
     map<ULONGLONG, bool>::iterator iter;
 
-    // ¸ðµç ¿ÞÂÊ ¿ÀºêÁ§Æ®¿Í ¿À¸¥ÂÊ ¿ÀºêÁ§Æ® °£ÀÇ Ãæµ¹ Ã¼Å©
+    // ëª¨ë“  ì™¼ìª½ ì˜¤ë¸Œì íŠ¸ì™€ ì˜¤ë¥¸ìª½ ì˜¤ë¸Œì íŠ¸ ê°„ì˜ ì¶©ëŒ ì²´í¬
     for (size_t i = 0; i < vecLeft.size(); ++i)
     {
-        // Ãæµ¹Ã¼°¡ ¾øÀ¸¸é °Ç³Ê¶Ù±â
+        // ì¶©ëŒì²´ê°€ ì—†ìœ¼ë©´ ê±´ë„ˆë›°ê¸°
         if (nullptr == vecLeft[i]->GetCollider())
             continue;
 
         for (size_t j = 0; j < vecRight.size(); ++j)
         {
-            // Ãæµ¹Ã¼°¡ ¾ø°Å³ª ÀÚ±â ÀÚ½ÅÀÌ¸é °Ç³Ê¶Ù±â
+            // ì¶©ëŒì²´ê°€ ì—†ê±°ë‚˜ ìžê¸° ìžì‹ ì´ë©´ ê±´ë„ˆë›°ê¸°
             if (nullptr == vecRight[j]->GetCollider() || vecLeft[i] == vecRight[j])
                 continue;
 
             CCollider* pLeftCol = vecLeft[i]->GetCollider();
             CCollider* pRightCol = vecRight[j]->GetCollider();
 
-            // µÎ Ãæµ¹Ã¼ Á¶ÇÕÀÇ °íÀ¯ÇÑ Å°°ª »ý¼º
+            // ë‘ ì¶©ëŒì²´ ì¡°í•©ì˜ ê³ ìœ í•œ í‚¤ê°’ ìƒì„±
             COLLIDER_ID ID;
             ID.iLeft_id = pLeftCol->GetID();
             ID.iRight_id = pRightCol->GetID();
 
             iter = m_mapColInfo.find(ID.ID);
 
-            // Ãæµ¹ Á¤º¸°¡ ¾ø´Ù¸é µî·Ï
+            // ì¶©ëŒ ì •ë³´ê°€ ì—†ë‹¤ë©´ ë“±ë¡
             if (m_mapColInfo.end() == iter)
             {
                 m_mapColInfo.insert(make_pair(ID.ID, false));
                 iter = m_mapColInfo.find(ID.ID);
             }
 
-            // ÇöÀç Ãæµ¹ ÁßÀÎÁö È®ÀÎ
+            // í˜„ìž¬ ì¶©ëŒ ì¤‘ì¸ì§€ í™•ì¸
             if (IsCollision(pLeftCol, pRightCol))
             {
-                // ÇöÀç Ãæµ¹ Áß
+                // í˜„ìž¬ ì¶©ëŒ ì¤‘
 
                 if (iter->second)
                 {
-                    // ÀÌÀü¿¡µµ Ãæµ¹ - °è¼Ó Ãæµ¹ Áß (OnCollision)
-                    // µÑ Áß ÇÏ³ª¶óµµ Á×À» ¿¹Á¤ÀÌ¸é Ãæµ¹ ÇØÁ¦
+                    // ì´ì „ì—ë„ ì¶©ëŒ - ê³„ì† ì¶©ëŒ ì¤‘ (OnCollision)
+                    // ë‘˜ ì¤‘ í•˜ë‚˜ë¼ë„ ì£½ì„ ì˜ˆì •ì´ë©´ ì¶©ëŒ í•´ì œ
                     if (vecLeft[i]->IsDead() || vecRight[j]->IsDead())
                     {
-                        // ÀÌº¥Æ®·Î Ãæµ¹ Á¾·á Ã³¸®
+                        // ì´ë²¤íŠ¸ë¡œ ì¶©ëŒ ì¢…ë£Œ ì²˜ë¦¬
                         tEvent event(EVENT_TYPE::COLLISION_EXIT, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);
                         CEventMgr::GetInst()->AddEvent(event);
                         iter->second = false;
                     }
                     else
                     {
-                        // °è¼Ó Ãæµ¹ Áß - Áï½Ã Ã³¸® (¸Å ÇÁ·¹ÀÓ È£ÃâµÇ¾î¾ß ÇÔ)
+                        // ê³„ì† ì¶©ëŒ ì¤‘ - ì¦‰ì‹œ ì²˜ë¦¬ (ë§¤ í”„ë ˆìž„ í˜¸ì¶œë˜ì–´ì•¼ í•¨)
                         pLeftCol->OnCollision(pRightCol);
                         pRightCol->OnCollision(pLeftCol);
                     }
                 }
                 else
                 {
-                    // ÀÌÀü¿¡´Â Ãæµ¹ÇÏÁö ¾ÊÀ½ - Ãæµ¹ ½ÃÀÛ (OnCollisionEnter)
-                    // µÑ Áß ÇÏ³ª¶óµµ Á×À» ¿¹Á¤ÀÌ¸é Ãæµ¹ÇÏÁö ¾ÊÀ½
+                    // ì´ì „ì—ëŠ” ì¶©ëŒí•˜ì§€ ì•ŠìŒ - ì¶©ëŒ ì‹œìž‘ (OnCollisionEnter)
+                    // ë‘˜ ì¤‘ í•˜ë‚˜ë¼ë„ ì£½ì„ ì˜ˆì •ì´ë©´ ì¶©ëŒí•˜ì§€ ì•ŠìŒ
                     if (!vecLeft[i]->IsDead() && !vecRight[j]->IsDead())
                     {
-                        // ÀÌº¥Æ®·Î Ãæµ¹ ½ÃÀÛ Ã³¸®
+                        // ì´ë²¤íŠ¸ë¡œ ì¶©ëŒ ì‹œìž‘ ì²˜ë¦¬
                         tEvent event(EVENT_TYPE::COLLISION_ENTER, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);
                         CEventMgr::GetInst()->AddEvent(event);
                         iter->second = true;
@@ -150,11 +152,11 @@ void CCollisionMgr::CollisionGroupUpdate(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
             }
             else
             {
-                // ÇöÀç Ãæµ¹ÇÏÁö ¾ÊÀ½
+                // í˜„ìž¬ ì¶©ëŒí•˜ì§€ ì•ŠìŒ
 
                 if (iter->second)
                 {
-                    // ÀÌÀü¿¡´Â Ãæµ¹ - Ãæµ¹ ÇØÁ¦ (OnCollisionExit)
+                    // ì´ì „ì—ëŠ” ì¶©ëŒ - ì¶©ëŒ í•´ì œ (OnCollisionExit)
                     tEvent event(EVENT_TYPE::COLLISION_EXIT, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);
                     CEventMgr::GetInst()->AddEvent(event);
                     iter->second = false;

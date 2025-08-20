@@ -14,7 +14,7 @@
 #include "CAnimationDataMgr.h"
 
 CMonster::CMonster()
-    : CObject(OBJECT_TYPE::MONSTER_WADDLE_DEE)  // ±âº»°ª, ÀÚ½Ä¿¡¼­ º¯°æ
+    : CObject(OBJECT_TYPE::MONSTER_WADDLE_DEE)  // ê¸°ë³¸ê°’, ìì‹ì—ì„œ ë³€ê²½
     , m_eCurState(MONSTER_STATE::IDLE)
     , m_ePrevState(MONSTER_STATE::END)
     , m_fStateTimer(0.f)
@@ -26,54 +26,54 @@ CMonster::CMonster()
     , m_fWallCheckDist(32.f)
     , m_pEnemyTex(nullptr)
 {
-    // ±âº» ÄÄÆ÷³ÍÆ® »ı¼º
+    // ê¸°ë³¸ ì»´í¬ë„ŒíŠ¸ ìƒì„±
     CreateCollider();
     GetCollider()->SetScale(Vec2(56.f, 56.f));
 
     CreateAnimator();
     CreateRigidBody();
 
-    // ¸®Áöµå¹Ùµğ ±âº» ¼³Á¤
+    // ë¦¬ì§€ë“œë°”ë”” ê¸°ë³¸ ì„¤ì •
     GetRigidBody()->SetMass(0.8f);
     GetRigidBody()->SetMaxVelocity(200.f);
     GetRigidBody()->SetFriction(8.f);
     GetRigidBody()->SetUseGravity(true);
 
-    // °øÅë ÅØ½ºÃ³ ·Îµå
+    // ê³µí†µ í…ìŠ¤ì²˜ ë¡œë“œ
     LoadEnemySpriteSheet();
 
-    // ÀÚ½Ä Å¬·¡½º¿¡¼­ CreateAnimations() È£ÃâµÊ
-    // ÃÊ±â »óÅÂ´Â ÀÚ½Ä Å¬·¡½º¿¡¼­ ¼³Á¤
+    // ìì‹ í´ë˜ìŠ¤ì—ì„œ CreateAnimations() í˜¸ì¶œë¨
+    // ì´ˆê¸° ìƒíƒœëŠ” ìì‹ í´ë˜ìŠ¤ì—ì„œ ì„¤ì •
 }
 
 CMonster::~CMonster()
 {
-    // »óÀ§ Å¬·¡½º CObject¿¡¼­ ÄÄÆ÷³ÍÆ® ÇØÁ¦ Ã³¸®
-    // m_pEnemyTex´Â ¸®¼Ò½º ¸Å´ÏÀú¿¡¼­ °ü¸®ÇÏ¹Ç·Î delete ÇÏÁö ¾ÊÀ½
+    // ìƒìœ„ í´ë˜ìŠ¤ CObjectì—ì„œ ì»´í¬ë„ŒíŠ¸ í•´ì œ ì²˜ë¦¬
+    // m_pEnemyTexëŠ” ë¦¬ì†ŒìŠ¤ ë§¤ë‹ˆì €ì—ì„œ ê´€ë¦¬í•˜ë¯€ë¡œ delete í•˜ì§€ ì•ŠìŒ
 }
 
 void CMonster::Update()
 {
-    // »óÅÂ ¾÷µ¥ÀÌÆ®
+    // ìƒíƒœ ì—…ë°ì´íŠ¸
     UpdateState();
 
-    // ÀÌµ¿ ¾÷µ¥ÀÌÆ®
+    // ì´ë™ ì—…ë°ì´íŠ¸
     UpdateMove();
 
-    // ÄÄÆ÷³ÍÆ® ¾÷µ¥ÀÌÆ®
+    // ì»´í¬ë„ŒíŠ¸ ì—…ë°ì´íŠ¸
     if (nullptr != GetRigidBody())
         GetRigidBody()->Update();
 
     if (nullptr != GetAnimator())
         GetAnimator()->Update();
 
-    // »óÅÂ Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ®
+    // ìƒíƒœ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
     m_fStateTimer += CTimeMgr::GetInst()->GetfDT();
 }
 
 void CMonster::Render(HDC _dc)
 {
-    // ÇÃ·¹ÀÌ¾î¿Í µ¿ÀÏÇÑ ·»´õ¸µ ¹æ½Ä
+    // í”Œë ˆì´ì–´ì™€ ë™ì¼í•œ ë Œë”ë§ ë°©ì‹
     CAnimator* pAnimator = GetAnimator();
     if (pAnimator)
     {
@@ -81,18 +81,18 @@ void CMonster::Render(HDC _dc)
     }
     else
     {
-        // ¾Ö´Ï¸ŞÀÌÅÍ°¡ ¾øÀ¸¸é ±âº» ¿ÀºêÁ§Æ® ·»´õ¸µ
+        // ì• ë‹ˆë©”ì´í„°ê°€ ì—†ìœ¼ë©´ ê¸°ë³¸ ì˜¤ë¸Œì íŠ¸ ë Œë”ë§
         CObject::Render(_dc);
     }
 
-    // Ãæµ¹Ã¼ ·»´õ¸µ
+    // ì¶©ëŒì²´ ë Œë”ë§
     if (GetCollider())
     {
-        GetCollider()->RenderScaled(_dc, 1.0f);  // TABÅ°·Î Åä±Û
+        GetCollider()->RenderScaled(_dc, 1.0f);  // TABí‚¤ë¡œ í† ê¸€
     }
 }
 
-// === Ãæµ¹ Ã³¸® ===
+// === ì¶©ëŒ ì²˜ë¦¬ ===
 
 void CMonster::OnCollisionEnter(CCollider* _pOther)
 {
@@ -102,7 +102,7 @@ void CMonster::OnCollisionEnter(CCollider* _pOther)
 
     OBJECT_TYPE eType = pOtherObj->GetType();
 
-    // Å¸ÀÏ°úÀÇ Ãæµ¹ Ã³¸®
+    // íƒ€ì¼ê³¼ì˜ ì¶©ëŒ ì²˜ë¦¬
     if (eType >= OBJECT_TYPE::TILE_GROUND && eType <= OBJECT_TYPE::TILE_INVISIBLE)
     {
         HandleTileCollision(pOtherObj);
@@ -117,7 +117,7 @@ void CMonster::OnCollision(CCollider* _pOther)
 
     OBJECT_TYPE eType = pOtherObj->GetType();
 
-    // Å¸ÀÏ°úÀÇ Áö¼ÓÀûÀÎ Ãæµ¹ Ã³¸®
+    // íƒ€ì¼ê³¼ì˜ ì§€ì†ì ì¸ ì¶©ëŒ ì²˜ë¦¬
     if (eType >= OBJECT_TYPE::TILE_GROUND && eType <= OBJECT_TYPE::TILE_INVISIBLE)
     {
         HandleTileCollision(pOtherObj);
@@ -132,14 +132,14 @@ void CMonster::OnCollisionExit(CCollider* _pOther)
 
     OBJECT_TYPE eType = pOtherObj->GetType();
 
-    // Å¸ÀÏ¿¡¼­ ¹ş¾î³¯ ¶§ Ã³¸®
+    // íƒ€ì¼ì—ì„œ ë²—ì–´ë‚  ë•Œ ì²˜ë¦¬
     if (eType >= OBJECT_TYPE::TILE_GROUND && eType <= OBJECT_TYPE::TILE_INVISIBLE)
     {
-        // Ground »óÅÂ ÇØÁ¦ (Á¡ÇÁ³ª ³«ÇÏ ÁßÀÏ ¶§¸¸)
+        // Ground ìƒíƒœ í•´ì œ (ì í”„ë‚˜ ë‚™í•˜ ì¤‘ì¼ ë•Œë§Œ)
         if (GetRigidBody())
         {
             Vec2 vVelocity = GetRigidBody()->GetVelocity();
-            if (vVelocity.y < -50.f)  // À§·Î ÀÌµ¿ Áß
+            if (vVelocity.y < -50.f)  // ìœ„ë¡œ ì´ë™ ì¤‘
             {
                 GetRigidBody()->SetGround(false);
             }
@@ -150,7 +150,7 @@ void CMonster::OnCollisionExit(CCollider* _pOther)
 void CMonster::HandleTileCollision(CObject* _pTile)
 {
     CTile* pTile = dynamic_cast<CTile*>(_pTile);
-    if (!pTile)  // IsSolid() Ã¼Å© Á¦°Å
+    if (!pTile)  // IsSolid() ì²´í¬ ì œê±°
         return;
 
     if (!GetRigidBody())
@@ -161,23 +161,23 @@ void CMonster::HandleTileCollision(CObject* _pTile)
     Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
     Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
 
-    // Å¸ÀÏ À§¿¡ ¼­ ÀÖ´ÂÁö È®ÀÎ
+    // íƒ€ì¼ ìœ„ì— ì„œ ìˆëŠ”ì§€ í™•ì¸
     float tileTop = vTilePos.y - vTileScale.y / 2.f;
     float myBottom = vMyPos.y + vMyScale.y / 2.f;
 
-    // ¸ó½ºÅÍ°¡ Å¸ÀÏ À§¿¡ ÀÖ°í, ¾Æ·¡·Î ¶³¾îÁö´Â ÁßÀÌ°Å³ª Á¤Áö »óÅÂ¸é Ground ¼³Á¤
+    // ëª¬ìŠ¤í„°ê°€ íƒ€ì¼ ìœ„ì— ìˆê³ , ì•„ë˜ë¡œ ë–¨ì–´ì§€ëŠ” ì¤‘ì´ê±°ë‚˜ ì •ì§€ ìƒíƒœë©´ Ground ì„¤ì •
     if (abs(myBottom - tileTop) < 8.f && vMyPos.y < vTilePos.y)
     {
         Vec2 vVelocity = GetRigidBody()->GetVelocity();
 
-        // ¾Æ·¡·Î ¶³¾îÁö´Â ÁßÀÌ¸é À§Ä¡ º¸Á¤ ¹× Ground ¼³Á¤
+        // ì•„ë˜ë¡œ ë–¨ì–´ì§€ëŠ” ì¤‘ì´ë©´ ìœ„ì¹˜ ë³´ì • ë° Ground ì„¤ì •
         if (vVelocity.y >= 0.f)
         {
-            // À§Ä¡ º¸Á¤
+            // ìœ„ì¹˜ ë³´ì •
             float correctedY = tileTop - vMyScale.y / 2.f;
             SetPos(Vec2(vMyPos.x, correctedY));
 
-            // Ground ¼³Á¤ ¹× Y ¼Óµµ Á¦°Å
+            // Ground ì„¤ì • ë° Y ì†ë„ ì œê±°
             GetRigidBody()->SetGround(true);
             GetRigidBody()->SetVelocityY(0.f);
         }
@@ -192,13 +192,13 @@ void CMonster::LoadAnimationsFromFile(const wstring& _strFileName)
         return;
     }
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ÆÄÀÏ ·Îµå
+    // ì• ë‹ˆë©”ì´ì…˜ íŒŒì¼ ë¡œë“œ
     CAnimationDataMgr::GetInst()->LoadAnimationsIntoAnimator(pAnimator, _strFileName);
 
-    // ÀÚ½Ä Å¬·¡½º¿¡¼­ ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤
+    // ìì‹ í´ë˜ìŠ¤ì—ì„œ ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì •
     SetupAnimationMapping();
 
-    // ·Îµå È®ÀÎ
+    // ë¡œë“œ í™•ì¸
     pAnimator->Play(L"IDLE", true);
 }
 
@@ -208,21 +208,21 @@ void CMonster::ChangeState(MONSTER_STATE _eState)
     m_eCurState = _eState;
     m_fStateTimer = 0.f;
 
-    // »óÅÂ¿¡ ¸Â´Â ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı
+    // ìƒíƒœì— ë§ëŠ” ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ
     CAnimator* pAnimator = GetAnimator();
     if (pAnimator)
     {
-        // ¸ÅÇÎ¿¡¼­ ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌ¸§ Ã£±â
+        // ë§¤í•‘ì—ì„œ ì• ë‹ˆë©”ì´ì…˜ ì´ë¦„ ì°¾ê¸°
         auto iter = m_mapStateToAnimation.find(_eState);
         if (iter != m_mapStateToAnimation.end())
         {
             const wstring& animName = iter->second;
-            bool bLoop = (_eState != MONSTER_STATE::DAMAGE); // DAMAGE´Â ¹İº¹ ¾ÈÇÔ
+            bool bLoop = (_eState != MONSTER_STATE::DAMAGE); // DAMAGEëŠ” ë°˜ë³µ ì•ˆí•¨
             pAnimator->Play(animName, bLoop);
         }
         else
         {
-            // ¸ÅÇÎ¿¡ ¾øÀ¸¸é ±âº» ¾Ö´Ï¸ŞÀÌ¼Ç »ç¿ë
+            // ë§¤í•‘ì— ì—†ìœ¼ë©´ ê¸°ë³¸ ì• ë‹ˆë©”ì´ì…˜ ì‚¬ìš©
             switch (_eState)
             {
             case MONSTER_STATE::IDLE:
@@ -265,7 +265,7 @@ void CMonster::MoveHorizontal(float speed)
 
 void CMonster::HandleWallCollision()
 {
-    // º® Ãæµ¹ ½Ã ¹æÇâ ÀüÈ¯
+    // ë²½ ì¶©ëŒ ì‹œ ë°©í–¥ ì „í™˜
     if (CheckWallAhead())
     {
         TurnAround();
@@ -315,32 +315,32 @@ void CMonster::UpdateState()
 
 void CMonster::UpdateMove()
 {
-    // ÀÚ½Ä Å¬·¡½º¿¡¼­ Move() È£Ãâ·Î ½ÇÁ¦ ÀÌµ¿ Ã³¸®
-    // ÀÌ ÇÔ¼ö´Â Move() È£Ãâ ÈÄ Ãß°¡ Ã³¸®°¡ ÇÊ¿äÇÒ ¶§ »ç¿ë
+    // ìì‹ í´ë˜ìŠ¤ì—ì„œ Move() í˜¸ì¶œë¡œ ì‹¤ì œ ì´ë™ ì²˜ë¦¬
+    // ì´ í•¨ìˆ˜ëŠ” Move() í˜¸ì¶œ í›„ ì¶”ê°€ ì²˜ë¦¬ê°€ í•„ìš”í•  ë•Œ ì‚¬ìš©
 }
 
 void CMonster::UpdateIdle()
 {
-    // ÀÏÁ¤ ½Ã°£ Á¤Áö ÈÄ ´ÙÀ½ Çàµ¿ °áÁ¤
+    // ì¼ì • ì‹œê°„ ì •ì§€ í›„ ë‹¤ìŒ í–‰ë™ ê²°ì •
     if (m_fStateTimer >= m_fIdleTime)
     {
-        // ±âº»ÀûÀ¸·Î °È±â »óÅÂ·Î ÀüÈ¯ (ÀÚ½Ä¿¡¼­ override °¡´É)
+        // ê¸°ë³¸ì ìœ¼ë¡œ ê±·ê¸° ìƒíƒœë¡œ ì „í™˜ (ìì‹ì—ì„œ override ê°€ëŠ¥)
         ChangeState(MONSTER_STATE::WALK);
     }
 }
 
 void CMonster::UpdateWalk()
 {
-    // ÀÚ½Ä Å¬·¡½ºÀÇ Move() ÇÔ¼ö È£Ãâ
+    // ìì‹ í´ë˜ìŠ¤ì˜ Move() í•¨ìˆ˜ í˜¸ì¶œ
     Move();
 }
 
 void CMonster::UpdateFly()
 {
-    // ±âº» ºñÇà ·ÎÁ÷ (ÀÚ½Ä¿¡¼­ override ±ÇÀå)
+    // ê¸°ë³¸ ë¹„í–‰ ë¡œì§ (ìì‹ì—ì„œ override ê¶Œì¥)
     Move();
 
-    // ÀÏÁ¤ ½Ã°£ ÈÄ ¹æÇâ ÀüÈ¯
+    // ì¼ì • ì‹œê°„ í›„ ë°©í–¥ ì „í™˜
     if (m_fStateTimer >= 3.0f)
     {
         TurnAround();
@@ -350,15 +350,15 @@ void CMonster::UpdateFly()
 
 void CMonster::UpdateTurn()
 {
-    // ¹æÇâ ÀüÈ¯ ½Ã°£
+    // ë°©í–¥ ì „í™˜ ì‹œê°„
     if (m_fStateTimer >= TURN_DURATION)
     {
         TurnAround();
-        ChangeState(MONSTER_STATE::WALK);  // ±âº»ÀûÀ¸·Î °È±â·Î º¹±Í
+        ChangeState(MONSTER_STATE::WALK);  // ê¸°ë³¸ì ìœ¼ë¡œ ê±·ê¸°ë¡œ ë³µê·€
     }
     else
     {
-        // ¹æÇâ ÀüÈ¯ Áß¿¡´Â ¸ØÃã
+        // ë°©í–¥ ì „í™˜ ì¤‘ì—ëŠ” ë©ˆì¶¤
         if (nullptr != GetRigidBody())
         {
             GetRigidBody()->SetVelocityX(0.f);
@@ -368,13 +368,13 @@ void CMonster::UpdateTurn()
 
 void CMonster::UpdateDamage()
 {
-    // µ¥¹ÌÁö »óÅÂ Áö¼Ó ½Ã°£
+    // ë°ë¯¸ì§€ ìƒíƒœ ì§€ì† ì‹œê°„
     if (m_fStateTimer >= DAMAGE_DURATION)
     {
         ChangeState(MONSTER_STATE::WALK);
     }
 
-    // µ¥¹ÌÁö Áß¿¡´Â ÀÌµ¿ Á¤Áö
+    // ë°ë¯¸ì§€ ì¤‘ì—ëŠ” ì´ë™ ì •ì§€
     if (nullptr != GetRigidBody())
     {
         GetRigidBody()->SetVelocityX(0.f);
@@ -383,13 +383,13 @@ void CMonster::UpdateDamage()
 
 void CMonster::UpdateAttackReady()
 {
-    // ±âº» °ø°İ ÁØºñ ½Ã°£ (ÀÚ½Ä¿¡¼­ override ±ÇÀå)
+    // ê¸°ë³¸ ê³µê²© ì¤€ë¹„ ì‹œê°„ (ìì‹ì—ì„œ override ê¶Œì¥)
     if (m_fStateTimer >= 1.0f)
     {
         ChangeState(MONSTER_STATE::ATTACK);
     }
 
-    // °ø°İ ÁØºñ Áß¿¡´Â ÀÌµ¿ Á¤Áö
+    // ê³µê²© ì¤€ë¹„ ì¤‘ì—ëŠ” ì´ë™ ì •ì§€
     if (nullptr != GetRigidBody())
     {
         GetRigidBody()->SetVelocityX(0.f);
@@ -398,13 +398,13 @@ void CMonster::UpdateAttackReady()
 
 void CMonster::UpdateAttack()
 {
-    // ±âº» °ø°İ Áö¼Ó ½Ã°£ (ÀÚ½Ä¿¡¼­ override ±ÇÀå)
+    // ê¸°ë³¸ ê³µê²© ì§€ì† ì‹œê°„ (ìì‹ì—ì„œ override ê¶Œì¥)
     if (m_fStateTimer >= 1.0f)
     {
         ChangeState(MONSTER_STATE::WALK);
     }
 
-    // °ø°İ Áß¿¡´Â ÀÌµ¿ Á¤Áö
+    // ê³µê²© ì¤‘ì—ëŠ” ì´ë™ ì •ì§€
     if (nullptr != GetRigidBody())
     {
         GetRigidBody()->SetVelocityX(0.f);
@@ -413,7 +413,7 @@ void CMonster::UpdateAttack()
 
 bool CMonster::CheckWallAhead()
 {
-    // ½ÇÁ¦ Å¸ÀÏ°úÀÇ Ãæµ¹ °Ë»ç ±¸Çö
+    // ì‹¤ì œ íƒ€ì¼ê³¼ì˜ ì¶©ëŒ ê²€ì‚¬ êµ¬í˜„
     CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
     if (!pCurScene)
         return false;
@@ -423,7 +423,7 @@ bool CMonster::CheckWallAhead()
     Vec2 vMyPos = GetPos();
     Vec2 vCheckPos = Vec2(vMyPos.x + (m_fWallCheckDist * m_iDir), vMyPos.y);
 
-    // ¸ó½ºÅÍÀÇ Ãæµ¹Ã¼ Å©±â
+    // ëª¬ìŠ¤í„°ì˜ ì¶©ëŒì²´ í¬ê¸°
     Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
 
     for (CObject* pTile : vecTiles)
@@ -438,7 +438,7 @@ bool CMonster::CheckWallAhead()
         Vec2 vTilePos = pTile->GetPos();
         Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
 
-        // AABB Ãæµ¹ °Ë»ç
+        // AABB ì¶©ëŒ ê²€ì‚¬
         if (abs(vCheckPos.x - vTilePos.x) < (vMyScale.x + vTileScale.x) / 2.f &&
             abs(vMyPos.y - vTilePos.y) < (vMyScale.y + vTileScale.y) / 2.f)
         {
@@ -446,7 +446,7 @@ bool CMonster::CheckWallAhead()
         }
     }
 
-    // È­¸é °æ°è Ã¼Å©
+    // í™”ë©´ ê²½ê³„ ì²´í¬
     if (vCheckPos.x < 32.f || vCheckPos.x > 928.f)
     {
         return true;
@@ -457,7 +457,7 @@ bool CMonster::CheckWallAhead()
 
 bool CMonster::CheckGroundAhead()
 {
-    // ½ÇÁ¦ Å¸ÀÏ°úÀÇ ¹Ù´Ú °Ë»ç ±¸Çö
+    // ì‹¤ì œ íƒ€ì¼ê³¼ì˜ ë°”ë‹¥ ê²€ì‚¬ êµ¬í˜„
     CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
     if (!pCurScene)
         return false;
@@ -481,7 +481,7 @@ bool CMonster::CheckGroundAhead()
         Vec2 vTilePos = pTile->GetPos();
         Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
 
-        // ¹ß ¾Æ·¡ÂÊ À§Ä¡¿¡ Å¸ÀÏÀÌ ÀÖ´ÂÁö °Ë»ç
+        // ë°œ ì•„ë˜ìª½ ìœ„ì¹˜ì— íƒ€ì¼ì´ ìˆëŠ”ì§€ ê²€ì‚¬
         if (abs(vCheckPos.x - vTilePos.x) < (vMyScale.x + vTileScale.x) / 2.f &&
             abs(vCheckPos.y - vTilePos.y) < (vMyScale.y + vTileScale.y) / 2.f)
         {

@@ -5,14 +5,14 @@ class CItem : public CObject
 {
 private:
     OBJECT_TYPE m_eItemType;
-    int m_iValue;       // Á¡¼ö³ª È¿°ú°ª
-    bool m_bCollected;  // ¼öÁı ¿©ºÎ
+    int m_iValue;       // ì ìˆ˜ë‚˜ íš¨ê³¼ê°’
+    bool m_bCollected;  // ìˆ˜ì§‘ ì—¬ë¶€
 
 public:
     virtual void Update() override
     {
-        // ÀÓ½Ã·Î ±âº» ¾÷µ¥ÀÌÆ®¸¸ ±¸Çö
-        // TODO: ¾ÆÀÌÅÛº° Æ¯¼ö µ¿ÀÛ ±¸Çö
+        // ì„ì‹œë¡œ ê¸°ë³¸ ì—…ë°ì´íŠ¸ë§Œ êµ¬í˜„
+        // TODO: ì•„ì´í…œë³„ íŠ¹ìˆ˜ ë™ì‘ êµ¬í˜„
     }
 
     void SetItemType(OBJECT_TYPE _eType) { m_eItemType = _eType; }
@@ -22,7 +22,7 @@ public:
 
     virtual void OnCollisionEnter(CCollider* _pOther) override
     {
-        // TODO: ÇÃ·¹ÀÌ¾î¿Í Ãæµ¹ ½Ã ¼öÁı Ã³¸®
+        // TODO: í”Œë ˆì´ì–´ì™€ ì¶©ëŒ ì‹œ ìˆ˜ì§‘ ì²˜ë¦¬
     }
 
 public:
@@ -31,7 +31,7 @@ public:
         , m_iValue(100)
         , m_bCollected(false)
     {
-        // ±âº» ¾ÆÀÌÅÛ ¼³Á¤
+        // ê¸°ë³¸ ì•„ì´í…œ ì„¤ì •
     }
     ~CItem() {}
 };

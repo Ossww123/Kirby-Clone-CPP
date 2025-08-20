@@ -17,10 +17,10 @@ class CCollisionMgr
     SINGLE(CCollisionMgr);
 
 private:
-    // Ãæµ¹ ±×·ì °£ÀÇ Ãæµ¹ Ã¼Å© ¿©ºÎ
+    // ì¶©ëŒ ê·¸ë£¹ ê°„ì˜ ì¶©ëŒ ì²´í¬ ì—¬ë¶€
     UINT m_arrCheck[(UINT)GROUP_TYPE::END];
 
-    // ÀÌÀü ÇÁ·¹ÀÓ Ãæµ¹ Á¤º¸
+    // ì´ì „ í”„ë ˆìž„ ì¶©ëŒ ì •ë³´
     map<ULONGLONG, bool> m_mapColInfo;
 
 public:
