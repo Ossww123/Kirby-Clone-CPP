@@ -7,64 +7,63 @@ class CPlayerInputManager;
 class CPlayerMovement
 {
 public:
-    // === »ı¼ºÀÚ & ¼Ò¸êÀÚ ===
+    // === ìƒì„±ì & ì†Œë©¸ì ===
     CPlayerMovement(CPlayer* _pOwner);
     ~CPlayerMovement();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
     void Init();
     void Update();
 
 private:
-    // === ÀÔ·Â Ã³¸® ÇÔ¼öµé ===
+    // === ì…ë ¥ ì²˜ë¦¬ í•¨ìˆ˜ë“¤ ===
     void ApplyCurrentMovement();
     void ProcessMovementInput();
-    void ProcessMovementInputLegacy();
 
 private:
-    // === ¹æÇâ °ü¸® ÇÔ¼öµé ===
+    // === ë°©í–¥ ê´€ë¦¬ í•¨ìˆ˜ë“¤ ===
     void UpdateDirection();
     void UpdateMovementState();
 
 private:
-    // === °¨¼Ó °ü¸® ÇÔ¼öµé ===
+    // === ê°ì† ê´€ë¦¬ í•¨ìˆ˜ë“¤ ===
     void StartDeceleration(int _iDirection);
     void ApplyDeceleration();
     void ApplyCrouchDeceleration();
 
 private:
-    // === ´õºíÅÇ ½Ã½ºÅÛ ÇÔ¼öµé ===
+    // === ë”ë¸”íƒ­ ì‹œìŠ¤í…œ í•¨ìˆ˜ë“¤ ===
     bool CheckDoubleTap(int _iCurrentDir);
     void ResetDoubleTapState();
 
 public:
-    // === ¹æÇâ °ü·Ã ===
+    // === ë°©í–¥ ê´€ë ¨ ===
     void SetFacingDirection(bool _bRight);
 
 public:
-    // === ÀÌµ¿ »óÅÂ Ã¼Å© ===
+    // === ì´ë™ ìƒíƒœ ì²´í¬ ===
     bool IsActuallyMoving() const;
     bool IsInputPressed() const { return m_bInputPressed; }
     bool IsRunMode() const { return m_bRunMode; }
     void SetRunMode(bool _bRunMode) { m_bRunMode = _bRunMode; }
 
 public:
-    // === Å©¶ó¿ìÄ¡ °ü·Ã ===
+    // === í¬ë¼ìš°ì¹˜ ê´€ë ¨ ===
     void HandleCrouchDirectionInput();
 
 public:
-    // === Á¡ÇÁ °ü·Ã ===
+    // === ì í”„ ê´€ë ¨ ===
     void Jump();
     bool CanJump() const;
 
 public:
-    // === ¼Óµµ Á÷Á¢ Á¦¾î (Æ¯¼ö »óÈ²¿ë) ===
+    // === ì†ë„ ì§ì ‘ ì œì–´ (íŠ¹ìˆ˜ ìƒí™©ìš©) ===
     void StopMovement();
     void SetVelocityX(float _fVelX);
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     bool IsFacingRight() const { return m_bFacingRight; }
     bool IsDirectionChanged() const { return m_bDirectionChanged; }
     float GetCurrentSpeed() const;
@@ -74,7 +73,7 @@ public:
     bool IsDecelerating() const { return m_bIsDecelerating; }
 
 public:
-    // === Setter ÇÔ¼öµé ===
+    // === Setter í•¨ìˆ˜ë“¤ ===
     void SetSpeed(float _fSpeed) { m_fSpeed = _fSpeed; }
     void SetRunSpeed(float _fRunSpeed) { m_fRunSpeed = _fRunSpeed; }
     void SetJumpPower(float _fJumpPower) { m_fJumpPower = _fJumpPower; }
@@ -82,38 +81,38 @@ public:
     void SetMinMovingSpeed(float _fMinSpeed) { m_fMinMovingSpeed = _fMinSpeed; }
 
 public:
-    // === InputManager ¿¬°á ===
+    // === InputManager ì—°ê²° ===
     void SetInputManager(CPlayerInputManager* pInputManager) { m_pInputManager = pInputManager; }
 
 private:
-    // === ¼ÒÀ¯ÀÚ ÂüÁ¶ ===
-    CPlayer* m_pOwner;                          // ÇÃ·¹ÀÌ¾î ÂüÁ¶
-    CPlayerInputManager* m_pInputManager;       // ÀÔ·Â ¸Å´ÏÀú
+    // === ì†Œìœ ì ì°¸ì¡° ===
+    CPlayer* m_pOwner;                          // í”Œë ˆì´ì–´ ì°¸ì¡°
+    CPlayerInputManager* m_pInputManager;       // ì…ë ¥ ë§¤ë‹ˆì €
 
-    // === ÀÌµ¿ °ü·Ã º¯¼öµé ===
-    float m_fSpeed;             // ±âº» ÀÌµ¿ ¼Óµµ
-    float m_fRunSpeed;          // ´Ş¸®±â ¼Óµµ
-    float m_fJumpPower;         // Á¡ÇÁ·Â
-    bool m_bRunMode;            // ´Ş¸®±â ¸ğµåÀÎÁö
+    // === ì´ë™ ê´€ë ¨ ë³€ìˆ˜ë“¤ ===
+    float m_fSpeed;             // ê¸°ë³¸ ì´ë™ ì†ë„
+    float m_fRunSpeed;          // ë‹¬ë¦¬ê¸° ì†ë„
+    float m_fJumpPower;         // ì í”„ë ¥
+    bool m_bRunMode;            // ë‹¬ë¦¬ê¸° ëª¨ë“œì¸ì§€
 
-    // === ¹æÇâ ½Ã½ºÅÛ °ü·Ã º¯¼öµé ===
-    bool m_bFacingRight;        // ¿À¸¥ÂÊÀ» º¸°í ÀÖ´ÂÁö (true: ¿À¸¥ÂÊ, false: ¿ŞÂÊ)
-    int m_iLastMoveDir;         // ¸¶Áö¸· ÀÌµ¿ ¹æÇâ (1: ¿À¸¥ÂÊ, -1: ¿ŞÂÊ, 0: Á¤Áö)
-    bool m_bDirectionChanged;   // ¹æÇâÀÌ ¹Ù²î¾ú´ÂÁö Ã¼Å©
+    // === ë°©í–¥ ì‹œìŠ¤í…œ ê´€ë ¨ ë³€ìˆ˜ë“¤ ===
+    bool m_bFacingRight;        // ì˜¤ë¥¸ìª½ì„ ë³´ê³  ìˆëŠ”ì§€ (true: ì˜¤ë¥¸ìª½, false: ì™¼ìª½)
+    int m_iLastMoveDir;         // ë§ˆì§€ë§‰ ì´ë™ ë°©í–¥ (1: ì˜¤ë¥¸ìª½, -1: ì™¼ìª½, 0: ì •ì§€)
+    bool m_bDirectionChanged;   // ë°©í–¥ì´ ë°”ë€Œì—ˆëŠ”ì§€ ì²´í¬
 
-    // === ºÎµå·¯¿î ¿òÁ÷ÀÓ °ü·Ã º¯¼öµé ===
-    float m_fDeceleration;      // °¨¼Óµµ (Å°¸¦ ¶¿ ¶§)
-    float m_fMinMovingSpeed;    // ÃÖ¼Ò ÀÌµ¿ ¼Óµµ (ÀÌ ÀÌÇÏ¸é Á¤Áö·Î °£ÁÖ)
-    bool m_bIsDecelerating;     // ÇöÀç °¨¼Ó ÁßÀÎÁö
+    // === ë¶€ë“œëŸ¬ìš´ ì›€ì§ì„ ê´€ë ¨ ë³€ìˆ˜ë“¤ ===
+    float m_fDeceleration;      // ê°ì†ë„ (í‚¤ë¥¼ ë—„ ë•Œ)
+    float m_fMinMovingSpeed;    // ìµœì†Œ ì´ë™ ì†ë„ (ì´ ì´í•˜ë©´ ì •ì§€ë¡œ ê°„ì£¼)
+    bool m_bIsDecelerating;     // í˜„ì¬ ê°ì† ì¤‘ì¸ì§€
 
-    // === Å©¶ó¿ìÄ¡ °ü·Ã º¯¼öµé ===
-    float m_fCrouchDeceleration; // Å©¶ó¿ìÄ¡ »óÅÂ °¨¼Óµµ (´õ ºü¸£°Ô)
+    // === í¬ë¼ìš°ì¹˜ ê´€ë ¨ ë³€ìˆ˜ë“¤ ===
+    float m_fCrouchDeceleration; // í¬ë¼ìš°ì¹˜ ìƒíƒœ ê°ì†ë„ (ë” ë¹ ë¥´ê²Œ)
 
-    // === ´õºíÅÇ RUN ½Ã½ºÅÛ °ü·Ã º¯¼öµé ===
-    float m_fDoubleTapWindow;       // ´õºíÅÇ ÀÎ½Ä ½Ã°£ (0.3ÃÊ)
-    int m_iDeceleratingDirection;   // °¨¼Ó ÁßÀÎ ¹æÇâ (-1: ¿ŞÂÊ, 1: ¿À¸¥ÂÊ, 0: ¾øÀ½)
+    // === ë”ë¸”íƒ­ RUN ì‹œìŠ¤í…œ ê´€ë ¨ ë³€ìˆ˜ë“¤ ===
+    float m_fDoubleTapWindow;       // ë”ë¸”íƒ­ ì¸ì‹ ì‹œê°„ (0.3ì´ˆ)
+    int m_iDeceleratingDirection;   // ê°ì† ì¤‘ì¸ ë°©í–¥ (-1: ì™¼ìª½, 1: ì˜¤ë¥¸ìª½, 0: ì—†ìŒ)
 
-    // === ÀÔ·Â »óÅÂ ÃßÀû ===
-    bool m_bWasMovingLastFrame; // ÀÌÀü ÇÁ·¹ÀÓ¿¡ ÀÌµ¿ ÁßÀÌ¾ú´ÂÁö
-    bool m_bInputPressed;       // ÇöÀç ÀÔ·ÂÀÌ ´­·ÁÀÖ´ÂÁö
+    // === ì…ë ¥ ìƒíƒœ ì¶”ì  ===
+    bool m_bWasMovingLastFrame; // ì´ì „ í”„ë ˆì„ì— ì´ë™ ì¤‘ì´ì—ˆëŠ”ì§€
+    bool m_bInputPressed;       // í˜„ì¬ ì…ë ¥ì´ ëˆŒë ¤ìˆëŠ”ì§€
 };

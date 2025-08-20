@@ -195,6 +195,7 @@ enum class MONSTER_STATE
 
     // 새로 추가할 상태들
     DAMAGE ,         // 데미지를 받는 상태
+    BEING_INHALED ,  // 빨아들려지는 상태
     ATTACK_READY ,   // 공격 준비 상태
     ATTACK ,         // 공격 상태
     FLY ,           // 비행 상태 (브론토 버트, 고르도)

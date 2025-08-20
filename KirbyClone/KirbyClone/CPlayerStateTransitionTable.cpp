@@ -26,7 +26,8 @@ void CPlayerStateTransitionTable::AddTransition(PLAYER_STATE from, InputFlags in
     if (!IsValidTransitionRule(rule))
     {
         char debugMsg[256];
-        sprintf_s(debugMsg, "Invalid transition rule: %d -> %d\n", (int)from, (int)to);
+        sprintf_s(debugMsg, "Invalid transition rule: %s -> %s\n", 
+            PlayerStateToString(from), PlayerStateToString(to));
         OutputDebugStringA(debugMsg);
         return;
     }
@@ -75,7 +76,8 @@ PLAYER_STATE CPlayerStateTransitionTable::GetNextState(PLAYER_STATE currentState
             {
                 // 조건을 만족하는 첫 번째 규칙 적용
                 char debugMsg[256];
-                sprintf_s(debugMsg, "State transition: %d -> %d\n", (int)currentState, (int)rule.toState);
+                sprintf_s(debugMsg, "State transition: %s -> %s\n", 
+                    PlayerStateToString(currentState), PlayerStateToString(rule.toState));
                 OutputDebugStringA(debugMsg);
 
                 return rule.toState;
@@ -117,132 +119,7 @@ bool CPlayerStateTransitionTable::HasTransition(PLAYER_STATE from, PLAYER_STATE 
     return false;
 }
 
-// === 초기화 (기본 전환 규칙들 설정) ===
-
-void CPlayerStateTransitionTable::InitializeDefaultTransitions()
-{
-    using INPUT = CPlayerInputManager::INPUT_TYPE;
-
-    // === 기본 이동 관련 전환 ===
-
-    // IDLE -> WALK (좌우 이동)
-    AddTransition(PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::MOVE_LEFT | (uint32_t)INPUT::MOVE_RIGHT,
-        PLAYER_STATE::WALK,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        100);
-
-    // WALK -> IDLE (이동 입력 없음)
-    AddTransition(PLAYER_STATE::WALK,
-        0,  // 특정 입력 없음
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) {
-            if (!p->GetMovement()) return false;
-            return !p->GetMovement()->IsActuallyMoving() &&
-                !p->GetMovement()->IsDecelerating();
-        },
-        50);
-
-    // === 점프 관련 전환 ===
-
-    // IDLE/WALK -> JUMP (점프 입력)
-    AddTransition(PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::JUMP,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        200);
-
-    AddTransition(PLAYER_STATE::WALK,
-        (uint32_t)INPUT::JUMP_TAP,
-        PLAYER_STATE::JUMP,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        200);
-
-    // JUMP -> FALL0 (점프 후 하강 시작)
-    AddTransition(PLAYER_STATE::JUMP,
-        0,  // 특정 입력 없음
-        PLAYER_STATE::FALL0,
-        [](CPlayer* p) {
-            if (!p->GetRigidBody()) return false;
-            return p->GetRigidBody()->GetVelocity().y >= 0.f;
-        },
-        300);
-
-    // FALL0 -> IDLE (빠른 착지)
-    AddTransition(PLAYER_STATE::FALL0,
-        0,  // 특정 입력 없음
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        300);
-
-    // FALL1 -> IDLE (일반 착지)
-    AddTransition(PLAYER_STATE::FALL1,
-        0,  // 특정 입력 없음
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        300);
-
-    // === 크라우치 관련 전환 ===
-
-    // IDLE -> CROUCH (DOWN 키)
-    AddTransition(PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::MOVE_DOWN,
-        PLAYER_STATE::CROUCH,
-        [](CPlayer* p) {
-            return p->GetRigidBody() && p->GetRigidBody()->IsGround() &&
-                !p->HasMouthful();
-        },
-        150);
-
-    // CROUCH -> IDLE (DOWN 키 해제)
-    AddTransition(PLAYER_STATE::CROUCH,
-        0,  // 특정 입력 없음
-        PLAYER_STATE::IDLE,
-        [](CPlayer* p) {
-            if (!p->GetMovement()) return false;
-            CPlayerInputManager* pInputMgr = p->GetStateMachine()->GetInputManager();
-            return !pInputMgr->IsMovingDown();
-        },
-        100);
-
-    // CROUCH -> SLIDE (점프 또는 액션 키)
-    AddTransition(PLAYER_STATE::CROUCH,
-        (uint32_t)INPUT::JUMP_TAP | (uint32_t)INPUT::ACTION_TAP,
-        PLAYER_STATE::SLIDE,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        250);
-
-    // === 흡입 관련 전환 ===
-
-    // IDLE -> INHALE (액션 키)
-    AddTransition(PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::ACTION_TAP,
-        PLAYER_STATE::INHALE,
-        [](CPlayer* p) { return !p->HasMouthful(); },
-        180);
-
-    // === 더블탭 RUN 전환 ===
-
-    // IDLE -> RUN (더블탭)
-    AddTransition(PLAYER_STATE::IDLE,
-        (uint32_t)INPUT::DOUBLE_TAP_LEFT | (uint32_t)INPUT::DOUBLE_TAP_RIGHT,
-        PLAYER_STATE::RUN,
-        [](CPlayer* p) { return p->GetRigidBody() && p->GetRigidBody()->IsGround(); },
-        120);
-
-    // RUN -> WALK (더블탭 아닌 일반 이동)
-    AddTransition(PLAYER_STATE::RUN,
-        (uint32_t)INPUT::MOVE_LEFT | (uint32_t)INPUT::MOVE_RIGHT,
-        PLAYER_STATE::WALK,
-        [](CPlayer* p) {
-            if (!p->GetMovement()) return false;
-            return !p->GetMovement()->IsRunMode();
-        },
-        80);
-
-    // 정렬 플래그 설정
-    m_bSorted = false;
-}
+// InitializeDefaultTransitions 제거됨 - CPlayerStateMachine에서 모든 전환 관리
 
 // === 내부 로직 ===
 
@@ -306,10 +183,45 @@ bool CPlayerStateTransitionTable::IsValidTransitionRule(const TransitionRule& ru
     if (rule.fromState == rule.toState)
     {
         char debugMsg[128];
-        sprintf_s(debugMsg, "Warning: Self-transition detected: %d -> %d\n",
-            (int)rule.fromState, (int)rule.toState);
+        sprintf_s(debugMsg, "Warning: Self-transition detected: %s -> %s\n",
+            PlayerStateToString(rule.fromState), PlayerStateToString(rule.toState));
         OutputDebugStringA(debugMsg);
     }
 
     return true;
+}
+
+// === 디버깅용 문자열 변환 ===
+
+const char* CPlayerStateTransitionTable::PlayerStateToString(PLAYER_STATE state) const
+{
+    switch (state)
+    {
+    case PLAYER_STATE::IDLE:              return "IDLE";
+    case PLAYER_STATE::WALK:              return "WALK";
+    case PLAYER_STATE::RUN:               return "RUN";
+    case PLAYER_STATE::JUMP:              return "JUMP";
+    case PLAYER_STATE::FALL0:             return "FALL0";
+    case PLAYER_STATE::FALL1:             return "FALL1";
+    case PLAYER_STATE::FALL2:             return "FALL2";
+    case PLAYER_STATE::BOUNCE:            return "BOUNCE";
+    case PLAYER_STATE::CROUCH:            return "CROUCH";
+    case PLAYER_STATE::SLIDE:             return "SLIDE";
+    case PLAYER_STATE::SLIDE_KICK_RECOIL: return "SLIDE_KICK_RECOIL";
+    case PLAYER_STATE::DAMAGE:            return "DAMAGE";
+    case PLAYER_STATE::HOVER:             return "HOVER";
+    case PLAYER_STATE::HOVER_EXHALE:      return "HOVER_EXHALE";
+    case PLAYER_STATE::INHALE:            return "INHALE";
+    case PLAYER_STATE::INHALE_SUCCESS:    return "INHALE_SUCCESS";
+    case PLAYER_STATE::EXHALE:            return "EXHALE";
+    case PLAYER_STATE::SWALLOW:           return "SWALLOW";
+    case PLAYER_STATE::MOUTHFUL_IDLE:     return "MOUTHFUL_IDLE";
+    case PLAYER_STATE::MOUTHFUL_WALK:     return "MOUTHFUL_WALK";
+    case PLAYER_STATE::MOUTHFUL_RUN:      return "MOUTHFUL_RUN";
+    case PLAYER_STATE::MOUTHFUL_JUMP:     return "MOUTHFUL_JUMP";
+    case PLAYER_STATE::MOUTHFUL_FALL:     return "MOUTHFUL_FALL";
+    case PLAYER_STATE::MOUTHFUL_DAMAGE:   return "MOUTHFUL_DAMAGE";
+    case PLAYER_STATE::END:               return "END";
+    default:                              return "UNKNOWN";
+    }
 }

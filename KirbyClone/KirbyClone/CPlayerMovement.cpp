@@ -42,22 +42,22 @@ void CPlayerMovement::Update()
     if (!pRigidBody)
         return;
 
-    // ÈíÀÔ ÁßÀÌ¸é ÀÌµ¿ Á¦ÇÑ
+    // í¡ì… ì¤‘ì´ë©´ ì´ë™ ì œí•œ
     if (m_pOwner && m_pOwner->IsInhaling())
     {
         StopMovement();
         return;
     }
 
-    // === ¹°¸®Àû ÀÌµ¿¸¸ Ã³¸® ===
+    // === ë¬¼ë¦¬ì  ì´ë™ë§Œ ì²˜ë¦¬ ===
     ApplyCurrentMovement();
 
-    // === ¹æÇâ ¹× »óÅÂ ¾÷µ¥ÀÌÆ® ===
+    // === ë°©í–¥ ë° ìƒíƒœ ì—…ë°ì´íŠ¸ ===
     UpdateDirection();
     UpdateMovementState();
 }
 
-// === »õ·Î Ãß°¡: ÇöÀç »óÅÂ¿¡ µû¸¥ ¹°¸®Àû ÀÌµ¿ Àû¿ë ===
+// === ìƒˆë¡œ ì¶”ê°€: í˜„ì¬ ìƒíƒœì— ë”°ë¥¸ ë¬¼ë¦¬ì  ì´ë™ ì ìš© ===
 void CPlayerMovement::ApplyCurrentMovement()
 {
     CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
@@ -68,7 +68,7 @@ void CPlayerMovement::ApplyCurrentMovement()
 
     PLAYER_STATE currentState = m_pOwner->GetCurrentState();
 
-    // Æ¯Á¤ »óÅÂ¿¡¼­´Â ÀÌµ¿ ºÒ°¡
+    // íŠ¹ì • ìƒíƒœì—ì„œëŠ” ì´ë™ ë¶ˆê°€
     if (currentState == PLAYER_STATE::CROUCH ||
         currentState == PLAYER_STATE::SLIDE ||
         currentState == PLAYER_STATE::SWALLOW ||
@@ -77,20 +77,17 @@ void CPlayerMovement::ApplyCurrentMovement()
         return;
     }
 
-    // ÀÌµ¿ ÀÔ·Â Ã³¸®
+    // ì´ë™ ì…ë ¥ ì²˜ë¦¬
     ProcessMovementInput();
 }
 
-// === ÀÔ·Â Ã³¸® ÇÔ¼öµé ===
+// === ì…ë ¥ ì²˜ë¦¬ í•¨ìˆ˜ë“¤ ===
 
-// === ÀÌµ¿ ÀÔ·Â Ã³¸® ===
+// === ì´ë™ ì…ë ¥ ì²˜ë¦¬ ===
 void CPlayerMovement::ProcessMovementInput()
 {
     if (!m_pInputManager)
-    {
-        ProcessMovementInputLegacy();
         return;
-    }
 
     CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
     if (!pRigidBody)
@@ -103,7 +100,7 @@ void CPlayerMovement::ProcessMovementInput()
 
     if (currentMoveDir != 0)
     {
-        // ´õºíÅÇ Ã¼Å©
+        // ë”ë¸”íƒ­ ì²´í¬
         if ((currentMoveDir == -1 && m_pInputManager->IsDoubleTapLeft()) ||
             (currentMoveDir == 1 && m_pInputManager->IsDoubleTapRight()))
         {
@@ -115,7 +112,7 @@ void CPlayerMovement::ProcessMovementInput()
 
         float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
 
-        // ÀÔ¿¡ ¹°°í ÀÖÀ¸¸é ¼Óµµ °¨¼Ò
+        // ì…ì— ë¬¼ê³  ìˆìœ¼ë©´ ì†ë„ ê°ì†Œ
         if (m_pOwner && m_pOwner->HasMouthful())
             fCurrentSpeed *= 0.7f;
 
@@ -125,7 +122,7 @@ void CPlayerMovement::ProcessMovementInput()
     }
     else
     {
-        // ÀÔ·ÂÀÌ ¾øÀ¸¸é °¨¼Ó ½ÃÀÛ
+        // ì…ë ¥ì´ ì—†ìœ¼ë©´ ê°ì† ì‹œì‘
         if (!m_bIsDecelerating)
         {
             StartDeceleration(m_iLastMoveDir);
@@ -133,78 +130,18 @@ void CPlayerMovement::ProcessMovementInput()
         ApplyDeceleration();
     }
 
-    // ¹æÇâ ¾÷µ¥ÀÌÆ®
+    // ë°©í–¥ ì—…ë°ì´íŠ¸
     m_iLastMoveDir = currentMoveDir;
 }
 
-void CPlayerMovement::ProcessMovementInputLegacy()
-{
-    CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
-    if (!pRigidBody)
-        return;
 
-    int currentMoveDir = 0;
-    m_bInputPressed = false;
-
-    if (KEY_HOLD(KEY::LEFT))
-    {
-        currentMoveDir = -1;
-        m_bInputPressed = true;
-
-        if (CheckDoubleTap(currentMoveDir))
-        {
-            m_bRunMode = true;
-        }
-
-        m_bIsDecelerating = false;
-        ResetDoubleTapState();
-
-        float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
-
-        if (m_pOwner && m_pOwner->HasMouthful())
-            fCurrentSpeed *= 0.7f;
-
-        pRigidBody->SetVelocityX(-fCurrentSpeed);
-    }
-    else if (KEY_HOLD(KEY::RIGHT))
-    {
-        currentMoveDir = 1;
-        m_bInputPressed = true;
-
-        if (CheckDoubleTap(currentMoveDir))
-        {
-            m_bRunMode = true;
-        }
-
-        m_bIsDecelerating = false;
-        ResetDoubleTapState();
-
-        float fCurrentSpeed = m_bRunMode ? m_fRunSpeed : m_fSpeed;
-
-        if (m_pOwner && m_pOwner->HasMouthful())
-            fCurrentSpeed *= 0.7f;
-
-        pRigidBody->SetVelocityX(fCurrentSpeed);
-    }
-    else
-    {
-        if (!m_bIsDecelerating)
-        {
-            StartDeceleration(m_iLastMoveDir);
-        }
-        ApplyDeceleration();
-    }
-
-    m_iLastMoveDir = currentMoveDir;
-}
-
-// === ¹æÇâ °ü¸® ÇÔ¼öµé ===
+// === ë°©í–¥ ê´€ë¦¬ í•¨ìˆ˜ë“¤ ===
 
 void CPlayerMovement::UpdateDirection()
 {
     m_bDirectionChanged = false;
 
-    // ÀÌµ¿ ÁßÀÏ ¶§¸¸ ¹æÇâ ¾÷µ¥ÀÌÆ®
+    // ì´ë™ ì¤‘ì¼ ë•Œë§Œ ë°©í–¥ ì—…ë°ì´íŠ¸
     if (m_iLastMoveDir != 0)
     {
         bool newFacingRight = (m_iLastMoveDir > 0);
@@ -219,10 +156,10 @@ void CPlayerMovement::UpdateDirection()
 
 void CPlayerMovement::UpdateMovementState()
 {
-    // ÇöÀç ½ÇÁ¦·Î ¿òÁ÷ÀÌ°í ÀÖ´ÂÁö È®ÀÎ
+    // í˜„ì¬ ì‹¤ì œë¡œ ì›€ì§ì´ê³  ìˆëŠ”ì§€ í™•ì¸
     bool currentlyMoving = IsActuallyMoving();
 
-    // ¹æÇâ º¯°æ °¨Áö
+    // ë°©í–¥ ë³€ê²½ ê°ì§€
     if (m_bWasMovingLastFrame != currentlyMoving)
     {
         m_bDirectionChanged = true;
@@ -235,7 +172,7 @@ void CPlayerMovement::UpdateMovementState()
     m_bWasMovingLastFrame = currentlyMoving;
 }
 
-// === °¨¼Ó °ü¸® ÇÔ¼öµé ===
+// === ê°ì† ê´€ë¦¬ í•¨ìˆ˜ë“¤ ===
 
 void CPlayerMovement::StartDeceleration(int _iDirection)
 {
@@ -251,19 +188,19 @@ void CPlayerMovement::ApplyDeceleration()
 
     float currentSpeedX = pRigidBody->GetVelocity().x;
 
-    // ÀÌ¹Ì Á¤Áö »óÅÂ¸é °¨¼Ó ¿Ï·á
+    // ì´ë¯¸ ì •ì§€ ìƒíƒœë©´ ê°ì† ì™„ë£Œ
     if (abs(currentSpeedX) <= m_fMinMovingSpeed)
     {
         pRigidBody->SetVelocityX(0.f);
         m_bIsDecelerating = false;
 
-        // °¨¼Ó ¿Ï·á ½Ã RUN ¸ğµå ÇØÁ¦ ¹× ´õºíÅÇ »óÅÂ ¸®¼Â
+        // ê°ì† ì™„ë£Œ ì‹œ RUN ëª¨ë“œ í•´ì œ ë° ë”ë¸”íƒ­ ìƒíƒœ ë¦¬ì…‹
         m_bRunMode = false;
         ResetDoubleTapState();
         return;
     }
 
-    // °¨¼Ó Àû¿ë
+    // ê°ì† ì ìš©
     float deltaTime = CTimeMgr::GetInst()->GetfDT();
     float decelAmount = m_fDeceleration * deltaTime;
 
@@ -283,7 +220,7 @@ void CPlayerMovement::ApplyDeceleration()
     }
 }
 
-// === Å©¶ó¿ìÄ¡ »óÅÂ °¨¼Ó Ã³¸® ===
+// === í¬ë¼ìš°ì¹˜ ìƒíƒœ ê°ì† ì²˜ë¦¬ ===
 void CPlayerMovement::ApplyCrouchDeceleration()
 {
     CRigidBody* pRigidBody = m_pOwner ? m_pOwner->GetRigidBody() : nullptr;
@@ -292,14 +229,14 @@ void CPlayerMovement::ApplyCrouchDeceleration()
 
     float currentSpeedX = pRigidBody->GetVelocity().x;
 
-    // ÀÌ¹Ì Á¤Áö »óÅÂ¸é °¨¼Ó ¿Ï·á
+    // ì´ë¯¸ ì •ì§€ ìƒíƒœë©´ ê°ì† ì™„ë£Œ
     if (abs(currentSpeedX) <= m_fMinMovingSpeed)
     {
         pRigidBody->SetVelocityX(0.f);
         return;
     }
 
-    // Å©¶ó¿ìÄ¡ °¨¼Ó Àû¿ë (ÀÏ¹İ °¨¼Óº¸´Ù ºü¸£°Ô)
+    // í¬ë¼ìš°ì¹˜ ê°ì† ì ìš© (ì¼ë°˜ ê°ì†ë³´ë‹¤ ë¹ ë¥´ê²Œ)
     float deltaTime = CTimeMgr::GetInst()->GetfDT();
     float decelAmount = m_fCrouchDeceleration * deltaTime;
 
@@ -319,11 +256,11 @@ void CPlayerMovement::ApplyCrouchDeceleration()
     }
 }
 
-// === ´õºíÅÇ ½Ã½ºÅÛ ÇÔ¼öµé ===
+// === ë”ë¸”íƒ­ ì‹œìŠ¤í…œ í•¨ìˆ˜ë“¤ ===
 
 bool CPlayerMovement::CheckDoubleTap(int _iCurrentDir)
 {
-    // °¨¼Ó ÁßÀÌ°í, °°Àº ¹æÇâ ÀÔ·ÂÀÌ°í, RUN ¸ğµå°¡ ¾Æ´Ò ¶§¸¸ ´õºíÅÇ ÀÎ½Ä
+    // ê°ì† ì¤‘ì´ê³ , ê°™ì€ ë°©í–¥ ì…ë ¥ì´ê³ , RUN ëª¨ë“œê°€ ì•„ë‹ ë•Œë§Œ ë”ë¸”íƒ­ ì¸ì‹
     if (m_bIsDecelerating &&
         _iCurrentDir == m_iDeceleratingDirection &&
         _iCurrentDir != 0 &&
@@ -339,7 +276,7 @@ void CPlayerMovement::ResetDoubleTapState()
     m_iDeceleratingDirection = 0;
 }
 
-// === ¹æÇâ °ü·Ã ===
+// === ë°©í–¥ ê´€ë ¨ ===
 
 void CPlayerMovement::SetFacingDirection(bool _bRight)
 {
@@ -349,24 +286,24 @@ void CPlayerMovement::SetFacingDirection(bool _bRight)
     }
 }
 
-// === Å©¶ó¿ìÄ¡ »óÅÂ¿¡¼­ ¹æÇâ º¯°æ Ã³¸® ===
+// === í¬ë¼ìš°ì¹˜ ìƒíƒœì—ì„œ ë°©í–¥ ë³€ê²½ ì²˜ë¦¬ ===
 void CPlayerMovement::HandleCrouchDirectionInput()
 {
-    // Å©¶ó¿ìÄ¡ »óÅÂ¿¡¼­´Â ÀÌµ¿ÇÏÁö ¾Ê°í ¹æÇâ¸¸ º¯°æ
+    // í¬ë¼ìš°ì¹˜ ìƒíƒœì—ì„œëŠ” ì´ë™í•˜ì§€ ì•Šê³  ë°©í–¥ë§Œ ë³€ê²½
     if (KEY_HOLD(KEY::LEFT))
     {
-        SetFacingDirection(false);  // ¿ŞÂÊ º¸±â
+        SetFacingDirection(false);  // ì™¼ìª½ ë³´ê¸°
     }
     else if (KEY_HOLD(KEY::RIGHT))
     {
-        SetFacingDirection(true);   // ¿À¸¥ÂÊ º¸±â
+        SetFacingDirection(true);   // ì˜¤ë¥¸ìª½ ë³´ê¸°
     }
 
-    // Å©¶ó¿ìÄ¡ »óÅÂ¿¡¼­ °¨¼Ó Àû¿ë
+    // í¬ë¼ìš°ì¹˜ ìƒíƒœì—ì„œ ê°ì† ì ìš©
     ApplyCrouchDeceleration();
 }
 
-// === Á¡ÇÁ °ü·Ã ===
+// === ì í”„ ê´€ë ¨ ===
 
 void CPlayerMovement::Jump()
 {
@@ -377,7 +314,7 @@ void CPlayerMovement::Jump()
     if (!pRigidBody)
         return;
 
-    // Á¡ÇÁ ½ÇÇà
+    // ì í”„ ì‹¤í–‰
     pRigidBody->SetVelocityY(-m_fJumpPower);
     pRigidBody->SetGround(false);
 }
@@ -388,11 +325,11 @@ bool CPlayerMovement::CanJump() const
     if (!pRigidBody)
         return false;
 
-    // ¶¥¿¡ ÀÖÀ» ¶§¸¸ Á¡ÇÁ °¡´É
+    // ë•…ì— ìˆì„ ë•Œë§Œ ì í”„ ê°€ëŠ¥
     return pRigidBody->IsGround();
 }
 
-// === ¼Óµµ Á÷Á¢ Á¦¾î (Æ¯¼ö »óÈ²¿ë) ===
+// === ì†ë„ ì§ì ‘ ì œì–´ (íŠ¹ìˆ˜ ìƒí™©ìš©) ===
 
 void CPlayerMovement::StopMovement()
 {
@@ -415,7 +352,7 @@ void CPlayerMovement::SetVelocityX(float _fVelX)
     }
 }
 
-// === Getter ÇÔ¼öµé ===
+// === Getter í•¨ìˆ˜ë“¤ ===
 
 bool CPlayerMovement::IsActuallyMoving() const
 {

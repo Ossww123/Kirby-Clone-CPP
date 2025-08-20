@@ -1,7 +1,7 @@
 #pragma once
 #include "CPlayerInputManager.h"
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CPlayer;
 
 class CPlayerStateTransitionTable
@@ -10,15 +10,15 @@ public:
     using InputFlags = CPlayerInputManager::InputFlags;
     using ConditionFunc = std::function<bool(CPlayer*)>;
 
-    // ÀüÈ¯ ±ÔÄ¢ ±¸Á¶Ã¼
+    // ì „í™˜ ê·œì¹™ êµ¬ì¡°ì²´
     struct TransitionRule
     {
-        PLAYER_STATE fromState;         // ÇöÀç »óÅÂ
-        InputFlags requiredInputs;      // ÇÊ¿äÇÑ ÀÔ·Â (ÀÌ ÀÔ·ÂµéÀÌ ¸ğµÎ ÀÖ¾î¾ß ÇÔ)
-        InputFlags blockedInputs;       // ±İÁöµÈ ÀÔ·Â (ÀÌ ÀÔ·ÂµéÀÌ ÀÖÀ¸¸é ¾ÈµÊ)
-        ConditionFunc condition;        // Ãß°¡ Á¶°Ç ÇÔ¼ö (nullptrÀÌ¸é Ç×»ó true)
-        PLAYER_STATE toState;           // ¸ñÇ¥ »óÅÂ
-        int priority;                   // ¿ì¼±¼øÀ§ (³ôÀ»¼ö·Ï ¸ÕÀú Ã¼Å©)
+        PLAYER_STATE fromState;         // í˜„ì¬ ìƒíƒœ
+        InputFlags requiredInputs;      // í•„ìš”í•œ ì…ë ¥ (ì´ ì…ë ¥ë“¤ì´ ëª¨ë‘ ìˆì–´ì•¼ í•¨)
+        InputFlags blockedInputs;       // ê¸ˆì§€ëœ ì…ë ¥ (ì´ ì…ë ¥ë“¤ì´ ìˆìœ¼ë©´ ì•ˆë¨)
+        ConditionFunc condition;        // ì¶”ê°€ ì¡°ê±´ í•¨ìˆ˜ (nullptrì´ë©´ í•­ìƒ true)
+        PLAYER_STATE toState;           // ëª©í‘œ ìƒíƒœ
+        int priority;                   // ìš°ì„ ìˆœìœ„ (ë†’ì„ìˆ˜ë¡ ë¨¼ì € ì²´í¬)
 
         TransitionRule()
             : fromState(PLAYER_STATE::END)
@@ -45,7 +45,7 @@ public:
     ~CPlayerStateTransitionTable();
 
 public:
-    // === ÀüÈ¯ ±ÔÄ¢ °ü¸® ===
+    // === ì „í™˜ ê·œì¹™ ê´€ë¦¬ ===
     void AddTransition(PLAYER_STATE from, InputFlags inputs, PLAYER_STATE to,
         ConditionFunc condition = nullptr, int priority = 0,
         InputFlags blockedInputs = 0);
@@ -54,30 +54,31 @@ public:
     void ClearAllTransitions();
 
 public:
-    // === »óÅÂ ÀüÈ¯ ·ÎÁ÷ ===
+    // === ìƒíƒœ ì „í™˜ ë¡œì§ ===
     PLAYER_STATE GetNextState(PLAYER_STATE currentState, InputFlags currentInput,
         CPlayer* player);
 
-    // === µğ¹ö±ë/°³¹ß Áö¿ø ===
+    // === ë””ë²„ê¹…/ê°œë°œ ì§€ì› ===
     std::vector<TransitionRule> GetPossibleTransitions(PLAYER_STATE currentState) const;
     bool HasTransition(PLAYER_STATE from, PLAYER_STATE to) const;
     int GetTransitionCount() const { return (int)m_transitions.size(); }
+    const char* PlayerStateToString(PLAYER_STATE state) const;
 
 public:
-    // === ÃÊ±âÈ­ (±âº» ÀüÈ¯ ±ÔÄ¢µé ¼³Á¤) ===
-    void InitializeDefaultTransitions();
+    // === ì´ˆê¸°í™” (ê¸°ë³¸ ì „í™˜ ê·œì¹™ë“¤ ì„¤ì •) ===
+    // InitializeDefaultTransitions ì œê±°ë¨ - CPlayerStateMachineì—ì„œ ê´€ë¦¬
 
 private:
-    // === ³»ºÎ ·ÎÁ÷ ===
+    // === ë‚´ë¶€ ë¡œì§ ===
     bool CheckTransitionCondition(const TransitionRule& rule, InputFlags currentInput,
         CPlayer* player) const;
     void SortTransitionsByPriority();
 
-    // === ÀüÈ¯ ±ÔÄ¢ °ËÁõ ===
+    // === ì „í™˜ ê·œì¹™ ê²€ì¦ ===
     bool IsValidTransitionRule(const TransitionRule& rule) const;
 
 private:
-    // === ¸â¹ö º¯¼ö ===
-    std::vector<TransitionRule> m_transitions;  // ¸ğµç ÀüÈ¯ ±ÔÄ¢µé
-    bool m_bSorted;                             // ¿ì¼±¼øÀ§ Á¤·Ä ¿©ºÎ
+    // === ë©¤ë²„ ë³€ìˆ˜ ===
+    std::vector<TransitionRule> m_transitions;  // ëª¨ë“  ì „í™˜ ê·œì¹™ë“¤
+    bool m_bSorted;                             // ìš°ì„ ìˆœìœ„ ì •ë ¬ ì—¬ë¶€
 };

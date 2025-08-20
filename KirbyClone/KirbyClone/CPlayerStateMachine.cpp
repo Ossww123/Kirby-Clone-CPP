@@ -228,10 +228,10 @@ void CPlayerStateMachine::ExecuteFallState ( )
 
 void CPlayerStateMachine::ExecuteCrouchState ( )
 {
-    // 크라우치 상태에서 감속 처리
+    // 크라우치 상태에서 방향 전환 및 감속 처리
     if ( m_pOwner->GetMovement ( ) )
     {
-        // Movement 시스템에서 크라우치 감속 처리
+        m_pOwner->GetMovement()->HandleCrouchDirectionInput();
     }
 }
 
@@ -259,6 +259,32 @@ void CPlayerStateMachine::ExecuteInhaleState ( )
     // 빨아들이기 상태 타이머 업데이트
     m_fInhaleTimer += CTimeMgr::GetInst ( )->GetfDT ( );
 
+    // X키가 눌려있지 않고, 빨아들려지고 있는 몬스터가 없으면 종료
+    if ( m_pInputManager && !m_pInputManager->IsActionHold ( ) )
+    {
+        // 빨아들이기 시스템에서 현재 빨아들이고 있는 대상이 있는지 확인
+        bool hasInhaleTargets = false;
+        if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
+        {
+            hasInhaleTargets = !m_pOwner->GetInhaleSystem ( )->GetInhaleTargets ( ).empty ( );
+        }
+
+        // 빨아들이고 있는 대상이 없으면 종료
+        if ( !hasInhaleTargets )
+        {
+            // 땅에 있으면 IDLE, 공중이면 FALL1로
+            if ( m_pOwner && m_pOwner->GetRigidBody ( ) && m_pOwner->GetRigidBody ( )->IsGround ( ) )
+            {
+                ChangeStateInternal ( PLAYER_STATE::IDLE );
+            }
+            else
+            {
+                ChangeStateInternal ( PLAYER_STATE::FALL1 );
+            }
+            return;
+        }
+    }
+
     // 빨아들이기 상태 시간 초과시 종료
     if ( m_fInhaleTimer >= m_fInhaleDuration )
     {
@@ -269,15 +295,10 @@ void CPlayerStateMachine::ExecuteInhaleState ( )
 
 void CPlayerStateMachine::ExecuteInhaleSuccessState ( )
 {
-    // 빨아들이기 성공 상태 타이머 업데이트
+    // 타이머 업데이트 (상태 전환 테이블에서 사용)
     m_fInhaleSuccessTimer += CTimeMgr::GetInst ( )->GetfDT ( );
-
-    // 빨아들이기 성공 상태 시간 초과시 종료
-    if ( m_fInhaleSuccessTimer >= m_fInhaleSuccessDuration )
-    {
-        // 입가득한 상태로 전이됨
-        ChangeStateInternal ( PLAYER_STATE::MOUTHFUL_IDLE );
-    }
+    
+    // 전환은 상태 전환 테이블에서 처리됨 (애니메이션 완료 또는 타이머 기반)
 }
 
 void CPlayerStateMachine::ExecuteExhaleState ( )
@@ -429,6 +450,15 @@ void CPlayerStateMachine::ExecuteSlideKickRecoilState ( )
 
 void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
 {
+    // 이전 상태가 INHALE이었다면 빨아들이기 시스템 중지
+    if ( m_ePrevState == PLAYER_STATE::INHALE && _eState != PLAYER_STATE::INHALE )
+    {
+        if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
+        {
+            m_pOwner->GetInhaleSystem ( )->StopInhale ( );
+        }
+    }
+
     switch ( _eState )
     {
     case PLAYER_STATE::JUMP:
@@ -625,15 +655,31 @@ void CPlayerStateMachine::InitializeTransitionTable ( )
 void CPlayerStateMachine::AddBasicMovementTransitions ( )
 {
     using INPUT = CPlayerInputManager::INPUT_TYPE;
+    
+    // 공통 조건 함수들
+    auto IsGrounded = [] ( CPlayer* p ) {
+        return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+    };
+    
+    auto IsStoppedCompletely = [] ( CPlayer* p ) {
+        if ( !p->GetMovement ( ) ) return false;
+        CPlayerInputManager* pInputMgr = p->GetStateMachine ( )->GetInputManager ( );
+        if ( !pInputMgr ) return false;
+        
+        bool hasLeftInput = pInputMgr->IsMovingLeft ( );
+        bool hasRightInput = pInputMgr->IsMovingRight ( );
+        bool isMoving = p->GetMovement ( )->IsActuallyMoving ( );
+        bool isDecelerating = p->GetMovement ( )->IsDecelerating ( );
+        
+        return !hasLeftInput && !hasRightInput && !isMoving && !isDecelerating;
+    };
 
     // IDLE <-> WALK 전환
     m_pTransitionTable->AddTransition (
         PLAYER_STATE::IDLE ,
         ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT ,
         PLAYER_STATE::WALK ,
-        [ ] ( CPlayer* p ) {
-            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
-        } ,
+        IsGrounded ,
         100
     );
 
@@ -641,19 +687,7 @@ void CPlayerStateMachine::AddBasicMovementTransitions ( )
         PLAYER_STATE::WALK ,
         0 ,
         PLAYER_STATE::IDLE ,
-        [ ] ( CPlayer* p ) {
-            if ( !p->GetMovement ( ) ) return false;
-
-            CPlayerInputManager* pInputMgr = p->GetStateMachine ( )->GetInputManager ( );
-            if ( !pInputMgr ) return false;
-
-            bool hasLeftInput = pInputMgr->IsMovingLeft ( );
-            bool hasRightInput = pInputMgr->IsMovingRight ( );
-            bool isMoving = p->GetMovement ( )->IsActuallyMoving ( );
-            bool isDecelerating = p->GetMovement ( )->IsDecelerating ( );
-
-            return !hasLeftInput && !hasRightInput && !isMoving && !isDecelerating;
-        } ,
+        IsStoppedCompletely ,
         50 ,
         ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT
     );
@@ -663,7 +697,7 @@ void CPlayerStateMachine::AddBasicMovementTransitions ( )
         PLAYER_STATE::WALK ,
         ( uint32_t ) INPUT::DOUBLE_TAP_LEFT | ( uint32_t ) INPUT::DOUBLE_TAP_RIGHT ,
         PLAYER_STATE::RUN ,
-        [ ] ( CPlayer* p ) { return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ); } ,
+        IsGrounded ,
         150
     );
 
@@ -696,6 +730,11 @@ void CPlayerStateMachine::AddBasicMovementTransitions ( )
 void CPlayerStateMachine::AddJumpAndFallTransitions ( )
 {
     using INPUT = CPlayerInputManager::INPUT_TYPE;
+    
+    // 공통 조건 함수들
+    auto IsGrounded = [] ( CPlayer* p ) {
+        return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+    };
 
     // 점프 시작
     std::vector<PLAYER_STATE> jumpableStates = {
@@ -708,7 +747,7 @@ void CPlayerStateMachine::AddJumpAndFallTransitions ( )
             state ,
             ( uint32_t ) INPUT::JUMP_TAP ,
             PLAYER_STATE::JUMP ,
-            [ ] ( CPlayer* p ) { return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ); } ,
+            IsGrounded ,
             200
         );
     }
@@ -962,14 +1001,21 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
         250
     );
 
-    // INHALE_SUCCESS -> MOUTHFUL_IDLE (자동 전환)
+    // INHALE_SUCCESS -> MOUTHFUL_IDLE (애니메이션 완료 시 자동 전환)
     m_pTransitionTable->AddTransition (
         PLAYER_STATE::INHALE_SUCCESS ,
         0 ,
         PLAYER_STATE::MOUTHFUL_IDLE ,
         [ this ] ( CPlayer* p ) {
-            // 시간 경과시 자동 전환
-            return m_fInhaleSuccessTimer >= m_fInhaleSuccessDuration;
+            // 애니메이션이 끝났거나 시간 경과시 자동 전환
+            CAnimator* pAnimator = p->GetAnimator();
+            bool bAnimFinished = false;
+            if (pAnimator && pAnimator->GetCurAnim())
+            {
+                bAnimFinished = pAnimator->GetCurAnim()->IsFinish();
+            }
+            bool bTimeElapsed = m_fInhaleSuccessTimer >= m_fInhaleSuccessDuration;
+            return bAnimFinished || bTimeElapsed;
         } ,
         400
     );

@@ -149,6 +149,10 @@ void CMonster::OnCollisionExit(CCollider* _pOther)
 
 void CMonster::HandleTileCollision(CObject* _pTile)
 {
+    // 빨아들려지는 중에는 타일 충돌 무시
+    if (m_eCurState == MONSTER_STATE::BEING_INHALED)
+        return;
+
     CTile* pTile = dynamic_cast<CTile*>(_pTile);
     if (!pTile)  // IsSolid() 체크 제거
         return;
@@ -217,7 +221,7 @@ void CMonster::ChangeState(MONSTER_STATE _eState)
         if (iter != m_mapStateToAnimation.end())
         {
             const wstring& animName = iter->second;
-            bool bLoop = (_eState != MONSTER_STATE::DAMAGE); // DAMAGE는 반복 안함
+            bool bLoop = (_eState != MONSTER_STATE::DAMAGE); // DAMAGE만 반복 안함, BEING_INHALED는 반복
             pAnimator->Play(animName, bLoop);
         }
         else
@@ -236,6 +240,9 @@ void CMonster::ChangeState(MONSTER_STATE _eState)
                 break;
             case MONSTER_STATE::DAMAGE:
                 pAnimator->Play(L"DAMAGE", false);
+                break;
+            case MONSTER_STATE::BEING_INHALED:
+                pAnimator->Play(L"DAMAGE", true);  // 빨아들어지는 동안 계속 재생
                 break;
             default:
                 pAnimator->Play(L"IDLE", true);
@@ -303,6 +310,9 @@ void CMonster::UpdateState()
         break;
     case MONSTER_STATE::DAMAGE:
         UpdateDamage();
+        break;
+    case MONSTER_STATE::BEING_INHALED:
+        UpdateBeingInhaled();
         break;
     case MONSTER_STATE::ATTACK_READY:
         UpdateAttackReady();
@@ -379,6 +389,13 @@ void CMonster::UpdateDamage()
     {
         GetRigidBody()->SetVelocityX(0.f);
     }
+}
+
+void CMonster::UpdateBeingInhaled()
+{
+    // 빨아들려지는 중에는 일반 AI 정지
+    // 물리 이동은 CPlayerInhaleSystem에서 처리됨
+    // 타일 충돌과 데미지는 자식 클래스에서 처리
 }
 
 void CMonster::UpdateAttackReady()

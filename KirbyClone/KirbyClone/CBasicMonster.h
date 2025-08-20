@@ -32,6 +32,7 @@ protected:
     void UpdateWalk() override;
     void UpdateFly() override;          // 비행 상태도 추가
     void UpdateTurn() override;
+    void UpdateBeingInhaled() override; // 빨아들려지는 상태 처리
 
 public:
     // === 감지 관련 Getter/Setter ===

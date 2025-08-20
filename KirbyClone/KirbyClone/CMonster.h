@@ -76,6 +76,7 @@ protected:
     virtual void UpdateFly();
     virtual void UpdateTurn();
     virtual void UpdateDamage();
+    virtual void UpdateBeingInhaled();
     virtual void UpdateAttackReady();
     virtual void UpdateAttack();
 

@@ -6,6 +6,7 @@
 #include "CSceneMgr.h"
 #include "CScene.h"
 #include "CPlayer.h"
+#include "CPlayerInhaleSystem.h"
 
 CBasicMonster::CBasicMonster()
     : CMonster()
@@ -31,8 +32,20 @@ CBasicMonster::~CBasicMonster()
 
 void CBasicMonster::OnInhaled()
 {
-    // 몬스터 제거
-    SetDead();
+    // 플레이어의 InhaleSystem에게 삼키기 요청
+    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+    if (pCurScene)
+    {
+        const vector<CObject*>& vecPlayers = pCurScene->GetGroupObject(GROUP_TYPE::PLAYER);
+        if (!vecPlayers.empty())
+        {
+            CPlayer* pPlayer = (CPlayer*)vecPlayers[0];
+            if (pPlayer && pPlayer->GetInhaleSystem())
+            {
+                pPlayer->GetInhaleSystem()->SwallowTarget(this);
+            }
+        }
+    }
 
     // TODO: 이펙트 생성
     // TODO: 사운드 재생
@@ -44,9 +57,9 @@ void CBasicMonster::OnInhaleStart()
     m_bBeingInhaled = true;
 
     // 빨아들임 중에는 일반 AI 정지
-    if (GetCurrentState() != MONSTER_STATE::DAMAGE)
+    if (GetCurrentState() != MONSTER_STATE::BEING_INHALED)
     {
-        ChangeState(MONSTER_STATE::DAMAGE);  // 임시로 damage 상태 사용
+        ChangeState(MONSTER_STATE::BEING_INHALED);  // 빨아들려지는 상태로 전환
     }
 }
 
@@ -159,24 +172,8 @@ void CBasicMonster::UpdateTurn()
 
 void CBasicMonster::ProcessInhaleMovement()
 {
-    // 플레이어 쪽으로 끌려가는 이동 처리
-    Vec2 vCurrentPos = GetPos();
-    Vec2 vDirection = m_vPlayerPos - vCurrentPos;
-
-    if (vDirection.Length() > 0.1f)
-    {
-        vDirection.Normalize();
-
-        // 빨아들임 힘 적용
-        m_fInhaleForce += 100.f * CTimeMgr::GetInst()->GetfDT();  // 점점 강해짐
-        float fMoveSpeed = m_fInhaleForce;
-
-        // 리지드바디를 통한 이동
-        if (nullptr != GetRigidBody())
-        {
-            GetRigidBody()->SetVelocity(vDirection * fMoveSpeed);
-        }
-    }
+    // CPlayerInhaleSystem에서 이동을 담당하므로 여기서는 처리하지 않음
+    // 단지 플레이어 위치만 업데이트
 }
 
 void CBasicMonster::CheckInhaleDistance()
@@ -258,5 +255,17 @@ void CBasicMonster::UpdateDeathEffect()
     if (m_fDeathEffectTimer >= 0.3f)
     {
         SetDead();
+    }
+}
+
+void CBasicMonster::UpdateBeingInhaled()
+{
+    // 빨아들려지는 중에는 일반 AI 완전 정지
+    // 물리 이동은 CPlayerInhaleSystem에서 처리됨
+    
+    // 타일과의 충돌 비활성화 및 중력 비활성화
+    if (GetRigidBody())
+    {
+        GetRigidBody()->SetUseGravity(false);  // 빨아들려지는 중에는 중력 비활성화
     }
 }

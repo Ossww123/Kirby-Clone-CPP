@@ -50,12 +50,6 @@ void CPlayerInhaleSystem::StartInhale()
     m_bInhaling = true;
     m_fInhaleTime = 0.f;
     m_vecInhaleTargets.clear();
-
-    // 상태 머신을 통한 상태 변경 - 이벤트 기반
-    if (m_pOwner)
-    {
-        //m_pOwner->ChangeState(PLAYER_STATE::INHALE_READY);
-    }
 }
 
 void CPlayerInhaleSystem::UpdateInhale()
@@ -159,12 +153,6 @@ void CPlayerInhaleSystem::SwallowTarget(CObject* _pTarget)
     if (_pTarget->IsDead())
         return;
 
-    // 삼키기 상태로 전환
-    if (m_pOwner)
-    {
-        //m_pOwner->ChangeState(PLAYER_STATE::SWALLOW);
-    }
-
     // 물고 있는 상태로 설정
     m_bHasMouthful = true;
     m_pMouthfulTarget = _pTarget;
@@ -173,7 +161,40 @@ void CPlayerInhaleSystem::SwallowTarget(CObject* _pTarget)
     // 오브젝트를 Dead 상태로 설정 (오브젝트 풀 시스템)
     _pTarget->SetDead();
 
-    // 빨아들이기 중지
+    // StateMachine에 빨아들이기 성공 알림 (InhaleCount 설정)
+    if (m_pOwner && m_pOwner->GetStateMachine())
+    {
+        // 빨아들인 개수 설정 (상태 전환 테이블이 이를 감지해서 INHALE_SUCCESS로 전환)
+        m_pOwner->GetStateMachine()->SetInhaleCount(INHALE_COUNT::ONE);
+        
+        // 카피 능력 확인 및 설정
+        CMonster* pMonster = dynamic_cast<CMonster*>(_pTarget);
+        if (pMonster)
+        {
+            OBJECT_TYPE monsterType = pMonster->GetType();
+            COPY_ABILITY ability = COPY_ABILITY::NONE;
+            
+            switch (monsterType)
+            {
+            case OBJECT_TYPE::MONSTER_HOT_HEAD:
+                ability = COPY_ABILITY::FIRE;
+                break;
+            case OBJECT_TYPE::MONSTER_WADDLE_DOO:
+                ability = COPY_ABILITY::BEAM;
+                break;
+            case OBJECT_TYPE::MONSTER_SPARKY:
+                ability = COPY_ABILITY::SPARK;
+                break;
+            default:
+                ability = COPY_ABILITY::NONE;
+                break;
+            }
+            
+            m_pOwner->GetStateMachine()->SetCopyAbility(ability);
+        }
+    }
+
+    // 빨아들이기 중지 (시스템 정리)
     StopInhale();
 }
 
@@ -287,65 +308,23 @@ void CPlayerInhaleSystem::ApplyInhaleForce(CObject* _pTarget)
     if (fDistance < 0.1f)
         return;
 
-    // 몬스터를 플레이어 쪽으로 끌어당기는 힘
+    // 몬스터를 플레이어 쪽으로 끌어당기는 힘 (속도 증가)
     Vec2 vToTarget = vDiff.GetNormalized();
     Vec2 vPullDirection = -vToTarget; // 플레이어 쪽으로
-    Vec2 vForce = vPullDirection * 200.f;
+    Vec2 vForce = vPullDirection * 600.f; // 200.f -> 600.f로 증가
 
     // 몬스터의 RigidBody에 힘 적용 (RigidBody가 있다면)
     CRigidBody* pTargetRigidBody = _pTarget->GetRigidBody();
     if (pTargetRigidBody)
     {
-        // 현재 속도에 끌어당기는 힘 추가
-        Vec2 vCurrentVel = pTargetRigidBody->GetVelocity();
-        Vec2 vNewVel = vCurrentVel + vForce * CTimeMgr::GetInst()->GetfDT();
-        pTargetRigidBody->SetVelocity(vNewVel);
+        // 직접 속도 설정 (더 확실한 제어)
+        pTargetRigidBody->SetVelocity(vForce);
     }
 
     // 매우 가까워지면 빨아들이기 성공
     if (fDistance < 30.f)
     {
         SwallowTarget(_pTarget);
-        
-        // StateMachine에 빨아들이기 성공 알림
-        if (m_pOwner && m_pOwner->GetStateMachine())
-        {
-            // 빨아들인 개수 업데이트
-            if (m_vecInhaleTargets.size() == 1)
-            {
-                m_pOwner->GetStateMachine()->SetInhaleCount(INHALE_COUNT::ONE);
-            }
-            else if (m_vecInhaleTargets.size() >= 2)
-            {
-                m_pOwner->GetStateMachine()->SetInhaleCount(INHALE_COUNT::MULTIPLE);
-            }
-            
-            // 카피 능력 확인 및 설정
-            CMonster* pMonster = dynamic_cast<CMonster*>(_pTarget);
-            if (pMonster)
-            {
-                OBJECT_TYPE monsterType = pMonster->GetType();
-                COPY_ABILITY ability = COPY_ABILITY::NONE;
-                
-                switch (monsterType)
-                {
-                case OBJECT_TYPE::MONSTER_HOT_HEAD:
-                    ability = COPY_ABILITY::FIRE;
-                    break;
-                case OBJECT_TYPE::MONSTER_WADDLE_DOO:
-                    ability = COPY_ABILITY::BEAM;
-                    break;
-                case OBJECT_TYPE::MONSTER_SPARKY:
-                    ability = COPY_ABILITY::SPARK;
-                    break;
-                default:
-                    ability = COPY_ABILITY::NONE;
-                    break;
-                }
-                
-                m_pOwner->GetStateMachine()->SetCopyAbility(ability);
-            }
-        }
     }
 }
 
