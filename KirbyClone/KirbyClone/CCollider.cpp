@@ -6,7 +6,7 @@
 
 UINT CCollider::g_iNextID = 0;
 
-// === »ı¼ºÀÚ & ¼Ò¸êÀÚ ===
+// === ìƒì„±ì & ì†Œë©¸ì ===
 CCollider::CCollider()
     : m_pOwner(nullptr)
     , m_vOffsetPos{}
@@ -19,33 +19,34 @@ CCollider::~CCollider()
 {
 }
 
-// === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+// === ìµœì¢… ì—…ë°ì´íŠ¸ í•¨ìˆ˜ë“¤ ===
 void CCollider::FinalUpdate()
 {
-    // Ãæµ¹Ã¼ÀÇ À§Ä¡¸¦ µû¶ó°¨
+    // ì¶©ëŒì²´ì˜ ìœ„ì¹˜ ê³„ì‚°
 }
 
 void CCollider::Render(HDC _dc)
 {
-    // ¿ùµå ÁÂÇ¥¸¦ Ä«¸Ş¶ó ÁÂÇ¥·Î º¯È¯
+    return; // ì¶©ëŒì²´ ë Œë”ë§ ë¹„í™œì„±í™”
+    // ì›”ë“œ ì¢Œí‘œë¥¼ ì¹´ë©”ë¼ ì¢Œí‘œë¡œ ë³€í™˜
     Vec2 vPos = GetFinalPos();
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
 
-    // Ãæµ¹Ã¼ ½Ã°¢È­ (Åõ¸íÃ¼Å©¿ë)
+    // ì¶©ëŒì²´ ì‹œê°í™” (ì†ì´ ë¹„ì–´ìˆëŠ” ì‚¬ê°í˜•)
     HBRUSH hBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
 
-    // Ãæµ¹Ã¼ Ææ
+    // ì¶©ëŒì²´ ì„ 
     HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
-    // »ç°¢Çü ·»´õ¸µ
+    // ì‚¬ê°í˜• ê·¸ë¦¬ê¸°
     Rectangle(_dc, int(vRenderPos.x - m_vScale.x / 2.f)
         , int(vRenderPos.y - m_vScale.y / 2.f)
         , int(vRenderPos.x + m_vScale.x / 2.f)
         , int(vRenderPos.y + m_vScale.y / 2.f));
 
-    // ¸®¼Ò½º Á¤¸®
+    // ë¦¬ì†ŒìŠ¤ ì •ë¦¬
     SelectObject(_dc, hOldBrush);
     SelectObject(_dc, hOldPen);
     DeleteObject(hPen);
@@ -53,45 +54,45 @@ void CCollider::Render(HDC _dc)
 
 void CCollider::RenderScaled(HDC _dc, float _fScale)
 {
-    // µğ¹ö±× ¸ğµå¿¡¼­¸¸ Ãæµ¹Ã¼ Ç¥½Ã
+    // ì—ë””í„° ëª¨ë“œì—ì„œì˜ ì¶©ëŒì²´ í‘œì‹œ
     if (!KEY_HOLD(KEY::TAB))
         return;
 
-    // ·»´õ¸µ À§Ä¡ °è»ê
+    // ë Œë”ë§ ìœ„ì¹˜ ê³„ì‚°
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetFinalPos());
     Vec2 vScaledSize = m_vScale * _fScale;
 
-    // ·»´õ¸µ µµ±¸ ¼³Á¤
+    // ì—ë””í„° ì „ìš© ìƒ‰ìƒ
     HPEN hRedPen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hRedPen);
     HBRUSH myBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, myBrush);
 
-    // ½ºÄÉÀÏÀÌ Àû¿ëµÈ Ãæµ¹Ã¼ »ç°¢Çü ±×¸®±â
+    // ìŠ¤ì¼€ì¼ë§ì´ ì ìš©ëœ ì¶©ëŒì²´ ì‚¬ê°í˜• ê·¸ë¦¬ê¸°
     Rectangle(_dc,
         (int)(vRenderPos.x - vScaledSize.x / 2.f),
         (int)(vRenderPos.y - vScaledSize.y / 2.f),
         (int)(vRenderPos.x + vScaledSize.x / 2.f),
         (int)(vRenderPos.y + vScaledSize.y / 2.f));
 
-    // ¸®¼Ò½º Á¤¸®
+    // ë¦¬ì†ŒìŠ¤ ì •ë¦¬
     SelectObject(_dc, hOldPen);
     SelectObject(_dc, hOldBrush);
     DeleteObject(hRedPen);
 }
 
-// === Ãæµ¹ °Ë»ç ===
+// === ì¶©ëŒ ê²€ì‚¬ ===
 bool CCollider::IsCollision(CCollider* _pOther)
 {
-    // À§Ä¡ Á¤º¸ °è»ê
+    // ìœ„ì¹˜ ì •ë³´ ê³„ì‚°
     Vec2 vPos = GetFinalPos();
     Vec2 vOtherPos = _pOther->GetFinalPos();
 
-    // Å©±â Á¤º¸ °è»ê
+    // í¬ê¸° ì •ë³´ ê³„ì‚°
     Vec2 vScale = GetScale();
     Vec2 vOtherScale = _pOther->GetScale();
 
-    // AABB Ãæµ¹ °Ë»ç - µÎ »ç°¢ÇüÀÌ °ãÄ¡´ÂÁö °Ë»ç
+    // AABB ì¶©ëŒ ê²€ì‚¬ - ë‘ ì‚¬ê°í˜•ì˜ ê²¹ì¹¨ì—¬ë¶€ ê²€ì‚¬
     if (abs(vPos.x - vOtherPos.x) < (vScale.x + vOtherScale.x) / 2.f &&
         abs(vPos.y - vOtherPos.y) < (vScale.y + vOtherScale.y) / 2.f)
     {
@@ -101,50 +102,50 @@ bool CCollider::IsCollision(CCollider* _pOther)
     return false;
 }
 
-// === Ãæµ¹ ÀÌº¥Æ® Ã³¸® ===
+// === ì¶©ëŒ ì´ë²¤íŠ¸ ì²˜ë¦¬ ===
 void CCollider::OnCollisionEnter(CCollider* _pOther)
 {
-    // ¼ÒÀ¯ÀÚ¿¡°Ô Ãæµ¹ ½ÃÀÛ ÀÌº¥Æ® Àü´Ş
+    // ì†Œìœ ìì—ê²Œ ì¶©ëŒ ì‹œì‘ ì´ë²¤íŠ¸ ì „ë‹¬
     m_pOwner->OnCollisionEnter(_pOther);
 }
 
 void CCollider::OnCollision(CCollider* _pOther)
 {
-    // ¼ÒÀ¯ÀÚ¿¡°Ô Ãæµ¹ Áß ÀÌº¥Æ® Àü´Ş
+    // ì†Œìœ ìì—ê²Œ ì¶©ëŒ ì¤‘ ì´ë²¤íŠ¸ ì „ë‹¬
     m_pOwner->OnCollision(_pOther);
 }
 
 void CCollider::OnCollisionExit(CCollider* _pOther)
 {
-    // ¼ÒÀ¯ÀÚ¿¡°Ô Ãæµ¹ Á¾·á ÀÌº¥Æ® Àü´Ş
+    // ì†Œìœ ìì—ê²Œ ì¶©ëŒ ì¢…ë£Œ ì´ë²¤íŠ¸ ì „ë‹¬
     m_pOwner->OnCollisionExit(_pOther);
 }
 
-// === À§Ä¡ ¹× Å©±â °ü¸® ===
+// === ìœ„ì¹˜ ë° í¬ê¸° ê³„ì‚° ===
 Vec2 CCollider::GetFinalPos()
 {
-    // ¿ÀºêÁ§Æ® À§Ä¡¿¡ ¿ÀÇÁ¼Â Àû¿ë
+    // ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ì— ì˜¤í”„ì…‹ ë”í•˜ê¸°
     Vec2 vObjectPos = m_pOwner->GetPos();
     return vObjectPos + m_vOffsetPos;
 }
 
-// === Ãæµ¹ ¸ñ·Ï °ü¸® ===
+// === ì¶©ëŒ ëª©ë¡ ê´€ë¦¬ ===
 void CCollider::AddCollidingCollider(CCollider* _pOther)
 {
-    // ÀÌ¹Ì ¸ñ·Ï¿¡ ÀÖ´ÂÁö È®ÀÎ
+    // ì´ë¯¸ ëª©ë¡ì— ìˆëŠ”ì§€ í™•ì¸
     for (CCollider* pCollider : m_vecCollidingColliders)
     {
         if (pCollider == _pOther)
-            return; // ÀÌ¹Ì Á¸ÀçÇÔ
+            return; // ì´ë¯¸ ì¡´ì¬í•¨
     }
 
-    // ¸ñ·Ï¿¡ Ãß°¡
+    // ëª©ë¡ì— ì¶”ê°€
     m_vecCollidingColliders.push_back(_pOther);
 }
 
 void CCollider::RemoveCollidingCollider(CCollider* _pOther)
 {
-    // º¤ÅÍ¿¡¼­ ÇØ´ç Äİ¶óÀÌ´õ Á¦°Å
+    // ëª©ë¡ì—ì„œ í•´ë‹¹ ì½œë¼ì´ë” ì œê±°
     auto iter = std::find(m_vecCollidingColliders.begin(), m_vecCollidingColliders.end(), _pOther);
     if (iter != m_vecCollidingColliders.end())
     {
@@ -154,7 +155,7 @@ void CCollider::RemoveCollidingCollider(CCollider* _pOther)
 
 bool CCollider::IsCollidingWith(CCollider* _pOther) const
 {
-    // ÇöÀç Ãæµ¹ ÁßÀÎÁö È®ÀÎ
+    // í˜„ì¬ ì¶©ëŒ ì¤‘ì¸ì§€ í™•ì¸
     for (CCollider* pCollider : m_vecCollidingColliders)
     {
         if (pCollider == _pOther)

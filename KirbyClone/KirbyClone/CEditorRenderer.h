@@ -3,6 +3,7 @@
 class CEditorCore;
 class CAnimation;
 class CObject;
+class CMonster;
 
 class CEditorRenderer
 {
@@ -10,36 +11,37 @@ private:
     CEditorCore* m_pEditorCore;
 
 public:
-    void Initialize(CEditorCore* _pCore);
-    void Render(HDC _dc);
+    void Initialize ( CEditorCore* _pCore );
+    void Render ( HDC _dc );
 
-    // ∆Øºˆ ∑ª¥ı∏µ ±‚¥…µÈ
-    void RenderMouse(HDC _dc);
-    void RenderPreview(HDC _dc);
-    void RenderSelectedObject(HDC _dc);
-    void RenderPlayerSpawnPoint(HDC _dc);
+    // ÌäπÏ†ï ÏöîÏÜåÎ≥Ñ Î†åÎçîÎßÅ
+    void RenderMouse ( HDC _dc );
+    void RenderPreview ( HDC _dc );
+    void RenderSelectedObject ( HDC _dc );
+    void RenderPlayerSpawnPoint ( HDC _dc );
+    void RenderMonsterDirectionArrow ( HDC _dc , CMonster* _pMonster );
 
 private:
-    // ∑ª¥ı∏µ ¿Ø∆ø∏Æ∆º
-    void RenderMouseCursor(HDC _dc, Vec2 vRenderPos, COLORREF color);
-    void RenderPreviewObject(HDC _dc, Vec2 vRenderPos, Vec2 vObjectSize, COLORREF color);
-    void RenderDeletePreview(HDC _dc, CObject* pTargetObj);
-    void RenderSelectionBox(HDC _dc, CObject* pObj);
-    void RenderGridPreview(HDC _dc, Vec2 vRenderPos);
-    void RenderGameOverLine(HDC _dc);
-    void RenderLeftBoundaryLine(HDC _dc);
+    // Î†åÎçîÎßÅ Ïú†Ìã∏Î¶¨Ìã∞
+    void RenderMouseCursor ( HDC _dc , Vec2 vRenderPos , COLORREF color );
+    void RenderPreviewObject ( HDC _dc , Vec2 vRenderPos , Vec2 vObjectSize , COLORREF color );
+    void RenderDeletePreview ( HDC _dc , CObject* pTargetObj );
+    void RenderSelectionBox ( HDC _dc , CObject* pObj );
+    void RenderGridPreview ( HDC _dc , Vec2 vRenderPos );
+    void RenderGameOverLine ( HDC _dc );
+    void RenderLeftBoundaryLine ( HDC _dc );
 
-    // ªˆªÛ ∞·¡§
-    COLORREF GetModeColor();
-    COLORREF GetPreviewColor();
+    // ÏÉâÏÉÅ Í¥ÄÎ¶¨
+    COLORREF GetModeColor ( );
+    COLORREF GetPreviewColor ( );
 
-    // ±◊∏Æ±‚ «Ô∆€ «‘ºˆµÈ
-    void DrawCross(HDC _dc, Vec2 vPos, int size, COLORREF color, int thickness = 2);
-    void DrawX(HDC _dc, Vec2 vPos, int size, COLORREF color, int thickness = 3);
-    void DrawDottedRectangle(HDC _dc, Vec2 vPos, Vec2 vSize, COLORREF color);
-    void DrawTextWithBackground(HDC _dc, Vec2 vPos, const wchar_t* text, COLORREF textColor, COLORREF bgColor = RGB(0, 0, 0));
+    // Í∑∏Î¶¨Í∏∞ Î≥¥Ï°∞ Ìï®ÏàòÎì§
+    void DrawCross ( HDC _dc , Vec2 vPos , int size , COLORREF color , int thickness = 2 );
+    void DrawX ( HDC _dc , Vec2 vPos , int size , COLORREF color , int thickness = 3 );
+    void DrawDottedRectangle ( HDC _dc , Vec2 vPos , Vec2 vSize , COLORREF color );
+    void DrawTextWithBackground ( HDC _dc , Vec2 vPos , const wchar_t* text , COLORREF textColor , COLORREF bgColor = RGB ( 0 , 0 , 0 ) );
 
 public:
-    CEditorRenderer();
-    ~CEditorRenderer();
+    CEditorRenderer ( );
+    ~CEditorRenderer ( );
 };

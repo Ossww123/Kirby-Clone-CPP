@@ -6,264 +6,280 @@
 #include "CSceneMgr.h"
 #include "CScene_Tool.h"
 
-CTile::CTile()
-    : m_eTileType(OBJECT_TYPE::TILE_GROUND)
-    , m_eCollisionType(COLLISION_TYPE::SOLID_GROUND)
-    , m_bSolid(true)
-    , m_bHarmful(false)
-    , m_bOneWay(false)
-    , m_displayColor(RGB(0, 0, 255))
-    , m_eVisualType(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK)
-    , m_pTileTexture(nullptr)
+CTile::CTile ( )
+    : m_eTileType ( OBJECT_TYPE::TILE_GROUND )
+    , m_eCollisionType ( COLLISION_TYPE::SOLID_GROUND )
+    , m_bSolid ( true )
+    , m_bHarmful ( false )
+    , m_bOneWay ( false )
+    , m_displayColor ( RGB ( 0 , 0 , 255 ) )
+    , m_eVisualType ( TILE_VISUAL_TYPE::TRANSPARENT_BLOCK )
+    , m_pTileTexture ( nullptr )
+    , m_vBossLockPos ( Vec2 ( 0.f , 0.f ) )
+    , m_bTriggerActive ( true )
 {
-    // ±âº» Ãæµ¹Ã¼ Å¸ÀÔ ¼³Á¤
-    SetCollisionType(COLLISION_TYPE::SOLID_GROUND);
+    // ê¸°ë³¸ ì¶©ëŒì²´ íƒ€ì… ì„¤ì •
+    SetCollisionType ( COLLISION_TYPE::SOLID_GROUND );
 }
 
-CTile::~CTile()
+CTile::~CTile ( )
 {
-    // ÅØ½ºÃ³´Â »ç¿ëÇÏÁö ¾ÊÀ¸¹Ç·Î Á¤¸®ÇÒ °Í ¾øÀ½
+    // í…ìŠ¤ì²˜ëŠ” ë§¤ë‹ˆì €ê°€ ê´€ë¦¬í•˜ë¯€ë¡œ ì‚­ì œí•  í•„ìš” ì—†ìŒ
     m_pTileTexture = nullptr;
 }
 
-void CTile::Update()
+void CTile::Update ( )
 {
-    // Ãæµ¹Ã¼ Àü¿ëÀÌ¹Ç·Î Æ¯º°ÇÑ ¾÷µ¥ÀÌÆ® ·ÎÁ÷ ¾øÀ½
-    // ÇÊ¿ä½Ã ¿òÁ÷ÀÌ´Â ÇÃ·§Æû µîÀÇ ·ÎÁ÷À» ¿©±â¿¡ Ãß°¡ °¡´É
+    // ì¶©ëŒì²´ ì „ìš©ì´ë¯€ë¡œ íŠ¹ë³„í•œ ì—…ë°ì´íŠ¸ ë¡œì§ ì—†ìŒ
+    // í•„ìš”í•œ ê²½ìš°ì—ëŠ” í”Œë«í¼ ì´ë™ ë¡œì§ì„ ì—¬ê¸°ì— ì¶”ê°€ ê°€ëŠ¥
 
-    if (m_eCollisionType == COLLISION_TYPE::MOVING_PLATFORM)
+    if ( m_eCollisionType == COLLISION_TYPE::MOVING_PLATFORM )
     {
-        // TODO: ¿òÁ÷ÀÌ´Â ÇÃ·§Æû ·ÎÁ÷
+        // TODO: ì›€ì§ì´ëŠ” í”Œë«í¼ êµ¬í˜„
     }
 }
 
-void CTile::Render(HDC _dc)
+void CTile::Render ( HDC _dc )
 {
-    // Å¸ÀÏ Å¸ÀÔº° ¸ŞÀÎ ·»´õ¸µ
-    switch (m_eVisualType)
+    // ë””ë²„ê·¸ ì‹œê° ìš”ì†Œê°€ ì¼œì ¸ ìˆì„ ë•Œë§Œ íˆ¬ëª… íƒ€ì¼ê³¼ íŠ¸ë¦¬ê±° ë°•ìŠ¤ ë Œë”ë§
+    if ( CCore::IsDebugVisualsVisible ( ) )
     {
-    case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK:
-        RenderTransparentBlock(_dc);
-        break;
-    // ÇâÈÄ Ãß°¡µÉ Å¸ÀÏµé
-    // case TILE_VISUAL_TYPE::GRASS_PLATFORM:
-    //     RenderGrassPlatform(_dc);
-    //     break;
-    default:
-        // ¾Ë ¼ö ¾ø´Â Å¸ÀÏ Å¸ÀÔÀº ±âº» Åõ¸í ºí·ÏÀ¸·Î ·»´õ¸µ
-        RenderTransparentBlock(_dc);
-        break;
-    }
+        // íƒ€ì¼ íƒ€ì…ë³„ ë Œë”ë§ ì²˜ë¦¬
+        switch ( m_eVisualType )
+        {
+        case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK:
+            RenderTransparentBlock ( _dc );
+            break;
+        case TILE_VISUAL_TYPE::BOSS_TRIGGER:
+            RenderTriggerTile ( _dc );
+            break;
+            // í–¥í›„ ì¶”ê°€ë  íƒ€ì¼ë“¤
+            // case TILE_VISUAL_TYPE::GRASS_PLATFORM:
+            //     RenderGrassPlatform(_dc);
+            //     break;
+        default:
+            // ì•Œ ìˆ˜ ì—†ëŠ” íƒ€ì¼ íƒ€ì…ì€ ê¸°ë³¸ ìƒ‰ìƒ ë¸”ë¡ìœ¼ë¡œ ë Œë”ë§
+            RenderTransparentBlock ( _dc );
+            break;
+        }
 
-    // °øÅë ·»´õ¸µ ¿ä¼Òµé
-    RenderCommonElements(_dc);
+        // ê³µí†µ ë Œë”ë§ ìš”ì†Œë“¤
+        RenderCommonElements ( _dc );
+    }
 }
 
-void CTile::SetCollisionType(COLLISION_TYPE _eType)
+void CTile::SetCollisionType ( COLLISION_TYPE _eType )
 {
-    // Ãæµ¹ Å¸ÀÔ ¼³Á¤
+    // ì¶©ëŒ íƒ€ì… ì„¤ì •
     m_eCollisionType = _eType;
 
-    // ±âº» ¼Ó¼º ¾÷µ¥ÀÌÆ®
-    SetupCollisionDefaults(_eType);
-    UpdateCollisionProperties();
+    // ê¸°ë³¸ ì†ì„± ì—…ë°ì´íŠ¸
+    SetupCollisionDefaults ( _eType );
+    UpdateCollisionProperties ( );
 }
 
-void CTile::SetupCollisionDefaults(COLLISION_TYPE _eType)
+void CTile::SetupCollisionDefaults ( COLLISION_TYPE _eType )
 {
-    // Ãæµ¹Ã¼ Å¸ÀÔº° ±âº» ¼Ó¼º ¹× »ö±ò ¼³Á¤
-    switch (_eType)
+    // ì¶©ëŒì²´ íƒ€ì…ë³„ ê¸°ë³¸ ì†ì„± ë° ìƒ‰ìƒ ì„¤ì •
+    switch ( _eType )
     {
     case COLLISION_TYPE::SOLID_GROUND:
         m_bSolid = true;
         m_bHarmful = false;
         m_bOneWay = false;
-        m_displayColor = RGB(0, 0, 255);        // ÆÄ¶õ»ö
+        m_displayColor = RGB ( 0 , 0 , 255 );        // íŒŒë€ìƒ‰
         break;
 
     case COLLISION_TYPE::PLATFORM:
         m_bSolid = true;
         m_bHarmful = false;
         m_bOneWay = true;
-        m_displayColor = RGB(0, 255, 0);        // ÃÊ·Ï»ö
+        m_displayColor = RGB ( 0 , 255 , 0 );        // ì´ˆë¡ìƒ‰
         break;
 
     case COLLISION_TYPE::SPIKE:
         m_bSolid = true;
         m_bHarmful = true;
         m_bOneWay = false;
-        m_displayColor = RGB(255, 0, 0);        // »¡°£»ö
+        m_displayColor = RGB ( 255 , 0 , 0 );        // ë¹¨ê°„ìƒ‰
         break;
 
     case COLLISION_TYPE::WATER:
         m_bSolid = false;
         m_bHarmful = false;
         m_bOneWay = false;
-        m_displayColor = RGB(100, 200, 255);    // ¿¬ÆÄ¶õ»ö
+        m_displayColor = RGB ( 100 , 200 , 255 );    // ì—°íŒŒë€ìƒ‰
         break;
 
     case COLLISION_TYPE::LAVA:
         m_bSolid = false;
         m_bHarmful = true;
         m_bOneWay = false;
-        m_displayColor = RGB(255, 100, 0);      // ÁÖÈ²»ö
+        m_displayColor = RGB ( 255 , 100 , 0 );      // ì£¼í™©ìƒ‰
         break;
 
     case COLLISION_TYPE::ONE_WAY_PLATFORM:
         m_bSolid = true;
         m_bHarmful = false;
         m_bOneWay = true;
-        m_displayColor = RGB(100, 255, 100);    // ¿¬ÃÊ·Ï»ö
+        m_displayColor = RGB ( 100 , 255 , 100 );    // ì—°ì´ˆë¡ìƒ‰
         break;
 
     case COLLISION_TYPE::MOVING_PLATFORM:
         m_bSolid = true;
         m_bHarmful = false;
         m_bOneWay = false;
-        m_displayColor = RGB(255, 0, 255);      // º¸¶ó»ö
+        m_displayColor = RGB ( 255 , 0 , 255 );      // ë§ˆì  íƒ€ìƒ‰
         break;
 
     case COLLISION_TYPE::BREAKABLE_BLOCK:
         m_bSolid = true;
         m_bHarmful = false;
         m_bOneWay = false;
-        m_displayColor = RGB(139, 69, 19);      // È²Åä»ö
+        m_displayColor = RGB ( 139 , 69 , 19 );      // ê°ˆìƒ‰
         break;
 
     case COLLISION_TYPE::INVISIBLE_WALL:
         m_bSolid = true;
         m_bHarmful = false;
         m_bOneWay = false;
-        m_displayColor = RGB(128, 128, 128);    // È¸»ö
+        m_displayColor = RGB ( 128 , 128 , 128 );    // íšŒìƒ‰
+        break;
+
+    case COLLISION_TYPE::TRIGGER:
+        m_bSolid = false;
+        m_bHarmful = false;
+        m_bOneWay = false;
+        m_displayColor = RGB ( 255 , 0 , 255 );      // ë§ˆì  íƒ€ìƒ‰
         break;
 
     default:
         m_bSolid = true;
         m_bHarmful = false;
         m_bOneWay = false;
-        m_displayColor = RGB(0, 0, 255);        // ±âº» ÆÄ¶õ»ö
+        m_displayColor = RGB ( 0 , 0 , 255 );        // ê¸°ë³¸ íŒŒë€ìƒ‰
         break;
     }
 }
 
-void CTile::UpdateCollisionProperties()
+void CTile::UpdateCollisionProperties ( )
 {
-    // Ãæµ¹Ã¼ »ı¼º/Á¦°Å Ã³¸®
-    if (m_bSolid || m_bHarmful)
+    // ì¶©ëŒì²´ ìƒì„±/ì œê±° ì²˜ë¦¬
+    if ( m_bSolid || m_bHarmful )
     {
-        // Ãæµ¹ÀÌ ÇÊ¿äÇÑ Å¸ÀÏÀÌ¸é Äİ¶óÀÌ´õ »ı¼º
-        if (!GetCollider())
+        // ì¶©ëŒì´ í•„ìš”í•œ íƒ€ì¼ì´ë©´ ì½œë¼ì´ë” ìƒì„±
+        if ( !GetCollider ( ) )
         {
-            CreateCollider();
+            CreateCollider ( );
         }
-        if (GetCollider())
+        if ( GetCollider ( ) )
         {
-            GetCollider()->SetScale(GetScale());
+            GetCollider ( )->SetScale ( GetScale ( ) );
         }
     }
-    else if (IsDecorative())
+    else if ( IsDecorative ( ) )
     {
-        // Àå½Ä¿ë Å¸ÀÏÀÌ¸é Äİ¶óÀÌ´õ Á¦°Å
-        if (GetCollider())
+        // ì¥ì‹ìš© íƒ€ì¼ì´ë©´ ì½œë¼ì´ë” ì œê±°
+        if ( GetCollider ( ) )
         {
-            // TODO: Äİ¶óÀÌ´õ Á¦°Å ·ÎÁ÷ ±¸Çö ÇÊ¿ä
+            // TODO: ì½œë¼ì´ë” ì œê±° ë¡œì§ êµ¬í˜„ í•„ìš”
         }
     }
 }
 
-void CTile::RenderCollisionBox(HDC _dc)
+void CTile::RenderCollisionBox ( HDC _dc )
 {
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
-    Vec2 vScale = GetScale();
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( GetPos ( ) );
+    Vec2 vScale = GetScale ( );
 
-    // Ãæµ¹Ã¼ Å¸ÀÔ¿¡ µû¸¥ »ö±ò ¹Ú½º ·»´õ¸µ
-    HBRUSH hBrush = CreateSolidBrush(m_displayColor);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+    // ì¶©ëŒì²´ íƒ€ì…ì— ë”°ë¥¸ ìƒ‰ìƒ ë°•ìŠ¤ ë Œë”ë§
+    HBRUSH hBrush = CreateSolidBrush ( m_displayColor );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
 
-    // ¾à°£ Åõ¸íÇÑ È¿°ú¸¦ À§ÇØ Å×µÎ¸®¿Í ³»ºÎ¸¦ ´Ù¸£°Ô ·»´õ¸µ
-    Rectangle(_dc,
-        (int)(vRenderPos.x - vScale.x / 2.f),
-        (int)(vRenderPos.y - vScale.y / 2.f),
-        (int)(vRenderPos.x + vScale.x / 2.f),
-        (int)(vRenderPos.y + vScale.y / 2.f));
+    // ì•½ê°„ íˆ¬ëª…í•œ íš¨ê³¼ë¥¼ ìœ„í•´ í…Œë‘ë¦¬ì™€ ë‚´ë¶€ë¥¼ ë‹¤ë¥´ê²Œ ë Œë”ë§
+    Rectangle ( _dc ,
+        ( int ) ( vRenderPos.x - vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y - vScale.y / 2.f ) ,
+        ( int ) ( vRenderPos.x + vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y + vScale.y / 2.f ) );
 
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hBrush);
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hBrush );
 
-    // Å×µÎ¸® ±×¸®±â (´õ ÁøÇÑ »öÀ¸·Î)
-    COLORREF borderColor = RGB(
-        GetRValue(m_displayColor) / 2,
-        GetGValue(m_displayColor) / 2,
-        GetBValue(m_displayColor) / 2
+    // í…Œë‘ë¦¬ ê·¸ë¦¬ê¸° (ë” ì§„í•œ ìƒ‰ìƒìœ¼ë¡œ)
+    COLORREF borderColor = RGB (
+        GetRValue ( m_displayColor ) / 2 ,
+        GetGValue ( m_displayColor ) / 2 ,
+        GetBValue ( m_displayColor ) / 2
     );
 
-    HPEN hPen = CreatePen(PS_SOLID, 2, borderColor);
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    HBRUSH hOldBrush2 = (HBRUSH)SelectObject(_dc, hHollowBrush);
+    HPEN hPen = CreatePen ( PS_SOLID , 2 , borderColor );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    HBRUSH hHollowBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+    HBRUSH hOldBrush2 = ( HBRUSH ) SelectObject ( _dc , hHollowBrush );
 
-    Rectangle(_dc,
-        (int)(vRenderPos.x - vScale.x / 2.f),
-        (int)(vRenderPos.y - vScale.y / 2.f),
-        (int)(vRenderPos.x + vScale.x / 2.f),
-        (int)(vRenderPos.y + vScale.y / 2.f));
+    Rectangle ( _dc ,
+        ( int ) ( vRenderPos.x - vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y - vScale.y / 2.f ) ,
+        ( int ) ( vRenderPos.x + vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y + vScale.y / 2.f ) );
 
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush2);
-    DeleteObject(hPen);
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldBrush2 );
+    DeleteObject ( hPen );
 
-    // Æ¯¼ö Ç¥½Ã Ãß°¡
-    RenderSpecialIndicators(_dc, vRenderPos, vScale);
+    // íŠ¹ìˆ˜ í‘œì‹œ ì¶”ê°€
+    RenderSpecialIndicators ( _dc , vRenderPos , vScale );
 }
 
-void CTile::RenderSpecialIndicators(HDC _dc, Vec2 vRenderPos, Vec2 vScale)
+void CTile::RenderSpecialIndicators ( HDC _dc , Vec2 vRenderPos , Vec2 vScale )
 {
-    // Ãæµ¹Ã¼ Å¸ÀÔº° Æ¯¼ö Ç¥½Ã
-    SetBkMode(_dc, TRANSPARENT);
-    SetTextColor(_dc, RGB(255, 255, 255));
+    // ì¶©ëŒì²´ íƒ€ì…ë³„ íŠ¹ìˆ˜ í‘œì‹œ
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
 
-    wchar_t szIndicator[8] = L"";
+    wchar_t szIndicator[ 8 ] = L"";
 
-    switch (m_eCollisionType)
+    switch ( m_eCollisionType )
     {
     case COLLISION_TYPE::SPIKE:
-        wcscpy_s(szIndicator, L"wan");        // °æ°í Ç¥½Ã
+        wcscpy_s ( szIndicator , L"ê°€ì‹œ" );        // ê°€ì‹œ í‘œì‹œ
         break;
     case COLLISION_TYPE::WATER:
-        wcscpy_s(szIndicator, L"~~~");         // ¹°°á Ç¥½Ã
+        wcscpy_s ( szIndicator , L"~~~" );         // ë¬¼ê²° í‘œì‹œ
         break;
     case COLLISION_TYPE::LAVA:
-        wcscpy_s(szIndicator, L"fire");       // ºÒ Ç¥½Ã (À¯´ÏÄÚµå Áö¿ø½Ã)
+        wcscpy_s ( szIndicator , L"ìš©ì•”" );       // ë¶ˆ í‘œì‹œ (ìœ ë‹ˆì½”ë“œ ë¬¸ì œë¡œ)
         break;
     case COLLISION_TYPE::ONE_WAY_PLATFORM:
-        wcscpy_s(szIndicator, L"UP");        // À§ÂÊ È­»ìÇ¥
+        wcscpy_s ( szIndicator , L"UP" );        // ìœ„ìª½ í™”ì‚´í‘œ
         break;
     case COLLISION_TYPE::MOVING_PLATFORM:
-        wcscpy_s(szIndicator, L"LEFRIG");        // ÁÂ¿ì È­»ìÇ¥
+        wcscpy_s ( szIndicator , L"ì¢Œìš°" );        // ì¢Œìš° í™”ì‚´í‘œ
         break;
     case COLLISION_TYPE::BREAKABLE_BLOCK:
-        wcscpy_s(szIndicator, L"BOOM");       // Æø¹ß Ç¥½Ã (À¯´ÏÄÚµå Áö¿ø½Ã)
+        wcscpy_s ( szIndicator , L"íŒŒê´´" );       // ê¹¨ì§ í‘œì‹œ (ìœ ë‹ˆì½”ë“œ ë¬¸ì œë¡œ)
         break;
     }
 
-    if (wcslen(szIndicator) > 0)
+    if ( wcslen ( szIndicator ) > 0 )
     {
-        TextOut(_dc,
-            (int)(vRenderPos.x - 8),
-            (int)(vRenderPos.y - 8),
-            szIndicator,
-            (int)wcslen(szIndicator));
+        TextOut ( _dc ,
+            ( int ) ( vRenderPos.x - 8 ) ,
+            ( int ) ( vRenderPos.y - 8 ) ,
+            szIndicator ,
+            ( int ) wcslen ( szIndicator ) );
     }
 }
 
-void CTile::RenderCollisionInfo(HDC _dc)
+void CTile::RenderCollisionInfo ( HDC _dc )
 {
-    // µğ¹ö±× Á¤º¸ ÅØ½ºÆ® ·»´õ¸µ
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
+    // íƒ€ì¼ì˜ ìƒì„¸ í…ìŠ¤íŠ¸ ë Œë”ë§
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( GetPos ( ) );
 
-    // Ãæµ¹ Å¸ÀÔ Á¤º¸ Ç¥½Ã
+    // ì¶©ëŒ íƒ€ì… ì •ë³´ í‘œì‹œ
     wstring strInfo = L"";
-    switch (m_eCollisionType)
+    switch ( m_eCollisionType )
     {
     case COLLISION_TYPE::SOLID_GROUND: strInfo = L"SOLID"; break;
     case COLLISION_TYPE::PLATFORM: strInfo = L"PLATFORM"; break;
@@ -271,54 +287,132 @@ void CTile::RenderCollisionInfo(HDC _dc)
     default: strInfo = L"UNKNOWN"; break;
     }
 
-    // ÅØ½ºÆ® Ãâ·Â
-    SetTextColor(_dc, RGB(255, 255, 255));
-    SetBkMode(_dc, TRANSPARENT);
-    TextOut(_dc,
-        (int)(vRenderPos.x - 20),
-        (int)(vRenderPos.y - 30),
-        strInfo.c_str(),
-        (int)strInfo.length());
+    // í…ìŠ¤íŠ¸ ì¶œë ¥
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+    SetBkMode ( _dc , TRANSPARENT );
+    TextOut ( _dc ,
+        ( int ) ( vRenderPos.x - 20 ) ,
+        ( int ) ( vRenderPos.y - 30 ) ,
+        strInfo.c_str ( ) ,
+        ( int ) strInfo.length ( ) );
 }
 
-// === Å¸ÀÏ Å¸ÀÔº° ·»´õ¸µ ===
+// === íƒ€ì¼ íƒ€ì…ë³„ ë Œë”ë§ ===
 
-void CTile::RenderTransparentBlock(HDC _dc)
+void CTile::RenderTransparentBlock ( HDC _dc )
 {
-    // ·»´õ¸µ ÁÂÇ¥ °è»ê
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
-    Vec2 vScale = GetScale();
-    float fPixelScale = CCore::GetPixelScale();
+    // ë Œë”ë§ ì¢Œí‘œ ê³„ì‚°
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( GetPos ( ) );
+    Vec2 vScale = GetScale ( );
+    float fPixelScale = CCore::GetPixelScale ( );
     Vec2 vScaledSize = vScale * fPixelScale;
     Vec2 vActualSize = vScale;
 
-    // Ãæµ¹Ã¼ Å¸ÀÔ¿¡ µû¸¥ »ö»ó ¹Ú½º ·»´õ¸µ
-    HBRUSH hBrush = CreateSolidBrush(m_displayColor);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+    // ì¶©ëŒì²´ íƒ€ì…ì— ë”°ë¥¸ ìƒ‰ìƒ ë°•ìŠ¤ ë Œë”ë§
+    HBRUSH hBrush = CreateSolidBrush ( m_displayColor );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
 
-    // ¹İÅõ¸íÇÑ È¿°ú¸¦ À§ÇØ Å×µÎ¸®¿Í ³»ºÎ¸¦ ´Ù¸£°Ô ·»´õ¸µ
+    // íˆ¬ëª…í•˜ê²Œ íš¨ê³¼ë¥¼ ìœ„í•´ í…Œë‘ë¦¬ì™€ ë‚´ë¶€ë¥¼ ë‹¤ë¥´ê²Œ ë Œë”ë§
     /*Rectangle(_dc,
         (int)(vRenderPos.x - vScaledSize.x / 2.f),
         (int)(vRenderPos.y - vScaledSize.y / 2.f),
         (int)(vRenderPos.x + vScaledSize.x / 2.f),
         (int)(vRenderPos.y + vScaledSize.y / 2.f));*/
 
-    Rectangle(_dc,
-        (int)(vRenderPos.x - vActualSize.x / 2.f),
-        (int)(vRenderPos.y - vActualSize.y / 2.f),
-        (int)(vRenderPos.x + vActualSize.x / 2.f),
-        (int)(vRenderPos.y + vActualSize.y / 2.f));
+    Rectangle ( _dc ,
+        ( int ) ( vRenderPos.x - vActualSize.x / 2.f ) ,
+        ( int ) ( vRenderPos.y - vActualSize.y / 2.f ) ,
+        ( int ) ( vRenderPos.x + vActualSize.x / 2.f ) ,
+        ( int ) ( vRenderPos.y + vActualSize.y / 2.f ) );
 
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hBrush);
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hBrush );
 }
 
-void CTile::RenderCommonElements(HDC _dc)
+void CTile::RenderCommonElements ( HDC _dc )
 {
-    // Äİ¶óÀÌ´õ ·»´õ¸µ
-    if (GetCollider())
+    // ì½œë¼ì´ë” ë Œë”ë§
+    if ( GetCollider ( ) )
     {
-        float fPixelScale = CCore::GetPixelScale();
-        GetCollider()->RenderScaled(_dc, fPixelScale);
+        float fPixelScale = CCore::GetPixelScale ( );
+        GetCollider ( )->RenderScaled ( _dc , fPixelScale );
+    }
+}
+
+void CTile::RenderTriggerTile ( HDC _dc )
+{
+    // íŠ¸ë¦¬ê±° íƒ€ì¼ì˜ ë…íŠ¹í•œ ì‹œê° í‘œì‹œ (ê¸°ë³¸ ë¸”ë¡ê³¼ ì¢Œí‘œ ê³„ì‚°)
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( GetPos ( ) );
+    Vec2 vScale = GetScale ( );
+
+    // íŠ¸ë¦¬ê±° íƒ€ì¼ì€ ë°ì€ ë…¸ë€ ë°•ìŠ¤ ë Œë”ë§
+    HBRUSH hBrush = CreateSolidBrush ( RGB ( 255 , 255 , 0 ) );  // ë…¸ë€ìƒ‰
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
+
+    // ë°˜íˆ¬ëª…í•˜ê²Œ íš¨ê³¼ë¥¼ ìœ„í•´ 50% íˆ¬ëª…ë„ë¡œ
+    HBRUSH hPattern = ( HBRUSH ) GetStockObject ( LTGRAY_BRUSH );
+    LOGBRUSH logBrush;
+    GetObject ( hPattern , sizeof ( LOGBRUSH ) , &logBrush );
+
+    SetBkMode ( _dc , TRANSPARENT );
+    SetBkColor ( _dc , RGB ( 255 , 255 , 0 ) );
+
+    Rectangle ( _dc ,
+        ( int ) ( vRenderPos.x - vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y - vScale.y / 2.f ) ,
+        ( int ) ( vRenderPos.x + vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y + vScale.y / 2.f ) );
+
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hBrush );
+
+    // í…Œë‘ë¦¬ ê·¸ë¦¬ê¸° (ì˜¤ë Œì§€ ìƒ‰ìƒ)
+    HPEN hPen = CreatePen ( PS_SOLID , 3 , RGB ( 255 , 165 , 0 ) );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    HBRUSH hHollowBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+    HBRUSH hOldBrush2 = ( HBRUSH ) SelectObject ( _dc , hHollowBrush );
+
+    Rectangle ( _dc ,
+        ( int ) ( vRenderPos.x - vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y - vScale.y / 2.f ) ,
+        ( int ) ( vRenderPos.x + vScale.x / 2.f ) ,
+        ( int ) ( vRenderPos.y + vScale.y / 2.f ) );
+
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldBrush2 );
+    DeleteObject ( hPen );
+
+    // ë³´ìŠ¤ì „ í…ìŠ¤íŠ¸ í‘œì‹œ
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 100 , 0 ) );
+
+    wchar_t szText[ ] = L"BOSS";
+    TextOut ( _dc ,
+        ( int ) ( vRenderPos.x - 16 ) ,
+        ( int ) ( vRenderPos.y - 8 ) ,
+        szText ,
+        ( int ) wcslen ( szText ) );
+}
+
+void CTile::SetVisualType ( TILE_VISUAL_TYPE _eType )
+{
+    m_eVisualType = _eType;
+
+    // ë¹„ì£¼ì–¼ íƒ€ì…ì— ë”°ë¼ ìë™ìœ¼ë¡œ ì ì ˆí•œ ì¶©ëŒ íƒ€ì… ì„¤ì •
+    switch ( _eType )
+    {
+    case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK:
+        // TRANSPARENT_BLOCKì€ ê¸°ë³¸ì ìœ¼ë¡œ SOLID_GROUND ì‚¬ìš© (ê¸°ì¡´ ë™ì‘ ìœ ì§€)
+        // ì‚¬ìš©ìê°€ ì—ë””í„°ì—ì„œ ë‹¤ë¥¸ ì¶©ëŒ íƒ€ì…ì„ ì§ì ‘ ì„¤ì •í•  ìˆ˜ ìˆìŒ
+        break;
+
+    case TILE_VISUAL_TYPE::BOSS_TRIGGER:
+        // BOSS_TRIGGERëŠ” ìë™ìœ¼ë¡œ TRIGGER ì¶©ëŒ íƒ€ì… ì„¤ì •
+        SetCollisionType ( COLLISION_TYPE::TRIGGER );
+        break;
+
+    default:
+        // í–¥í›„ ì¶”ê°€ë  ë‹¤ë¥¸ ë¹„ì£¼ì–¼ íƒ€ì…ë“¤ì˜ ê¸°ë³¸ ì²˜ë¦¬
+        break;
     }
 }

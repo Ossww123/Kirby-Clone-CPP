@@ -13,7 +13,7 @@ CStageMgr::CStageMgr()
 
 CStageMgr::~CStageMgr()
 {
-    // ¸ğµç ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ÇØÁ¦
+    // ëª¨ë“  ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ í•´ì œ
     for (auto& pair : m_mapStageImage)
     {
         delete pair.second;
@@ -45,23 +45,24 @@ void CStageMgr::Render(HDC _dc)
 
 CStageImage* CStageMgr::CreateStageImage(STAGE_IMAGE_TYPE _eType, const wstring& _strTexturePath)
 {
-    // ÀÌ¹Ì Á¸ÀçÇÏ´Â ½ºÅ×ÀÌÁö ÀÌ¹ÌÁöÀÎÁö È®ÀÎ
+    // ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ì¸ì§€ í™•ì¸
     CStageImage* pExistStage = FindStageImage(_eType);
     if (pExistStage)
         return pExistStage;
 
-    // ÅØ½ºÃ³ Å° »ı¼º
+    // í…ìŠ¤ì²˜ í‚¤ ìƒì„±
     wstring strKey = L"StageImage_";
 
     switch (_eType)
     {
     case STAGE_IMAGE_TYPE::STAGE_01:      strKey += L"Stage01"; break;
     case STAGE_IMAGE_TYPE::STAGE_02:      strKey += L"Stage02"; break;
+    case STAGE_IMAGE_TYPE::STAGE_03:      strKey += L"Stage03"; break;
     case STAGE_IMAGE_TYPE::CUSTOM:        strKey += L"Custom"; break;
     default:                              strKey += L"Unknown"; break;
     }
 
-    // 24ºñÆ® BMP ·Îµù (¸¶Á¨Å¸ ÄÃ·¯Å° ¹æ½Ä)
+    // 24ë¹„íŠ¸ BMP ë¡œë”© (ë§ˆì  íƒ€ ì»¬ëŸ¬í‚¤ ë°©ì‹)
     CTexture* pTexture = CResMgr::GetInst()->LoadTexture(strKey, _strTexturePath);
 
     if (!pTexture)
@@ -69,15 +70,15 @@ CStageImage* CStageMgr::CreateStageImage(STAGE_IMAGE_TYPE _eType, const wstring&
         return nullptr;
     }
 
-    // »õ ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö »ı¼º
+    // ìƒˆ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ìƒì„±
     CStageImage* pNewStage = new CStageImage;
     pNewStage->SetStageTexture(pTexture);
 
-    // ÅØ½ºÃ³¸¦ ¸ÕÀú ¼³Á¤ÇÑ ÈÄ SetupStageImage È£Ãâ
-    // ÀÌ·¸°Ô ÇÏ¸é SetImageToBottomLeft¿¡¼­ ÅØ½ºÃ³ Á¤º¸¸¦ »ç¿ëÇÒ ¼ö ÀÖÀ½
+    // í…ìŠ¤ì²˜ë¥¼ ë¨¼ì € ì„¤ì •í•œ í›„ SetupStageImage í˜¸ì¶œ
+    // ì´ë ‡ê²Œ í•˜ë©´ SetImageToBottomLeftì—ì„œ í…ìŠ¤ì²˜ ì •ë³´ë¥¼ ì‚¬ìš©í•  ìˆ˜ ìˆìŒ
     pNewStage->SetupStageImage(_eType);
 
-    // ¸Ê¿¡ Ãß°¡
+    // ë§µì— ì¶”ê°€
     m_mapStageImage.insert(make_pair(_eType, pNewStage));
 
     return pNewStage;
@@ -100,11 +101,12 @@ void CStageMgr::SetCurrentStageImage(STAGE_IMAGE_TYPE _eType)
 
 void CStageMgr::CreateDefaultStageImages()
 {
-    // ±âº» ½ºÅ×ÀÌÁö ÀÌ¹ÌÁöµé »ı¼º
+    // ê¸°ë³¸ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ë“¤ ìƒì„±
     CreateStageImage(STAGE_IMAGE_TYPE::STAGE_01, L"stage\\stage01_full.bmp");
     CreateStageImage(STAGE_IMAGE_TYPE::STAGE_02, L"stage\\stage02_full.bmp");
+    CreateStageImage ( STAGE_IMAGE_TYPE::STAGE_03 , L"stage\\stage03_full.bmp" );
 
-    // ±âº» ½ºÅ×ÀÌÁö ¼³Á¤
+    // ê¸°ë³¸ ìŠ¤í…Œì´ì§€ ì„¤ì •
     SetCurrentStageImage(STAGE_IMAGE_TYPE::STAGE_01);
 }
 
@@ -113,7 +115,7 @@ STAGE_IMAGE_TYPE CStageMgr::GetCurrentStageType() const
     if (m_pCurrentStageImage)
         return m_pCurrentStageImage->GetStageType();
 
-    return STAGE_IMAGE_TYPE::STAGE_01; // ±âº»°ª
+    return STAGE_IMAGE_TYPE::STAGE_01; // ê¸°ë³¸ê°’
 }
 
 const wchar_t* CStageMgr::GetStageImageName(STAGE_IMAGE_TYPE _eType) const
@@ -122,6 +124,7 @@ const wchar_t* CStageMgr::GetStageImageName(STAGE_IMAGE_TYPE _eType) const
     {
     case STAGE_IMAGE_TYPE::STAGE_01:      return L"Stage01";
     case STAGE_IMAGE_TYPE::STAGE_02:      return L"Stage02";
+    case STAGE_IMAGE_TYPE::STAGE_03:      return L"Stage03";
     case STAGE_IMAGE_TYPE::CUSTOM:        return L"Custom Stage";
     default:                              return L"Unknown Stage";
     }
@@ -133,8 +136,9 @@ vector<STAGE_IMAGE_TYPE> CStageMgr::GetAvailableStageImageTypes() const
 
     result.push_back(STAGE_IMAGE_TYPE::STAGE_01);
     result.push_back(STAGE_IMAGE_TYPE::STAGE_02);
+    result.push_back ( STAGE_IMAGE_TYPE::STAGE_03 );
 
-    // Ä¿½ºÅÒ ½ºÅ×ÀÌÁö°¡ ·ÎµåµÇ¾î ÀÖÀ¸¸é Ãß°¡
+    // ì»¤ìŠ¤í…€ ìŠ¤í…Œì´ì§€ê°€ ë¡œë“œë˜ì–´ ìˆìœ¼ë©´ ì¶”ê°€
     if (FindStageImage(STAGE_IMAGE_TYPE::CUSTOM))
     {
         result.push_back(STAGE_IMAGE_TYPE::CUSTOM);

@@ -5,21 +5,21 @@ class CObject;
 class CRigidBody
 {
 private:
-    CObject*    m_pOwner;           // ¼ÒÀ¯ÀÚ ¿ÀºêÁ§Æ®
+    CObject*    m_pOwner;           // ì†Œìœ ì ì˜¤ë¸Œì íŠ¸
 
-    Vec2        m_vVelocity;        // ¼Óµµ º¤ÅÍ
-    Vec2        m_vAccel;           // °¡¼Óµµ º¤ÅÍ
-    Vec2        m_vForce;           // Èû º¤ÅÍ (ÀÌ¹ø ÇÁ·¹ÀÓ¿¡ Àû¿ëµÉ Èû)
+    Vec2        m_vVelocity;        // ì†ë„ ë²¡í„°
+    Vec2        m_vAccel;           // ê°€ì†ë„ ë²¡í„°
+    Vec2        m_vForce;           // í˜ ë²¡í„° (ì´ë²ˆ í”„ë ˆì„ì— ì ìš©ë  í˜)
 
-    float       m_fMass;            // Áú·®
-    float       m_fGravityScale;    // Áß·Â ¹èÀ² (1.0ÀÌ ±âº»)
-    float       m_fMaxVelocity;     // ÃÖ´ë ¼Óµµ Á¦ÇÑ
-    float       m_fFriction;        // ¸¶Âû °è¼ö (0~1)
+    float       m_fMass;            // ì§ˆëŸ‰
+    float       m_fGravityScale;    // ì¤‘ë ¥ ë°°ìœ¨ (1.0ì´ ê¸°ë³¸)
+    float       m_fMaxVelocity;     // ìµœëŒ€ ì†ë„ ì œí•œ
+    float       m_fFriction;        // ë§ˆì°° ê³„ìˆ˜ (0~1)
 
-    bool        m_bUseGravity;      // Áß·Â »ç¿ë ¿©ºÎ
-    bool        m_bGround;          // ¹Ù´Ú¿¡ Á¢ÃË ¿©ºÎ
+    bool        m_bUseGravity;      // ì¤‘ë ¥ ì‚¬ìš© ì—¬ë¶€
+    bool        m_bGround;          // ë°”ë‹¥ì— ì ‘ì´‰ ì—¬ë¶€
 
-    static float s_fGravity;        // Àü¿ª Áß·Â°ª
+    static float s_fGravity;        // ì „ì—­ ì¤‘ë ¥ê°’
 
 public:
     void SetMass(float _fMass) { m_fMass = _fMass; }
@@ -36,16 +36,16 @@ public:
     bool IsGround() { return m_bGround; }
     bool IsUseGravity() { return m_bUseGravity; }
 
-    // Èû Àû¿ë ÇÔ¼öµé
-    void AddForce(Vec2 _vForce);                    // Èû Ãß°¡
-    void AddVelocity(Vec2 _vVelocity);              // ¼Óµµ Á÷Á¢ Ãß°¡
-    void SetVelocityX(float _fVelX);                // X ¼Óµµ¸¸ ¼³Á¤
-    void SetVelocityY(float _fVelY);                // Y ¼Óµµ¸¸ ¼³Á¤
+    // í˜ ì ìš© í•¨ìˆ˜ë“¤
+    void AddForce(Vec2 _vForce);                    // í˜ ì¶”ê°€
+    void AddVelocity(Vec2 _vVelocity);              // ì†ë„ ì§ì ‘ ì¶”ê°€
+    void SetVelocityX(float _fVelX);                // X ì†ë„ë§Œ ì„¤ì •
+    void SetVelocityY(float _fVelY);                // Y ì†ë„ë§Œ ì„¤ì •
 
-    // ¹°¸® ½Ã¹Ä·¹ÀÌ¼Ç
+    // ë¬¼ë¦¬ ì‹œë®¬ë ˆì´ì…˜
     void Update();
 
-    // Àü¿ª Áß·Â ¼³Á¤
+    // ì „ì—­ ì¤‘ë ¥ ì„¤ì •
     static void SetGlobalGravity(float _fGravity) { s_fGravity = _fGravity; }
     static float GetGlobalGravity() { return s_fGravity; }
 

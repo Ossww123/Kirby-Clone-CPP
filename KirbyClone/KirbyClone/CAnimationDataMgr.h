@@ -1,6 +1,6 @@
 #pragma once
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CAnimator;
 class CAnimation;
 class CTexture;
@@ -10,41 +10,41 @@ class CAnimationDataMgr
     SINGLE(CAnimationDataMgr);
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === ë§¤ë‹ˆì € ì´ˆê¸°í™” í•¨ìˆ˜ ===
     void init();
 
 public:
-    // === ÆÄÀÏ ÀÔÃâ·Â ===
+    // === íŒŒì¼ ë¡œë”© ===
     tAnimationFileData LoadAnimationFile(const wstring& _strFilePath);
     bool SaveAnimationFile(const wstring& _strFilePath, const tAnimationFileData& _data);
 
 public:
-    // === °ÔÀÓ ·±Å¸ÀÓ Áö¿ø (CAnimator ¿¬µ¿) ===
+    // === ì• ë‹ˆë©”ì´í„°ì— ë¡œë”© (CAnimator ì§ì ‘) ===
     void LoadAnimationsIntoAnimator(CAnimator* _pAnimator, const wstring& _strFilePath);
 
 public:
-    // === ¿¡µğÅÍ Áö¿ø ±â´Éµé ===
+    // === ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ ëª¨ìŒ ===
     CAnimation* CreateTemporaryAnimation(const tAnimationData& _data, CTexture* _pTexture);
     vector<wstring> GetAllAnimationFiles(const wstring& _strDirectory);
     bool IsValidAnimationFile(const wstring& _strFilePath);
 
 public:
-    // === À¯Æ¿¸®Æ¼ ÇÔ¼öµé ===
+    // === ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ ===
     tAnimationData ConvertFromCAnimation(CAnimation* _pAnim);
     wstring GetAnimationDirectory() const { return m_strAnimationDir; }
     void SetAnimationDirectory(const wstring& _strDir) { m_strAnimationDir = _strDir; }
 
-    // Å×½ºÆ®¿ë ÇÔ¼öµé
+    // í…ŒìŠ¤íŠ¸ìš© í•¨ìˆ˜
     bool CreateSampleAnimationFile(const wstring& _strFileName);
     bool TestLoadAnimationFile(const wstring& _strFileName);
-    bool TestDirectLoad();  // Á÷Á¢ ·Îµå Å×½ºÆ® Ãß°¡
+    bool TestDirectLoad();  // ì§ì ‘ ë¡œë“œ í…ŒìŠ¤íŠ¸ ì¶”ê°€
 
 private:
-    // === JSON ÆÄ½Ì °ü·Ã ³»ºÎ ±¸Çö ===
+    // === JSON íŒŒì‹± ê´€ë ¨ ë‚´ë¶€ í•¨ìˆ˜ ===
     tAnimationFileData ParseJsonToAnimationData(const wstring& _strJsonContent);
     wstring SerializeAnimationDataToJson(const tAnimationFileData& _data);
 
-    // JSON ÆÄ½Ì µµ¿ì¹Ì ÇÔ¼öµé
+    // JSON íŒŒì‹± í—¬í¼ í•¨ìˆ˜
     wstring ExtractNumberFromJson(const wstring& _content, size_t _startPos);
     wstring ExtractStringFromJson(const wstring& _content, size_t _startPos);
     Vec2 ExtractVec2FromJson(const wstring& _content, size_t _startPos);
@@ -53,21 +53,21 @@ private:
     tAnimFrame ParseSingleFrame(const wstring& _content, size_t _startPos, size_t _endPos);
 
 private:
-    // === ÆÄÀÏ Ã³¸® ³»ºÎ ±¸Çö ===
+    // === íŒŒì¼ ì²˜ë¦¬ ê´€ë ¨ í•¨ìˆ˜ ===
     wstring ReadTextFile(const wstring& _strFilePath);
     bool WriteTextFile(const wstring& _strFilePath, const wstring& _strContent);
     wstring GetFullPath(const wstring& _strRelativePath);
 
 private:
-    // === À¯È¿¼º °Ë»ç ===
+    // === ìœ íš¨ì„± ê²€ì‚¬ ===
     bool ValidateAnimationData(const tAnimationFileData& _data);
     bool ValidateFrameData(const tAnimFrame& _frameData);
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    wstring m_strAnimationDir;      // ¾Ö´Ï¸ŞÀÌ¼Ç ÆÄÀÏµéÀÌ ÀúÀåµÈ µğ·ºÅä¸®
+    // === ë² ì´ìŠ¤ ë³€ìˆ˜ë“¤ ===
+    wstring m_strAnimationDir;      // ì• ë‹ˆë©”ì´ì…˜ íŒŒì¼ë“¤ì´ ì €ì¥ëœ ë””ë ‰í† ë¦¬
 
-    // Ä³½Ì (¼±ÅÃ»çÇ× - ³ªÁß¿¡ ¼º´É °³¼±¿ë)
+    // ìºì‹± (ìµœì í™”ìš© - ë‚˜ì¤‘ì— êµ¬í˜„ ì˜ˆì •)
     map<wstring, tAnimationFileData> m_mapCachedData;
     bool m_bUseCaching;
 };

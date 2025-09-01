@@ -21,6 +21,15 @@ enum class BOSS_ATTACK_PATTERN
     END
 };
 
+enum class BOSS_DEFEAT_PHASE
+{
+    NONE,           // 아직 격파되지 않음
+    DEFEAT1_ANIM,   // DEFEAT1 애니메이션 재생 중 (2초)
+    DEFEAT3_ANIM,   // DEFEAT3 애니메이션 계속 재생
+    VICTORY_WAIT,   // 커비 가운데 이동 후 대기 (2초)
+    VICTORY_DANCE   // 승리 춤 단계
+};
+
 class CBoss : public CMonster
 {
 public:
@@ -31,10 +40,10 @@ public:
     // === 보스 특성 (final로 하위 클래스에서 변경 불가) ===
     bool CanBeInhaled() const override final { return false; }
     bool HasAttack() const override { return true; }
+    virtual bool IsBoss() const override final { return true; }  // 보스 여부 확인
 
 public:
     // === 순수 가상 함수 (하위 클래스에서 반드시 구현) ===
-    virtual void StartBossEvent() = 0;                      // 보스전 시작
     virtual void EndBossEvent() = 0;                        // 보스전 종료
     virtual void ExecuteAttackPattern(BOSS_ATTACK_PATTERN _ePattern) = 0;  // 공격 패턴 실행
 
@@ -52,6 +61,10 @@ public:
     // === 보스 데미지 처리 ===
     void TakeBossDamage(int _iDamage);
     bool IsDefeated() const { return m_iCurrentHP <= 0; }
+    
+    // === 보스 이벤트 제어 ===
+    virtual void StartBossEvent();                          // 보스전 시작 (오버라이드 가능)
+    bool IsBossEventStarted() const { return m_bBossEventStarted; }
 
 protected:
     // === 보스 시스템 관리 ===
@@ -64,6 +77,7 @@ protected:
     void OnPhaseChanged(BOSS_PHASE _eNewPhase);            // 페이즈 변경 시 처리
 
     // === 상태 업데이트 오버라이드 ===
+    void Update() override;                                 // 메인 업데이트 (DEFEATED 페이즈 처리)
     void UpdateIdle() override;
     void UpdateAttackReady() override;
     void UpdateAttack() override;
@@ -78,6 +92,13 @@ protected:
     void ShowPhaseChangeEffect();                           // 페이즈 변경 이펙트
     void PlayBossMusic();                                   // 보스 BGM 재생
     void StopBossMusic();                                   // 보스 BGM 정지
+    
+    // === 격파 시퀀스 관리 ===
+    void UpdateDefeatSequence();                            // 격파 시퀀스 업데이트
+    void CleanupAppleAndProjectiles();                      // 사과와 투사체 정리
+    void ReleaseBossDefeatWaiting();                        // 커비 움직임 제한 해제
+    void MovePlayerToCenterAndStartVictoryWait();           // 커비 이동 및 승리 대기 시작
+    void StartVictoryDance();                               // 승리 춤 시작
 
 private:
     // === 보스 기본 정보 ===
@@ -100,4 +121,9 @@ private:
     // === 무적 시간 관리 ===
     float               m_fInvincibleTime;                  // 무적 시간
     bool                m_bInvincible;                      // 무적 상태
+    
+    // === 격파 시퀀스 관리 ===
+    BOSS_DEFEAT_PHASE   m_eDefeatPhase;                     // 격파 단계
+    float               m_fDefeat1Timer;                    // DEFEAT1 애니메이션 타이머
+    float               m_fVictoryWaitTimer;                // 승리 대기 타이머
 };

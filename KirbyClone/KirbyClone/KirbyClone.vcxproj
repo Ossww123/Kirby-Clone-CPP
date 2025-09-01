@@ -114,6 +114,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,6 +131,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,9 +141,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CAbilityStar.h" />
+    <ClInclude Include="CAirParticle.h" />
     <ClInclude Include="CAnimation.h" />
     <ClInclude Include="CAnimationDataMgr.h" />
     <ClInclude Include="CAnimator.h" />
+    <ClInclude Include="CApple.h" />
     <ClInclude Include="CBackground.h" />
     <ClInclude Include="CBackgroundMgr.h" />
     <ClInclude Include="CBasicMonster.h" />
@@ -152,6 +157,7 @@
     <ClInclude Include="CCollisionMgr.h" />
     <ClInclude Include="CCopyMonster.h" />
     <ClInclude Include="CCore.h" />
+    <ClInclude Include="CDeathEffect.h" />
     <ClInclude Include="CDoor.h" />
     <ClInclude Include="CEditorCameraController.h" />
     <ClInclude Include="CEditorCore.h" />
@@ -162,6 +168,7 @@
     <ClInclude Include="CEditorToolbar.h" />
     <ClInclude Include="CEditorUI.h" />
     <ClInclude Include="CEventMgr.h" />
+    <ClInclude Include="CFadeEffect.h" />
     <ClInclude Include="CGordo.h" />
     <ClInclude Include="CGrid.h" />
     <ClInclude Include="CHotHead.h" />
@@ -169,11 +176,13 @@
     <ClInclude Include="CItem.h" />
     <ClInclude Include="CKeyMgr.h" />
     <ClInclude Include="CMonster.h" />
+    <ClInclude Include="CMonsterSpawnMgr.h" />
     <ClInclude Include="CObject.h" />
     <ClInclude Include="CObjectFactory.h" />
     <ClInclude Include="CPathMgr.h" />
     <ClInclude Include="CPlayer.h" />
     <ClInclude Include="CPlayerCollisionSystem.h" />
+    <ClInclude Include="CPlayerDataMgr.h" />
     <ClInclude Include="CPlayerHealthSystem.h" />
     <ClInclude Include="CPlayerInhaleSystem.h" />
     <ClInclude Include="CPlayerInputManager.h" />
@@ -191,6 +200,8 @@
     <ClInclude Include="CScene_Stage02.h" />
     <ClInclude Include="CScene_Start.h" />
     <ClInclude Include="CScene_Tool.h" />
+    <ClInclude Include="CSound.h" />
+    <ClInclude Include="CSoundMgr.h" />
     <ClInclude Include="CSparky.h" />
     <ClInclude Include="CSpecialObject.h" />
     <ClInclude Include="CStageImage.h" />
@@ -199,6 +210,7 @@
     <ClInclude Include="CTile.h" />
     <ClInclude Include="CTileMgr.h" />
     <ClInclude Include="CTimeMgr.h" />
+    <ClInclude Include="CUIMgr.h" />
     <ClInclude Include="CWaddleDee.h" />
     <ClInclude Include="CWaddleDoo.h" />
     <ClInclude Include="CWhispyWoods.h" />
@@ -212,9 +224,12 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CAbilityStar.cpp" />
+    <ClCompile Include="CAirParticle.cpp" />
     <ClCompile Include="CAnimation.cpp" />
     <ClCompile Include="CAnimationDataMgr.cpp" />
     <ClCompile Include="CAnimator.cpp" />
+    <ClCompile Include="CApple.cpp" />
     <ClCompile Include="CBackground.cpp" />
     <ClCompile Include="CBackgroundMgr.cpp" />
     <ClCompile Include="CBasicMonster.cpp" />
@@ -225,6 +240,7 @@
     <ClCompile Include="CCollisionMgr.cpp" />
     <ClCompile Include="CCopyMonster.cpp" />
     <ClCompile Include="CCore.cpp" />
+    <ClCompile Include="CDeathEffect.cpp" />
     <ClCompile Include="CDoor.cpp" />
     <ClCompile Include="CEditorCameraController.cpp" />
     <ClCompile Include="CEditorCore.cpp" />
@@ -235,6 +251,7 @@
     <ClCompile Include="CEditorToolbar.cpp" />
     <ClCompile Include="CEditorUI.cpp" />
     <ClCompile Include="CEventMgr.cpp" />
+    <ClCompile Include="CFadeEffect.cpp" />
     <ClCompile Include="CGordo.cpp" />
     <ClCompile Include="CGrid.cpp" />
     <ClCompile Include="CHotHead.cpp" />
@@ -242,11 +259,13 @@
     <ClCompile Include="CItem.cpp" />
     <ClCompile Include="CKeyMgr.cpp" />
     <ClCompile Include="CMonster.cpp" />
+    <ClCompile Include="CMonsterSpawnMgr.cpp" />
     <ClCompile Include="CObject.cpp" />
     <ClCompile Include="CObjectFactory.cpp" />
     <ClCompile Include="CPathMgr.cpp" />
     <ClCompile Include="CPlayer.cpp" />
     <ClCompile Include="CPlayerCollisionSystem.cpp" />
+    <ClCompile Include="CPlayerDataMgr.cpp" />
     <ClCompile Include="CPlayerHealthSystem.cpp" />
     <ClCompile Include="CPlayerInhaleSystem.cpp" />
     <ClCompile Include="CPlayerInputManager.cpp" />
@@ -264,6 +283,8 @@
     <ClCompile Include="CScene_Stage02.cpp" />
     <ClCompile Include="CScene_Start.cpp" />
     <ClCompile Include="CScene_Tool.cpp" />
+    <ClCompile Include="CSound.cpp" />
+    <ClCompile Include="CSoundMgr.cpp" />
     <ClCompile Include="CSparky.cpp" />
     <ClCompile Include="CSpecialObject.cpp" />
     <ClCompile Include="CStageImage.cpp" />
@@ -272,6 +293,7 @@
     <ClCompile Include="CTile.cpp" />
     <ClCompile Include="CTileMgr.cpp" />
     <ClCompile Include="CTimeMgr.cpp" />
+    <ClCompile Include="CUIMgr.cpp" />
     <ClCompile Include="CWaddleDee.cpp" />
     <ClCompile Include="CWaddleDoo.cpp" />
     <ClCompile Include="CWhispyWoods.cpp" />

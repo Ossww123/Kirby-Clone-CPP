@@ -14,67 +14,78 @@
 #include "CTileMgr.h"
 #include "CStageMgr.h"
 #include "CAnimationDataMgr.h"
+#include "CSoundMgr.h"
+#include "CUIMgr.h"
+#include "CFadeEffect.h"
 
-CCore::CCore()
-	: m_hWnd(0)
+// === Ï†ïÏ†Å Î©§Î≤Ñ Î≥ÄÏàò Ï†ïÏùò ===
+bool CCore::s_bShowDebugVisuals = false;
+
+CCore::CCore ( )
+	: m_hWnd ( 0 )
 	, m_ptResolution{}
-	, m_hDC(0)
-	, m_hBit(0)
-	, m_memDC(0)
+	, m_hDC ( 0 )
+	, m_hBit ( 0 )
+	, m_memDC ( 0 )
 {
 }
 
-CCore::~CCore()
+CCore::~CCore ( )
 {
-	// ∏ﬁ¿Œ DC «ÿ¡¶
-	ReleaseDC(m_hWnd, m_hDC);
+	// Î©îÏù∏ DC Ìï¥Ï†ú
+	ReleaseDC ( m_hWnd , m_hDC );
 
-	// ¥ı∫Ì πˆ∆€∏µ ∏Æº“Ω∫ ¡§∏Æ
-	DeleteDC(m_memDC);
-	DeleteObject(m_hBit);
+	// ÎçîÎ∏î Î≤ÑÌçºÎßÅ Î¶¨ÏÜåÏä§ Ï†ïÎ¶¨
+	DeleteDC ( m_memDC );
+	DeleteObject ( m_hBit );
 }
 
-int CCore::init(HWND _hWnd, POINT _ptResolution)
+int CCore::init ( HWND _hWnd , POINT _ptResolution )
 {
-	// ±‚∫ª ¡§∫∏ º≥¡§
+	// Í∏∞Î≥∏ Ï†ïÎ≥¥ ÏÑ§Ï†ï
 	m_hWnd = _hWnd;
 	m_ptResolution = _ptResolution;
 
-	// ¿©µµøÏ ≈©±‚ ¡∂¡§
-	RECT rt = { 0, 0, (long)m_ptResolution.x, (long)m_ptResolution.y };
-	AdjustWindowRect(&rt, WS_OVERLAPPEDWINDOW, true);
-	SetWindowPos(m_hWnd, nullptr, 100, 100, rt.right - rt.left, rt.bottom - rt.top,0);
+	// ÏúàÎèÑÏö∞ ÌÅ¨Í∏∞ Ï°∞Ï†ï
+	RECT rt = { 0, 0, ( long ) m_ptResolution.x, ( long ) m_ptResolution.y };
+	AdjustWindowRect ( &rt , WS_OVERLAPPEDWINDOW , true );
+	SetWindowPos ( m_hWnd , nullptr , 100 , 100 , rt.right - rt.left , rt.bottom - rt.top , 0 );
 
-	// ¥ı∫Ì πˆ∆€∏µ √ ±‚»≠
-	m_hDC = GetDC(m_hWnd);
-	m_hBit = CreateCompatibleBitmap(m_hDC, m_ptResolution.x, m_ptResolution.y);
-	m_memDC = CreateCompatibleDC(m_hDC);
+	// ÎçîÎ∏î Î≤ÑÌçºÎßÅ Ï¥àÍ∏∞Ìôî
+	m_hDC = GetDC ( m_hWnd );
+	m_hBit = CreateCompatibleBitmap ( m_hDC , m_ptResolution.x , m_ptResolution.y );
+	m_memDC = CreateCompatibleDC ( m_hDC );
 
-	HBITMAP hOldBit = (HBITMAP)SelectObject(m_memDC, m_hBit);
-	DeleteObject(hOldBit);
+	HBITMAP hOldBit = ( HBITMAP ) SelectObject ( m_memDC , m_hBit );
+	DeleteObject ( hOldBit );
 
-	// «ŸΩ… ∏≈¥œ¿˙ √ ±‚»≠
-	CTimeMgr::GetInst()->init();
-	CKeyMgr::GetInst()->init();
-	CPathMgr::GetInst()->init();
-	CResMgr::GetInst()->init();
+	// ÌïµÏã¨ Îß§ÎãàÏ†Ä Ï¥àÍ∏∞Ìôî
+	CTimeMgr::GetInst ( )->init ( );
+	CKeyMgr::GetInst ( )->init ( );
+	CPathMgr::GetInst ( )->init ( );
+	CResMgr::GetInst ( )->init ( );
+	CSoundMgr::GetInst ( )->init ( );
 
-	// æ÷¥œ∏ﬁ¿Ãº« µ•¿Ã≈Õ ∏≈¥œ¿˙ √ ±‚»≠
-	CAnimationDataMgr::GetInst()->init();
+	// Ïï†ÎãàÎ©îÏù¥ÏÖò Îç∞Ïù¥ÌÑ∞ Îß§ÎãàÏ†Ä Ï¥àÍ∏∞Ìôî
+	CAnimationDataMgr::GetInst ( )->init ( );
 
-	// ∞‘¿” ƒ‹≈Ÿ√˜ ∏≈¥œ¿˙µÈ √ ±‚»≠
-	CBackgroundMgr::GetInst()->init();
-	CTileMgr::GetInst()->init();
-	CStageMgr::GetInst()->init();
+	// Í≤åÏûÑ ÏΩòÌÖêÏ∏† Îß§ÎãàÏ†ÄÎì§ Ï¥àÍ∏∞Ìôî
+	CBackgroundMgr::GetInst ( )->init ( );
+	CTileMgr::GetInst ( )->init ( );
+	CStageMgr::GetInst ( )->init ( );
 
-	// ∞‘¿” ∑Œ¡˜ ∏≈¥œ¿˙ √ ±‚»≠
-	CSceneMgr::GetInst()->init();
-	CCollisionMgr::GetInst()->init();
-	CEventMgr::GetInst()->init();
-	CCamera::GetInst()->init(m_ptResolution.x, m_ptResolution.y);
-	CGrid::GetInst()->init();
+	// Í≤åÏûÑ Î°úÏßÅ Îß§ÎãàÏ†Ä Ï¥àÍ∏∞Ìôî
+	CSceneMgr::GetInst ( )->init ( );
+	CCollisionMgr::GetInst ( )->init ( );
+	CEventMgr::GetInst ( )->init ( );
+	CCamera::GetInst ( )->init ( m_ptResolution.x , m_ptResolution.y );
+	CGrid::GetInst ( )->init ( );
 
-	//// ≈◊Ω∫∆Æ ƒ⁄µÂ
+	// UI Îß§ÎãàÏ†Ä Ï¥àÍ∏∞Ìôî
+	CUIMgr::GetInst ( )->Init ( );
+	CFadeEffect::GetInst ( )->Init ( );
+
+	//// ÌÖåÏä§Ìä∏ ÏΩîÎìú
 	//CAnimationDataMgr::GetInst()->init();
 	//CAnimationDataMgr::GetInst()->CreateSampleAnimationFile(L"test_player.json");
 	//CAnimationDataMgr::GetInst()->TestDirectLoad();
@@ -84,94 +95,106 @@ int CCore::init(HWND _hWnd, POINT _ptResolution)
 	return S_OK;
 }
 
-void CCore::progress()
+void CCore::progress ( )
 {
-	update();
-	render();
+	update ( );
+	render ( );
 }
 
-void CCore::update()
+void CCore::update ( )
 {
-	// Ω√∞£ π◊ ¿‘∑¬ æ˜µ•¿Ã∆Æ
-	CTimeMgr::GetInst()->update();
-	CKeyMgr::GetInst()->update();
+	// ÏãúÍ∞Ñ Î∞è ÏûÖÎ†• ÏóÖÎç∞Ïù¥Ìä∏
+	CTimeMgr::GetInst ( )->update ( );
+	CKeyMgr::GetInst ( )->update ( );
+	
+	// CTRL ÌÇ§Î°ú ÎîîÎ≤ÑÍ∑∏ ÏãúÍ∞Å ÏöîÏÜå ÌÜ†Í∏Ä
+	if (CKeyMgr::GetInst()->IsKeyTap(KEY::CTRL))
+	{
+		ToggleDebugVisuals();
+	}
 
-	// ƒ´∏ﬁ∂Û π◊ æ¿ æ˜µ•¿Ã∆Æ
-	CCamera::GetInst()->update();
-	CSceneMgr::GetInst()->update();
+	// Ïπ¥Î©îÎùº Î∞è Ïî¨ ÏóÖÎç∞Ïù¥Ìä∏
+	CCamera::GetInst ( )->update ( );
+	CSceneMgr::GetInst ( )->update ( );
 
-	// √Êµπ √≥∏Æ
-	CCollisionMgr::GetInst()->update();
+	// Ï∂©Îèå Ï≤òÎ¶¨
+	CCollisionMgr::GetInst ( )->update ( );
 
-	// ¿Ã∫•∆Æ √≥∏Æ (∏∂¡ˆ∏∑)
-	CEventMgr::GetInst()->update();
+	// Ïù¥Î≤§Ìä∏ Ï≤òÎ¶¨ (ÎßàÏßÄÎßâ)
+	CEventMgr::GetInst ( )->update ( );
+	
+	// ÌéòÏù¥Îìú Ìö®Í≥º ÏóÖÎç∞Ïù¥Ìä∏
+	CFadeEffect::GetInst ( )->Update ( );
 }
 
-void CCore::render()
+void CCore::render ( )
 {
-	// πÈπˆ∆€(m_memDC) ¿¸√º∏¶ »Úªˆ¿∏∑Œ √ ±‚»≠
-	Rectangle(m_memDC, -1, -1, m_ptResolution.x + 1, m_ptResolution.y + 1);
+	// Î∞±Î≤ÑÌçº(m_memDC) Ï†ÑÏ≤¥Î•º Ìù∞ÏÉâÏúºÎ°ú Ï¥àÍ∏∞Ìôî
+	Rectangle ( m_memDC , -1 , -1 , m_ptResolution.x + 1 , m_ptResolution.y + 1 );
 
-	// πÈπˆ∆€ø° æ¿ ∑ª¥ı∏µ
-	CSceneMgr::GetInst()->render(m_memDC);
-	CCamera::GetInst()->render(m_memDC);
+	// Î∞±Î≤ÑÌçºÏóê Ïî¨ Î†åÎçîÎßÅ
+	CSceneMgr::GetInst ( )->render ( m_memDC );
+	CCamera::GetInst ( )->render ( m_memDC );
+	
+	// ÌéòÏù¥Îìú Ìö®Í≥º Î†åÎçîÎßÅ (ÏµúÏÉÅÏúÑ)
+	CFadeEffect::GetInst ( )->Render ( m_memDC );
 
-	// »≠∏È √‚∑¬
-	BitBlt(m_hDC, 0, 0, m_ptResolution.x, m_ptResolution.y,
-		m_memDC, 0, 0, SRCCOPY);
+	// ÌôîÎ©¥ Ï∂úÎ†•
+	BitBlt ( m_hDC , 0 , 0 , m_ptResolution.x , m_ptResolution.y ,
+		m_memDC , 0 , 0 , SRCCOPY );
 
-	// FPS ¡§∫∏ æ˜µ•¿Ã∆Æ
-	CTimeMgr::GetInst()->render();
+	// FPS Ï†ïÎ≥¥ ÏóÖÎç∞Ïù¥Ìä∏
+	CTimeMgr::GetInst ( )->render ( );
 }
 
-void CCore::SetGameResolution()
+void CCore::SetGameResolution ( )
 {
-	ChangeResolution(GAME_WIDTH, GAME_HEIGHT);
+	ChangeResolution ( GAME_WIDTH , GAME_HEIGHT );
 }
 
-void CCore::SetToolResolution()
+void CCore::SetToolResolution ( )
 {
-	ChangeResolution(TOOL_WIDTH, TOOL_HEIGHT);
+	ChangeResolution ( TOOL_WIDTH , TOOL_HEIGHT );
 }
 
-void CCore::ChangeResolution(int _iWidth, int _iHeight)
+void CCore::ChangeResolution ( int _iWidth , int _iHeight )
 {
-	// µø¿œ«— «ÿªÛµµ∏È ∫Ø∞Ê ª˝∑´
-	if (m_ptResolution.x == _iWidth && m_ptResolution.y == _iHeight)
+	// ÎèôÏùºÌïú Ìï¥ÏÉÅÎèÑÎ©¥ Î≥ÄÍ≤Ω ÏÉùÎûµ
+	if ( m_ptResolution.x == _iWidth && m_ptResolution.y == _iHeight )
 		return;
 
-	// «ÿªÛµµ º≥¡§
+	// Ìï¥ÏÉÅÎèÑ ÏÑ§Ï†ï
 	m_ptResolution.x = _iWidth;
 	m_ptResolution.y = _iHeight;
 
-	// ¿©µµøÏ ≈©±‚ ¡∂¡§
-	UpdateWindowSize();
+	// ÏúàÎèÑÏö∞ ÌÅ¨Í∏∞ Ï°∞Ï†ï
+	UpdateWindowSize ( );
 
-	// πÈπˆ∆€ ¡§∏Æ & ¿Áª˝º∫
-	RecreateBackBuffer();
+	// Î∞±Î≤ÑÌçº Ï†ïÎ¶¨ & Ïû¨ÏÉùÏÑ±
+	RecreateBackBuffer ( );
 
-	// ∞¸∑√ Ω√Ω∫≈€ æ˜µ•¿Ã∆Æ
-	CCamera::GetInst()->init(m_ptResolution.x, m_ptResolution.y);
+	// Í¥ÄÎ†® ÏãúÏä§ÌÖú ÏóÖÎç∞Ïù¥Ìä∏
+	CCamera::GetInst ( )->init ( m_ptResolution.x , m_ptResolution.y );
 }
 
-void CCore::UpdateWindowSize()
+void CCore::UpdateWindowSize ( )
 {
-	RECT rt = { 0, 0, (long)m_ptResolution.x, (long)m_ptResolution.y };
-	AdjustWindowRect(&rt, WS_OVERLAPPEDWINDOW, true);
-	SetWindowPos(m_hWnd, nullptr, 100, 100,
-		rt.right - rt.left, rt.bottom - rt.top, 0);
+	RECT rt = { 0, 0, ( long ) m_ptResolution.x, ( long ) m_ptResolution.y };
+	AdjustWindowRect ( &rt , WS_OVERLAPPEDWINDOW , true );
+	SetWindowPos ( m_hWnd , nullptr , 100 , 100 ,
+		rt.right - rt.left , rt.bottom - rt.top , 0 );
 }
 
-void CCore::RecreateBackBuffer()
+void CCore::RecreateBackBuffer ( )
 {
-	// ±‚¡∏ πÈπˆ∆€ ¡§∏Æ
-	if (m_memDC) DeleteDC(m_memDC);
-	if (m_hBit) DeleteObject(m_hBit);
+	// Í∏∞Ï°¥ Î∞±Î≤ÑÌçº Ï†ïÎ¶¨
+	if ( m_memDC ) DeleteDC ( m_memDC );
+	if ( m_hBit ) DeleteObject ( m_hBit );
 
-	// ªı∑ŒøÓ πÈπˆ∆€ ª˝º∫
-	m_hBit = CreateCompatibleBitmap(m_hDC, m_ptResolution.x, m_ptResolution.y);
-	m_memDC = CreateCompatibleDC(m_hDC);
+	// ÏÉàÎ°úÏö¥ Î∞±Î≤ÑÌçº ÏÉùÏÑ±
+	m_hBit = CreateCompatibleBitmap ( m_hDC , m_ptResolution.x , m_ptResolution.y );
+	m_memDC = CreateCompatibleDC ( m_hDC );
 
-	HBITMAP hOldBit = (HBITMAP)SelectObject(m_memDC, m_hBit);
-	DeleteObject(hOldBit);
+	HBITMAP hOldBit = ( HBITMAP ) SelectObject ( m_memDC , m_hBit );
+	DeleteObject ( hOldBit );
 }

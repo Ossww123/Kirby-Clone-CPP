@@ -355,6 +355,12 @@ struct tLevelObjectData
 	int iSubType;
 	int iTileVisualType;
 	int iCollisionType;
+	
+	// 몬스터 방향 정보
+	float fDirection;
+	
+	// 트리거 블록 전용 카메라 좌표 (트리거가 아닌 경우 무시됨)
+	Vec2 vBossLockPos;
 
 	tLevelObjectData()
 		: eGroupType(GROUP_TYPE::END)
@@ -363,6 +369,8 @@ struct tLevelObjectData
 		, iSubType(0)
 		, iTileVisualType(-1)
 		, iCollisionType(-1)
+		, fDirection(1.f)
+		, vBossLockPos(Vec2(400.f, 300.f))
 	{}
 };
 

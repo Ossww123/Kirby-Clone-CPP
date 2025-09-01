@@ -3,7 +3,7 @@
 #include "CObject.h"
 #include "CTimeMgr.h"
 
-// Àü¿ª Áß·Â°ª ÃÊ±âÈ­ (980Àº ÇÈ¼¿/ÃÊ^2 ´ÜÀ§)
+// ì „ì—­ ì¤‘ë ¥ê°’ ì´ˆê¸°í™” (980ì€ í”½ì…€/ì´ˆ^2 ë‹¨ìœ„)
 float CRigidBody::s_fGravity = 980.f;
 
 CRigidBody::CRigidBody()
@@ -49,22 +49,22 @@ void CRigidBody::Update()
 {
     float fDT = CTimeMgr::GetInst()->GetfDT();
 
-    // 1. ÈûÀ» °¡¼Óµµ·Î º¯È¯ (F = ma, a = F/m)
+    // 1. íž˜ì„ ê°€ì†ë„ë¡œ ë³€í™˜ (F = ma, a = F/m)
     m_vAccel = m_vForce / m_fMass;
 
-    // 2. Áß·Â Àû¿ë
+    // 2. ì¤‘ë ¥ ì ìš©
     if (m_bUseGravity && !m_bGround)
     {
         m_vAccel.y += s_fGravity * m_fGravityScale;
     }
 
-    // 3. °¡¼Óµµ¸¦ ¼Óµµ¿¡ Àû¿ë (v = v0 + at)
+    // 3. ê°€ì†ë„ë¥¼ ì†ë„ì— ì ìš© (v = v0 + at)
     m_vVelocity += m_vAccel * fDT;
 
-    // 4. ¸¶Âû·Â Àû¿ë (¹Ù´Ú¿¡ ÀÖÀ» ¶§¸¸)
+    // 4. ë§ˆì°°ë ¥ ì ìš© (ë°”ë‹¥ì— ìžˆì„ ë•Œë§Œ)
     if (m_bGround)
     {
-        // XÃà ¸¶Âû
+        // Xì¶• ë§ˆì°°
         if (abs(m_vVelocity.x) > 0.1f)
         {
             float fFrictionForce = m_fFriction * s_fGravity * fDT;
@@ -79,7 +79,7 @@ void CRigidBody::Update()
         }
     }
 
-    // 5. ÃÖ´ë ¼Óµµ Á¦ÇÑ
+    // 5. ìµœëŒ€ ì†ë„ ì œí•œ
     float fSpeed = m_vVelocity.Length();
     if (fSpeed > m_fMaxVelocity)
     {
@@ -87,7 +87,7 @@ void CRigidBody::Update()
         m_vVelocity *= m_fMaxVelocity;
     }
 
-    // 6. ¼Óµµ¸¦ À§Ä¡¿¡ Àû¿ë (s = s0 + vt)
+    // 6. ì†ë„ë¥¼ ìœ„ì¹˜ì— ì ìš© (s = s0 + vt)
     if (nullptr != m_pOwner)
     {
         Vec2 vPos = m_pOwner->GetPos();
@@ -95,6 +95,6 @@ void CRigidBody::Update()
         m_pOwner->SetPos(vPos);
     }
 
-    // 7. ÀÌ¹ø ÇÁ·¹ÀÓ Èû ÃÊ±âÈ­
+    // 7. ì´ë²ˆ í”„ë ˆìž„ íž˜ ì´ˆê¸°í™”
     m_vForce = Vec2(0.f, 0.f);
 }

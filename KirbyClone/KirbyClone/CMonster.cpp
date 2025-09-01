@@ -12,6 +12,7 @@
 #include "CScene.h"
 #include "CTile.h"
 #include "CAnimationDataMgr.h"
+#include "CSoundMgr.h"
 
 CMonster::CMonster()
     : CObject(OBJECT_TYPE::MONSTER_WADDLE_DEE)  // 기본값, 자식에서 변경
@@ -25,6 +26,7 @@ CMonster::CMonster()
     , m_fGroundCheckDist(32.f)
     , m_fWallCheckDist(32.f)
     , m_pEnemyTex(nullptr)
+    , m_bEditorMode(false)
 {
     // 기본 컴포넌트 생성
     CreateCollider();
@@ -36,7 +38,7 @@ CMonster::CMonster()
     // 리지드바디 기본 설정
     GetRigidBody()->SetMass(0.8f);
     GetRigidBody()->SetMaxVelocity(200.f);
-    GetRigidBody()->SetFriction(8.f);
+    GetRigidBody()->SetFriction(0.f);  // 몬스터는 정속 이동이므로 마찰력 불필요
     GetRigidBody()->SetUseGravity(true);
 
     // 공통 텍스처 로드
@@ -54,6 +56,18 @@ CMonster::~CMonster()
 
 void CMonster::Update()
 {
+    // 에디터 모드에서는 최소한의 업데이트만 수행
+    if (m_bEditorMode)
+    {   
+        // 애니메이터만 업데이트 (시각적 표시용)
+        if (nullptr != GetAnimator())
+            GetAnimator()->Update();
+        return;
+    }
+
+    // 스테이지 경계 체크 (경계를 벗어나면 Dead 처리)
+    CheckStageBounds();
+
     // 상태 업데이트
     UpdateState();
 
@@ -77,6 +91,9 @@ void CMonster::Render(HDC _dc)
     CAnimator* pAnimator = GetAnimator();
     if (pAnimator)
     {
+        // 몬스터는 기본적으로 왼쪽을 보므로, 오른쪽을 볼 때 플립
+        bool shouldFlip = IsFacingRight();
+        pAnimator->SetFlipX(shouldFlip);
         pAnimator->Render(_dc);
     }
     else
@@ -149,44 +166,83 @@ void CMonster::OnCollisionExit(CCollider* _pOther)
 
 void CMonster::HandleTileCollision(CObject* _pTile)
 {
-    // 빨아들려지는 중에는 타일 충돌 무시
-    if (m_eCurState == MONSTER_STATE::BEING_INHALED)
+    // 빨아들려지는 중이거나 데미지 상태에서는 타일 충돌 무시
+    if (m_eCurState == MONSTER_STATE::BEING_INHALED || m_eCurState == MONSTER_STATE::DAMAGE)
+    {
+        return;
+    }
+
+    if (!_pTile || !GetCollider() || !_pTile->GetCollider())
         return;
 
     CTile* pTile = dynamic_cast<CTile*>(_pTile);
-    if (!pTile)  // IsSolid() 체크 제거
-        return;
-
-    if (!GetRigidBody())
+    if (!pTile || !pTile->IsSolid())
         return;
 
     Vec2 vMyPos = GetPos();
-    Vec2 vTilePos = pTile->GetPos();
-    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
-    Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
+    Vec2 vTilePos = _pTile->GetPos();
+    Vec2 vMyScale = GetCollider()->GetScale();
+    Vec2 vTileScale = _pTile->GetCollider()->GetScale();
 
-    // 타일 위에 서 있는지 확인
-    float tileTop = vTilePos.y - vTileScale.y / 2.f;
-    float myBottom = vMyPos.y + vMyScale.y / 2.f;
+    // 충돌 깊이 계산
+    float fOverlapX = (vMyScale.x + vTileScale.x) / 2.f - abs(vMyPos.x - vTilePos.x);
+    float fOverlapY = (vMyScale.y + vTileScale.y) / 2.f - abs(vMyPos.y - vTilePos.y);
 
-    // 몬스터가 타일 위에 있고, 아래로 떨어지는 중이거나 정지 상태면 Ground 설정
-    if (abs(myBottom - tileTop) < 8.f && vMyPos.y < vTilePos.y)
+    if (fOverlapX > 0.f && fOverlapY > 0.f)
     {
-        Vec2 vVelocity = GetRigidBody()->GetVelocity();
-
-        // 아래로 떨어지는 중이면 위치 보정 및 Ground 설정
-        if (vVelocity.y >= 0.f)
+        // 더 작은 겹침을 우선으로 분리
+        if (fOverlapX < fOverlapY)
         {
-            // 위치 보정
-            float correctedY = tileTop - vMyScale.y / 2.f;
-            SetPos(Vec2(vMyPos.x, correctedY));
-
-            // Ground 설정 및 Y 속도 제거
-            GetRigidBody()->SetGround(true);
-            GetRigidBody()->SetVelocityY(0.f);
+            // 수평 분리
+            if (vMyPos.x < vTilePos.x)
+            {
+                // 몬스터가 타일 왼쪽에 있음 - 왼쪽으로 밀기
+                SetPos(Vec2(vTilePos.x - (vMyScale.x + vTileScale.x) / 2.f, vMyPos.y));
+                if (GetRigidBody())
+                {
+                    GetRigidBody()->SetVelocityX(0.f);
+                    // 벽에 부딪혔으므로 방향 전환
+                    TurnAround();
+                }
+            }
+            else
+            {
+                // 몬스터가 타일 오른쪽에 있음 - 오른쪽으로 밀기  
+                SetPos(Vec2(vTilePos.x + (vMyScale.x + vTileScale.x) / 2.f, vMyPos.y));
+                if (GetRigidBody())
+                {
+                    GetRigidBody()->SetVelocityX(0.f);
+                    // 벽에 부딪혔으므로 방향 전환
+                    TurnAround();
+                }
+            }
+        }
+        else
+        {
+            // 수직 분리
+            if (vMyPos.y < vTilePos.y)
+            {
+                // 몬스터가 타일 위에 있음 - 위로 밀기 (착지)
+                SetPos(Vec2(vMyPos.x, vTilePos.y - (vMyScale.y + vTileScale.y) / 2.f));
+                if (GetRigidBody())
+                {
+                    GetRigidBody()->SetVelocityY(0.f);
+                    GetRigidBody()->SetGround(true);
+                }
+            }
+            else
+            {
+                // 몬스터가 타일 아래에 있음 - 아래로 밀기 (천장 충돌)
+                SetPos(Vec2(vMyPos.x, vTilePos.y + (vMyScale.y + vTileScale.y) / 2.f));
+                if (GetRigidBody())
+                {
+                    GetRigidBody()->SetVelocityY(0.f);
+                }
+            }
         }
     }
 }
+
 
 void CMonster::LoadAnimationsFromFile(const wstring& _strFileName)
 {
@@ -244,6 +300,9 @@ void CMonster::ChangeState(MONSTER_STATE _eState)
             case MONSTER_STATE::BEING_INHALED:
                 pAnimator->Play(L"DAMAGE", true);  // 빨아들어지는 동안 계속 재생
                 break;
+            case MONSTER_STATE::EDITOR_IDLE:
+                pAnimator->Play(L"IDLE", true);
+                break;
             default:
                 pAnimator->Play(L"IDLE", true);
                 break;
@@ -262,11 +321,45 @@ void CMonster::TurnAround()
     m_iDir *= -1;
 }
 
+void CMonster::SetEditorMode(bool _bEditorMode)
+{
+    bool bPrevEditorMode = m_bEditorMode;
+    m_bEditorMode = _bEditorMode;
+    
+    // 에디터 모드에서 게임 모드로 전환될 때 초기화
+    if (bPrevEditorMode && !_bEditorMode)
+    {
+        // 리지드바디 다시 활성화
+        if (GetRigidBody())
+        {
+            GetRigidBody()->SetUseGravity(true);
+            GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
+        }
+        
+        // 게임 상태로 초기화
+        ChangeState(MONSTER_STATE::IDLE);
+        m_fStateTimer = 0.f;
+    }
+    // 게임 모드에서 에디터 모드로 전환될 때
+    else if (!bPrevEditorMode && _bEditorMode)
+    {
+        // 물리 효과 정지
+        if (GetRigidBody())
+        {
+            GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
+        }
+        
+        // 에디터 전용 상태로 변경
+        ChangeState(MONSTER_STATE::EDITOR_IDLE);
+    }
+}
+
 void CMonster::MoveHorizontal(float speed)
 {
     if (nullptr != GetRigidBody())
     {
-        GetRigidBody()->SetVelocityX(speed * m_iDir);
+        float targetVelocityX = speed * m_iDir;
+        GetRigidBody()->SetVelocityX(targetVelocityX);
     }
 }
 
@@ -320,13 +413,16 @@ void CMonster::UpdateState()
     case MONSTER_STATE::ATTACK:
         UpdateAttack();
         break;
+    case MONSTER_STATE::EDITOR_IDLE:
+        UpdateEditorIdle();
+        break;
     }
 }
 
 void CMonster::UpdateMove()
 {
     // 자식 클래스에서 Move() 호출로 실제 이동 처리
-    // 이 함수는 Move() 호출 후 추가 처리가 필요할 때 사용
+    Move();
 }
 
 void CMonster::UpdateIdle()
@@ -360,19 +456,18 @@ void CMonster::UpdateFly()
 
 void CMonster::UpdateTurn()
 {
+    // 방향 전환 중에는 멈춤
+    if (nullptr != GetRigidBody())
+    {
+        GetRigidBody()->SetVelocityX(0.f);
+    }
+    
     // 방향 전환 시간
     if (m_fStateTimer >= TURN_DURATION)
     {
+        // 실제 방향 전환
         TurnAround();
         ChangeState(MONSTER_STATE::WALK);  // 기본적으로 걷기로 복귀
-    }
-    else
-    {
-        // 방향 전환 중에는 멈춤
-        if (nullptr != GetRigidBody())
-        {
-            GetRigidBody()->SetVelocityX(0.f);
-        }
     }
 }
 
@@ -463,12 +558,6 @@ bool CMonster::CheckWallAhead()
         }
     }
 
-    // 화면 경계 체크
-    if (vCheckPos.x < 32.f || vCheckPos.x > 928.f)
-    {
-        return true;
-    }
-
     return false;
 }
 
@@ -507,4 +596,29 @@ bool CMonster::CheckGroundAhead()
     }
 
     return false;
+}
+
+void CMonster::UpdateEditorIdle()
+{
+    // 에디터 모드에서는 아무 행동도 하지 않음
+    // - AI 비활성화 (상태 변경 없음)
+    // - 물리 효과 비활성화 (중력, 이동 없음)
+    // - 단순히 위치에 배치된 상태로만 유치
+}
+
+void CMonster::CheckStageBounds()
+{
+    // 카메라의 스테이지 경계 정보 가져오기
+    Vec2 vStageBoundsMin, vStageBoundsMax;
+    CCamera::GetInst()->GetStageBounds(vStageBoundsMin, vStageBoundsMax);
+    
+    Vec2 vMyPos = GetPos();
+    
+    // 스테이지 경계를 벗어났는지 확인
+    if (vMyPos.x < vStageBoundsMin.x - 100.f || vMyPos.x > vStageBoundsMax.x + 100.f ||
+        vMyPos.y < vStageBoundsMin.y - 100.f || vMyPos.y > vStageBoundsMax.y + 100.f)
+    {
+        // 경계를 벗어나면 Dead 처리
+        SetDead();
+    }
 }

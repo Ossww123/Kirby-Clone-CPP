@@ -20,6 +20,11 @@ public:
     void AddObject(CObject* _pObj, GROUP_TYPE _eType);
     const vector<CObject*>& GetGroupObject(GROUP_TYPE _eType) { return m_arrObj[(UINT)_eType]; }
 
+public:
+    // === 일시정지 관리 ===
+    void SetPaused(bool _bPaused) { m_bPaused = _bPaused; }
+    bool IsPaused() const { return m_bPaused; }
+
 protected:
     // === 오브젝트 관리 내부 구현 ===
     void DeleteAllObject();             // 모든 오브젝트 삭제
@@ -28,4 +33,5 @@ protected:
 private:
     // === 멤버 변수 ===
     vector<CObject*> m_arrObj[(UINT)GROUP_TYPE::END];  // 그룹별로 오브젝트 관리
+    bool m_bPaused;                                    // 일시정지 상태
 };

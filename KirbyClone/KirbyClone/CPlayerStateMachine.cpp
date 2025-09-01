@@ -12,6 +12,13 @@
 #include "CPlayerStateTransitionTable.h"
 #include "CPlayerHealthSystem.h"
 #include "CProjectileFactory.h"
+#include "CProjectile.h"
+#include "CScene.h"
+#include "CSceneMgr.h"
+#include "CAbilityStar.h"
+#include "CFadeEffect.h"
+#include "CSoundMgr.h"
+#include "CCamera.h"
 
 CPlayerStateMachine::CPlayerStateMachine ( CPlayer* _pOwner )
     : m_pOwner ( _pOwner )
@@ -48,8 +55,10 @@ CPlayerStateMachine::CPlayerStateMachine ( CPlayer* _pOwner )
     , m_fDamageTimer ( 0.0f )              // 피격 타이머
     , m_fDamageDuration ( 0.5f )           // 0.5초 피격 상태
     , m_bDamageCompleted ( false )
+    , m_bAbilityAcquisitionAttack ( false )
     , m_eInhaleCount ( INHALE_COUNT::NONE )
     , m_eCopyAbility ( COPY_ABILITY::NONE )
+    , m_ePendingCopyAbility ( COPY_ABILITY::NONE )
     , m_fInhaleTimer ( 0.0f )
     , m_fInhaleDuration ( 1.0f )
     , m_fInhaleSuccessTimer ( 0.0f )
@@ -57,7 +66,10 @@ CPlayerStateMachine::CPlayerStateMachine ( CPlayer* _pOwner )
     , m_fExhaleTimer ( 0.0f )
     , m_fExhaleDuration ( 0.5f )
     , m_fSwallowTimer ( 0.0f )
-    , m_fSwallowDuration ( 0.8f )
+    , m_fSwallowDuration ( 0.3f )
+    , m_fAttackTimer ( 0.0f )
+    , m_fAttackDuration ( 0.5f )
+    , m_pElectricField ( nullptr )
 {
     // 새로운 시스템들 생성
     m_pInputManager = new CPlayerInputManager ( );
@@ -100,6 +112,29 @@ void CPlayerStateMachine::Update ( )
     if ( !m_pOwner || !pRigidBody || !m_pInputManager || !m_pTransitionTable )
         return;
 
+    // === 승리 시퀀스 대기 중에는 입력 처리 건너뛰기 ===
+    if (m_pOwner->IsVictorySequenceWaiting())
+    {
+        // 입력 없는 상태로 상태 전환 테이블만 사용
+        CPlayerInputManager::InputFlags noInput = 0;
+        
+        // 상태 전환 체크 (입력 없음으로 자연스러운 전환만 허용)
+        PLAYER_STATE nextState = m_pTransitionTable->GetNextState(m_eCurState, noInput, m_pOwner);
+        
+        // 상태 변경 (전환 테이블 결과만 사용)
+        if (nextState != m_eCurState)
+        {
+            ChangeStateInternal(nextState);
+        }
+        
+        // 현재 상태 실행
+        ExecuteCurrentState();
+        
+        // 이전 프레임 Ground 상태 업데이트
+        m_bWasGrounded = pRigidBody->IsGround();
+        return;
+    }
+
     // 1. 입력 수집
     m_pInputManager->Update ( );
     CPlayerInputManager::InputFlags currentInput = m_pInputManager->GetCurrentFrameInput ( );
@@ -113,10 +148,13 @@ void CPlayerStateMachine::Update ( )
         ChangeStateInternal ( nextState );
     }
 
-    // 4. 현재 상태 실행 (입력 처리 없음, 순수 실행만)
+    // 4. 능력 버리기 처리 (모든 상태에서 가능)
+    HandleDropAbility();
+
+    // 5. 현재 상태 실행 (입력 처리 없음, 순수 실행만)
     ExecuteCurrentState ( );
 
-    // 5. 이전 프레임 Ground 상태 업데이트
+    // 6. 이전 프레임 Ground 상태 업데이트
     m_bWasGrounded = pRigidBody->IsGround ( );
 }
 
@@ -124,7 +162,13 @@ void CPlayerStateMachine::ChangeStateInternal ( PLAYER_STATE _eState )
 {
     // 유효성 검사
     if ( !CanChangeToState ( _eState ) )
+    {
+        // 디버깅: 유효성 검사 실패
+        char debugMsg[256];
+        sprintf_s(debugMsg, "State transition BLOCKED: %d -> %d\n", (int)m_eCurState, (int)_eState);
+        OutputDebugStringA(debugMsg);
         return;
+    }
 
     // 실제 상태 변경
     m_ePrevState = m_eCurState;
@@ -192,8 +236,20 @@ void CPlayerStateMachine::ExecuteCurrentState ( )
     case PLAYER_STATE::SWALLOW:
         ExecuteSwallowState ( );
         break;
+    case PLAYER_STATE::ATTACK:
+        ExecuteAttackState ( );
+        break;
+    case PLAYER_STATE::ATTACK_HOLD:
+        ExecuteAttackHoldState ( );
+        break;
     case PLAYER_STATE::BOUNCE:
         ExecuteBounceState ( );
+        break;
+    case PLAYER_STATE::DOOR_ENTER:
+        ExecuteDoorEnterState();
+        break;
+    case PLAYER_STATE::VICTORY_DANCE:
+        ExecuteVictoryDanceState();
         break;
     }
 }
@@ -306,16 +362,16 @@ void CPlayerStateMachine::ExecuteExhaleState ( )
     // 내뱉기 상태 타이머 업데이트
     m_fExhaleTimer += CTimeMgr::GetInst ( )->GetfDT ( );
 
-    // 내뱉기 상태 시간 초과시 종료
-    if ( m_fExhaleTimer >= m_fExhaleDuration )
+    // 내뱉기 시작 시 빨아들이기 시스템 상태 초기화 (한 번만 실행)
+    if (m_fExhaleTimer <= CTimeMgr::GetInst()->GetfDT() && m_pOwner )
     {
-        // 빨아들이기 카운트 초기화
-        m_eInhaleCount = INHALE_COUNT::NONE;
-        m_eCopyAbility = COPY_ABILITY::NONE;
-
-        // 기본 상태로 복귀
-        ChangeStateInternal ( PLAYER_STATE::IDLE );
+        if ( m_pOwner->GetInhaleSystem())
+        {
+            m_pOwner->GetInhaleSystem()->SpitOut(); // 내뱉기 실행
+        }
     }
+
+    // 전환은 전환 테이블에 맡김 - 애니메이션 완료 시점에 상태 변경됨
 }
 
 void CPlayerStateMachine::ExecuteSwallowState ( )
@@ -323,15 +379,485 @@ void CPlayerStateMachine::ExecuteSwallowState ( )
     // 삼키기 상태 타이머 업데이트
     m_fSwallowTimer += CTimeMgr::GetInst ( )->GetfDT ( );
 
+    // 삼키기 시작 시 빨아들이기 시스템 상태 초기화 (한 번만 실행)
+    if (m_fSwallowTimer <= CTimeMgr::GetInst()->GetfDT() && m_pOwner)
+    {
+        if ( m_pOwner->GetInhaleSystem())
+        {
+            m_pOwner->GetInhaleSystem()->ReleaseMouthful(); // 입에 물고 있는 상태 해제
+        }
+    }
+
     // 삼키기 상태 시간 초과시 종료
     if ( m_fSwallowTimer >= m_fSwallowDuration )
     {
-        // 카피 능력 획득 (현재 COPY_ABILITY 유지)
-        // 빨아들이기 카운트 초기화
-        m_eInhaleCount = INHALE_COUNT::NONE;
+        // 카피 능력 획득 및 애니메이션 변경
+        if ( m_pOwner && m_ePendingCopyAbility != COPY_ABILITY::NONE )
+        {
+            // pending에서 실제 능력으로 적용
+            m_eCopyAbility = m_ePendingCopyAbility;
+            m_ePendingCopyAbility = COPY_ABILITY::NONE;
+            
+            // 카피 능력 획득 효과음
+            OutputDebugStringA("CopyAbility acquired: Playing copy sound\n");
+            CSoundMgr::GetInst()->PlaySFX(L"copy");
+            
+            // 능력별 애니메이션 파일 로드
+            m_pOwner->LoadCopyAbilityAnimations ( m_eCopyAbility );
 
-        // 기본 상태로 복귀
+            // 디버그 메시지 출력
+            const char* abilityName = "";
+            switch ( m_eCopyAbility )
+            {
+            case COPY_ABILITY::FIRE: abilityName = "FIRE"; break;
+            case COPY_ABILITY::BEAM: abilityName = "BEAM"; break;
+            case COPY_ABILITY::SPARK: abilityName = "SPARK"; break;
+            default: abilityName = "NONE"; break;
+            }
+
+            // 빨아들이기 카운트 초기화
+            m_eInhaleCount = INHALE_COUNT::NONE;
+
+            // ATTACK 상태로 전환 (능력 시연)
+            ChangeStateInternal ( PLAYER_STATE::ATTACK );
+        }
+        else
+        {
+            // 능력이 없어도 상태 초기화 및 복귀
+            m_eInhaleCount = INHALE_COUNT::NONE;
+            m_ePendingCopyAbility = COPY_ABILITY::NONE; // pending도 초기화
+            ChangeStateInternal ( PLAYER_STATE::IDLE );
+        }
+    }
+}
+
+void CPlayerStateMachine::ExecuteAttackState ( )
+{
+    // 공격 상태 타이머 업데이트
+    m_fAttackTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+    
+    // 능력 획득 연출 중이면 연출용 공격, 아니면 일반 공격
+    if (m_bAbilityAcquisitionAttack)
+    {
+        ExecutePresentationAttack();
+    }
+    else
+    {
+        // 카피 능력에 따른 일반 공격 실행
+        switch ( m_eCopyAbility )
+        {
+        case COPY_ABILITY::FIRE:
+            // 파이어는 0.5초만 실행 (ATTACK_HOLD로 전환됨)
+            if ( m_fAttackTimer <= 0.5f )
+            {
+                ExecuteFireAttack ( );
+            }
+            break;
+        case COPY_ABILITY::BEAM:
+            // BEAM은 기존 방식 유지
+            ExecuteBeamAttack ( );
+            break;
+        case COPY_ABILITY::SPARK:
+            // 스파크는 0.5초만 실행 (ATTACK_HOLD로 전환됨)
+            if ( m_fAttackTimer <= 0.5f )
+            {
+                ExecuteSparkAttack ( );
+            }
+            break;
+        default:
+            // 기본 공격이나 오류 처리
+            break;
+        }
+    }
+    
+    // 능력 획득 연출 중인 공격이 끝나가면 페이드인 시작 (한 번만 실행)
+    if (m_bAbilityAcquisitionAttack && 
+        m_fAttackTimer >= m_fAttackDuration - 0.2f && m_fAttackTimer < m_fAttackDuration - 0.1f)
+    {
+        CFadeEffect::GetInst()->ReleaseFadeHold(); // 암전 유지 해제
+        CFadeEffect::GetInst()->StartFadeIn(FADE_COLOR::BLACK, 0.3f); // 페이드인 시작
+    }
+    
+    // 공격 상태 완료 시 능력 획득 연출 플래그 리셋
+    if (m_fAttackTimer >= m_fAttackDuration)
+    {
+        m_bAbilityAcquisitionAttack = false;
+    }
+    
+    // 공격 상태 시간 초과시 종료 (상태 전환은 전환 테이블에서 처리)
+}
+
+void CPlayerStateMachine::ExecuteAttackHoldState ( )
+{
+    // ATTACK_HOLD 상태: 파이어/스파크 지속 공격
+    // X키가 떼어질 때까지 계속 공격 유지
+    
+    // 카피 능력에 따른 지속 공격 실행
+    switch ( m_eCopyAbility )
+    {
+    case COPY_ABILITY::FIRE:
+        ExecuteFireHoldAttack ( );
+        break;
+    case COPY_ABILITY::SPARK:
+        ExecuteSparkHoldAttack ( );
+        break;
+    default:
+        // 파이어/스파크가 아니면 IDLE로 복귀 (BEAM은 이미 ATTACK에서 처리됨)
         ChangeStateInternal ( PLAYER_STATE::IDLE );
+        break;
+    }
+}
+
+void CPlayerStateMachine::ExecuteFireAttack ( )
+{
+    // 파이어 능력: X키 홀드로 전방 불 공격
+    if ( !m_pOwner || !m_pInputManager )
+        return;
+    
+    // X키가 홀드되어 있는 동안 지속적으로 불 공격 (투사체 생성)
+    // 연출 중일 때는 1초간 가상 홀드
+    bool bShouldAttack = m_pInputManager->HasInput ( ( uint32_t ) CPlayerInputManager::INPUT_TYPE::ACTION_HOLD );
+    if ( m_bAbilityAcquisitionAttack && m_fAttackTimer <= 1.0f )
+    {
+        bShouldAttack = true; // 연출 중 1초간 가상 홀드
+    }
+    
+    if ( bShouldAttack )
+    {
+        // 파이어 공격 시작 시 사운드 재생
+        static bool bFireSoundStarted = false;
+        static float fireSoundTimer = 0.0f;
+        
+        if (!bFireSoundStarted)
+        {
+            CSoundMgr::GetInst()->PlaySFX(L"kirby_fire");
+            bFireSoundStarted = true;
+            fireSoundTimer = 0.0f;
+        }
+        
+        // 사운드 재생 시간 추적 (대략 1초마다 재시작)
+        fireSoundTimer += CTimeMgr::GetInst()->GetfDT();
+        if (fireSoundTimer >= 1.0f)
+        {
+            CSoundMgr::GetInst()->PlaySFX(L"kirby_fire");
+            fireSoundTimer = 0.0f;
+        }
+        
+        // 0.1초마다 화염구 발사
+        static float fireballTimer = 0.0f;
+        fireballTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+        
+        if ( fireballTimer >= 0.1f )
+        {
+            // 현재 씬의 불덩이 개수 확인 (최대 5개 제한)
+            CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+            if (pCurScene)
+            {
+                const vector<CObject*>& projList = pCurScene->GetGroupObject(GROUP_TYPE::PROJ_PLAYER);
+                int fireballCount = 0;
+                
+                // 현재 활성화된 KIRBY_FIRE 투사체 개수 세기
+                for (CObject* pObj : projList)
+                {
+                    CProjectile* pProj = dynamic_cast<CProjectile*>(pObj);
+                    if (pProj && pProj->GetProjectileType() == PROJECTILE_TYPE::KIRBY_FIRE && !pProj->IsDead())
+                    {
+                        fireballCount++;
+                    }
+                }
+                
+                // 5개 미만일 때만 새로운 불덩이 생성
+                if (fireballCount < 5)
+                {
+                    Vec2 kirbyPos = m_pOwner->GetPos();
+                    CPlayerMovement* pMovement = m_pOwner->GetMovement();
+                    
+                    // 커비가 바라보는 방향 확인
+                    int direction = 1; // 1: 오른쪽, -1: 왼쪽
+                    if (pMovement && !pMovement->IsFacingRight())
+                    {
+                        direction = -1;
+                    }
+                    
+                    // 발사 위치 (커비 앞쪽)
+                    Vec2 firePos = kirbyPos + Vec2(direction * 32.0f, 0.0f);
+                    
+                    // 발사 방향
+                    Vec2 fireDirection = Vec2((float)direction, 0.0f);
+                    
+                    // 불덩이 투사체 생성
+                    CProjectile* pFireball = CProjectileFactory::Create(
+                        PROJECTILE_TYPE::KIRBY_FIRE, 
+                        firePos, 
+                        fireDirection, 
+                        GROUP_TYPE::PLAYER
+                    );
+                    
+                    if (pFireball)
+                    {
+                        // 씬에 추가
+                        CREATE_OBJECT(pFireball, GROUP_TYPE::PROJ_PLAYER);
+                    }
+                }
+            }
+            
+            fireballTimer = 0.0f;
+        }
+    }
+    else
+    {
+        // 파이어 공격이 끝나면 사운드 플래그 리셋
+        static bool bFireSoundStarted = false;
+        bFireSoundStarted = false;
+    }
+}
+
+void CPlayerStateMachine::ExecuteBeamAttack ( )
+{
+    // 빔 능력: 전방 원뿔 범위를 위에서부터 쓸어내리는 공격
+    if ( !m_pOwner )
+        return;
+    
+    // 공격 시작 시 한 번만 실행 - 5개의 빔 투사체 생성
+    if ( m_fAttackTimer <= CTimeMgr::GetInst ( )->GetfDT ( ) )
+    {
+        // 빔 공격 효과음 재생
+        CSoundMgr::GetInst()->PlaySFX(L"kirby_beam");
+        Vec2 kirbyPos = m_pOwner->GetPos();
+        CPlayerMovement* pMovement = m_pOwner->GetMovement();
+        
+        // 커비가 바라보는 방향 확인 (기본값: 오른쪽)
+        int direction = 1; // 1: 오른쪽, -1: 왼쪽
+        if (pMovement && !pMovement->IsFacingRight())
+        {
+            direction = -1;
+        }
+        
+        // 회전 중심점 (커비 앞쪽 1타일)
+        Vec2 rotationCenter = kirbyPos + Vec2(direction * 64.0f, 0.0f); // 64픽셀 = 1타일
+        
+        // 6개의 빔 투사체 생성
+        for (int i = 0; i < 6; ++i)
+        {
+            // 각 투사체의 반지름 (바깥쪽부터 안쪽으로) - 1.2배 확장
+            float radius = (128.0f - (i * 24.0f)) * 1.2f; // 153.6, 124.8, 96, 67.2, 38.4, 9.6 픽셀
+            
+            // 시작 각도 (위쪽 75도부터)
+            float startAngle = -75.0f * (3.14159f / 180.0f); // 라디안 변환
+            
+            // 끝 각도 (아래쪽 45도까지)
+            float endAngle = 45.0f * (3.14159f / 180.0f);
+            
+            // 왼쪽을 보고 있으면 각도 반전
+            if (direction == -1)
+            {
+                startAngle = 180.0f * (3.14159f / 180.0f) + 75.0f * (3.14159f / 180.0f);
+                endAngle = 180.0f * (3.14159f / 180.0f) - 45.0f * (3.14159f / 180.0f);
+            }
+            
+            // 시작 위치 계산
+            Vec2 startPos = rotationCenter + Vec2(
+                cos(startAngle) * radius,
+                sin(startAngle) * radius
+            );
+            
+            // 끝 위치 계산
+            Vec2 endPos = rotationCenter + Vec2(
+                cos(endAngle) * radius,
+                sin(endAngle) * radius
+            );
+            
+            // 회전 빔 투사체 생성 - 특수 파라미터 전달
+            CProjectile* pBeam = CProjectileFactory::CreateRotatingBeam(
+                rotationCenter,     // 회전 중심점
+                radius,             // 회전 반지름
+                startAngle,         // 시작 각도
+                endAngle,           // 끝 각도
+                0.6f,               // 회전 지속시간
+                m_pOwner
+            );
+            
+            if (pBeam)
+            {
+                CREATE_OBJECT(pBeam, GROUP_TYPE::PROJ_PLAYER);
+            }
+        }
+    }
+}
+
+void CPlayerStateMachine::ExecuteSparkAttack ( )
+{
+    // 스파크 능력: 몸 주변으로 전기장을 생성하는 공격
+    if ( !m_pOwner || !m_pInputManager )
+        return;
+    
+    // X키가 홀드되어 있는 동안 전기장 유지
+    // 연출 중일 때는 1초간 가상 홀드
+    bool bShouldAttack = m_pInputManager->HasInput ( ( uint32_t ) CPlayerInputManager::INPUT_TYPE::ACTION_HOLD );
+    if ( m_bAbilityAcquisitionAttack && m_fAttackTimer <= 1.0f )
+    {
+        bShouldAttack = true; // 연출 중 1초간 가상 홀드
+    }
+    
+    if ( bShouldAttack )
+    {
+        // 스파크 공격 시작 시 사운드 재생
+        static bool bSparkSoundStarted = false;
+        static float sparkSoundTimer = 0.0f;
+        
+        if (!bSparkSoundStarted)
+        {
+            CSoundMgr::GetInst()->PlaySFX(L"kirby_spark");
+            bSparkSoundStarted = true;
+            sparkSoundTimer = 0.0f;
+        }
+        
+        // 사운드 재생 시간 추적 (대략 1초마다 재시작)
+        sparkSoundTimer += CTimeMgr::GetInst()->GetfDT();
+        if (sparkSoundTimer >= 1.0f)
+        {
+            CSoundMgr::GetInst()->PlaySFX(L"kirby_spark");
+            sparkSoundTimer = 0.0f;
+        }
+        
+        // 전기장이 없으면 생성
+        if ( !m_pElectricField || m_pElectricField->IsDead() )
+        {
+            Vec2 kirbyPos = m_pOwner->GetPos();
+            
+            // 커비 주위 3x3 타일 크기의 전기장 생성
+            CProjectile* pElectricField = CProjectileFactory::Create(
+                PROJECTILE_TYPE::KIRBY_ELECTRIC_FIELD, 
+                kirbyPos, 
+                Vec2(0.0f, 0.0f),  // 이동하지 않음
+                GROUP_TYPE::PLAYER
+            );
+            
+            if (pElectricField)
+            {
+                // 씬에 추가
+                CREATE_OBJECT(pElectricField, GROUP_TYPE::PROJ_PLAYER);
+                m_pElectricField = pElectricField;
+            }
+        }
+        else
+        {
+            // 전기장이 이미 있으면 커비 위치에 맞춰 위치 업데이트
+            Vec2 kirbyPos = m_pOwner->GetPos();
+            m_pElectricField->SetPos(kirbyPos);
+        }
+    }
+    else
+    {
+        // X키를 떼면 전기장 즉시 삭제
+        if ( m_pElectricField && !m_pElectricField->IsDead() )
+        {
+            m_pElectricField->SetDead();
+            m_pElectricField = nullptr;
+        }
+        
+        // 스파크 공격이 끝나면 사운드 플래그 리셋
+        static bool bSparkSoundStarted = false;
+        bSparkSoundStarted = false;
+    }
+}
+
+void CPlayerStateMachine::ExecuteFireHoldAttack ( )
+{
+    // 파이어 홀드 공격: 지속적으로 화염구 발사
+    if ( !m_pOwner || !m_pInputManager )
+        return;
+    
+    // 0.1초마다 화염구 발사
+    static float fireballTimer = 0.0f;
+    fireballTimer += CTimeMgr::GetInst ( )->GetfDT ( );
+    
+    if ( fireballTimer >= 0.1f )
+    {
+        // 현재 씬의 불덩이 개수 확인 (최대 5개 제한)
+        CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+        if (pCurScene)
+        {
+            const vector<CObject*>& projObjects = pCurScene->GetGroupObject(GROUP_TYPE::PROJ_PLAYER);
+            int fireballCount = 0;
+            
+            for (CObject* pObj : projObjects)
+            {
+                CProjectile* pProj = dynamic_cast<CProjectile*>(pObj);
+                if (pProj && pProj->GetProjectileType() == PROJECTILE_TYPE::KIRBY_FIRE && !pProj->IsDead())
+                {
+                    fireballCount++;
+                }
+            }
+            
+            // 5개 미만일 때만 새로운 화염구 생성
+            if (fireballCount < 5)
+            {
+                Vec2 kirbyPos = m_pOwner->GetPos();
+                CPlayerMovement* pMovement = m_pOwner->GetMovement();
+                
+                // 커비가 바라보는 방향 확인
+                int direction = 1; // 1: 오른쪽, -1: 왼쪽
+                if (pMovement && !pMovement->IsFacingRight())
+                {
+                    direction = -1;
+                }
+                
+                // 발사 위치 (커비 앞쪽)
+                Vec2 firePos = kirbyPos + Vec2(direction * 32.0f, 0.0f);
+                
+                // 발사 방향
+                Vec2 fireDirection = Vec2((float)direction, 0.0f);
+                
+                CProjectile* pFireball = CProjectileFactory::Create(
+                    PROJECTILE_TYPE::KIRBY_FIRE,
+                    firePos,
+                    fireDirection,
+                    GROUP_TYPE::PLAYER
+                );
+                
+                if (pFireball)
+                {
+                    CREATE_OBJECT(pFireball, GROUP_TYPE::PROJ_PLAYER);
+                }
+            }
+        }
+        
+        fireballTimer = 0.0f;
+    }
+}
+
+void CPlayerStateMachine::ExecuteSparkHoldAttack ( )
+{
+    // 스파크 홀드 공격: 전기장 유지
+    if ( !m_pOwner || !m_pInputManager )
+        return;
+    
+    // 전기장이 없으면 생성
+    if ( !m_pElectricField || m_pElectricField->IsDead() )
+    {
+        Vec2 kirbyPos = m_pOwner->GetPos();
+        
+        // 커비 주위 3x3 타일 크기의 전기장 생성
+        CProjectile* pElectricField = CProjectileFactory::Create(
+            PROJECTILE_TYPE::KIRBY_ELECTRIC_FIELD, 
+            kirbyPos, 
+            Vec2(0.0f, 0.0f),  // 이동하지 않음
+            GROUP_TYPE::PLAYER
+        );
+        
+        if (pElectricField)
+        {
+            // 씬에 추가
+            CREATE_OBJECT(pElectricField, GROUP_TYPE::PROJ_PLAYER);
+            m_pElectricField = pElectricField;
+        }
+    }
+    else
+    {
+        // 전기장이 이미 있으면 커비 위치에 맞춰 위치 업데이트
+        Vec2 kirbyPos = m_pOwner->GetPos();
+        m_pElectricField->SetPos(kirbyPos);
     }
 }
 
@@ -459,6 +985,14 @@ void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
         }
     }
 
+    // 이전 상태가 EXHALE이었다면 빨아들이기 카운트 초기화
+    if ( m_ePrevState == PLAYER_STATE::EXHALE && _eState != PLAYER_STATE::EXHALE )
+    {
+        m_eInhaleCount = INHALE_COUNT::NONE;
+        m_eCopyAbility = COPY_ABILITY::NONE;
+        // 타이머는 다음 EXHALE 진입 시 초기화되므로 여기서 리셋하지 않음
+    }
+
     switch ( _eState )
     {
     case PLAYER_STATE::JUMP:
@@ -482,13 +1016,24 @@ void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
     case PLAYER_STATE::SWALLOW:
         OnEnterSwallowState ( );
         break;
+    case PLAYER_STATE::ATTACK:
+        OnEnterAttackState ( );
+        break;
     case PLAYER_STATE::MOUTHFUL_IDLE:
+        OnEnterMouthfulState ( );
+        break;
+    case PLAYER_STATE::RUN:
+        OnEnterRunState();
+        break;
     case PLAYER_STATE::MOUTHFUL_WALK:
     case PLAYER_STATE::MOUTHFUL_RUN:
-    case PLAYER_STATE::MOUTHFUL_JUMP:
+        OnEnterRunState();
+        break;
     case PLAYER_STATE::MOUTHFUL_FALL:
     case PLAYER_STATE::MOUTHFUL_DAMAGE:
-        OnEnterMouthfulState ( );
+        break;
+    case PLAYER_STATE::MOUTHFUL_JUMP:
+        OnEnterJumpState ( );
         break;
     case PLAYER_STATE::BOUNCE:
         OnEnterBounceState ( );
@@ -506,6 +1051,9 @@ void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
     case PLAYER_STATE::DAMAGE:
         OnEnterDamageState ( );
         break;
+    case PLAYER_STATE::VICTORY_DANCE:
+        OnEnterVictoryDanceState ( );
+        break;
     }
 }
 
@@ -515,11 +1063,25 @@ void CPlayerStateMachine::OnEnterJumpState ( )
     {
         m_pOwner->GetMovement ( )->Jump ( );
     }
+    
+    // 점프 효과음
+    OutputDebugStringA("OnEnterJumpState: Playing kirby_jump sound\n");
+    CSoundMgr::GetInst()->PlaySFX(L"kirby_jump");
+}
+
+void CPlayerStateMachine::OnEnterRunState ( )
+{
+    // RUN 효과음
+    OutputDebugStringA("OnEnterRunState: Playing kirby_run sound\n");
+    CSoundMgr::GetInst()->PlaySFX(L"kirby_run");
 }
 
 void CPlayerStateMachine::OnEnterSlideState ( )
 {
     InitiateSlide ( );
+    
+    // 슬라이드 효과음
+    CSoundMgr::GetInst()->PlaySFX(L"kirby_slide");
 }
 
 void CPlayerStateMachine::OnEnterSlideKickRecoilState ( )
@@ -569,17 +1131,105 @@ void CPlayerStateMachine::OnEnterExhaleState ( )
     m_fExhaleTimer = 0.0f;
 
     // 투사체 생성 (빨아들인 것이 있을 경우에만)
-    if ( m_pOwner && m_eInhaleCount != INHALE_COUNT::NONE )
+    if ( m_pOwner && m_eInhaleCount == INHALE_COUNT::ONE )
     {
-        // TODO: CProjectileFactory를 통한 투사체 생성
-        // KIRBY_STAR 또는 KIRBY_STAR_ENHANCED 타입 투사체 생성
+        // 플레이어 위치와 방향 가져오기
+        Vec2 vPlayerPos = m_pOwner->GetPos ( );
+        Vec2 vDirection;
+
+        // 플레이어가 보고 있는 방향 확인
+        CPlayerMovement* pMovement = m_pOwner->GetMovement ( );
+        if ( pMovement && !pMovement->IsFacingRight ( ) )
+        {
+            vDirection = Vec2 ( -1.f , 0.f );  // 왼쪽
+            vPlayerPos.x -= 32.f;  // 투사체 시작 위치 조정
+        }
+        else
+        {
+            vDirection = Vec2 ( 1.f , 0.f );   // 오른쪽  
+            vPlayerPos.x += 32.f;  // 투사체 시작 위치 조정
+        }
+
+        // KIRBY_STAR 투사체 생성
+        CProjectile* pStar = CProjectileFactory::CreateStar (
+            vPlayerPos ,
+            vDirection ,
+            GROUP_TYPE::PLAYER
+        );
+
+        if ( pStar )
+        {
+            // 씬에 추가
+            CREATE_OBJECT ( pStar , GROUP_TYPE::PROJ_PLAYER );
+        }
     }
 }
 
 void CPlayerStateMachine::OnEnterSwallowState ( )
 {
+    // 삼키기 사운드 재생
+    CSoundMgr::GetInst()->PlaySFX(L"kirby_swallow");
+    
     // 삼키기 타이머 초기화
     m_fSwallowTimer = 0.0f;
+    
+    // 능력이 있는 경우에만 페이드아웃 시작
+    if (m_ePendingCopyAbility != COPY_ABILITY::NONE)
+    {
+        CFadeEffect::GetInst()->StartFadeOut(FADE_COLOR::BLACK, 0.3f, 25); // 0.3초 페이드아웃, 알파 25
+        m_bAbilityAcquisitionAttack = true; // 능력 획득 연출 공격 플래그 설정
+    }
+}
+
+void CPlayerStateMachine::ExecutePresentationAttack()
+{
+    // 연출용 공격 실행 - private Execute 함수들을 내부에서 호출
+    switch (m_eCopyAbility)
+    {
+    case COPY_ABILITY::FIRE:
+        ExecuteFireAttack();
+        break;
+    case COPY_ABILITY::BEAM:
+        ExecuteBeamAttack();
+        break;
+    case COPY_ABILITY::SPARK:
+        ExecuteSparkAttack();
+        break;
+    default:
+        break;
+    }
+}
+
+void CPlayerStateMachine::OnEnterAttackState ( )
+{
+    // 공격 타이머 초기화
+    m_fAttackTimer = 0.0f;
+    
+    // 능력 획득 연출 중인 경우 암전 유지 설정
+    if (m_bAbilityAcquisitionAttack)
+    {
+        CFadeEffect::GetInst()->HoldCurrentFade();
+    }
+    
+    // 능력별 초기화 처리 및 공격 시간 설정
+    switch ( m_eCopyAbility )
+    {
+    case COPY_ABILITY::FIRE:
+        // 파이어 공격 초기화
+        m_fAttackDuration = 0.5f; // 기본 공격 시간
+        break;
+    case COPY_ABILITY::BEAM:
+        // 빔 공격 초기화
+        m_fAttackDuration = 0.7f; // 빔 공격은 더 긴 시간
+        break;
+    case COPY_ABILITY::SPARK:
+        // 스파크 공격 초기화
+        m_fAttackDuration = 0.8f; // 스파크 공격 시간
+        break;
+    default:
+        m_fAttackDuration = 0.5f; // 기본 공격 시간
+        break;
+    }
 }
 
 void CPlayerStateMachine::OnEnterMouthfulState ( )
@@ -590,6 +1240,9 @@ void CPlayerStateMachine::OnEnterMouthfulState ( )
 void CPlayerStateMachine::OnEnterBounceState ( )
 {
     PerformBounce ( );
+    
+    // 바운스 효과음 재생
+    CSoundMgr::GetInst()->PlaySFX(L"kirby_bounce");
 }
 
 void CPlayerStateMachine::OnEnterFallState ( )
@@ -610,6 +1263,10 @@ void CPlayerStateMachine::OnEnterHoverState ( )
 
     // 중력 비활성화
     DisableGravityForHover ( );
+    
+    // HOVER 시작 효과음
+    OutputDebugStringA("OnEnterHoverState: Playing kirby_hover sound\n");
+    CSoundMgr::GetInst()->PlaySFX(L"kirby_hover");
 }
 
 void CPlayerStateMachine::OnEnterHoverExhaleState ( )
@@ -623,6 +1280,10 @@ void CPlayerStateMachine::OnEnterHoverExhaleState ( )
     {
         pRigidBody->SetUseGravity ( true );
     }
+    
+    // 공기 내뱉기 효과음
+    OutputDebugStringA("OnEnterHoverExhaleState: Playing exhale_air_puff sound\n");
+    CSoundMgr::GetInst()->PlaySFX(L"exhale_air_puff");
 }
 
 void CPlayerStateMachine::OnEnterDamageState ( )
@@ -630,11 +1291,67 @@ void CPlayerStateMachine::OnEnterDamageState ( )
     m_fDamageTimer = 0.0f;
     m_bDamageCompleted = false;
 
+    // 커비 데미지 효과음
+    OutputDebugStringA("OnEnterDamageState: Playing damage sound\n");
+    CSoundMgr::GetInst()->PlaySFX(L"damage");
+    
+    // 카메라 흔들림 효과 (0.3초간 15픽셀 강도)
+    CCamera::GetInst()->CameraShake(0.3f, 15.f);
+
     // 피격 플래그 정리
     if ( m_pOwner )
     {
         m_pOwner->ClearDamageRequest ( );
     }
+    
+    // 카피 능력이 있는 상태에서 데미지를 받으면 능력별 생성
+    if (m_eCopyAbility != COPY_ABILITY::NONE && m_pOwner)
+    {
+        COPY_ABILITY currentAbility = m_eCopyAbility;
+        Vec2 kirbyPos = m_pOwner->GetPos();
+        Vec2 starPos = kirbyPos + Vec2(0.f, -30.f);
+        
+        // 능력별 생성
+        CAbilityStar* pAbilityStar = new CAbilityStar(currentAbility);
+        pAbilityStar->SetPos(starPos);
+        
+        // 데미지 받을 때는 반대 방향으로 튕겨나감
+        Vec2 initialVelocity = m_pOwner->IsFacingRight() ? 
+            Vec2(-180.f, -480.f) : Vec2(180.f, -480.f);
+        pAbilityStar->SetInitialVelocity(initialVelocity);
+        
+        CREATE_OBJECT(pAbilityStar, GROUP_TYPE::ITEM);
+        
+        // 커비의 능력 제거
+        m_eCopyAbility = COPY_ABILITY::NONE;
+        
+        // 스파크 능력의 경우 전기장도 즉시 제거
+        if (currentAbility == COPY_ABILITY::SPARK && m_pElectricField && !m_pElectricField->IsDead())
+        {
+            m_pElectricField->SetDead();
+            m_pElectricField = nullptr;
+        }
+        
+        // 기본 애니메이션으로 복구 (NONE 능력 상태)
+        m_pOwner->LoadCopyAbilityAnimations(COPY_ABILITY::NONE);
+        
+        // 디버그 출력
+        const char* abilityName = "";
+        switch (currentAbility)
+        {
+        case COPY_ABILITY::FIRE: abilityName = "FIRE"; break;
+        case COPY_ABILITY::BEAM: abilityName = "BEAM"; break;
+        case COPY_ABILITY::SPARK: abilityName = "SPARK"; break;
+        default: abilityName = "UNKNOWN"; break;
+        }
+    }
+}
+
+void CPlayerStateMachine::OnEnterVictoryDanceState ( )
+{
+    // 승리 춤 효과음
+    OutputDebugStringA("OnEnterVictoryDanceState: Playing kirbydance_short sound\n");
+    CSoundMgr::GetInst()->PlaySFX(L"kirbydance_short");
 }
 
 void CPlayerStateMachine::InitializeTransitionTable ( )
@@ -946,23 +1663,40 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
 
     for ( PLAYER_STATE state : inhalableStates )
     {
+        // 카피 능력이 있을 때: X키 홀드로 ATTACK 실행 (높은 우선순위)
+        m_pTransitionTable->AddTransition (
+            state ,
+            ( uint32_t ) INPUT::ACTION_HOLD ,
+            PLAYER_STATE::ATTACK ,
+            [ ] ( CPlayer* p ) -> bool {
+                if ( !p || !p->GetStateMachine ( ) )
+                    return false;
+                // 카피 능력이 있을 때만 ATTACK
+                COPY_ABILITY currentAbility = p->GetStateMachine ( )->GetCopyAbility ( );
+                bool hasAbility = currentAbility != COPY_ABILITY::NONE;
+                
+                return hasAbility;
+            } ,
+            250  // INHALE보다 높은 우선순위
+        );
+        
+        // 카피 능력이 없을 때: X키 홀드로 INHALE 실행
         m_pTransitionTable->AddTransition (
             state ,
             ( uint32_t ) INPUT::ACTION_HOLD ,
             PLAYER_STATE::INHALE ,
-            nullptr ,
+            [ ] ( CPlayer* p ) -> bool {
+                if ( !p || !p->GetStateMachine ( ) )
+                    return false;
+                // 카피 능력이 없을 때만 INHALE
+                COPY_ABILITY currentAbility = p->GetStateMachine ( )->GetCopyAbility ( );
+                bool noAbility = currentAbility == COPY_ABILITY::NONE;
+                
+                return noAbility;
+            } ,
             200
         );
     }
-
-    // INHALE 상태 유지 (X키 계속 누르고 있으면)
-    m_pTransitionTable->AddTransition (
-        PLAYER_STATE::INHALE ,
-        ( uint32_t ) INPUT::ACTION_HOLD ,
-        PLAYER_STATE::INHALE ,
-        nullptr ,
-        100
-    );
 
     // INHALE -> INHALE_SUCCESS
     m_pTransitionTable->AddTransition (
@@ -978,14 +1712,15 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
         300
     );
 
-    // INHALE -> 원래 상태로 복귀 (X키 떼면)
+    // INHALE -> 원래 상태로 복귀 (X키 떼면, 단 빨아들여지는 몬스터가 없을 때만)
     m_pTransitionTable->AddTransition (
         PLAYER_STATE::INHALE ,
         ( uint32_t ) INPUT::ACTION_AWAY ,
         PLAYER_STATE::IDLE ,
         [ ] ( CPlayer* p ) {
-            // 땅에 있으면 IDLE로
-            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+            // 땅에 있고, 빨아들여지는 중인 몬스터가 없을 때만
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( ) &&
+                   p->GetInhaleSystem ( ) && !p->GetInhaleSystem ( )->HasBeingInhaledMonsters ( );
         } ,
         250
     );
@@ -995,8 +1730,9 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
         ( uint32_t ) INPUT::ACTION_AWAY ,
         PLAYER_STATE::FALL1 ,
         [ ] ( CPlayer* p ) {
-            // 공중에 있으면 FALL1로
-            return p->GetRigidBody ( ) && !p->GetRigidBody ( )->IsGround ( );
+            // 공중에 있고, 빨아들여지는 중인 몬스터가 없을 때만
+            return p->GetRigidBody ( ) && !p->GetRigidBody ( )->IsGround ( ) &&
+                   p->GetInhaleSystem ( ) && !p->GetInhaleSystem ( )->HasBeingInhaledMonsters ( );
         } ,
         250
     );
@@ -1029,24 +1765,63 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
         300
     );
 
-    // EXHALE -> IDLE
+    // MOUTHFUL_IDLE -> SWALLOW (DOWN 키)
     m_pTransitionTable->AddTransition (
-        PLAYER_STATE::EXHALE ,
-        0 ,
-        PLAYER_STATE::IDLE ,
-        [ ] ( CPlayer* p ) {
-            return true;
-        } ,
-        400
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        ( uint32_t ) INPUT::MOVE_DOWN ,
+        PLAYER_STATE::SWALLOW ,
+        nullptr ,
+        350  // EXHALE보다 높은 우선순위
     );
+
+    // MOUTHFUL_WALK -> EXHALE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_WALK ,
+        ( uint32_t ) INPUT::ACTION_TAP ,
+        PLAYER_STATE::EXHALE ,
+        nullptr ,
+        300
+    );
+
+    // MOUTHFUL_RUN -> EXHALE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_RUN ,
+        ( uint32_t ) INPUT::ACTION_TAP ,
+        PLAYER_STATE::EXHALE ,
+        nullptr ,
+        300
+    );
+
+    // MOUTHFUL_JUMP -> EXHALE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_JUMP ,
+        ( uint32_t ) INPUT::ACTION_TAP ,
+        PLAYER_STATE::EXHALE ,
+        nullptr ,
+        300
+    );
+
+    // MOUTHFUL_FALL -> EXHALE
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_FALL ,
+        ( uint32_t ) INPUT::ACTION_TAP ,
+        PLAYER_STATE::EXHALE ,
+        nullptr ,
+        300
+    );
+
 
     // SWALLOW -> IDLE
     m_pTransitionTable->AddTransition (
         PLAYER_STATE::SWALLOW ,
         0 ,
         PLAYER_STATE::IDLE ,
-        [ ] ( CPlayer* p ) {
-            return true;
+        [ ] ( CPlayer* p ) -> bool {
+            if ( !p || !p->GetStateMachine ( ) )
+                return false;
+            
+            // 삼키기 타이머 완료 시 IDLE로 전환
+            return p->GetStateMachine ( )->m_fSwallowTimer >= p->GetStateMachine ( )->m_fSwallowDuration;
         } ,
         400
     );
@@ -1056,18 +1831,87 @@ void CPlayerStateMachine::AddSpecialTransitions ( )
 {
     using INPUT = CPlayerInputManager::INPUT_TYPE;
 
-    // 애니메이션 기반 전환들
+    // 애니메이션 기반 전환들 (타이머 백업 조건 포함)
     m_pTransitionTable->AddTransition (
         PLAYER_STATE::EXHALE ,
         0 ,
         PLAYER_STATE::IDLE ,
-        [ ] ( CPlayer* p ) {
+        [ this ] ( CPlayer* p ) {
+            // 현재 상태가 실제로 EXHALE인지 확인 (안전장치)
+            if ( m_eCurState != PLAYER_STATE::EXHALE )
+                return false;
+                
+            // 애니메이션 완료 조건
             CAnimator* pAnimator = p->GetAnimator ( );
-            if ( !pAnimator ) return false;
-            CAnimation* pCurAnim = pAnimator->GetCurAnim ( );
-            return pCurAnim && pCurAnim->IsFinish ( );
+            if ( pAnimator )
+            {
+                CAnimation* pCurAnim = pAnimator->GetCurAnim ( );
+                if ( pCurAnim && pCurAnim->IsFinish ( ) )
+                {
+                    return true;
+                }
+            }
+            
+            // 타이머 백업 조건 (0.5초 후 강제 전환)
+            return m_fExhaleTimer >= m_fExhaleDuration;
         } ,
         400
+    );
+
+    // ATTACK -> ATTACK_HOLD (파이어/스파크: 0.5초 후 X키 홀드 시)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::ATTACK ,
+        ( uint32_t ) INPUT::ACTION_HOLD ,
+        PLAYER_STATE::ATTACK_HOLD ,
+        [ this ] ( CPlayer* p ) -> bool {
+            if ( !p || !p->GetStateMachine ( ) )
+                return false;
+            
+            // 파이어/스파크만 ATTACK_HOLD로 전환 가능, 0.5초 경과 시
+            return ( m_eCopyAbility == COPY_ABILITY::FIRE || m_eCopyAbility == COPY_ABILITY::SPARK ) &&
+                   m_fAttackTimer >= 0.5f;
+        } ,
+        450  // 높은 우선순위
+    );
+
+    // ATTACK -> IDLE (공격 완료 시 또는 X키를 뗄 때)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::ATTACK ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ this ] ( CPlayer* p ) -> bool {
+            if ( !p || !p->GetStateMachine ( ) )
+                return false;
+            
+            // 공격 타이머 완료 시 IDLE로 전환
+            bool bTimerExpired = m_fAttackTimer >= m_fAttackDuration;
+            
+            // 파이어/스파크의 경우 0.5초 후 X키를 떼면 IDLE로 전환
+            bool bKeyReleased = false;
+            if ( m_eCopyAbility == COPY_ABILITY::FIRE || m_eCopyAbility == COPY_ABILITY::SPARK )
+            {
+                bKeyReleased = ( m_fAttackTimer >= 0.5f ) && 
+                               !m_pInputManager->HasInput ( ( uint32_t ) CPlayerInputManager::INPUT_TYPE::ACTION_HOLD );
+            }
+            
+            return bTimerExpired || bKeyReleased;
+        } ,
+        400
+    );
+
+    // ATTACK_HOLD -> IDLE (X키를 뗄 때)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::ATTACK_HOLD ,
+        0 ,
+        PLAYER_STATE::IDLE ,
+        [ this ] ( CPlayer* p ) -> bool {
+            if ( !p || !p->GetStateMachine ( ) || !m_pInputManager )
+                return false;
+            
+            // X키를 떼면 즉시 IDLE로 전환
+            return !m_pInputManager->HasInput ( ( uint32_t ) CPlayerInputManager::INPUT_TYPE::ACTION_HOLD );
+        } ,
+        500  // 가장 높은 우선순위
     );
 
     m_pTransitionTable->AddTransition (
@@ -1114,11 +1958,30 @@ void CPlayerStateMachine::AddSpecialTransitions ( )
         0 ,
         PLAYER_STATE::MOUTHFUL_IDLE ,
         [ ] ( CPlayer* p ) {
+            if ( !p->GetMovement ( ) ) return false;
             CPlayerInputManager* pInputMgr = p->GetStateMachine ( )->GetInputManager ( );
             if ( !pInputMgr ) return false;
-            return !pInputMgr->IsMovingLeft ( ) && !pInputMgr->IsMovingRight ( );
+            
+            bool hasLeftInput = pInputMgr->IsMovingLeft ( );
+            bool hasRightInput = pInputMgr->IsMovingRight ( );
+            bool isMoving = p->GetMovement ( )->IsActuallyMoving ( );
+            bool isDecelerating = p->GetMovement ( )->IsDecelerating ( );
+            
+            return !hasLeftInput && !hasRightInput && !isMoving && !isDecelerating;
         } ,
-        50
+        50 ,
+        ( uint32_t ) INPUT::MOVE_LEFT | ( uint32_t ) INPUT::MOVE_RIGHT
+    );
+
+    // MOUTHFUL_IDLE -> MOUTHFUL_RUN (더블탭으로 바로 달리기)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::MOUTHFUL_IDLE ,
+        ( uint32_t ) INPUT::DOUBLE_TAP_LEFT | ( uint32_t ) INPUT::DOUBLE_TAP_RIGHT ,
+        PLAYER_STATE::MOUTHFUL_RUN ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+        } ,
+        150
     );
 
     // MOUTHFUL_WALK -> MOUTHFUL_RUN (더블탭으로 달리기)
@@ -1129,7 +1992,7 @@ void CPlayerStateMachine::AddSpecialTransitions ( )
         [ ] ( CPlayer* p ) {
             return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
         } ,
-        120
+        150
     );
 
     // MOUTHFUL_RUN -> MOUTHFUL_WALK (달리기 해제)
@@ -1829,6 +2692,13 @@ void CPlayerStateMachine::ChangeHoverSubState ( HOVER_SUBSTATE _eNewSubState )
     m_eHoverSubState = _eNewSubState;
     ResetHoverSubStateTimer ( );
 
+    // FLY_UP 상태로 변경될 때 떠오르는 사운드 재생
+    if ( _eNewSubState == HOVER_SUBSTATE::FLY_UP )
+    {
+        OutputDebugStringA("ChangeHoverSubState: FLY_UP - Playing kirby_hover sound\n");
+        CSoundMgr::GetInst()->PlaySFX(L"kirby_hover");
+    }
+
     // 현재 HOVER 상태라면 애니메이션 재설정
     if ( m_eCurState == PLAYER_STATE::HOVER )
     {
@@ -1901,7 +2771,6 @@ void CPlayerStateMachine::SetAnimationForState ( PLAYER_STATE _eState )
         }
         break;
     case PLAYER_STATE::DAMAGE:
-    case PLAYER_STATE::MOUTHFUL_DAMAGE:
         pAnimator->Play ( L"DAMAGE" , false );
         break;
     case PLAYER_STATE::INHALE:
@@ -1931,6 +2800,33 @@ void CPlayerStateMachine::SetAnimationForState ( PLAYER_STATE _eState )
     case PLAYER_STATE::MOUTHFUL_FALL:
         pAnimator->Play ( L"MOUTHFUL_FALL" , true );
         break;
+    case PLAYER_STATE::MOUTHFUL_DAMAGE:
+        pAnimator->Play ( L"MOUTHFUL_DAMAGE" , false );
+        break;
+    case PLAYER_STATE::ATTACK:
+        // 카피 능력에 따른 공격 애니메이션
+        switch ( m_eCopyAbility )
+        {
+        case COPY_ABILITY::FIRE:
+        case COPY_ABILITY::BEAM:
+        case COPY_ABILITY::SPARK:
+        default:
+            pAnimator->Play ( L"ATTACK" , false );      // 기본 공격
+            break;
+        }
+        break;
+    case PLAYER_STATE::ATTACK_HOLD:
+        // 카피 능력에 따른 공격 애니메이션
+        switch ( m_eCopyAbility )
+        {
+        case COPY_ABILITY::FIRE:
+        case COPY_ABILITY::BEAM:
+        case COPY_ABILITY::SPARK:
+        default:
+            pAnimator->Play ( L"ATTACK_HOLD" , true );
+            break;
+        }
+        break;
     default:
         char buffer[ 256 ];
         sprintf_s ( buffer , "WARNING: No animation case for state: %d\n" , ( int ) _eState );
@@ -1949,10 +2845,16 @@ bool CPlayerStateMachine::IsValidStateTransition ( PLAYER_STATE _from , PLAYER_S
     switch ( _from )
     {
     case PLAYER_STATE::SWALLOW:
-        return false;
+        return ( _to == PLAYER_STATE::IDLE || _to == PLAYER_STATE::ATTACK );
 
     case PLAYER_STATE::EXHALE:
-        return false;
+        return ( _to == PLAYER_STATE::IDLE );
+
+    case PLAYER_STATE::ATTACK:
+        return ( _to == PLAYER_STATE::IDLE || _to == PLAYER_STATE::ATTACK_HOLD );
+
+    case PLAYER_STATE::ATTACK_HOLD:
+        return ( _to == PLAYER_STATE::IDLE );
 
     case PLAYER_STATE::SLIDE:
         return ( _to == PLAYER_STATE::FALL0 ||
@@ -1971,4 +2873,196 @@ bool CPlayerStateMachine::IsValidStateTransition ( PLAYER_STATE _from , PLAYER_S
 
     // 기본적으로 모든 전환 허용
     return true;
+}
+
+void CPlayerStateMachine::HandleDropAbility()
+{
+    // 능력이 없으면 처리하지 않음
+    if (m_eCopyAbility == COPY_ABILITY::NONE || !m_pOwner || !m_pInputManager)
+        return;
+    
+    // 데미지 상태에서는 능력 버리기 불가 (OnEnterDamageState에서 이미 처리됨)
+    if (m_eCurState == PLAYER_STATE::DAMAGE)
+        return;
+    
+    // 백스페이스 키 TAP 체크
+    if (m_pInputManager->HasInput((uint32_t)CPlayerInputManager::INPUT_TYPE::DROP_ABILITY))
+    {
+        // 현재 능력 저장
+        COPY_ABILITY currentAbility = m_eCopyAbility;
+        
+        // 능력별 생성 위치 (커비 위쪽)
+        Vec2 kirbyPos = m_pOwner->GetPos();
+        Vec2 starPos = kirbyPos + Vec2(0.f, -30.f);
+        
+        // 능력별 생성
+        CAbilityStar* pAbilityStar = new CAbilityStar(currentAbility);
+        pAbilityStar->SetPos(starPos);
+        
+        // 포물선 초기 속도 설정 (커비가 바라보는 반대방향으로)
+        Vec2 initialVelocity = m_pOwner->IsFacingRight() ? 
+            Vec2(-180.f, -480.f) : Vec2(180.f, -480.f);
+        pAbilityStar->SetInitialVelocity(initialVelocity);
+        
+        // 씬에 추가
+        CREATE_OBJECT(pAbilityStar, GROUP_TYPE::ITEM);
+        
+        // 커비의 능력 제거
+        m_eCopyAbility = COPY_ABILITY::NONE;
+        
+        // 스파크 능력의 경우 전기장도 즉시 제거
+        if (currentAbility == COPY_ABILITY::SPARK && m_pElectricField && !m_pElectricField->IsDead())
+        {
+            m_pElectricField->SetDead();
+            m_pElectricField = nullptr;
+        }
+        
+        // 기본 애니메이션으로 복구 (NONE 능력 상태)
+        m_pOwner->LoadCopyAbilityAnimations(COPY_ABILITY::NONE);
+        
+        // 디버그 출력
+        const char* abilityName = "";
+        switch (currentAbility)
+        {
+        case COPY_ABILITY::FIRE: abilityName = "FIRE"; break;
+        case COPY_ABILITY::BEAM: abilityName = "BEAM"; break;
+        case COPY_ABILITY::SPARK: abilityName = "SPARK"; break;
+        default: abilityName = "UNKNOWN"; break;
+        }
+    }
+}
+
+void CPlayerStateMachine::SetCopyAbility(COPY_ABILITY _eAbility)
+{
+    COPY_ABILITY oldAbility = m_eCopyAbility;
+    m_eCopyAbility = _eAbility;
+    
+    // 애니메이션 로드 (상태 복원 시에도 필요)
+    if (m_pOwner)
+    {
+        m_pOwner->LoadCopyAbilityAnimations(_eAbility);
+    }
+    
+    // 디버깅: 능력 변경 로그
+    const char* oldName = "";
+    const char* newName = "";
+    
+    switch (oldAbility)
+    {
+    case COPY_ABILITY::NONE: oldName = "NONE"; break;
+    case COPY_ABILITY::FIRE: oldName = "FIRE"; break;
+    case COPY_ABILITY::BEAM: oldName = "BEAM"; break;
+    case COPY_ABILITY::SPARK: oldName = "SPARK"; break;
+    default: oldName = "UNKNOWN"; break;
+    }
+    
+    switch (_eAbility)
+    {
+    case COPY_ABILITY::NONE: newName = "NONE"; break;
+    case COPY_ABILITY::FIRE: newName = "FIRE"; break;
+    case COPY_ABILITY::BEAM: newName = "BEAM"; break;
+    case COPY_ABILITY::SPARK: newName = "SPARK"; break;
+    default: newName = "UNKNOWN"; break;
+    }
+}
+
+void CPlayerStateMachine::ExecuteDoorEnterState()
+{
+    // 상태 진입 시 한 번만 애니메이션 설정
+    static PLAYER_STATE s_lastDoorState = PLAYER_STATE::END;
+    if (s_lastDoorState != PLAYER_STATE::DOOR_ENTER)
+    {
+        s_lastDoorState = PLAYER_STATE::DOOR_ENTER;
+        
+        // DOOR_ENTER 애니메이션 재생
+        if (CAnimator* pAnimator = m_pOwner->GetAnimator())
+        {
+            pAnimator->Play(L"DOOR_ENTER", false);  // 한 번만 재생
+        }
+    }
+    
+    // DOOR_ENTER 상태에서는 플레이어 움직임 정지
+    if (CRigidBody* pRigidBody = m_pOwner->GetRigidBody())
+    {
+        pRigidBody->SetVelocityX(0.f);
+        pRigidBody->SetVelocityY(0.f);
+    }
+}
+
+void CPlayerStateMachine::ExecuteVictoryDanceState()
+{
+    OutputDebugString(L"[DEBUG] ExecuteVictoryDanceState() called\n");
+    
+    // 상태 진입 시 한 번만 애니메이션 설정
+    static PLAYER_STATE s_lastVictoryState = PLAYER_STATE::END;
+    static bool s_bFadeStarted = false;
+    static bool s_bNeedsReset = false;
+    
+    // 게임 재시작 시 static 변수 초기화
+    if (s_bNeedsReset)
+    {
+        OutputDebugString(L"[DEBUG] Resetting static variables\n");
+        s_lastVictoryState = PLAYER_STATE::END;
+        s_bFadeStarted = false;
+        s_bNeedsReset = false;
+    }
+    
+    if (s_lastVictoryState != PLAYER_STATE::VICTORY_DANCE && !s_bFadeStarted)
+    {
+        OutputDebugString(L"[DEBUG] Starting KIRBY_DANCE animation\n");
+        s_lastVictoryState = PLAYER_STATE::VICTORY_DANCE;
+        
+        // VICTORY_DANCE 애니메이션 재생 (KIRBY_DANCE)
+        if (CAnimator* pAnimator = m_pOwner->GetAnimator())
+        {
+            pAnimator->Play(L"KIRBY_DANCE", false);  // 한 번만 재생
+            OutputDebugString(L"[DEBUG] KIRBY_DANCE animation started\n");
+        }
+        else
+        {
+            OutputDebugString(L"[DEBUG] ERROR: No Animator found!\n");
+        }
+    }
+    
+    // VICTORY_DANCE 상태에서는 플레이어 움직임 정지
+    if (CRigidBody* pRigidBody = m_pOwner->GetRigidBody())
+    {
+        pRigidBody->SetVelocityX(0.f);
+        pRigidBody->SetVelocityY(0.f);
+    }
+    
+    // 애니메이션이 끝났는지 체크
+    if (CAnimator* pAnimator = m_pOwner->GetAnimator())
+    {
+        if (CAnimation* pCurrentAnim = pAnimator->GetCurAnim())
+        {
+            // 현재 애니메이션 정보 출력
+            wchar_t debugStr[300];
+            swprintf_s(debugStr, L"[DEBUG] Current animation: %s, CurFrame: %d, MaxFrame: %d, FadeStarted: %s\n", 
+                pCurrentAnim->GetName().c_str(),
+                pCurrentAnim->GetCurFrame(),
+                pCurrentAnim->GetMaxFrame(),
+                s_bFadeStarted ? L"true" : L"false");
+            OutputDebugString(debugStr);
+            
+            // 마지막 프레임에 도달했을 때 5초 페이드아웃 시작
+            if (pCurrentAnim->GetCurFrame() >= pCurrentAnim->GetMaxFrame() - 1 && !s_bFadeStarted)
+            {
+                OutputDebugString(L"[DEBUG] Last frame reached! Starting 5-second fade out to StartScene\n");
+                s_bFadeStarted = true;
+                
+                // 흰색 페이드 아웃 시작 (5초, 콜백 데이터 4 = 스타트 씬 이동)
+                CFadeEffect::GetInst()->StartFadeOut(FADE_COLOR::WHITE, 5.0f, (DWORD_PTR)4);
+                OutputDebugString(L"[DEBUG] 5-second fade out started with callback data 4\n");
+            }
+        }
+        else
+        {
+            OutputDebugString(L"[DEBUG] ERROR: No current animation found!\n");
+        }
+    }
+    else
+    {
+        OutputDebugString(L"[DEBUG] ERROR: No Animator found in animation check!\n");
+    }
 }

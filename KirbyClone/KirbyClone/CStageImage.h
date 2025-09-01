@@ -1,49 +1,50 @@
 #pragma once
 #include "CRes.h"
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CTexture;
 
-// ½ºÅ×ÀÌÁö ÀüÃ¼ ÀÌ¹ÌÁö¸¦ °ü¸®ÇÏ´Â Å¬·¡½º
+// ìŠ¤í…Œì´ì§€ ë°°ê²½ ì´ë¯¸ì§€ë¥¼ ë‹´ë‹¹í•˜ëŠ” í´ë˜ìŠ¤
 class CStageImage : public CRes
 {
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
-    CStageImage();
-    virtual ~CStageImage();
+    // === ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
+    CStageImage ( );
+    virtual ~CStageImage ( );
 
 public:
-    // === ÇÙ½É ±â´É ===
-    void Update();
-    void Render(HDC _dc);
+    // === ê¸°ë³¸ ë™ì‘ ===
+    void Update ( );
+    void Render ( HDC _dc );
 
 public:
-    // === ½ºÅ×ÀÌÁö ¼³Á¤ ===
-    void SetupStageImage(STAGE_IMAGE_TYPE _eType);
-    void SetImageToBottomLeft();
+    // === ìŠ¤í…Œì´ì§€ ì„¤ì • ===
+    void SetupStageImage ( STAGE_IMAGE_TYPE _eType );
+    void SetImageToBottomLeft ( );
+    void SetImageToBottomLeft ( Vec2 mapSize );
 
 public:
-    // === ÅØ½ºÃ³ °ü¸® ===
-    void SetStageTexture(CTexture* _pTex) { m_pStageTexture = _pTex; }
-    CTexture* GetStageTexture() const { return m_pStageTexture; }
+    // === í…ìŠ¤ì²˜ ê´€ë¦¬ ===
+    void SetStageTexture ( CTexture* _pTex ) { m_pStageTexture = _pTex; }
+    CTexture* GetStageTexture ( ) const { return m_pStageTexture; }
 
 public:
-    // === ½ºÅ×ÀÌÁö Á¤º¸ Á¢±ÙÀÚ ===
-    void SetStageType(STAGE_IMAGE_TYPE _eType) { m_eStageType = _eType; }
-    STAGE_IMAGE_TYPE GetStageType() const { return m_eStageType; }
+    // === ìŠ¤í…Œì´ì§€ íƒ€ì… ì†ì„±ë“¤ ===
+    void SetStageType ( STAGE_IMAGE_TYPE _eType ) { m_eStageType = _eType; }
+    STAGE_IMAGE_TYPE GetStageType ( ) const { return m_eStageType; }
 
 public:
-    // === ÀÌ¹ÌÁö ¼Ó¼º °ü¸® ===
-    void SetRenderOffset(Vec2 _vOffset) { m_vRenderOffset = _vOffset; }
-    Vec2 GetRenderOffset() const { return m_vRenderOffset; }
+    // === ì´ë¯¸ì§€ ì†ì„± ì„¤ì • ===
+    void SetRenderOffset ( Vec2 _vOffset ) { m_vRenderOffset = _vOffset; }
+    Vec2 GetRenderOffset ( ) const { return m_vRenderOffset; }
 
-    void SetScrollWithCamera(bool _bScroll) { m_bScrollWithCamera = _bScroll; }
-    bool IsScrollWithCamera() const { return m_bScrollWithCamera; }
+    void SetScrollWithCamera ( bool _bScroll ) { m_bScrollWithCamera = _bScroll; }
+    bool IsScrollWithCamera ( ) const { return m_bScrollWithCamera; }
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    CTexture* m_pStageTexture;    // ½ºÅ×ÀÌÁö ÀüÃ¼ ÀÌ¹ÌÁö ÅØ½ºÃ³
-    STAGE_IMAGE_TYPE m_eStageType;       // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Å¸ÀÔ
-    Vec2             m_vRenderOffset;    // ·»´õ¸µ ¿ÀÇÁ¼Â (ÇÊ¿ä½Ã)
-    bool             m_bScrollWithCamera; // Ä«¸Ş¶ó¿Í ÇÔ²² ½ºÅ©·Ñ ¿©ºÎ
+    // === í•µì‹¬ ë°ì´í„° ===
+    CTexture* m_pStageTexture;    // ìŠ¤í…Œì´ì§€ ë°°ê²½ ì´ë¯¸ì§€ í…ìŠ¤ì²˜
+    STAGE_IMAGE_TYPE m_eStageType;       // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ íƒ€ì…
+    Vec2             m_vRenderOffset;    // ë Œë”ë§ ì˜¤í”„ì…‹ (í•„ìš”ì‹œ)
+    bool             m_bScrollWithCamera; // ì¹´ë©”ë¼ì™€ í•¨ê»˜ ìŠ¤í¬ë¡¤ ì—¬ë¶€
 };

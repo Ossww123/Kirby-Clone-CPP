@@ -6,27 +6,30 @@ class CTexture;
 class CBackground : public CRes
 {
 private:
-    CTexture* m_pBackgroundTex;   // ¹è°æ ÅØ½ºÃ³
-    BACKGROUND_TYPE m_eBackgroundType;  // ¹è°æ Å¸ÀÔ
-    Vec2           m_vScrollSpeed;      // ½ºÅ©·Ñ ¼Óµµ (ÆĞ·²·¢½º È¿°ú¿ë)
-    float          m_fScrollOffset;     // ÇöÀç ½ºÅ©·Ñ ¿ÀÇÁ¼Â
-    bool           m_bScrollable;       // ½ºÅ©·Ñ °¡´É ¿©ºÎ
+    CTexture* m_pBackgroundTex;   // ë°°ê²½ í…ìŠ¤ì²˜
+    BACKGROUND_TYPE m_eBackgroundType;  // ë°°ê²½ íƒ€ì…
+    Vec2           m_vScrollSpeed;      // ìŠ¤í¬ë¡¤ ì†ë„ (íŒ¨ëŸ´ë™ìŠ¤ íš¨ê³¼ìš©)
+    float          m_fScrollOffset;     // í˜„ì¬ ìŠ¤í¬ë¡¤ ì˜¤í”„ì…‹
+    bool           m_bScrollable;       // ìŠ¤í¬ë¡¤ ê°€ëŠ¥ ì—¬ë¶€
+    Vec2           m_vStageSize;        // ìŠ¤í…Œì´ì§€ í¬ê¸° (ë°°ê²½ìŠ¤í¬ë¡¤ ë²”ìœ„ ìš©)
 
 public:
     void SetBackgroundTexture(CTexture* _pTex) { m_pBackgroundTex = _pTex; }
     void SetBackgroundType(BACKGROUND_TYPE _eType) { m_eBackgroundType = _eType; }
     void SetScrollSpeed(Vec2 _vSpeed) { m_vScrollSpeed = _vSpeed; }
     void SetScrollable(bool _bScrollable) { m_bScrollable = _bScrollable; }
+    void SetStageSize(Vec2 _vStageSize) { m_vStageSize = _vStageSize; }
 
     CTexture* GetBackgroundTexture() { return m_pBackgroundTex; }
     BACKGROUND_TYPE GetBackgroundType() { return m_eBackgroundType; }
     Vec2 GetScrollSpeed() { return m_vScrollSpeed; }
     bool IsScrollable() { return m_bScrollable; }
+    Vec2 GetStageSize() { return m_vStageSize; }
 
-    void Update();                      // ½ºÅ©·Ñ ¾÷µ¥ÀÌÆ®
-    void Render(HDC _dc);              // ¹è°æ ·»´õ¸µ
+    void Update();                      // ìŠ¤í¬ë¡¤ ì—…ë°ì´íŠ¸
+    void Render(HDC _dc);              // ë°°ê²½ ë Œë”ë§
 
-    // ¹è°æ Å¸ÀÔº° ±âº» ¼³Á¤
+    // ë°°ê²½ íƒ€ì…ë³„ ê¸°ë³¸ ì„¤ì •
     void SetupBackground(BACKGROUND_TYPE _eType);
 
 public:

@@ -1,6 +1,8 @@
 #pragma once
 #include "CCopyMonster.h"
 
+class CProjectile;
+
 class CWaddleDoo : public CCopyMonster
 {
 public:
@@ -8,20 +10,30 @@ public:
     virtual ~CWaddleDoo();
 
 public:
-    // === °¡»ó ÇÔ¼ö ±¸Çö ===
-    void Move() override;                                           // °È±â + °ø°İ Å¸ÀÌ¹Ö
-    void Attack() override;                                         // ºö °ø°İ
+    // === ê°€ìƒ í•¨ìˆ˜ êµ¬í˜„ ===
+    void Move() override;                                           // ê±·ê¸° + ê³µê²© íƒ€ì´ë°
+    void Attack() override;                                         // ë¹” ê³µê²©
     COPY_ABILITY GetCopyAbility() const override { return COPY_ABILITY::BEAM; }
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤ ±¸Çö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì • êµ¬í˜„ ===
     void SetupAnimationMapping() override;
+    
+    // === ìƒíƒœ ì—…ë°ì´íŠ¸ ì˜¤ë²„ë¼ì´ë“œ ===
+    void UpdateAttackReady() override;
+    void UpdateAttack() override;
 
 private:
-    // === ¿şÀÌµé µÎ Àü¿ë °ø°İ ===
-    void ShootBeam();                                               // ºö ¹ß»ç
-    void CreateBeamProjectile();                                    // ºö Åõ»çÃ¼ »ı¼º
+    // === ì›¨ì´ë“¤ ë‘ ì „ìš© ê³µê²© ===
+    void ShootBeam();                                               // ë¹” íˆ¬ì‚¬ì²´ ë°œì‚¬
+    void CreateBeamProjectile();                                    // ë¹” íˆ¬ì‚¬ì²´ ìƒì„±
+    void UpdateBeamSweep();                                         // ë¹” ì“¸ì–´ë‚´ë¦¬ê¸° ì—…ë°ì´íŠ¸
+    void ClearBeamProjectiles();                                    // ë¹” íˆ¬ì‚¬ì²´ë“¤ ì •ë¦¬
 
 private:
-    bool m_bBeamFired;                                              // ºö ¹ß»ç ¿©ºÎ
+    bool m_bBeamFired;                                              // ë¹” ë°œì‚¬ ì—¬ë¶€
+    vector<CProjectile*> m_vecBeamProjectiles;                     // ë¹” ë  íˆ¬ì‚¬ì²´ë“¤
+    float m_fBeamSweepTimer;                                        // ë¹” ì“¸ê¸° íƒ€ì´ë¨¸
+    float m_fCurrentBeamAngle;                                      // í˜„ì¬ ë¹” ê°ë„
+    int m_iBeamSweepStep;                                           // í˜„ì¬ ì“¸ê¸° ë‹¨ê³„
 };

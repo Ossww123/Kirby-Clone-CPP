@@ -9,42 +9,42 @@ public:
     ~CAnimation();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === ê¸°ë³¸ ì‹œìŠ¤í…œ í•¨ìˆ˜ë“¤ ===
     void Update();
     void Render(HDC _dc, Vec2 _vPos);
     void Reset();
 
 public:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç »ı¼º ¹× °ü¸® ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ìƒì„± ë° ê´€ë¦¬ ===
     void Create(CTexture* _pTex, Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
         float _fDuration, int _iFrameCount, bool _bLoop = true);
     void AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration);
     void ClearFrames();
 
 public:
-    // === ·»´õ¸µ ¿É¼Ç ===
-    void RenderScaled(HDC _dc, Vec2 _vPos, float _fScale);
+    // === ë Œë”ë§ ì˜µì…˜ ===
+    void RenderScaled(HDC _dc, Vec2 _vPos, float _fScale, bool _bFlipX = false);
 
 private:
-    // === À¯È¿¼º °Ë»ç ===
+    // === ìœ íš¨ì„± ê²€ì‚¬ ===
     bool IsValidCreateParams(CTexture* _pTex, int _iFrameCount, float _fDuration) const;
     bool IsValidRenderState() const;
 
 private:
-    // === ³»ºÎ ·ÎÁ÷ ===
+    // === ë‚´ë¶€ ì²˜ë¦¬ ===
     void CreateFrameSequence(Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
         float _fDuration, int _iFrameCount);
     void RenderFrame(HDC _dc, const Vec2& _vRenderPos, const tAnimFrame& _frame,
-        const Vec2& _vDestSize);
+        const Vec2& _vDestSize, bool _bFlipX = false);
 
 public:
-    // === Setter ÇÔ¼öµé ===
+    // === Setter í•¨ìˆ˜ë“¤ ===
     void SetName(const wstring& _strName) { m_strName = _strName; }
     void SetTexture(CTexture* _pTex) { m_pTex = _pTex; }
     void SetLoop(bool _bLoop) { m_bLoop = _bLoop; }
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     const wstring& GetName() const { return m_strName; }
     bool IsFinish() const { return m_bFinish; }
     tAnimFrame& GetFrame(int _iIdx) { return m_vecFrame[_iIdx]; }
@@ -53,13 +53,13 @@ public:
     CTexture* GetTexture() const { return m_pTex; }
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    wstring m_strName;                  // ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌ¸§
-    CTexture* m_pTex;                   // ½ºÇÁ¶óÀÌÆ® ½ÃÆ® ÅØ½ºÃ³
-    vector<tAnimFrame> m_vecFrame;      // ¾Ö´Ï¸ŞÀÌ¼Ç ÇÁ·¹ÀÓµé
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
+    wstring m_strName;                  // ì• ë‹ˆë©”ì´ì…˜ ì´ë¦„
+    CTexture* m_pTex;                   // ìŠ¤í”„ë¼ì´íŠ¸ ì‹œíŠ¸ í…ìŠ¤ì²˜
+    vector<tAnimFrame> m_vecFrame;      // ì• ë‹ˆë©”ì´ì…˜ í”„ë ˆì„ë“¤
 
-    int m_iCurFrame;                    // ÇöÀç ÇÁ·¹ÀÓ ÀÎµ¦½º
-    float m_fAccTime;                   // ´©Àû ½Ã°£
-    bool m_bFinish;                     // ¾Ö´Ï¸ŞÀÌ¼Ç ¿Ï·á ¿©ºÎ
-    bool m_bLoop;                       // ¹İº¹ Àç»ı ¿©ºÎ
+    int m_iCurFrame;                    // í˜„ì¬ í”„ë ˆì„ ì¸ë±ìŠ¤
+    float m_fAccTime;                   // ëˆ„ì  ì‹œê°„
+    bool m_bFinish;                     // ì• ë‹ˆë©”ì´ì…˜ ì™„ë£Œ ìƒíƒœ
+    bool m_bLoop;                       // ë°˜ë³µ ì¬ìƒ ìƒíƒœ
 };

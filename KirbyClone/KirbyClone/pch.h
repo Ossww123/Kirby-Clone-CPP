@@ -25,3 +25,8 @@ using std::make_pair;
 
 #include <functional>
 #include <algorithm>
+
+#include <cmath>
+
+#include <commdlg.h>
+#include <mmsystem.h>

@@ -1,6 +1,8 @@
 #pragma once
 #include "CCopyMonster.h"
 
+class CProjectile;
+
 class CHotHead : public CCopyMonster
 {
 public:
@@ -8,21 +10,25 @@ public:
     virtual ~CHotHead();
 
 public:
-    // === °¡»ó ÇÔ¼ö ±¸Çö ===
-    void Move() override;                                           // °È±â + È­¿° °ø°İ
-    void Attack() override;                                         // È­¿° °ø°İ
+    // === ê°€ìƒ í•¨ìˆ˜ êµ¬í˜„ ===
+    void Move() override;                                           // ê±·ê¸° + í™”ì—¼ ê³µê²©
+    void Attack() override;                                         // í™”ì—¼ ê³µê²©
+    void UpdateAttackReady() override;                              // ê³µê²© ì¤€ë¹„ ìƒíƒœ ì—…ë°ì´íŠ¸
+    void UpdateAttack() override;                                   // ê³µê²© ìƒíƒœ ì—…ë°ì´íŠ¸
     COPY_ABILITY GetCopyAbility() const override { return COPY_ABILITY::FIRE; }
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤ ±¸Çö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì • êµ¬í˜„ ===
     void SetupAnimationMapping() override;
 
 private:
-    // === ÇÖ Çìµå Àü¿ë °ø°İ ===
-    void SpitFire();                                                // ºÒ »Õ±â
-    void CreateFireProjectile();                                    // È­¿° Åõ»çÃ¼ »ı¼º
+    // === í•« í—¤ë“œ ì „ìš© ê³µê²© ===
+    void SpitFire();                                                // ë¶ˆ ë¿œê¸°
+    void CreateFireProjectile();                                    // í™”ì—¼ íˆ¬ì‚¬ì²´ ìƒì„±
+    void ClearFireProjectiles();                                    // í™”ì—¼ íˆ¬ì‚¬ì²´ë“¤ ì •ë¦¬
 
 private:
-    bool m_bFireSpat;                                               // È­¿° ¹ß»ç ¿©ºÎ
-    int m_iFireCount;                                               // È­¿° ¹ß»ç È½¼ö
+    bool m_bFireSpat;                                               // í™”ì—¼ ë°œì‚¬ ì—¬ë¶€
+    float m_fFireTimer;                                             // í™”ì—¼ ë°œì‚¬ íƒ€ì´ë¨¸
+    vector<CProjectile*> m_vecFireProjectiles;                     // í™”ì—¼ íˆ¬ì‚¬ì²´ ëª©ë¡
 };

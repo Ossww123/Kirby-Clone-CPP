@@ -2,21 +2,22 @@
 #include "CAnimator.h"
 #include "CAnimation.h"
 #include "CObject.h"
-#include "CCore.h"  // »õ·Î Ãß°¡: GetPixelScale() »ç¿ë
+#include "CCore.h"  // ì¶”ê°€: GetPixelScale() ì‚¬ìš©
 
 CAnimator::CAnimator()
     : m_pOwner(nullptr)
     , m_pCurAnim(nullptr)
     , m_bRepeat(false)
+    , m_bFlipX(false)
 {
 }
 
 CAnimator::~CAnimator()
 {
-    // ¸ÊÀÌ À¯È¿ÇÑÁö ¸ÕÀú È®ÀÎ
+    // ì•ˆì „í•œ í•´ì œë¥¼ ìœ„í•œ í™•ì¸
     if (!m_mapAnim.empty())
     {
-        // ¾ÈÀüÇÑ ¹æ¹ıÀ¸·Î »èÁ¦
+        // ë™ì ìœ¼ë¡œ í• ë‹¹ëœ ë©”ëª¨ë¦¬ í•´ì œ
         for (map<wstring, CAnimation*>::iterator iter = m_mapAnim.begin();
             iter != m_mapAnim.end(); )
         {
@@ -25,7 +26,7 @@ CAnimator::~CAnimator()
                 delete iter->second;
                 iter->second = nullptr;
             }
-            iter = m_mapAnim.erase(iter);  // erase ÈÄ ´ÙÀ½ iterator ¹İÈ¯
+            iter = m_mapAnim.erase(iter);  // erase í›„ ë‹¤ìŒ iterator ë°˜í™˜
         }
     }
 }
@@ -35,10 +36,10 @@ void CAnimator::Update()
     if (nullptr == m_pCurAnim)
         return;
 
-    // ÇöÀç ¾Ö´Ï¸ŞÀÌ¼Ç ¾÷µ¥ÀÌÆ®
+    // í˜„ì¬ ì• ë‹ˆë©”ì´ì…˜ ì—…ë°ì´íŠ¸
     m_pCurAnim->Update();
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ¿Ï·á ½Ã Ã³¸®
+    // ì• ë‹ˆë©”ì´ì…˜ ì™„ë£Œ í›„ ì²˜ë¦¬
     if (m_pCurAnim->IsFinish() && !m_bRepeat)
     {
         m_pCurAnim = nullptr;
@@ -50,46 +51,46 @@ void CAnimator::Render(HDC _dc)
     if (nullptr == m_pCurAnim || nullptr == m_pOwner)
         return;
 
-    // ¿ÀºêÁ§Æ® À§Ä¡ °¡Á®¿À±â
+    // ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
     Vec2 vPos = m_pOwner->GetPos();
 
-    // ½ºÄÉÀÏ¸µ ÆÑÅÍ Àû¿ë
+    // ìŠ¤ì¼€ì¼ë§ ê³„ì‚°
     float fScale = CCore::GetPixelScale();
 
-    // ½ºÄÉÀÏµÈ ·»´õ¸µ ¼öÇà
-    m_pCurAnim->RenderScaled(_dc, vPos, fScale);
+    // ìŠ¤ì¼€ì¼ë§ëœ ë Œë”ë§ (í”Œë¦½ í¬í•¨)
+    m_pCurAnim->RenderScaled(_dc, vPos, fScale, m_bFlipX);
 }
 
 void CAnimator::CreateAnimation(const wstring& _strName, CTexture* _pTex,
     Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
     float _fDuration, int _iFrameCount, bool _bLoop)
 {
-    // À¯È¿¼º °Ë»ç
+    // ìœ íš¨ì„± ê²€ì‚¬
     if (_strName.empty() || nullptr == _pTex)
         return;
 
-    // Áßº¹ ¾Ö´Ï¸ŞÀÌ¼Ç Ã¼Å©
+    // ì¤‘ë³µ ì• ë‹ˆë©”ì´ì…˜ ì²´í¬
     CAnimation* pExistingAnim = FindAnimation(_strName);
     if (nullptr != pExistingAnim)
         return;
 
-    // »õ ¾Ö´Ï¸ŞÀÌ¼Ç »ı¼º
+    // ìƒˆ ì• ë‹ˆë©”ì´ì…˜ ìƒì„±
     CAnimation* pAnim = new CAnimation;
     pAnim->SetName(_strName);
     pAnim->SetTexture(_pTex);
     pAnim->Create(_pTex, _vLT, _vSliceSize, _vStep, _fDuration, _iFrameCount, _bLoop);
 
-    // ¸Ê¿¡ Ãß°¡
+    // ë§µì— ì¶”ê°€
     m_mapAnim.insert(make_pair(_strName, pAnim));
 }
 
 void CAnimator::AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim)
 {
-    // À¯È¿¼º °Ë»ç
+    // ìœ íš¨ì„± ê²€ì‚¬
     if (_strName.empty() || nullptr == _pAnim)
         return;
 
-    // ±âÁ¸ ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ÀÖ´Ù¸é ±³Ã¼
+    // ê°™ì€ ì• ë‹ˆë©”ì´ì…˜ì´ ìˆë‹¤ë©´ êµì²´
     auto iter = m_mapAnim.find(_strName);
     if (iter != m_mapAnim.end())
     {
@@ -98,31 +99,31 @@ void CAnimator::AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim)
     }
     else
     {
-        // »õ ¾Ö´Ï¸ŞÀÌ¼Ç Ãß°¡
+        // ìƒˆ ì• ë‹ˆë©”ì´ì…˜ ì¶”ê°€
         m_mapAnim.insert(make_pair(_strName, _pAnim));
     }
 }
 
 void CAnimator::LoadAnimation(const wstring& _strRelativePath)
 {
-    // TODO: ÆÄÀÏ¿¡¼­ ¾Ö´Ï¸ŞÀÌ¼Ç Á¤º¸ ·Îµå
-    // ÇöÀç ¹Ì±¸Çö »óÅÂ
+    // TODO: íŒŒì¼ì—ì„œ ì• ë‹ˆë©”ì´ì…˜ ì •ë³´ ë¡œë“œ
+    // í˜„ì¬ ë¯¸êµ¬í˜„ ìƒíƒœ
 }
 
 void CAnimator::SaveAnimation(const wstring& _strRelativePath)
 {
-    // TODO: ¾Ö´Ï¸ŞÀÌ¼Ç Á¤º¸¸¦ ÆÄÀÏ·Î ÀúÀå  
-    // ÇöÀç ¹Ì±¸Çö »óÅÂ
+    // TODO: ì• ë‹ˆë©”ì´ì…˜ ì •ë³´ë¥¼ íŒŒì¼ë¡œ ì €ì¥  
+    // í˜„ì¬ ë¯¸êµ¬í˜„ ìƒíƒœ
 }
 
 void CAnimator::Play(const wstring& _strName, bool _bRepeat)
 {
-    // ¾Ö´Ï¸ŞÀÌ¼Ç Ã£±â
+    // ì• ë‹ˆë©”ì´ì…˜ ì°¾ê¸°
     CAnimation* pTargetAnim = FindAnimation(_strName);
     if (nullptr == pTargetAnim)
         return;
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı ½ÃÀÛ
+    // ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ ì„¤ì •
     m_pCurAnim = pTargetAnim;
     m_bRepeat = _bRepeat;
     m_pCurAnim->Reset();
@@ -133,11 +134,24 @@ void CAnimator::RenderScaled(HDC _dc, float _fScale)
     if (nullptr == m_pCurAnim || nullptr == m_pOwner)
         return;
 
-    // ¿ÀºêÁ§Æ® À§Ä¡ °¡Á®¿À±â
+    // ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
     Vec2 vPos = m_pOwner->GetPos();
 
-    // ½ºÄÉÀÏµÈ ·»´õ¸µ ¼öÇà
+    // ìŠ¤ì¼€ì¼ë§ëœ ë Œë”ë§
     m_pCurAnim->RenderScaled(_dc, vPos, _fScale);
+}
+
+void CAnimator::RenderAtPosition(HDC _dc, Vec2 _vPos, float _fScale)
+{
+    if (nullptr == m_pCurAnim)
+        return;
+
+    // ìŠ¤ì¼€ì¼ì´ 0ì´ë©´ ê¸°ë³¸ í”½ì…€ ìŠ¤ì¼€ì¼ ì‚¬ìš©
+    if (_fScale <= 0.f)
+        _fScale = CCore::GetPixelScale();
+
+    // ì§€ì •ëœ ìœ„ì¹˜ì—ì„œ ë Œë”ë§ (í”Œë¦½ í¬í•¨)
+    m_pCurAnim->RenderScaled(_dc, _vPos, _fScale, m_bFlipX);
 }
 
 CAnimation* CAnimator::FindAnimation(const wstring& _strName)

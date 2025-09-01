@@ -4,94 +4,109 @@
 #include "CCamera.h"
 #include "CCore.h"
 
-CStageImage::CStageImage()
-    : m_pStageTexture(nullptr)
-    , m_eStageType(STAGE_IMAGE_TYPE::STAGE_01)
-    , m_vRenderOffset(Vec2(0.f, 0.f))
-    , m_bScrollWithCamera(true)
+CStageImage::CStageImage ( )
+    : m_pStageTexture ( nullptr )
+    , m_eStageType ( STAGE_IMAGE_TYPE::STAGE_01 )
+    , m_vRenderOffset ( Vec2 ( 0.f , 0.f ) )
+    , m_bScrollWithCamera ( true )
 {
 }
 
-CStageImage::~CStageImage()
+CStageImage::~CStageImage ( )
 {
-    // ÅØ½ºÃ³´Â CResMgr¿¡¼­ °ü¸®ÇÏ¹Ç·Î ¿©±â¼­ »èÁ¦ÇÏÁö ¾ÊÀ½
+    // í…ìŠ¤ì²˜ëŠ” CResMgrì—ì„œ ê´€ë¦¬í•˜ë¯€ë¡œ ì—¬ê¸°ì„œ ì‚­ì œí•˜ì§€ ì•ŠìŒ
     m_pStageTexture = nullptr;
 }
 
-void CStageImage::Update()
+void CStageImage::Update ( )
 {
-    // ±âº»ÀûÀ¸·Î ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö´Â Á¤ÀûÀÌÁö¸¸, 
-    // ÇÊ¿ä½Ã ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ³ª Æ¯¼ö È¿°ú¸¦ À§ÇÑ ¾÷µ¥ÀÌÆ® ·ÎÁ÷ Ãß°¡ °¡´É
+    // ê¸°ë³¸ì ìœ¼ë¡œ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ëŠ” ì •ì ì´ì§€ë§Œ, 
+    // í•„ìš”ì‹œ ì• ë‹ˆë©”ì´ì…˜ì´ë‚˜ íŠ¹ìˆ˜ íš¨ê³¼ë¥¼ ìœ„í•œ ì—…ë°ì´íŠ¸ ë¡œì§ ì¶”ê°€ ê°€ëŠ¥
 }
 
-void CStageImage::Render(HDC _dc)
+void CStageImage::Render ( HDC _dc )
 {
-    if (nullptr == m_pStageTexture) { return; }
+    if ( nullptr == m_pStageTexture ) { return; }
 
-    // ±âº» Á¤º¸ °¡Á®¿À±â
-    UINT originalWidth = m_pStageTexture->GetWidth();
-    UINT originalHeight = m_pStageTexture->GetHeight();
+    // ê¸°ë³¸ ì›ë³¸ í¬ê¸°ì •ë³´
+    UINT originalWidth = m_pStageTexture->GetWidth ( );
+    UINT originalHeight = m_pStageTexture->GetHeight ( );
 
-    // 4¹è ½ºÄÉÀÏ Àû¿ë
-    float pixelScale = CCore::GetInst()->GetPixelScale();
-    UINT scaledWidth = (UINT)(originalWidth * pixelScale);
-    UINT scaledHeight = (UINT)(originalHeight * pixelScale);
+    // 4ë°° ìŠ¤ì¼€ì¼ ì ìš©
+    float pixelScale = CCore::GetInst ( )->GetPixelScale ( );
+    UINT scaledWidth = ( UINT ) ( originalWidth * pixelScale );
+    UINT scaledHeight = ( UINT ) ( originalHeight * pixelScale );
 
-    // ·»´õ¸µ À§Ä¡ °è»ê
+    // ë Œë”ë§ ìœ„ì¹˜ ê³„ì‚°
     Vec2 vRenderPos = m_vRenderOffset;
-    if (m_bScrollWithCamera)
+    if ( m_bScrollWithCamera )
     {
-        vRenderPos = CCamera::GetInst()->GetRenderPos(m_vRenderOffset);
+        vRenderPos = CCamera::GetInst ( )->GetRenderPos ( m_vRenderOffset );
     }
 
-    // ½ºÄÉÀÏ¸µµÈ Å©±â·Î ·»´õ¸µ
-    m_pStageTexture->RenderWithColorKey(_dc,
-        (int)vRenderPos.x, (int)vRenderPos.y,
-        scaledWidth, scaledHeight,
-        RGB(255, 0, 255));
+    // ì»¬ëŸ¬í‚¤ì™€ í¬ê¸°ë¥¼ ì ìš©í•˜ì—¬ ë Œë”ë§
+    m_pStageTexture->RenderWithColorKey ( _dc ,
+        ( int ) vRenderPos.x , ( int ) vRenderPos.y ,
+        scaledWidth , scaledHeight ,
+        RGB ( 255 , 0 , 255 ) );
 }
 
-void CStageImage::SetupStageImage(STAGE_IMAGE_TYPE _eType)
+void CStageImage::SetupStageImage ( STAGE_IMAGE_TYPE _eType )
 {
     m_eStageType = _eType;
 
-    // ½ºÅ×ÀÌÁöº° ±âº» ¼³Á¤
-    switch (_eType)
+    // ìŠ¤í…Œì´ì§€ë³„ ê¸°ë³¸ ì„¤ì •
+    switch ( _eType )
     {
     case STAGE_IMAGE_TYPE::STAGE_01:
-        // Green Hill Stage ¼³Á¤
-        SetImageToBottomLeft();
-        SetScrollWithCamera(true);
+        // Green Hill Stage ì„¤ì •
+        SetImageToBottomLeft ( );
+        SetScrollWithCamera ( true );
         break;
 
     case STAGE_IMAGE_TYPE::STAGE_02:
-        // Castle Stage ¼³Á¤
-        SetImageToBottomLeft();
-        SetScrollWithCamera(true);
+        // Castle Stage ì„¤ì •
+        SetImageToBottomLeft ( );
+        SetScrollWithCamera ( true );
         break;
 
     default:
-        // ±âº» ¼³Á¤
-        SetImageToBottomLeft();
-        SetScrollWithCamera(true);
+        // ê¸°ë³¸ ì„¤ì •
+        SetImageToBottomLeft ( );
+        SetScrollWithCamera ( true );
         break;
     }
 }
 
-void CStageImage::SetImageToBottomLeft()
+void CStageImage::SetImageToBottomLeft ( )
 {
-    if (!m_pStageTexture)
+    if ( !m_pStageTexture )
         return;
 
-    // 4¹è ½ºÄÉÀÏµÈ Å©±â °è»ê
-    float pixelScale = CCore::GetInst()->GetPixelScale();
-    UINT originalHeight = m_pStageTexture->GetHeight();
-    UINT scaledHeight = (UINT)(originalHeight * pixelScale);
+    // 4ë°° ìŠ¤ì¼€ì¼ëœ í¬ê¸° ê³„ì‚°
+    float pixelScale = CCore::GetInst ( )->GetPixelScale ( );
+    UINT originalHeight = m_pStageTexture->GetHeight ( );
+    UINT scaledHeight = ( UINT ) ( originalHeight * pixelScale );
 
-    // ÇØ»óµµ Á¤º¸ °¡Á®¿À±â
-    Vec2 vResolution = CCore::GetInst()->GetResolution();
+    // í•´ìƒë„ ì •ë³´ ê°€ì ¸ì˜¤ê¸°
+    Vec2 vResolution = CCore::GetInst ( )->GetResolution ( );
 
-    // ½ºÄÉÀÏµÈ Å©±â¸¦ ±âÁØÀ¸·Î È­¸é ÇÏ´Ü¿¡ ¹èÄ¡
-    // yÁÂÇ¥´Â È­¸é ÇÏ´Ü - ½ºÄÉÀÏµÈ ÀÌ¹ÌÁö ³ôÀÌ
-    m_vRenderOffset = Vec2(0.f, vResolution.y - scaledHeight);
+    // ìŠ¤ì¼€ì¼ëœ í¬ê¸°ë¥¼ ê³ ë ¤í•˜ì—¬ í™”ë©´ í•˜ë‹¨ì— ë°°ì¹˜
+    // yì¢Œí‘œëŠ” í™”ë©´ í•˜ë‹¨ - ìŠ¤ì¼€ì¼ëœ ì´ë¯¸ì§€ ë†’ì´
+    m_vRenderOffset = Vec2 ( 0.f , vResolution.y - scaledHeight );
+}
+
+void CStageImage::SetImageToBottomLeft ( Vec2 mapSize )
+{
+    if ( !m_pStageTexture )
+        return;
+
+    // 4ë°° ìŠ¤ì¼€ì¼ëœ í¬ê¸° ê³„ì‚°
+    float pixelScale = CCore::GetInst ( )->GetPixelScale ( );
+    UINT originalHeight = m_pStageTexture->GetHeight ( );
+    UINT scaledHeight = ( UINT ) ( originalHeight * pixelScale );
+
+    // ë§µ í¬ê¸°ë¥¼ ê¸°ì¤€ìœ¼ë¡œ ì´ë¯¸ì§€ë¥¼ í•˜ë‹¨ì— ìœ„ì¹˜
+    // yì¢Œí‘œëŠ” ë§µ í•˜ë‹¨ - ìŠ¤ì¼€ì¼ëœ ì´ë¯¸ì§€ ë†’ì´
+    m_vRenderOffset = Vec2 ( 0.f , mapSize.y - scaledHeight );
 }

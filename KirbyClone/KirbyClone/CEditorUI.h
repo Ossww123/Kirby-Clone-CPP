@@ -3,87 +3,92 @@
 class CEditorCore;
 class CScene;
 class CDoor;
+class CMonster;
 
 class CEditorUI
 {
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
-    CEditorUI();
-    ~CEditorUI();
+    // === ê¸°ë³¸ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
+    CEditorUI ( );
+    ~CEditorUI ( );
 
-    void Initialize(CEditorCore* _pCore, CScene* _pScene);
-    void Render(HDC _dc);
-
-public:
-    // === ¿ÀºêÁ§Æ® ÆÈ·¹Æ® ½Ã½ºÅÛ ===
-    void RenderObjectPalette(HDC _dc);
-    bool HandlePaletteClick(Vec2 vMousePos);
-    bool HandleStageImagePaletteClick(Vec2 vMousePos);
-    bool IsInPaletteArea(Vec2 vMousePos) const;
+    void Initialize ( CEditorCore* _pCore , CScene* _pScene );
+    void Render ( HDC _dc );
 
 public:
-    // === ¼Ó¼º ÆĞ³Î ½Ã½ºÅÛ ===
-    void RenderPropertyPanel(HDC _dc);
-    bool HandlePropertyPanelClick(Vec2 vMousePos);
-    bool IsInPropertyPanelArea(Vec2 vMousePos) const;
-
-private:
-    // === ¼Ó¼º ÆĞ³Î ·»´õ¸µ ===
-    void RenderPropertyPanelBackground(HDC _dc);
-    void RenderPropertyPanelHeader(HDC _dc);
-    void RenderDoorProperties(HDC _dc, CDoor* _pDoor);
-    void RenderNoSelection(HDC _dc);
-
-private:
-    // === ¹® ¼Ó¼º ÆíÁı ===
-    bool HandleDoorPropertyEdit(CDoor* _pDoor, Vec2 _vPos);
-    void RenderSceneDropdown(HDC _dc, SCENE_TYPE _currentScene, int _x, int _y, int _width, int _height);
-    void RenderInputField(HDC _dc, const wchar_t* _label, float _value, int _x, int _y, int _width);
-
-private:
-    // === ¾À ÀÌ¸§ ¹İÈ¯ À¯Æ¿¸®Æ¼ ===
-    const wchar_t* GetSceneName(SCENE_TYPE _eScene) const;
-
-private:
-    // === ÆÈ·¹Æ® ·»´õ¸µ ===
-    void RenderPaletteBackground(HDC _dc);
-    void RenderPaletteHeader(HDC _dc);
-    void RenderPaletteItems(HDC _dc);
-    void RenderPaletteItem(HDC _dc, int index, OBJECT_TYPE objType, int x, int y, bool selected);
-
-    // === ¾ÆÀÌÄÜ ·»´õ¸µ ===
-    void RenderObjectIcon(HDC _dc, OBJECT_TYPE objType, int x, int y, int size);
-    void RenderCollisionIcon(HDC _dc, COLLISION_TYPE collisionType, int centerX, int centerY);
-
-    // === Æ¯¼ö ÆÈ·¹Æ® ·»´õ¸µ ===
-    void RenderCollisionPalette(HDC _dc);
-    void RenderStageImagePalette(HDC _dc);
-    void RenderStageImageItem(HDC _dc, STAGE_IMAGE_TYPE stageType, int x, int y, bool selected);
-    void RenderStageImageIcon(HDC _dc, STAGE_IMAGE_TYPE stageType, int centerX, int centerY);
-
-    // === ÆÈ·¹Æ® À¯Æ¿¸®Æ¼ ===
-    int GetPaletteItemAt(Vec2 vMousePos) const;
-    void CalculatePaletteLayout();
+    // === ì˜¤ë¸Œì íŠ¸ íŒ”ë ˆíŠ¸ ì‹œìŠ¤í…œ ===
+    void RenderObjectPalette ( HDC _dc );
+    bool HandlePaletteClick ( Vec2 vMousePos );
+    bool HandleStageImagePaletteClick ( Vec2 vMousePos );
+    bool IsInPaletteArea ( Vec2 vMousePos ) const;
 
 public:
-    // === ÅØ½ºÆ® ·»´õ¸µ À¯Æ¿¸®Æ¼ ===
-    void SetupTextStyle(HDC _dc, COLORREF color);
-    void RenderText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color = RGB(255, 255, 255));
-    void RenderBoldText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color = RGB(255, 255, 100));
+    // === ì†ì„± íŒ¨ë„ ì‹œìŠ¤í…œ ===
+    void RenderPropertyPanel ( HDC _dc );
+    bool HandlePropertyPanelClick ( Vec2 vMousePos );
+    bool IsInPropertyPanelArea ( Vec2 vMousePos ) const;
 
 private:
-    // === ÆùÆ® °ü¸® ===
-    HFONT CreateUIFont(int size = 14, bool bold = false);
-
-    // === ÅøÆÁ ½Ã½ºÅÛ ===
-    void RenderCollisionTooltip(HDC _dc, OBJECT_TYPE objType, int mouseX, int mouseY);
+    // === ì†ì„± íŒ¨ë„ ë Œë”ë§ ===
+    void RenderPropertyPanelBackground ( HDC _dc );
+    void RenderPropertyPanelHeader ( HDC _dc );
+    void RenderDoorProperties ( HDC _dc , CDoor* _pDoor );
+    void RenderMonsterProperties ( HDC _dc , CMonster* _pMonster );
+    void RenderTileProperties ( HDC _dc , class CTile* _pTile );
+    void RenderNoSelection ( HDC _dc );
 
 private:
-    // === ¿¡µğÅÍ ½Ã½ºÅÛ ÂüÁ¶ ===
+    // === ê° ì†ì„± í¸ì§‘ ===
+    bool HandleDoorPropertyEdit ( CDoor* _pDoor , Vec2 _vPos );
+    bool HandleMonsterPropertyEdit ( CMonster* _pMonster , Vec2 _vPos );
+    bool HandleTilePropertyEdit ( class CTile* _pTile , Vec2 _vPos );
+    void RenderSceneDropdown ( HDC _dc , SCENE_TYPE _currentScene , int _x , int _y , int _width , int _height );
+    void RenderInputField ( HDC _dc , const wchar_t* _label , float _value , int _x , int _y , int _width );
+
+private:
+    // === ì”¬ ì´ë¦„ ë³€í™˜ ìœ í‹¸ë¦¬í‹° ===
+    const wchar_t* GetSceneName ( SCENE_TYPE _eScene ) const;
+
+private:
+    // === íŒ”ë ˆíŠ¸ ë Œë”ë§ ===
+    void RenderPaletteBackground ( HDC _dc );
+    void RenderPaletteHeader ( HDC _dc );
+    void RenderPaletteItems ( HDC _dc );
+    void RenderPaletteItem ( HDC _dc , int index , OBJECT_TYPE objType , int x , int y , bool selected );
+
+    // === ì•„ì´ì½˜ ë Œë”ë§ ===
+    void RenderObjectIcon ( HDC _dc , OBJECT_TYPE objType , int x , int y , int size );
+    void RenderCollisionIcon ( HDC _dc , COLLISION_TYPE collisionType , int centerX , int centerY );
+
+    // === íŠ¹ìˆ˜ íŒ”ë ˆíŠ¸ ë Œë”ë§ ===
+    void RenderCollisionPalette ( HDC _dc );
+    void RenderStageImagePalette ( HDC _dc );
+    void RenderStageImageItem ( HDC _dc , STAGE_IMAGE_TYPE stageType , int x , int y , bool selected );
+    void RenderStageImageIcon ( HDC _dc , STAGE_IMAGE_TYPE stageType , int centerX , int centerY );
+
+    // === íŒ”ë ˆíŠ¸ ìœ í‹¸ë¦¬í‹° ===
+    int GetPaletteItemAt ( Vec2 vMousePos ) const;
+    void CalculatePaletteLayout ( );
+
+public:
+    // === í…ìŠ¤íŠ¸ ë Œë”ë§ ìœ í‹¸ë¦¬í‹° ===
+    void SetupTextStyle ( HDC _dc , COLORREF color );
+    void RenderText ( HDC _dc , int x , int y , const wchar_t* text , COLORREF color = RGB ( 255 , 255 , 255 ) );
+    void RenderBoldText ( HDC _dc , int x , int y , const wchar_t* text , COLORREF color = RGB ( 255 , 255 , 100 ) );
+
+private:
+    // === í°íŠ¸ ê´€ë¦¬ ===
+    HFONT CreateUIFont ( int size = 14 , bool bold = false );
+
+    // === íˆ´íŒ ì‹œìŠ¤í…œ ===
+    void RenderCollisionTooltip ( HDC _dc , OBJECT_TYPE objType , int mouseX , int mouseY );
+
+private:
+    // === í•µì‹¬ ì‹œìŠ¤í…œ ì—°ê²° ===
     CEditorCore* m_pEditorCore;
     CScene* m_pScene;
 
-    // === ÆÈ·¹Æ® ·¹ÀÌ¾Æ¿ô ===
+    // === íŒ”ë ˆíŠ¸ ë ˆì´ì•„ì›ƒ ===
     int                 m_iPaletteX;
     int                 m_iPaletteY;
     int                 m_iPaletteWidth;
@@ -92,13 +97,13 @@ private:
     int                 m_iItemPadding;
     int                 m_iItemsPerRow;
 
-    // === ¼Ó¼º ÆĞ³Î ·¹ÀÌ¾Æ¿ô ===
+    // === ì†ì„± íŒ¨ë„ ë ˆì´ì•„ì›ƒ ===
     int                 m_iPropertyPanelX;
-    int                 m_iPropertyPanelY; 
-    int                 m_iPropertyPanelWidth;      // ¼Ó¼º ÆĞ³Î ³Êºñ (ÆÈ·¹Æ®¿Í µ¿ÀÏ)
+    int                 m_iPropertyPanelY;
+    int                 m_iPropertyPanelWidth;      // ì†ì„± íŒ¨ë„ ë„ˆë¹„ (íŒ”ë ˆíŠ¸ì™€ ë¶„ë¦¬)
     int                 m_iPropertyPanelHeight;
 
-    // === ½ºÅ©·Ñ °ü·Ã ===
+    // === ìŠ¤í¬ë¡¤ ê´€ë¦¬ ===
     int                 m_iScrollOffset;
     int                 m_iMaxScroll;
 };

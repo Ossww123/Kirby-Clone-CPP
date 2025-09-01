@@ -191,6 +191,36 @@
     <Filter Include="Engine\08. Factory\CProjectileFactory">
       <UniqueIdentifier>{0079e2ea-c9e2-472a-8d95-04699bd69df2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\06. Resource\Sound">
+      <UniqueIdentifier>{3daacb4a-e86d-48c7-a394-081e271da5c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\SoundMgr">
+      <UniqueIdentifier>{5fc4cee2-23df-404f-846c-6e354c6d9057}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\AbilityStar">
+      <UniqueIdentifier>{d5c9bed1-195b-49e0-aacb-0dd7570c5003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\PlayerDataMgr">
+      <UniqueIdentifier>{0c8e1bd8-5370-4abe-9e17-6d7a9cca2dfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\Apple">
+      <UniqueIdentifier>{31a0504c-7dd5-4b33-81db-11486f2fffe4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\MonsterSpawnMgr">
+      <UniqueIdentifier>{e076e4b1-e0dd-4a8b-8f76-56d84f6df098}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\UIMgr">
+      <UniqueIdentifier>{54c1dfd9-8b3b-4919-96f9-6a61e7b73eb9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\10. Module">
+      <UniqueIdentifier>{e5710e02-9da1-4d29-b5e5-7185e67cc327}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\AirParticle">
+      <UniqueIdentifier>{b05aa1d1-fee6-4ede-9c97-cdd2fd544ae6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\DeathEffect">
+      <UniqueIdentifier>{9874a97f-b591-4d37-a1f1-f03648e5343b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -404,6 +434,36 @@
     <ClInclude Include="CProjectileFactory.h">
       <Filter>Engine\08. Factory\CProjectileFactory</Filter>
     </ClInclude>
+    <ClInclude Include="CSoundMgr.h">
+      <Filter>Engine\03. Manager\SoundMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="CSound.h">
+      <Filter>Engine\06. Resource\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="CAbilityStar.h">
+      <Filter>Engine\04. Object\AbilityStar</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayerDataMgr.h">
+      <Filter>Engine\03. Manager\PlayerDataMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="CApple.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
+    </ClInclude>
+    <ClInclude Include="CMonsterSpawnMgr.h">
+      <Filter>Engine\03. Manager\MonsterSpawnMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="CUIMgr.h">
+      <Filter>Engine\03. Manager\UIMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="CFadeEffect.h">
+      <Filter>Engine\10. Module</Filter>
+    </ClInclude>
+    <ClInclude Include="CAirParticle.h">
+      <Filter>Engine\04. Object\AirParticle</Filter>
+    </ClInclude>
+    <ClInclude Include="CDeathEffect.h">
+      <Filter>Engine\04. Object\DeathEffect</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyClone.rc">
@@ -608,6 +668,36 @@
     </ClCompile>
     <ClCompile Include="CProjectileFactory.cpp">
       <Filter>Engine\08. Factory\CProjectileFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="CSoundMgr.cpp">
+      <Filter>Engine\03. Manager\SoundMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="CSound.cpp">
+      <Filter>Engine\06. Resource\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="CAbilityStar.cpp">
+      <Filter>Engine\04. Object\AbilityStar</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerDataMgr.cpp">
+      <Filter>Engine\03. Manager\PlayerDataMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="CApple.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
+    </ClCompile>
+    <ClCompile Include="CMonsterSpawnMgr.cpp">
+      <Filter>Engine\03. Manager\MonsterSpawnMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="CUIMgr.cpp">
+      <Filter>Engine\03. Manager\UIMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="CFadeEffect.cpp">
+      <Filter>Engine\10. Module</Filter>
+    </ClCompile>
+    <ClCompile Include="CAirParticle.cpp">
+      <Filter>Engine\04. Object\AirParticle</Filter>
+    </ClCompile>
+    <ClCompile Include="CDeathEffect.cpp">
+      <Filter>Engine\04. Object\DeathEffect</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

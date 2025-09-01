@@ -8,20 +8,20 @@ public:
     virtual ~CBrontoBurt();
 
 public:
-    // === °¡»ó ÇÔ¼ö ±¸Çö ===
-    void Move() override;                   // »çÀÎÆÄ ºñÇà ÆĞÅÏ
+    // === ê°€ìƒ í•¨ìˆ˜ êµ¬í˜„ ===
+    void Move() override;                   // ì‚¬ì¸íŒŒ ë¹„í–‰ íŒ¨í„´
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤ ±¸Çö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì • êµ¬í˜„ ===
     void SetupAnimationMapping() override;
 
 private:
-    // === ºñÇà ÆĞÅÏ ·ÎÁ÷ ===
-    void UpdateFlightPattern();             // »çÀÎÆÄ ºñÇà ÆĞÅÏ ¾÷µ¥ÀÌÆ®
+    // === ë¹„í–‰ íŒ¨í„´ ë¡œì§ ===
+    void UpdateFlightPattern();             // ì‚¬ì¸íŒŒ ë¹„í–‰ íŒ¨í„´ ì—…ë°ì´íŠ¸
 
 private:
-    float   m_fFlightTimer;                 // ºñÇà ÆĞÅÏ¿ë Å¸ÀÌ¸Ó
-    float   m_fWaveAmplitude;               // »çÀÎÆÄ ÁøÆø
-    float   m_fWaveFrequency;               // »çÀÎÆÄ ÁÖÆÄ¼ö
-    Vec2    m_vStartPos;                    // ½ÃÀÛ À§Ä¡ (±âÁØÁ¡)
+    float   m_fFlightTimer;                 // ë¹„í–‰ íŒ¨í„´ìš© íƒ€ì´ë¨¸
+    float   m_fWaveAmplitude;               // ì‚¬ì¸íŒŒ ì§„í­
+    float   m_fWaveFrequency;               // ì‚¬ì¸íŒŒ ì£¼íŒŒìˆ˜
+    Vec2    m_vStartPos;                    // ì‹œì‘ ìœ„ì¹˜ (ê¸°ì¤€ì )
 };

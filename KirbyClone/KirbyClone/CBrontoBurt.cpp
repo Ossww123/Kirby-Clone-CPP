@@ -2,71 +2,97 @@
 #include "CBrontoBurt.h"
 #include "CTimeMgr.h"
 #include "CRigidBody.h"
+#include "CCamera.h"
+#include "CCore.h"
 
 CBrontoBurt::CBrontoBurt()
     : m_fFlightTimer(0.f)
-    , m_fWaveAmplitude(50.f)        // »çÀÎÆÄ ÁøÆø 50ÇÈ¼¿
-    , m_fWaveFrequency(2.f)         // »çÀÎÆÄ ÁÖÆÄ¼ö
+    , m_fWaveAmplitude(50.f)        // ì‚¬ì¸íŒŒ ì§„í­ 50í”½ì…€
+    , m_fWaveFrequency(2.f)         // ì‚¬ì¸íŒŒ ì£¼íŒŒìˆ˜
     , m_vStartPos(Vec2(0.f, 0.f))
 {
-    // ¿ÀºêÁ§Æ® Å¸ÀÔ ¼³Á¤
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì… ì„¤ì •
     SetType(OBJECT_TYPE::MONSTER_BRONTO_BURT);
 
-    // ºê·ĞÅä ¹öÆ® Àü¿ë ¼³Á¤
+    // ë¸Œë¡ í†  ë²„íŠ¸ ì „ìš© ì„¤ì •
     m_fSpeed = 100.f;
 
-    // ºñÇà ¸ó½ºÅÍÀÌ¹Ç·Î Áß·Â ºñÈ°¼ºÈ­
+    // ë¹„í–‰ ëª¬ìŠ¤í„°ì´ë¯€ë¡œ ì¤‘ë ¥ ë¹„í™œì„±í™”
     GetRigidBody()->SetUseGravity(false);
 
-    // ½ÃÀÛ À§Ä¡ ÀúÀå
+    // ì‹œì‘ ìœ„ì¹˜ ì €ì¥
     m_vStartPos = GetPos();
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç »ı¼º
+    // ì• ë‹ˆë©”ì´ì…˜ ìƒì„±
 
-    // ÃÊ±â »óÅÂ¸¦ FLY·Î ¼³Á¤ (WALK°¡ ¾Æ´Ô!)
+    // ì´ˆê¸° ìƒíƒœë¥¼ FLYë¡œ ì„¤ì • (WALKê°€ ì•„ë‹˜!)
+    // ì• ë‹ˆë©”ì´ì…˜ ë¡œë“œ
+    LoadAnimationsFromFile(L"bronto_burt_animations.json");
+    
+    // ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì •
+    SetupAnimationMapping();
+
     ChangeState(MONSTER_STATE::FLY);
 }
 
 CBrontoBurt::~CBrontoBurt()
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸®
+    // ìƒìœ„ í´ë˜ìŠ¤ì—ì„œ ì •ë¦¬
 }
 
 void CBrontoBurt::Move()
 {
-    // »çÀÎÆÄ ºñÇà ÆĞÅÏ ¾÷µ¥ÀÌÆ®
+    // ì‚¬ì¸íŒŒ ë¹„í–‰ íŒ¨í„´ ì—…ë°ì´íŠ¸
     UpdateFlightPattern();
 
-    // È­¸é °æ°è Ã¼Å©
+    // ê²½ê³„ ì²´í¬ ë° Dead ì²˜ë¦¬
     Vec2 currentPos = GetPos();
-    if (currentPos.x < -50.f || currentPos.x > 1970.f)  // È­¸é °æ°è
+    
+    // 1. ì¹´ë©”ë¼ ê²½ê³„ ì²´í¬
+    Vec2 cameraPos = CCamera::GetInst()->GetLookAt();
+    Vec2 resolution = CCore::GetInst()->GetResolution();
+    float cameraLeft = cameraPos.x - resolution.x/2.f - 200.f;
+    float cameraRight = cameraPos.x + resolution.x/2.f + 200.f;
+    
+    // 2. ìŠ¤í…Œì´ì§€ ê²½ê³„ ì²´í¬
+    Vec2 stageBoundsMin, stageBoundsMax;
+    CCamera::GetInst()->GetStageBounds(stageBoundsMin, stageBoundsMax);
+    
+    // 3. ê²½ê³„ ë²—ì–´ë‚˜ë©´ Dead ì²˜ë¦¬
+    if (currentPos.x < cameraLeft || currentPos.x > cameraRight ||
+        currentPos.x < stageBoundsMin.x - 100.f || currentPos.x > stageBoundsMax.x + 100.f)
     {
-        TurnAround();
-        m_vStartPos.x = currentPos.x;  // »õ·Î¿î ±âÁØÁ¡ ¼³Á¤
+        SetDead();
+        return;  // Move() í•¨ìˆ˜ ì¢…ë£Œ
     }
 }
 
 void CBrontoBurt::SetupAnimationMapping()
 {
+    // ë¸Œë¡ í† ë²„íŠ¸ëŠ” ì£¼ë¡œ FLY ìƒíƒœë¥¼ ì‚¬ìš©
+    m_mapStateToAnimation[MONSTER_STATE::FLY] = L"FLY";
+    m_mapStateToAnimation[MONSTER_STATE::IDLE] = L"IDLE";
+    m_mapStateToAnimation[MONSTER_STATE::DAMAGE] = L"DAMAGE";
+    m_mapStateToAnimation[MONSTER_STATE::BEING_INHALED] = L"DAMAGE";
 }
 
 void CBrontoBurt::UpdateFlightPattern()
 {
-    // »çÀÎÆÄ ÆĞÅÏÀ¸·Î »óÇÏ ¿òÁ÷ÀÓ + ÁÂ¿ì ÀÌµ¿
+    // ì‚¬ì¸íŒŒ íŒ¨í„´ìœ¼ë¡œ ìƒí•˜ ì›€ì§ì„ + ì¢Œìš° ì´ë™
     m_fFlightTimer += CTimeMgr::GetInst()->GetfDT();
 
-    // »çÀÎÆÄ¸¦ ÀÌ¿ëÇÑ Y ÁÂÇ¥ °è»ê
+    // ì‚¬ì¸íŒŒë¥¼ ì´ìš©í•œ Y ì¢Œí‘œ ê³„ì‚°
     float fSinValue = sinf(m_fFlightTimer * m_fWaveFrequency);
     float fNewY = m_vStartPos.y + (fSinValue * m_fWaveAmplitude);
 
-    // ¼öÆò ÀÌµ¿
+    // ìˆ˜í‰ ì´ë™
     Vec2 currentPos = GetPos();
     float fNewX = currentPos.x + (m_fSpeed * m_iDir * CTimeMgr::GetInst()->GetfDT());
 
-    // »õ À§Ä¡ ¼³Á¤
+    // ìƒˆ ìœ„ì¹˜ ì„¤ì •
     SetPos(Vec2(fNewX, fNewY));
 
-    // ¸®Áöµå¹Ùµğ ¼Óµµµµ ¼³Á¤ (¹°¸® ½Ã¹Ä·¹ÀÌ¼Ç°ú µ¿±âÈ­)
+    // ë¦¬ì§€ë“œë°”ë”” ì†ë„ë„ ì„¤ì • (ë¬¼ë¦¬ ì‹œë®¬ë ˆì´ì…˜ê³¼ ë™ê¸°í™”)
     if (nullptr != GetRigidBody())
     {
         Vec2 velocity = Vec2(m_fSpeed * m_iDir,

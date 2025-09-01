@@ -7,73 +7,86 @@ class CTexture;
 class CTile : public CObject
 {
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
-    CTile();
-    ~CTile();
+    // === ê¸°ë³¸ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
+    CTile ( );
+    ~CTile ( );
 
-    void Update() override;
-    void Render(HDC _dc) override;
+    void Update ( ) override;
+    void Render ( HDC _dc ) override;
 
 public:
-    // === Ãæµ¹ Å¸ÀÔ °ü¸® ===
-    void SetCollisionType(COLLISION_TYPE _eType);
-    COLLISION_TYPE GetCollisionType() const { return m_eCollisionType; }
+    // === ì¶©ëŒ íƒ€ì… ê´€ë¦¬ ===
+    void SetCollisionType ( COLLISION_TYPE _eType );
+    COLLISION_TYPE GetCollisionType ( ) const { return m_eCollisionType; }
 
 private:
-    void SetupCollisionDefaults(COLLISION_TYPE _eType);
-    void UpdateCollisionProperties();
+    void SetupCollisionDefaults ( COLLISION_TYPE _eType );
+    void UpdateCollisionProperties ( );
 
 public:
-    // === ¼Ó¼º ¼³Á¤/Á¶È¸ ===
-    void SetSolid(bool _bSolid) { m_bSolid = _bSolid; }
-    bool IsSolid() const { return m_bSolid; }
+    // === ì†ì„± ì„¤ì •/ì¡°íšŒ ===
+    void SetSolid ( bool _bSolid ) { m_bSolid = _bSolid; }
+    bool IsSolid ( ) const { return m_bSolid; }
 
-    void SetHarmful(bool _bHarmful) { m_bHarmful = _bHarmful; }
-    bool IsHarmful() const { return m_bHarmful; }
+    void SetHarmful ( bool _bHarmful ) { m_bHarmful = _bHarmful; }
+    bool IsHarmful ( ) const { return m_bHarmful; }
 
-    void SetOneWay(bool _bOneWay) { m_bOneWay = _bOneWay; }
-    bool IsOneWay() const { return m_bOneWay; }
+    void SetOneWay ( bool _bOneWay ) { m_bOneWay = _bOneWay; }
+    bool IsOneWay ( ) const { return m_bOneWay; }
 
-    bool IsDecorative() const { return !m_bSolid && !m_bHarmful && !m_bOneWay; }
+    bool IsDecorative ( ) const { return !m_bSolid && !m_bHarmful && !m_bOneWay; }
 
 public:
-    // === ¿¡µğÅÍ ·»´õ¸µ °ü¸® ===
-    void SetDisplayColor(COLORREF _color) { m_displayColor = _color; }
-    COLORREF GetDisplayColor() const { return m_displayColor; }
+    // === ë””ë²„ê·¸ ë Œë”ë§ ê´€ë ¨ ===
+    void SetDisplayColor ( COLORREF _color ) { m_displayColor = _color; }
+    COLORREF GetDisplayColor ( ) const { return m_displayColor; }
 
 private:
-    void RenderCollisionBox(HDC _dc);
-    void RenderSpecialIndicators(HDC _dc, Vec2 vRenderPos, Vec2 vScale);
-    void RenderCollisionInfo(HDC _dc);
+    void RenderCollisionBox ( HDC _dc );
+    void RenderSpecialIndicators ( HDC _dc , Vec2 vRenderPos , Vec2 vScale );
+    void RenderCollisionInfo ( HDC _dc );
 
-    // === Å¸ÀÏ Å¸ÀÔº° ·»´õ¸µ ===
-    void RenderTransparentBlock(HDC _dc);
-    void RenderCommonElements(HDC _dc);
+    // === íƒ€ì¼ íƒ€ì…ë³„ ë Œë”ë§ ===
+    void RenderTransparentBlock ( HDC _dc );
+    void RenderTriggerTile ( HDC _dc );
+    void RenderCommonElements ( HDC _dc );
 
 public:
-    // === ±âº» È£È¯¼º À¯Áö ÇÔ¼öµé (ÇâÈÄ ±¸Çö) ===
-    void SetVisualType(TILE_VISUAL_TYPE _eType) { m_eVisualType = _eType; }
-    TILE_VISUAL_TYPE GetVisualType() const { return m_eVisualType; }
+    // === ê¸°ë³¸ í˜¸í™˜ì„± ìœ ì§€ í•¨ìˆ˜ë“¤ (í˜„ì¬ ì‚¬ìš©) ===
+    void SetVisualType ( TILE_VISUAL_TYPE _eType );
+    TILE_VISUAL_TYPE GetVisualType ( ) const { return m_eVisualType; }
 
-    void SetTileType(OBJECT_TYPE _eType) { m_eTileType = _eType; }
-    OBJECT_TYPE GetTileType() const { return m_eTileType; }
+    void SetTileType ( OBJECT_TYPE _eType ) { m_eTileType = _eType; }
+    OBJECT_TYPE GetTileType ( ) const { return m_eTileType; }
 
-    void SetTileTexture(CTexture* _pTexture) { /* ÇâÈÄ ±¸Çö */ }
+    void SetTileTexture ( CTexture* _pTexture ) { /* í˜„ì¬ ë¯¸êµ¬í˜„ */ }
+
+    // === ë³´ìŠ¤ì „ íƒ€ì… íŠ¹ìˆ˜ íš¨ê³¼ìš© ===
+    void SetBossLockPosition ( Vec2 _vPos ) { m_vBossLockPos = _vPos; }
+    Vec2 GetBossLockPosition ( ) const { return m_vBossLockPos; }
+
+    // === Trigger activation state ===
+    void SetTriggerActive ( bool _bActive ) { m_bTriggerActive = _bActive; }
+    bool IsTriggerActive ( ) const { return m_bTriggerActive; }
 
 private:
-    // === Ãæµ¹ ¹× Å¸ÀÏ µ¥ÀÌÅÍ ===
-    OBJECT_TYPE         m_eTileType;            // ±âº» ¿ÀºêÁ§Æ® Å¸ÀÔ
-    COLLISION_TYPE      m_eCollisionType;       // »óÈ£ÀÛ¿ë Ãæµ¹ Å¸ÀÔ
+    // === ì¶©ëŒ ë° íƒ€ì¼ ë°ì´í„° ===
+    OBJECT_TYPE         m_eTileType;            // ê¸°ë³¸ ì˜¤ë¸Œì íŠ¸ íƒ€ì…
+    COLLISION_TYPE      m_eCollisionType;       // ìƒí˜¸ì‘ìš© ì¶©ëŒ íƒ€ì…
 
-    // === Ãæµ¹ ¼Ó¼ºµé ===
-    bool                m_bSolid;               // ´Ü´ÜÇÑ Ãæµ¹ (Åë°ú ºÒ°¡)
-    bool                m_bHarmful;             // µ¥¹ÌÁö¸¦ ÁÖ´Â°¡
-    bool                m_bOneWay;              // ÀÏ¹æÅëÇàÀÎ°¡ (À§¿¡¼­¸¸ Ãæµ¹)
+    // === ì¶©ëŒ ì†ì„±ë“¤ ===
+    bool                m_bSolid;               // ë‹¨ë‹¨í•œ ì¶©ëŒ (í†µê³¼ ë¶ˆê°€)
+    bool                m_bHarmful;             // í•´ë¡œìš´ì§€ ìˆëŠ”ê°€
+    bool                m_bOneWay;              // ì¼ë°©í–¥ì¸ê°€ (ì•„ë˜ì—ì„œ ì¶©ëŒ)
 
-    // === ¿¡µğÅÍ ·»´õ¸µ ===
-    COLORREF            m_displayColor;         // ¿¡µğÅÍ¿¡¼­ Ç¥½ÃÇÒ »ö±ò
+    // === ë””ë²„ê·¸ ë Œë”ë§ ===
+    COLORREF            m_displayColor;         // ì—ë””í„°ì—ì„œ í‘œì‹œë  ìƒ‰ìƒ
 
-    // === ±âº» ÅØ½ºÃ³ °ü¸® (¹Ì»ç¿ë) ===
-    TILE_VISUAL_TYPE    m_eVisualType;          // ±âº» ½Ã°¢Àû Å¸ÀÔ
-    CTexture*           m_pTileTexture;         // ´ëÃ¼ ÀÌ¹ÌÁö (nullptr À¯Áö)
+    // === ê¸°ë³¸ í…ìŠ¤ì²˜ ê´€ë ¨ (ë¯¸ì‚¬ìš©) ===
+    TILE_VISUAL_TYPE    m_eVisualType;          // ê¸°ë³¸ ë¹„ì£¼ì–¼ íƒ€ì…
+    CTexture* m_pTileTexture;         // ì‹¤ì œ ì´ë¯¸ì§€ (nullptr ìƒíƒœ)
+
+    // === ë³´ìŠ¤ì „ íƒ€ì… íŠ¹ìˆ˜ ë³€ìˆ˜ë“¤ ===
+    Vec2                m_vBossLockPos;         // ë³´ìŠ¤ì „ íƒ€ì… ë°œë™ ì‹œì ì— ì €ì¥í•  ì¹´ë©”ë¼ ìœ„ì¹˜
+    bool                m_bTriggerActive;       // Trigger activation state (default: true)
 };

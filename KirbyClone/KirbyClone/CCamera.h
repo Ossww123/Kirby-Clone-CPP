@@ -7,26 +7,35 @@ class CCamera
     SINGLE(CCamera);
 
 private:
-    // === À§Ä¡ °ü·Ã ===
-    Vec2        m_vLookAt;          // Ä«¸Ş¶ó°¡ ¹Ù¶óº¸´Â À§Ä¡ (¿ùµå ÁÂÇ¥)
-    Vec2        m_vCurLookAt;       // ÇöÀç Ä«¸Ş¶ó°¡ ½ÇÁ¦·Î ¹Ù¶óº¸´Â À§Ä¡
-    Vec2        m_vPrevLookAt;      // ÀÌÀü ÇÁ·¹ÀÓ Ä«¸Ş¶ó À§Ä¡
-    Vec2        m_vDiff;            // ÇØ»óµµ Áß¾Ó°ú Ä«¸Ş¶ó LookAt °£ÀÇ Â÷ÀÌ°ª
+    // === ìœ„ì¹˜ ê´€ë ¨ ===
+    Vec2        m_vLookAt;          // ì¹´ë©”ë¼ê°€ ë°”ë¼ë³´ëŠ” ìœ„ì¹˜ (ì›”ë“œ ì¢Œí‘œ)
+    Vec2        m_vCurLookAt;       // í˜„ì¬ ì¹´ë©”ë¼ê°€ ì‹¤ì œë¡œ ë°”ë¼ë³´ëŠ” ìœ„ì¹˜
+    Vec2        m_vPrevLookAt;      // ì´ì „ í”„ë ˆì„ ì¹´ë©”ë¼ ìœ„ì¹˜
+    Vec2        m_vDiff;            // í•´ìƒë„ ì¤‘ì•™ê³¼ ì¹´ë©”ë¼ LookAt ê°„ì˜ ì°¨ì´ê°’
 
-    // === Å¸°Ù ÃßÀû ===
-    CObject*    m_pTargetObj;       // Ä«¸Ş¶ó°¡ µû¶ó´Ù´Ò Å¸°Ù ¿ÀºêÁ§Æ®
+    // === íƒ€ê²Ÿ ì¶”ì  ===
+    CObject*    m_pTargetObj;       // ì¹´ë©”ë¼ê°€ ë”°ë¼ë‹¤ë‹ íƒ€ê²Ÿ ì˜¤ë¸Œì íŠ¸
 
-    // === ½Ã½ºÅÛ Á¤º¸ ===
-    Vec2        m_vResolution;      // Ä«¸Ş¶ó ÇØ»óµµ (È­¸é Å©±â)
-    float       m_fTime;            // Ä«¸Ş¶ó È¿°ú¿ë ´©Àû ½Ã°£
+    // === ì‹œìŠ¤í…œ ì •ë³´ ===
+    Vec2        m_vResolution;      // ì¹´ë©”ë¼ í•´ìƒë„ (í™”ë©´ í¬ê¸°)
+    float       m_fTime;            // ì¹´ë©”ë¼ íš¨ê³¼ìš© ëˆ„ì  ì‹œê°„
 
-    // === ºÎµå·¯¿î ÀÌµ¿ ===
-    static constexpr float SMOOTH_SPEED = 10.f;     // ºÎµå·¯¿î ÀÌµ¿ ¼Óµµ
-    static constexpr float MANUAL_SPEED = 300.f;    // ¼öµ¿ Á¶ÀÛ ¼Óµµ
+    // === ë¶€ë“œëŸ¬ìš´ ì´ë™ ===
+    static constexpr float SMOOTH_SPEED = 10.f;     // ë¶€ë“œëŸ¬ìš´ ì´ë™ ì†ë„
+    static constexpr float MANUAL_SPEED = 300.f;    // ìˆ˜ë™ ì¡°ì‘ ì†ë„
 
-    // === È­¸é Èçµé¸² ===
-    float       m_fShakeTime;       // Èçµé¸² Áö¼Ó ½Ã°£
-    float       m_fShakePower;      // Èçµé¸² °­µµ
+    // === í™”ë©´ í”ë“¤ë¦¼ ===
+    float       m_fShakeTime;       // í”ë“¤ë¦¼ ì§€ì† ì‹œê°„
+    float       m_fShakePower;      // í”ë“¤ë¦¼ ê°•ë„
+
+    // === ìŠ¤í…Œì´ì§€ ê²½ê³„ ===
+    Vec2        m_vStageBoundsMin;  // ìŠ¤í…Œì´ì§€ ìµœì†Œ ì¢Œí‘œ
+    Vec2        m_vStageBoundsMax;  // ìŠ¤í…Œì´ì§€ ìµœëŒ€ ì¢Œí‘œ
+    bool        m_bUseStageBounds;  // ìŠ¤í…Œì´ì§€ ê²½ê³„ ì‚¬ìš© ì—¬ë¶€
+
+    // === ë³´ìŠ¤ ëª¨ë“œ ===
+    bool        m_bBossMode;        // ë³´ìŠ¤ì „ ëª¨ë“œ (ì¹´ë©”ë¼ ê³ ì •)
+    Vec2        m_vBossLockPos;     // ë³´ìŠ¤ì „ ì‹œ ê³ ì •í•  ì¹´ë©”ë¼ ìœ„ì¹˜
 
 public:
     void init(int _iWidth, int _iHeight);
@@ -35,20 +44,33 @@ public:
 
     // === Public Interface ===
     void SetLookAt(Vec2 _vLook) { m_vLookAt = _vLook; }
+    void SetLookAtImmediate(Vec2 _vLook); // ì¦‰ì‹œ ì¹´ë©”ë¼ ìœ„ì¹˜ ì„¤ì • (ë¶€ë“œëŸ¬ìš´ ì´ë™ ì—†ì´)
     void SetTarget(CObject* _pTarget) { m_pTargetObj = _pTarget; }
     void CameraShake(float _fDuration, float _fPower);
+    void SetStageBounds(Vec2 _vMin, Vec2 _vMax);
+    void DisableStageBounds() { m_bUseStageBounds = false; }
+
+    // === ë³´ìŠ¤ ëª¨ë“œ ì œì–´ ===
+    void StartBossMode(Vec2 _vLockPos);         // ë³´ìŠ¤ì „ ì‹œì‘ (ì¹´ë©”ë¼ ê³ ì •)
+    void EndBossMode();                         // ë³´ìŠ¤ì „ ì¢…ë£Œ (ì¹´ë©”ë¼ ì¶”ì  ì¬ê°œ)
+    bool IsBossMode() const { return m_bBossMode; }
 
     // === Getters ===
     Vec2 GetLookAt() const { return m_vCurLookAt; }
     CObject* GetTarget() const { return m_pTargetObj; }
     Vec2 GetRenderPos(Vec2 _vObjPos) const { return _vObjPos - m_vDiff; }
     Vec2 GetRealPos(Vec2 _vRenderPos) const { return _vRenderPos + m_vDiff; }
+    void GetStageBounds(Vec2& _vMin, Vec2& _vMax) const { _vMin = m_vStageBoundsMin; _vMax = m_vStageBoundsMax; }
+    
+    // === Camera Bounds ===
+    Vec2 GetCameraBounds() const;
+    void ClampPositionToCameraBounds(Vec2& _vPos) const;
 
 private:
-    // === ¾÷µ¥ÀÌÆ® ÇÔ¼ö ===
-    void UpdateTargetTracking();   // Å¸°Ù ÃßÀû
-    void UpdateManualInput();      // Å°º¸µå ÀÔ·Â  
-    void UpdateSmoothMovement();   // ºÎµå·¯¿î ÀÌµ¿
-    void UpdateCameraShake();      // È­¸é Èçµé¸²
-    void CalDiff();                // Â÷ÀÌ°ª °è»ê
+    // === ì—…ë°ì´íŠ¸ í•¨ìˆ˜ ===
+    void UpdateTargetTracking();   // íƒ€ê²Ÿ ì¶”ì 
+    void UpdateManualInput();      // í‚¤ë³´ë“œ ì…ë ¥  
+    void UpdateSmoothMovement();   // ë¶€ë“œëŸ¬ìš´ ì´ë™
+    void UpdateCameraShake();      // í™”ë©´ í”ë“¤ë¦¼
+    void CalDiff();                // ì°¨ì´ê°’ ê³„ì‚°
 };

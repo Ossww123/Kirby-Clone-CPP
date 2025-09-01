@@ -2,7 +2,6 @@
 #include "CGrid.h"
 #include "CCamera.h"
 #include "CCore.h"
-#include <cmath>
 
 CGrid::CGrid()
     : m_fGridSize(64.f)
@@ -20,7 +19,7 @@ CGrid::~CGrid()
 
 void CGrid::init()
 {
-    // ±âº» ±×¸®µå ¼³Á¤
+    // ê¸°ë³¸ ê·¸ë¦¬ë“œ ì„¤ì •
     m_fGridSize = 64.f;
     m_bShowGrid = true;
     m_bSnapToGrid = true;
@@ -32,39 +31,39 @@ void CGrid::Render(HDC _dc)
     if (!m_bShowGrid)
         return;
 
-    // È­¸é ÇØ»óµµ °¡Á®¿À±â
+    // í™”ë©´ í•´ìƒë„ ê°€ì ¸ì˜¤ê¸°
     Vec2 vResolution = CCore::GetInst()->GetResolution();
 
-    // Ä«¸Ş¶ó À§Ä¡ °¡Á®¿À±â
+    // ì¹´ë©”ë¼ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
     Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
 
-    // È­¸é¿¡ º¸ÀÌ´Â ¿µ¿ªÀÇ ¿ùµå ÁÂÇ¥ °è»ê
+    // í™”ë©´ì— ë³´ì´ëŠ” ì˜ì—­ì˜ ì›”ë“œ ì¢Œí‘œ ê³„ì‚°
     Vec2 vScreenStart = vCameraPos - vResolution / 2.f;
     Vec2 vScreenEnd = vCameraPos + vResolution / 2.f;
 
-    // ±×¸®µå ½ÃÀÛ/³¡ À§Ä¡ °è»ê (±×¸®µå¿¡ ¸ÂÃç Á¤·Ä)
+    // ê·¸ë¦¬ë“œ ì‹œì‘/ë ìœ„ì¹˜ ê³„ì‚° (ê·¸ë¦¬ë“œì— ë§ì¶° ì •ë ¬)
     int iStartX = (int)(vScreenStart.x / m_fGridSize) - 1;
     int iStartY = (int)(vScreenStart.y / m_fGridSize) - 1;
     int iEndX = (int)(vScreenEnd.x / m_fGridSize) + 1;
     int iEndY = (int)(vScreenEnd.y / m_fGridSize) + 1;
 
-    // ±×¸®µå Ææ ¼³Á¤
+    // ê·¸ë¦¬ë“œ íœ ì„¤ì •
     HPEN hGridPen = CreatePen(PS_SOLID, 1, m_gridColor);
     HPEN hMajorGridPen = CreatePen(PS_SOLID, 1, m_majorGridColor);
     HPEN hOldPen = (HPEN)SelectObject(_dc, hGridPen);
 
-    // ¼¼·Î¼± ±×¸®±â
+    // ì„¸ë¡œì„  ê·¸ë¦¬ê¸°
     for (int x = iStartX; x <= iEndX; ++x)
     {
         float fWorldX = x * m_fGridSize + m_vGridOffset.x;
         Vec2 vLineStart = Vec2(fWorldX, vScreenStart.y);
         Vec2 vLineEnd = Vec2(fWorldX, vScreenEnd.y);
 
-        // ¿ùµå ÁÂÇ¥¸¦ È­¸é ÁÂÇ¥·Î º¯È¯
+        // ì›”ë“œ ì¢Œí‘œë¥¼ í™”ë©´ ì¢Œí‘œë¡œ ë³€í™˜
         Vec2 vRenderStart = CCamera::GetInst()->GetRenderPos(vLineStart);
         Vec2 vRenderEnd = CCamera::GetInst()->GetRenderPos(vLineEnd);
 
-        // ÁÖ¿ä ±×¸®µå¼± (5¹è¼ö)ÀÎÁö È®ÀÎ
+        // ì£¼ìš” ê·¸ë¦¬ë“œì„  (5ë°°ìˆ˜)ì¸ì§€ í™•ì¸
         if (x % 5 == 0)
         {
             SelectObject(_dc, hMajorGridPen);
@@ -74,23 +73,23 @@ void CGrid::Render(HDC _dc)
             SelectObject(_dc, hGridPen);
         }
 
-        // ¼± ±×¸®±â
+        // ì„  ê·¸ë¦¬ê¸°
         MoveToEx(_dc, (int)vRenderStart.x, (int)vRenderStart.y, nullptr);
         LineTo(_dc, (int)vRenderEnd.x, (int)vRenderEnd.y);
     }
 
-    // °¡·Î¼± ±×¸®±â
+    // ê°€ë¡œì„  ê·¸ë¦¬ê¸°
     for (int y = iStartY; y <= iEndY; ++y)
     {
         float fWorldY = y * m_fGridSize + m_vGridOffset.y;
         Vec2 vLineStart = Vec2(vScreenStart.x, fWorldY);
         Vec2 vLineEnd = Vec2(vScreenEnd.x, fWorldY);
 
-        // ¿ùµå ÁÂÇ¥¸¦ È­¸é ÁÂÇ¥·Î º¯È¯
+        // ì›”ë“œ ì¢Œí‘œë¥¼ í™”ë©´ ì¢Œí‘œë¡œ ë³€í™˜
         Vec2 vRenderStart = CCamera::GetInst()->GetRenderPos(vLineStart);
         Vec2 vRenderEnd = CCamera::GetInst()->GetRenderPos(vLineEnd);
 
-        // ÁÖ¿ä ±×¸®µå¼± (5¹è¼ö)ÀÎÁö È®ÀÎ
+        // ì£¼ìš” ê·¸ë¦¬ë“œì„  (5ë°°ìˆ˜)ì¸ì§€ í™•ì¸
         if (y % 5 == 0)
         {
             SelectObject(_dc, hMajorGridPen);
@@ -100,12 +99,12 @@ void CGrid::Render(HDC _dc)
             SelectObject(_dc, hGridPen);
         }
 
-        // ¼± ±×¸®±â
+        // ì„  ê·¸ë¦¬ê¸°
         MoveToEx(_dc, (int)vRenderStart.x, (int)vRenderStart.y, nullptr);
         LineTo(_dc, (int)vRenderEnd.x, (int)vRenderEnd.y);
     }
 
-    // Ææ º¹¿ø
+    // íœ ë³µì›
     SelectObject(_dc, hOldPen);
     DeleteObject(hGridPen);
     DeleteObject(hMajorGridPen);
@@ -116,11 +115,11 @@ Vec2 CGrid::SnapToGrid(Vec2 _vPos)
     if (!m_bSnapToGrid)
         return _vPos;
 
-    // ¸ğµç ¿ÀºêÁ§Æ®°¡ ±×¸®µå ¼¿ÀÇ Áß½É¿¡ ¹èÄ¡µÇµµ·Ï ¼öÁ¤
+    // ëª¨ë“  ì˜¤ë¸Œì íŠ¸ê°€ ê·¸ë¦¬ë“œ ì…€ì˜ ì¤‘ì‹¬ì— ë°°ì¹˜ë˜ë„ë¡ ìˆ˜ì •
     float fGridX = floor((_vPos.x - m_vGridOffset.x) / m_fGridSize);
     float fGridY = floor((_vPos.y - m_vGridOffset.y) / m_fGridSize);
 
-    // ±×¸®µå Áß½É + (±×¸®µå Å©±â / 2) = ¼¿ÀÇ Áß½É
+    // ê·¸ë¦¬ë“œ ì¤‘ì‹¬ + (ê·¸ë¦¬ë“œ í¬ê¸° / 2) = ì…€ì˜ ì¤‘ì‹¬
     float fSnappedX = fGridX * m_fGridSize + m_vGridOffset.x + (m_fGridSize / 2.f);
     float fSnappedY = fGridY * m_fGridSize + m_vGridOffset.y + (m_fGridSize / 2.f);
 
@@ -129,7 +128,7 @@ Vec2 CGrid::SnapToGrid(Vec2 _vPos)
 
 Vec2 CGrid::GetGridPosition(Vec2 _vWorldPos)
 {
-    // ¿ùµå ÁÂÇ¥¸¦ ±×¸®µå ÀÎµ¦½º·Î º¯È¯
+    // ì›”ë“œ ì¢Œí‘œë¥¼ ê·¸ë¦¬ë“œ ì¸ë±ìŠ¤ë¡œ ë³€í™˜
     float fGridX = (_vWorldPos.x - m_vGridOffset.x) / m_fGridSize;
     float fGridY = (_vWorldPos.y - m_vGridOffset.y) / m_fGridSize;
 
@@ -138,7 +137,7 @@ Vec2 CGrid::GetGridPosition(Vec2 _vWorldPos)
 
 Vec2 CGrid::GetWorldPosition(Vec2 _vGridPos)
 {
-    // ±×¸®µå ÀÎµ¦½º¸¦ ¿ùµå ÁÂÇ¥·Î º¯È¯
+    // ê·¸ë¦¬ë“œ ì¸ë±ìŠ¤ë¥¼ ì›”ë“œ ì¢Œí‘œë¡œ ë³€í™˜
     float fWorldX = _vGridPos.x * m_fGridSize + m_vGridOffset.x;
     float fWorldY = _vGridPos.y * m_fGridSize + m_vGridOffset.y;
 
@@ -147,7 +146,7 @@ Vec2 CGrid::GetWorldPosition(Vec2 _vGridPos)
 
 void CGrid::GetVisibleGridRange(Vec2& _vStart, Vec2& _vEnd)
 {
-    // È­¸é ÇØ»óµµ¿Í Ä«¸Ş¶ó À§Ä¡·Î º¸ÀÌ´Â ±×¸®µå ¹üÀ§ °è»ê
+    // í™”ë©´ í•´ìƒë„ì™€ ì¹´ë©”ë¼ ìœ„ì¹˜ë¡œ ë³´ì´ëŠ” ê·¸ë¦¬ë“œ ë²”ìœ„ ê³„ì‚°
     Vec2 vResolution = CCore::GetInst()->GetResolution();
     Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
 
@@ -163,16 +162,16 @@ void CGrid::SetGridSizePreset(int _iPreset)
     switch (_iPreset)
     {
     case 1:
-        m_fGridSize = 32.f;
+        m_fGridSize = 16.f;
         break;
     case 2:
-        m_fGridSize = 64.f;
+        m_fGridSize = 32.f;
         break;
     case 3:
-        m_fGridSize = 128.f;
+        m_fGridSize = 64.f;
         break;
     case 4:
-        m_fGridSize = 256.f;
+        m_fGridSize = 128.f;
         break;
     default:
         m_fGridSize = 64.f;

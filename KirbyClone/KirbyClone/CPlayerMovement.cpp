@@ -10,7 +10,7 @@ CPlayerMovement::CPlayerMovement(CPlayer* _pOwner) :
     m_pOwner(_pOwner),
     m_pInputManager(nullptr),
     m_fSpeed(150.f),
-    m_fRunSpeed(250.f),
+    m_fRunSpeed(300.f),
     m_fJumpPower(640.f),
     m_bRunMode(false),
     m_bFacingRight(true),
@@ -72,7 +72,9 @@ void CPlayerMovement::ApplyCurrentMovement()
     if (currentState == PLAYER_STATE::CROUCH ||
         currentState == PLAYER_STATE::SLIDE ||
         currentState == PLAYER_STATE::SWALLOW ||
-        currentState == PLAYER_STATE::EXHALE)
+        currentState == PLAYER_STATE::EXHALE ||
+        currentState == PLAYER_STATE::ATTACK ||
+        currentState == PLAYER_STATE::ATTACK_HOLD)
     {
         return;
     }

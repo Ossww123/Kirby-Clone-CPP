@@ -34,46 +34,46 @@ void CEditorInput::Initialize(CEditorCore* _pCore)
 
 void CEditorInput::Update()
 {
-    // ÀÔ·Â Ã³¸® ¼ø¼­ (¿ì¼±¼øÀ§ ¼ø)
-    UpdateGeneralInput();       // UI Åä±Û µî ÃÖ¿ì¼±
-    UpdateFileInput();          // ÆÄÀÏ ÀÛ¾÷ (Ctrl Á¶ÇÕ)
-    UpdateGridInput();          // ±×¸®µå ¼³Á¤
-    UpdateModeInput();          // ¸ğµå ÀüÈ¯
-    UpdateSelectedObjectInput(); // ¼±ÅÃµÈ ¿ÀºêÁ§Æ® ÆíÁı
-    UpdateMouseInput();         // ¸¶¿ì½º Ã³¸®
-    UpdateObjectSelection();    // ¿ÀºêÁ§Æ® ¼±ÅÃ (Tab Å°)
-    HandleModeSpecificInput();  // ÇöÀç ¸ğµå¿¡ Æ¯È­µÈ ÀÔ·Â
+    // ì…ë ¥ ì²˜ë¦¬ ìˆœì„œ (ìš°ì„ ìˆœìœ„ ìˆœ)
+    UpdateGeneralInput();       // UI í† ê¸€ ë° ì£¼ìš”í‚¤
+    UpdateFileInput();          // íŒŒì¼ ì‘ì—… (Ctrl ë‹¨ì¶•í‚¤)
+    UpdateGridInput();          // ê·¸ë¦¬ë“œ ì œì–´
+    UpdateModeInput();          // ëª¨ë“œ ë³€í™˜
+    UpdateSelectedObjectInput(); // ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ ì œì–´
+    UpdateMouseInput();         // ë§ˆìš°ìŠ¤ ì²˜ë¦¬
+    UpdateObjectSelection();    // ì˜¤ë¸Œì íŠ¸ ì„ íƒ (Tab í‚¤)
+    HandleModeSpecificInput();  // í˜„ì¬ ëª¨ë“œì— íŠ¹í™”ëœ ì…ë ¥
 }
 
 void CEditorInput::UpdateGeneralInput()
 {
-    // UI Åä±Û (H Å°)
+    // UI í† ê¸€ (H í‚¤)
     if (KEY_TAP(KEY::H))
     {
         bool bShowUI = m_pEditorCore->IsShowUI();
         m_pEditorCore->SetShowUI(!bShowUI);
     }
 
-    // HOME Å°: Ä«¸Ş¶ó¸¦ ¿øÁ¡À¸·Î ÀÌµ¿
+    // HOME í‚¤: ì¹´ë©”ë¼ ì›ì ìœ¼ë¡œ ì´ë™
     if (KEY_TAP(KEY::HOME))
     {
         m_pEditorCore->GetCameraController()->ResetCameraPosition();
     }
 
-    // ALT + ´Ù¸¥ Å° Á¶ÇÕµé
+    // ALT + ë‹¤ë¥¸ í‚¤ ì¡°í•©ë“¤
     if (KEY_HOLD(KEY::ALT))
     {
-        // ALT + C: ¸ğµç ¿ÀºêÁ§Æ® »èÁ¦
+        // ALT + C: ëª¨ë“  ì˜¤ë¸Œì íŠ¸ ì‚­ì œ
         if (KEY_TAP(KEY::C))
         {
             m_pEditorCore->GetObjectManager()->ClearAllObjects();
         }
-        // ALT + R: ±âº» ¼³Á¤À¸·Î ¸®¼Â
+        // ALT + R: ê¸°ë³¸ ì˜¤ë¸Œì íŠ¸ ì¶”ê°€
         else if (KEY_TAP(KEY::R))
         {
             m_pEditorCore->GetObjectManager()->ResetToDefault();
         }
-        // ALT + P: ÇÃ·¹ÀÌ¾î ½ºÆù Ç¥½Ã Åä±Û
+        // ALT + P: í”Œë ˆì´ì–´ ìŠ¤í° í‘œì‹œ í† ê¸€
         else if (KEY_TAP(KEY::P))
         {
             bool bShow = m_pEditorCore->GetObjectManager()->IsShowPlayerSpawn();
@@ -84,7 +84,7 @@ void CEditorInput::UpdateGeneralInput()
 
 void CEditorInput::UpdateFileInput()
 {
-    // ÆÄÀÏ °ü·Ã ÀÔ·Â (Ctrl Á¶ÇÕÅ°µé)
+    // íŒŒì¼ ê´€ë ¨ ì…ë ¥ (Ctrl ë‹¨ì¶•í‚¤ë“¤)
     if (KEY_HOLD(KEY::CTRL))
     {
         if (KEY_TAP(KEY::S))
@@ -100,49 +100,49 @@ void CEditorInput::UpdateFileInput()
 
 void CEditorInput::UpdateGridInput()
 {
-    // ±×¸®µå Ç¥½Ã Åä±Û (G Å°)
+    // ê·¸ë¦¬ë“œ í‘œì‹œ í† ê¸€ (G í‚¤)
     if (KEY_HOLD(KEY::CTRL) && KEY_TAP(KEY::G))
     {
         bool bShowGrid = CGrid::GetInst()->IsShowGrid();
         CGrid::GetInst()->SetShowGrid(!bShowGrid);
     }
 
-    // ±×¸®µå ½º³À Åä±Û (Ctrl + G)
+    // ê·¸ë¦¬ë“œ ìŠ¤ëƒ… í† ê¸€ (Alt + G)
     if (KEY_HOLD(KEY::ALT) && KEY_TAP(KEY::G))
     {
         bool bSnapToGrid = CGrid::GetInst()->IsSnapToGrid();
         CGrid::GetInst()->SetSnapToGrid(!bSnapToGrid);
     }
 
-    // ±×¸®µå Å©±â Á¶Àı (1, 2, 3, 4 Å°)
+    // ê·¸ë¦¬ë“œ í¬ê¸° ë³€ê²½ (1, 2, 3, 4 í‚¤)
     if (KEY_TAP(KEY::ALPHA_1))
     {
-        CGrid::GetInst()->SetGridSizePreset(1);  // 32px
+        CGrid::GetInst()->SetGridSizePreset(1);  // 16px
     }
     else if (KEY_TAP(KEY::ALPHA_2))
     {
-        CGrid::GetInst()->SetGridSizePreset(2);  // 64px
+        CGrid::GetInst()->SetGridSizePreset(2);  // 32px
     }
     else if (KEY_TAP(KEY::ALPHA_3))
     {
-        CGrid::GetInst()->SetGridSizePreset(3);  // 128px
+        CGrid::GetInst()->SetGridSizePreset(3);  // 64px
     }
     else if (KEY_TAP(KEY::ALPHA_4))
     {
-        CGrid::GetInst()->SetGridSizePreset(4);  // 256px
+        CGrid::GetInst()->SetGridSizePreset(4);  // 128px
     }
 }
 
 void CEditorInput::UpdateModeInput()
 {
-    // ESC - ±âº» ¸ğµå·Î
+    // ESC - ê¸°ë³¸ ëª¨ë“œ
     if (KEY_TAP(KEY::ESC))
     {
         m_pEditorCore->ChangeMode(EDITOR_MODE::NORMAL);
         return;
     }
 
-    // ¿ÀºêÁ§Æ® ¹èÄ¡ ¸ğµåµé
+    // ì˜¤ë¸Œì íŠ¸ ë°°ì¹˜ ëª¨ë“œ
     if (KEY_TAP(KEY::M))
     {
         m_pEditorCore->ChangeMode(EDITOR_MODE::PLACE_MONSTER);
@@ -164,7 +164,7 @@ void CEditorInput::UpdateModeInput()
         m_pEditorCore->GetObjectManager()->ChangeObjectCategory(L"Special");
     }
 
-    // ÆíÁı µµ±¸ ¸ğµåµé
+    // ì¡°ì‘ ëª¨ë“œ ì „í™˜
     else if (KEY_TAP(KEY::S))
     {
         m_pEditorCore->ChangeMode(EDITOR_MODE::SELECT);
@@ -174,7 +174,7 @@ void CEditorInput::UpdateModeInput()
         m_pEditorCore->ChangeMode(EDITOR_MODE::ERASE);
     }
 
-    // Æ¯¼ö ¸ğµåµé
+    // íŠ¹ìˆ˜ ëª¨ë“œ
     else if (KEY_TAP(KEY::B))
     {
         m_pEditorCore->ChangeMode(EDITOR_MODE::BACKGROUND);
@@ -191,12 +191,12 @@ void CEditorInput::UpdateModeInput()
 
 void CEditorInput::UpdateSelectedObjectInput()
 {
-    // ¼±ÅÃµÈ ¿ÀºêÁ§Æ®°¡ ÀÖÀ» ¶§¸¸ Ã³¸®
+    // ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ì˜ ì†ì„± ì…ë ¥ ì²˜ë¦¬
     CObject* pSelected = m_pEditorCore->GetSelectedObject();
     if (!pSelected)
         return;
 
-    // ¹® ¿ÀºêÁ§Æ®ÀÎ °æ¿ì ¼Ó¼º ÆíÁı
+    // ë¬¸ ì˜¤ë¸Œì íŠ¸ì˜ ì†ì„± ì„¤ì • ì²˜ë¦¬
     if (pSelected->GetType() == OBJECT_TYPE::OBJECT_DOOR)
     {
         CDoor* pDoor = dynamic_cast<CDoor*>(pSelected);
@@ -205,66 +205,73 @@ void CEditorInput::UpdateSelectedObjectInput()
             HandleDoorPropertyInput(pDoor);
         }
     }
-    // ´Ù¸¥ Æ¯¼ö ¿ÀºêÁ§Æ®µéµµ ÃßÈÄ Ãß°¡ °¡´É
+    // ë‹¤ë¥¸ íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ë“¤ë„ ì¶”ê°€ í™•ì¥ ê°€ëŠ¥
 }
 
 void CEditorInput::UpdateMouseInput()
 {
-    // ¿øº» ½ºÅ©¸° ÁÂÇ¥ ¾ò±â (±×¸®µå ½º³À Àû¿ë Àü)
+    // ì›ì‹œ ë§ˆìš°ìŠ¤ ì¢Œí‘œ ê°€ì ¸ì˜¤ê¸° (ê·¸ë¦¬ë“œ ìŠ¤ëƒ… ì ìš© ì „)
     Vec2 vRawMousePos = CKeyMgr::GetInst()->GetMousePos();
 
-    // ±×¸®µå ½º³ÀÀÌ Àû¿ëµÈ ¿ùµå ÁÂÇ¥ °è»ê ¹× ÀúÀå
+    // ê·¸ë¦¬ë“œ ìŠ¤ëƒ…ì´ ì ìš©ëœ ë§ˆìš°ìŠ¤ ì¢Œí‘œ ê³„ì‚° ë° ì €ì¥
     UpdateMousePosition();
 
-    // ¸¶¿ì½º Å¬¸¯ Ã³¸®
+    // ë§ˆìš°ìŠ¤ í´ë¦­ ì²˜ë¦¬
     if (KEY_TAP(KEY::MOUSE_LEFT))
     {
-        // Åø¹Ù ÀÌº¥Æ® Ã³¸® ¿ì¼± (¿øº» ½ºÅ©¸° ÁÂÇ¥ »ç¿ë)
+        // íˆ´ë°” ì´ë²¤íŠ¸ ì²˜ë¦¬ ìš°ì„  (ì›ì‹œ ë§ˆìš°ìŠ¤ ì¢Œí‘œ ì‚¬ìš©)
         if (m_pEditorCore->GetToolbar() &&
             m_pEditorCore->GetToolbar()->HandleMouseClick(vRawMousePos))
         {
-            return; // Åø¹Ù¿¡¼­ Ã³¸®ÇßÀ¸¸é ´õ ÀÌ»ó ÁøÇàÇÏÁö ¾ÊÀ½
+            return; // íˆ´ë°”ì—ì„œ ì²˜ë¦¬í–ˆìœ¼ë¯€ë¡œ ë” ì´ìƒ ì§„í–‰í•˜ì§€ ì•ŠìŒ
         }
 
-        // UI ÆÈ·¹Æ® Å¬¸¯ Ã³¸® (¿øº» ½ºÅ©¸° ÁÂÇ¥ »ç¿ë)
+        // UI íŒ”ë ˆíŠ¸ í´ë¦­ ì²˜ë¦¬ (ì›ì‹œ ë§ˆìš°ìŠ¤ ì¢Œí‘œ ì‚¬ìš©)
         if (m_pEditorCore->GetUI() &&
             m_pEditorCore->GetUI()->HandlePaletteClick(vRawMousePos))
         {
-            return; // ÆÈ·¹Æ®¿¡¼­ Ã³¸®ÇßÀ¸¸é ´õ ÀÌ»ó ÁøÇàÇÏÁö ¾ÊÀ½
+            return; // íŒ”ë ˆíŠ¸ì—ì„œ ì²˜ë¦¬í–ˆìœ¼ë¯€ë¡œ ë” ì´ìƒ ì§„í–‰í•˜ì§€ ì•ŠìŒ
         }
 
-        // ±âº» ¸¶¿ì½º Å¬¸¯ Ã³¸® (±×¸®µå ½º³ÀµÈ ÁÂÇ¥ »ç¿ë)
+        // UI ì†ì„± íŒ¨ë„ í´ë¦­ ì²˜ë¦¬ (ìŠ¤í¬ë¦° ì¢Œí‘œ ì‚¬ìš©)
+        if (m_pEditorCore->GetUI() &&
+            m_pEditorCore->GetUI()->HandlePropertyPanelClick(vRawMousePos))
+        {
+            return; // ì†ì„± íŒ¨ë„ì—ì„œ ì²˜ë¦¬í–ˆìœ¼ë¯€ë¡œ ë” ì´ìƒ ì§„í–‰í•˜ì§€ ì•ŠìŒ
+        }
+
+        // ê¸°ë³¸ ë§ˆìš°ìŠ¤ í´ë¦­ ì²˜ë¦¬ (ê·¸ë¦¬ë“œ ìŠ¤ëƒ…ëœ ì¢Œí‘œ ì‚¬ìš©)
         HandleMouseClick();
     }
 
-    // ¸¶¿ì½º ¹öÆ°À» ¶¼¸é µå·¡±× Á¾·á
+    // ë§ˆìš°ìŠ¤ ë²„íŠ¼ì„ ë—€ ë“œë˜ê·¸ ì¢…ë£Œ
     if (KEY_AWAY(KEY::MOUSE_LEFT))
     {
-        // Åø¹Ù MouseUp ÀÌº¥Æ® Ã³¸®
+        // íˆ´ë°” MouseUp ì´ë²¤íŠ¸ ì²˜ë¦¬
         if (m_pEditorCore->GetToolbar())
         {
             m_pEditorCore->GetToolbar()->HandleMouseUp(vRawMousePos);
         }
 
-        // µå·¡±× Á¾·á
+        // ë“œë˜ê·¸ ì¢…ë£Œ
         if (m_pEditorCore->IsDragging())
         {
             m_pEditorCore->SetDragging(false);
         }
     }
 
-    // ¸¶¿ì½º ÀÌµ¿ ÀÌº¥Æ® Àü´Ş
+    // ë§ˆìš°ìŠ¤ ì´ë™ ì´ë²¤íŠ¸ ì²˜ë¦¬
     if (m_pEditorCore->GetToolbar())
     {
         m_pEditorCore->GetToolbar()->HandleMouseMove(vRawMousePos);
     }
 
-    // µå·¡±× ÁßÀÌ¸é ¼±ÅÃµÈ ¿ÀºêÁ§Æ® ÀÌµ¿
+    // ë“œë˜ê·¸ ì¤‘ì´ë©´ ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ ì´ë™
     if (m_pEditorCore->IsDragging() &&
         m_pEditorCore->GetSelectedObject() &&
         m_pEditorCore->GetCurrentMode() == EDITOR_MODE::SELECT)
     {
-        // Åø¹Ù³ª UI ¿µ¿ªÀÌ ¾Æ´Ò ¶§¸¸ ¿ÀºêÁ§Æ® ÀÌµ¿
+        // íˆ´ë°”ë‚˜ UI ì˜ì—­ì´ ì•„ë‹Œ ê²½ìš° ì˜¤ë¸Œì íŠ¸ ì´ë™
         bool bInToolbar = m_pEditorCore->GetToolbar() &&
             m_pEditorCore->GetToolbar()->IsInToolbarArea(vRawMousePos);
         bool bInPalette = m_pEditorCore->GetUI() &&
@@ -280,12 +287,12 @@ void CEditorInput::UpdateMouseInput()
 
 void CEditorInput::UpdateObjectSelection()
 {
-    // TabÅ°: Ä«Å×°í¸® ³» ´ÙÀ½ ¿ÀºêÁ§Æ®
+    // Tabí‚¤: ì¹´í…Œê³ ë¦¬ë‚´ ë‹¤ìŒ ì˜¤ë¸Œì íŠ¸
     if (KEY_TAP(KEY::TAB) && !KEY_HOLD(KEY::SHIFT))
     {
         m_pEditorCore->GetObjectManager()->NextObjectInCategory();
     }
-    // Shift+TabÅ°: Ä«Å×°í¸® ³» ÀÌÀü ¿ÀºêÁ§Æ®
+    // Shift+Tabí‚¤: ì¹´í…Œê³ ë¦¬ë‚´ ì´ì „ ì˜¤ë¸Œì íŠ¸
     else if (KEY_TAP(KEY::TAB) && KEY_HOLD(KEY::SHIFT))
     {
         m_pEditorCore->GetObjectManager()->PrevObjectInCategory();
@@ -312,7 +319,7 @@ void CEditorInput::HandleMouseClick()
 
     case EDITOR_MODE::SELECT:
     {
-        // Å¬¸¯ÇÑ À§Ä¡¿¡¼­ ¿ÀºêÁ§Æ® Ã£±â
+        // í´ë¦­í•œ ìœ„ì¹˜ì—ì„œ ì˜¤ë¸Œì íŠ¸ ì°¾ê¸°
         CObject* pClickedObj = m_pEditorCore->GetObjectManager()->FindObjectAtPos(vMousePos);
         if (pClickedObj)
         {
@@ -322,7 +329,7 @@ void CEditorInput::HandleMouseClick()
         }
         else
         {
-            // ºó °ø°£ Å¬¸¯ ½Ã ¼±ÅÃ ÇØÁ¦
+            // ë¹ˆ ê³µê°„ í´ë¦­ ì‹œ ì„ íƒ í•´ì œ
             m_pEditorCore->DeselectObject();
         }
     }
@@ -334,27 +341,27 @@ void CEditorInput::HandleMouseClick()
 
     case EDITOR_MODE::BACKGROUND:
     {
-        // ¹è°æ ¸ğµå¿¡¼­´Â Å¬¸¯À¸·Î ´ÙÀ½ ¹è°æÀ¸·Î º¯°æ
+        // ë°°ê²½ ëª¨ë“œì—ì„œ í´ë¦­í•˜ë©´ ë‹¤ìŒ ë°°ê²½ìœ¼ë¡œ ì „í™˜
         m_pEditorCore->GetObjectManager()->NextBackground();
     }
     break;
     case EDITOR_MODE::PLACE_STAGE:
-        // Stage Image ¸ğµå¿¡¼­´Â Å¬¸¯À¸·Î ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö º¯°æ
+        // Stage Image ëª¨ë“œì—ì„œ í´ë¦­í•˜ë©´ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì„¤ì •
         HandleStageImageClick();
         break;
     case EDITOR_MODE::NORMAL:
     default:
-        // ±âº» ¸ğµå¿¡¼­´Â Å¬¸¯ À§Ä¡¸¸ Ç¥½Ã
+        // ê¸°ë³¸ ëª¨ë“œì—ì„œ í´ë¦­ ìœ„ì¹˜ì˜ í‘œì‹œ
     break;
     }
 }
 
 void CEditorInput::UpdateMousePosition()
 {
-    // CKeyMgr¿¡¼­ ¸¶¿ì½º ¿ùµå ÁÂÇ¥ °¡Á®¿À±â
+    // CKeyMgrì—ì„œ ë§ˆìš°ìŠ¤ ì›”ë“œ ì¢Œí‘œ ê°€ì ¸ì˜¤ê¸°
     Vec2 vMousePos = CKeyMgr::GetInst()->GetMouseWorldPos();
 
-    // ±×¸®µå ½º³À Àû¿ë
+    // ê·¸ë¦¬ë“œ ìŠ¤ëƒ… ì ìš©
     if (CGrid::GetInst()->IsSnapToGrid())
     {
         vMousePos = CGrid::GetInst()->SnapToGrid(vMousePos);
@@ -383,7 +390,7 @@ void CEditorInput::HandleModeSpecificInput()
 
 void CEditorInput::HandleBackgroundModeInput()
 {
-    // ¹è°æ ¸ğµå¿¡¼­ Q/E·Î ¹è°æ º¯°æ
+    // ë°°ê²½ ëª¨ë“œì—ì„œ Q/Eë¡œ ë°°ê²½ ì „í™˜
     if (KEY_TAP(KEY::Q))
     {
         m_pEditorCore->GetObjectManager()->PrevBackground();
@@ -396,7 +403,7 @@ void CEditorInput::HandleBackgroundModeInput()
 
 void CEditorInput::HandleTileModeInput()
 {
-    // Å¸ÀÏ ¸ğµå¿¡¼­ Q/E·Î Å¸ÀÏ ½Ã°¢ Å¸ÀÔ º¯°æ
+    // íƒ€ì¼ ëª¨ë“œì—ì„œ Q/Eë¡œ íƒ€ì¼ ë¹„ì£¼ì–¼ ì „í™˜
     if (KEY_TAP(KEY::Q))
     {
         m_pEditorCore->GetObjectManager()->PrevTileVisual();
@@ -409,7 +416,7 @@ void CEditorInput::HandleTileModeInput()
 
 void CEditorInput::HandleStageImageModeInput()
 {
-    // Q/E Å°·Î ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö º¯°æ
+    // Q/E í‚¤ë¡œ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì „í™˜
     if (KEY_TAP(KEY::Q))
     {
         PrevStageImage();
@@ -419,41 +426,44 @@ void CEditorInput::HandleStageImageModeInput()
         NextStageImage();
     }
 
-    // C Å°·Î Ä¿½ºÅÒ ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ·Îµå
+    // C í‚¤ë¡œ ì»¤ìŠ¤í…€ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ë¡œë“œ
     if (KEY_TAP(KEY::C))
     {
         LoadCustomStageImage();
     }
 
-    // R Å°·Î ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö¸¦ ÁÂÇÏ´ÜÀ¸·Î Àç¹èÄ¡
+    // R í‚¤ë¡œ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ë¥¼ ë°”ë‹¥ì™¼ìª½ìœ¼ë¡œ ë°°ì¹˜
     if (KEY_TAP(KEY::R))
     {
         CStageImage* pCurrent = CStageMgr::GetInst()->GetCurrentStageImage();
-        if (pCurrent)
+        if (pCurrent && m_pEditorCore && m_pEditorCore->GetCameraController())
         {
-            pCurrent->SetImageToBottomLeft();
+            // í˜„ì¬ ë§µ í¬ê¸°ë¥¼ ê°€ì ¸ì™€ì„œ ì‚¬ìš©
+            Vec2 vMapSize = m_pEditorCore->GetCameraController()->GetCameraBoundsMax() - 
+                           m_pEditorCore->GetCameraController()->GetCameraBoundsMin();
+            pCurrent->SetImageToBottomLeft(vMapSize);
         }
     }
 }
 
 void CEditorInput::HandleDoorPropertyInput(CDoor* _pDoor)
 {
-    // ¸ñÇ¥ ¾À º¯°æ (1~2 Å°)
+    // ëª©í‘œ ì”¬ ì„¤ì • (1~2 í‚¤)
     if (KEY_TAP(KEY::ALPHA_1))
     {
         _pDoor->SetTargetScene(SCENE_TYPE::STAGE_01);
-        ShowDoorPropertyChanged(_pDoor, L"¸ñÇ¥ ¾ÀÀ» '½ºÅ×ÀÌÁö 1'·Î º¯°æ");
+        ShowDoorPropertyChanged(_pDoor, L"ëª©í‘œ ì”¬ì„ 'ìŠ¤í…Œì´ì§€ 1'ë¡œ ë³€ê²½");
     }
     else if (KEY_TAP(KEY::ALPHA_2))
     {
         _pDoor->SetTargetScene(SCENE_TYPE::STAGE_02);
-        ShowDoorPropertyChanged(_pDoor, L"¸ñÇ¥ ¾ÀÀ» '½ºÅ×ÀÌÁö 2'·Î º¯°æ");
+        ShowDoorPropertyChanged(_pDoor, L"ëª©í‘œ ì”¬ì„ 'ìŠ¤í…Œì´ì§€ 2'ë¡œ ë³€ê²½");
     }
 
-    // ¸ñÇ¥ À§Ä¡ Á¶Á¤ (Q/W/A/S Å°)
+    // ëª©í‘œ ìœ„ì¹˜ ì„¤ì • (Q/W/A/S í‚¤)
     Vec2 currentPos = _pDoor->GetTargetPosition();
     bool posChanged = false;
-    float moveStep = 32.f; // ±×¸®µå Å©±â¿¡ ¸ÂÃã
+    float moveStep = 32.f; // ê·¸ë¦¬ë“œ í¬ê¸°ì— ë§ì¶¤
 
     if (KEY_TAP(KEY::Q))
     {
@@ -476,47 +486,47 @@ void CEditorInput::HandleDoorPropertyInput(CDoor* _pDoor)
         posChanged = true;
     }
 
-    // À§Ä¡°¡ º¯°æµÇ¾úÀ¸¸é Àû¿ë
+    // ìœ„ì¹˜ê°€ ë³€ê²½ë˜ì—ˆëŠ”ì§€ í™•ì¸
     if (posChanged)
     {
         _pDoor->SetTargetPosition(currentPos);
 
         wchar_t szMessage[128];
-        swprintf_s(szMessage, L"¸ñÇ¥ À§Ä¡¸¦ (%.0f, %.0f)·Î º¯°æ", currentPos.x, currentPos.y);
+        swprintf_s(szMessage, L"ëª©í‘œ ìœ„ì¹˜ë¥¼ (%.0f, %.0f)ë¡œ ë³€ê²½", currentPos.x, currentPos.y);
         ShowDoorPropertyChanged(_pDoor, szMessage);
     }
 
-    // ±âº» À§Ä¡·Î ¸®¼Â (R Å°)
+    // ê¸°ë³¸ ìœ„ì¹˜ë¡œ ë¦¬ì…‹ (R í‚¤)
     if (KEY_TAP(KEY::R))
     {
-        _pDoor->SetTargetPosition(Vec2(256.f, 384.f)); // ±âº» À§Ä¡
-        ShowDoorPropertyChanged(_pDoor, L"¸ñÇ¥ À§Ä¡¸¦ ±âº»°ªÀ¸·Î ¸®¼Â");
+        _pDoor->SetTargetPosition(Vec2(256.f, 384.f)); // ê¸°ë³¸ ìœ„ì¹˜
+        ShowDoorPropertyChanged(_pDoor, L"ëª©í‘œ ìœ„ì¹˜ë¥¼ ê¸°ë³¸ê°’ìœ¼ë¡œ ë¦¬ì…‹");
     }
 }
 
 void CEditorInput::ShowDoorPropertyChanged(CDoor* _pDoor, const wchar_t* _message)
 {
-    // À©µµ¿ì Å¸ÀÌÆ²¿¡ º¯°æ »çÇ× Ç¥½Ã (ÀÓ½Ã ÇÇµå¹é)
+    // ìœˆë„ìš° íƒ€ì´í‹€ë°”ì— ìƒíƒœ ë©”ì‹œì§€ í‘œì‹œ (ì„ì‹œ í”¼ë“œë°±)
     wchar_t szTitle[256];
     swprintf_s(szTitle, L"Door Editor - %s", _message);
     SetWindowText(CCore::GetInst()->GetMainHwnd(), szTitle);
 
-    // ¶Ç´Â ÄÜ¼Ö Ãâ·ÂÀ¸·Î µğ¹ö±× Á¤º¸ Ç¥½Ã
+    // ë˜ëŠ” ì½˜ì†” ë¡œê·¸ë¡œ ìƒì„¸ ì •ë³´ í‘œì‹œ
     wprintf(L"[Door Property] %s\n", _message);
 }
 
 void CEditorInput::HandleStageImageClick()
 {
-    // ÇöÀç ½ºÅ×ÀÌÁö Å¸ÀÔ °¡Á®¿À±â
+    // í˜„ì¬ ìŠ¤í…Œì´ì§€ íƒ€ì… ê°€ì ¸ì˜¤ê¸°
     STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
 
-    // »ç¿ë °¡´ÉÇÑ ½ºÅ×ÀÌÁö Å¸ÀÔµé °¡Á®¿À±â
+    // ëª¨ë“  ì‚¬ìš© ê°€ëŠ¥í•œ ìŠ¤í…Œì´ì§€ íƒ€ì…ë“¤ ê°€ì ¸ì˜¤ê¸°
     vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst()->GetAvailableStageImageTypes();
 
     if (availableTypes.empty())
         return;
 
-    // ÇöÀç Å¸ÀÔÀÇ ÀÎµ¦½º Ã£±â
+    // í˜„ì¬ íƒ€ì…ì˜ ì¸ë±ìŠ¤ ì°¾ê¸°
     int currentIndex = 0;
     for (size_t i = 0; i < availableTypes.size(); ++i)
     {
@@ -527,20 +537,23 @@ void CEditorInput::HandleStageImageClick()
         }
     }
 
-    // ´ÙÀ½ ½ºÅ×ÀÌÁö Å¸ÀÔÀ¸·Î º¯°æ
+    // ë‹¤ìŒ ìŠ¤í…Œì´ì§€ íƒ€ì…ìœ¼ë¡œ ì „í™˜
     currentIndex = (currentIndex + 1) % (int)availableTypes.size();
     STAGE_IMAGE_TYPE nextType = availableTypes[currentIndex];
 
-    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö º¯°æ
+    // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì„¤ì •
     CStageMgr::GetInst()->SetCurrentStageImage(nextType);
 }
 
 void CEditorInput::ResetStageImageToBottomLeft()
 {
     CStageImage* pCurrentStage = CStageMgr::GetInst()->GetCurrentStageImage();
-    if (pCurrentStage)
+    if (pCurrentStage && m_pEditorCore && m_pEditorCore->GetCameraController())
     {
-        pCurrentStage->SetImageToBottomLeft();
+        // í˜„ì¬ ë§µ í¬ê¸°ë¥¼ ê°€ì ¸ì™€ì„œ ì‚¬ìš©
+        Vec2 vMapSize = m_pEditorCore->GetCameraController()->GetCameraBoundsMax() - 
+                       m_pEditorCore->GetCameraController()->GetCameraBoundsMin();
+        pCurrentStage->SetImageToBottomLeft(vMapSize);
     }
 }
 
@@ -552,7 +565,7 @@ void CEditorInput::PrevStageImage()
     if (availableTypes.size() <= 1)
         return;
 
-    // ÇöÀç Å¸ÀÔÀÇ ÀÎµ¦½º Ã£±â
+    // ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ Ã£ï¿½ï¿½
     int currentIndex = 0;
     for (size_t i = 0; i < availableTypes.size(); ++i)
     {
@@ -563,7 +576,7 @@ void CEditorInput::PrevStageImage()
         }
     }
 
-    // ÀÌÀü ½ºÅ×ÀÌÁö Å¸ÀÔÀ¸·Î º¯°æ
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     currentIndex = (currentIndex - 1 + (int)availableTypes.size()) % (int)availableTypes.size();
     STAGE_IMAGE_TYPE prevType = availableTypes[currentIndex];
 
@@ -578,7 +591,7 @@ void CEditorInput::NextStageImage()
     if (availableTypes.size() <= 1)
         return;
 
-    // ÇöÀç Å¸ÀÔÀÇ ÀÎµ¦½º Ã£±â
+    // ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ Ã£ï¿½ï¿½
     int currentIndex = 0;
     for (size_t i = 0; i < availableTypes.size(); ++i)
     {
@@ -589,7 +602,7 @@ void CEditorInput::NextStageImage()
         }
     }
 
-    // ´ÙÀ½ ½ºÅ×ÀÌÁö Å¸ÀÔÀ¸·Î º¯°æ
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     currentIndex = (currentIndex + 1) % (int)availableTypes.size();
     STAGE_IMAGE_TYPE nextType = availableTypes[currentIndex];
 
@@ -598,7 +611,7 @@ void CEditorInput::NextStageImage()
 
 void CEditorInput::LoadCustomStageImage()
 {
-    // ÆÄÀÏ ´ÙÀÌ¾ó·Î±× ¿­±â
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¾ï¿½Î±ï¿½ ï¿½ï¿½ï¿½ï¿½
     OPENFILENAME ofn;
     wchar_t szFile[260] = { 0 };
 
@@ -616,19 +629,19 @@ void CEditorInput::LoadCustomStageImage()
 
     if (GetOpenFileName(&ofn))
     {
-        // »ó´ë °æ·Î·Î º¯È¯ (content Æú´õ ±âÁØ)
+        // ï¿½ï¿½ï¿½ ï¿½ï¿½Î·ï¿½ ï¿½ï¿½È¯ (content ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         wstring strFullPath = szFile;
         wstring strContentPath = CPathMgr::GetInst()->GetContentPath();
 
         wstring strRelativePath;
         if (strFullPath.find(strContentPath) == 0)
         {
-            // content Æú´õ ³»ºÎÀÇ ÆÄÀÏÀÎ °æ¿ì
+            // content ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             strRelativePath = strFullPath.substr(strContentPath.length());
         }
         else
         {
-            // ¿ÜºÎ ÆÄÀÏÀÎ °æ¿ì ÆÄÀÏ¸í¸¸ »ç¿ë
+            // ï¿½Üºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             size_t pos = strFullPath.find_last_of(L"\\");
             if (pos != wstring::npos)
             {
@@ -640,7 +653,7 @@ void CEditorInput::LoadCustomStageImage()
             }
         }
 
-        // Ä¿½ºÅÒ ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö »ı¼º
+        // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         CStageMgr::GetInst()->CreateStageImage(STAGE_IMAGE_TYPE::CUSTOM, strRelativePath);
         CStageMgr::GetInst()->SetCurrentStageImage(STAGE_IMAGE_TYPE::CUSTOM);
     }

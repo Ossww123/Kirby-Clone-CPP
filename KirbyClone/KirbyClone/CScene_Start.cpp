@@ -1,112 +1,169 @@
 #include "pch.h"
 #include "CScene_Start.h"
 
-#include "CObject.h"
-#include "CPlayer.h"
-#include "CMonster.h"
 #include "CCore.h"
-#include "CTile.h"
-#include "CObjectFactory.h"
 #include "CCamera.h"
-#include "CCollisionMgr.h"
-#include "CMonster.h"
-#include "CWaddleDee.h"
+#include "CResMgr.h"
+#include "CTexture.h"
+#include "CKeyMgr.h"
+#include "CFadeEffect.h"
+#include "CSceneMgr.h"
+#include "CEventMgr.h"
+#include "CAnimator.h"
+#include "CAnimationDataMgr.h"
+#include "CAnimation.h"
+#include "CSoundMgr.h"
 
 CScene_Start::CScene_Start()
+    : m_pBackgroundTexture(nullptr)
+    , m_pLogoAnimator(nullptr)
+    , m_bEnterPressed(false)
+    , m_bTransitioning(false)
 {
 }
 
 CScene_Start::~CScene_Start()
 {
+    if (m_pLogoAnimator)
+    {
+        delete m_pLogoAnimator;
+        m_pLogoAnimator = nullptr;
+    }
 }
 
 void CScene_Start::Update()
 {
-    CScene::Update();
+    // ì „í™˜ ì¤‘ì´ ì•„ë‹ ë•Œë§Œ ì…ë ¥ ì²˜ë¦¬
+    if (!m_bTransitioning && !CFadeEffect::GetInst()->IsActive())
+    {
+        // ì—”í„° í‚¤ ì…ë ¥ ì²´í¬
+        if (CKeyMgr::GetInst()->IsKeyTap(KEY::ENTER))
+        {
+            m_bEnterPressed = true;
+            m_bTransitioning = true;
+            
+            // í°ìƒ‰ í˜ì´ë“œ ì•„ì›ƒ ì‹œì‘ (1.0ì´ˆ)
+            CFadeEffect::GetInst()->StartFadeOut(FADE_COLOR::WHITE, 1.0f);
+        }
+    }
+    
+    // í˜ì´ë“œ ì•„ì›ƒì´ ì™„ë£Œë˜ë©´ ì”¬ ì „í™˜
+    if (m_bTransitioning && CFadeEffect::GetInst()->IsComplete())
+    {
+        // Stage1ìœ¼ë¡œ ì”¬ ì „í™˜ ì´ë²¤íŠ¸ ë°œì†¡
+        tEvent sceneChangeEvent = {};
+        sceneChangeEvent.eType = EVENT_TYPE::SCENE_CHANGE;
+        sceneChangeEvent.lParam = (DWORD_PTR)SCENE_TYPE::STAGE_01;
+        CEventMgr::GetInst()->AddEvent(sceneChangeEvent);
+    }
+    
+    // ë¡œê³  ì• ë‹ˆë©”ì´í„° ì—…ë°ì´íŠ¸
+    if (m_pLogoAnimator)
+    {
+        m_pLogoAnimator->Update();
+    }
+    
+    // í˜ì´ë“œ íš¨ê³¼ ì—…ë°ì´íŠ¸
+    CFadeEffect::GetInst()->Update();
+}
+
+void CScene_Start::Render(HDC _dc)
+{
+    // ë°°ê²½ ë Œë”ë§ (í™”ë©´ ì¤‘ì•™ì— ë°°ì¹˜)
+    if (m_pBackgroundTexture)
+    {
+        Vec2 vResolution = CCore::GetInst()->GetResolution();
+        Vec2 vBgSize = Vec2(240.f, 160.f) * CCore::GetPixelScale(); // 4ë°° ìŠ¤ì¼€ì¼
+        Vec2 vBgPos = Vec2(
+            (vResolution.x - vBgSize.x) / 2.f,
+            (vResolution.y - vBgSize.y) / 2.f
+        );
+        
+        StretchBlt(_dc,
+            (int)vBgPos.x, (int)vBgPos.y,
+            (int)vBgSize.x, (int)vBgSize.y,
+            m_pBackgroundTexture->GetDC(),
+            0, 0,
+            (int)m_pBackgroundTexture->GetWidth(),
+            (int)m_pBackgroundTexture->GetHeight(),
+            SRCCOPY
+        );
+    }
+    
+    // ë¡œê³  ì• ë‹ˆë©”ì´í„° ë Œë”ë§ (í™”ë©´ ì¤‘ì•™)
+    if (m_pLogoAnimator)
+    {
+        Vec2 vResolution = CCore::GetInst()->GetResolution();
+        Vec2 vLogoPos = Vec2(vResolution.x / 2.f + 24.f, vResolution.x / 4.f );
+        
+        m_pLogoAnimator->RenderAtPosition(_dc, vLogoPos);
+    }
+    
+    // í˜ì´ë“œ íš¨ê³¼ ë Œë”ë§ (í•­ìƒ ë§ˆì§€ë§‰)
+    CFadeEffect::GetInst()->Render(_dc);
 }
 
 void CScene_Start::Enter()
 {
-    // ÇÃ·¹ÀÌ¾î »ı¼º (Áß¾Ó »ó´Ü¿¡ ¹èÄ¡)
-    CObject* pObj = new CPlayer;
-    pObj->SetPos(Vec2(480.f, 200.f));
-    pObj->SetScale(Vec2(64.f, 64.f));
-    AddObject(pObj, GROUP_TYPE::PLAYER);
-
-    // === ¿şÀÌµé µğ ¸ó½ºÅÍµé »ı¼º ===
-
-    // ¿ŞÂÊ¿¡ ¿şÀÌµé µğ 1¸¶¸®
-    CWaddleDee* pWaddleDee1 = new CWaddleDee;
-    pWaddleDee1->SetPos(Vec2(150.f, 450.f));
-    pWaddleDee1->SetScale(Vec2(64.f, 64.f));
-    AddObject(pWaddleDee1, GROUP_TYPE::MONSTER);
-
-    // ¿À¸¥ÂÊ¿¡ ¿şÀÌµé µğ 1¸¶¸®
-    CWaddleDee* pWaddleDee2 = new CWaddleDee;
-    pWaddleDee2->SetPos(Vec2(750.f, 150.f));
-    pWaddleDee2->SetScale(Vec2(64.f, 64.f));
-    AddObject(pWaddleDee2, GROUP_TYPE::MONSTER);
-
-    // ³ôÀº ÇÃ·§Æû¿¡ ¿şÀÌµé µğ 1¸¶¸®
-    CWaddleDee* pWaddleDee3 = new CWaddleDee;
-    pWaddleDee3->SetPos(Vec2(400.f, 100.f));
-    pWaddleDee3->SetScale(Vec2(64.f, 64.f));
-    AddObject(pWaddleDee3, GROUP_TYPE::MONSTER);
-
-    // === ¹Ù´Ú Å¸ÀÏµé »ı¼º ===
-
-    // ¸ŞÀÎ ¹Ù´Ú ÇÃ·§Æû (Áß¾Ó)
-    for (int i = 0; i < 12; ++i)
-    {
-        CTile* pTile = (CTile*)CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND);
-        pTile->SetPos(Vec2(200.f + i * 64.f, 500.f));
-        AddObject(pTile, GROUP_TYPE::TILE);
-    }
-
-    // ¿ŞÂÊ ÇÃ·§Æû (Á¡ÇÁ Å×½ºÆ®¿ë)
-    for (int i = 0; i < 3; ++i)
-    {
-        CTile* pTile = (CTile*)CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND);
-        pTile->SetPos(Vec2(50.f + i * 64.f, 400.f));
-        AddObject(pTile, GROUP_TYPE::TILE);
-    }
-
-    // ¿À¸¥ÂÊ ÇÃ·§Æû (Á¡ÇÁ Å×½ºÆ®¿ë)
-    for (int i = 0; i < 4; ++i)
-    {
-        CTile* pTile = (CTile*)CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND);
-        pTile->SetPos(Vec2(850.f + i * 64.f, 350.f));
-        AddObject(pTile, GROUP_TYPE::TILE);
-    }
-
-    // ³ôÀº ÇÃ·§Æû (°øÁß ºÎ¾ç Å×½ºÆ®¿ë)
-    for (int i = 0; i < 2; ++i)
-    {
-        CTile* pTile = (CTile*)CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND);
-        pTile->SetPos(Vec2(400.f + i * 64.f, 250.f));
-        AddObject(pTile, GROUP_TYPE::TILE);
-    }
-
-    // === º® Å¸ÀÏµé »ı¼º ===
-
-    // ¿ŞÂÊ º®
-    for (int i = 0; i < 8; ++i)
-    {
-        CTile* pTile = (CTile*)CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND);
-        pTile->SetPos(Vec2(50.f, 500.f - i * 64.f));
-        AddObject(pTile, GROUP_TYPE::TILE);
-    }
-
-    // ¿À¸¥ÂÊ º®
-    for (int i = 0; i < 6; ++i)
-    {
-        CTile* pTile = (CTile*)CObjectFactory::CreateObject(OBJECT_TYPE::TILE_GROUND);
-        pTile->SetPos(Vec2(950.f, 500.f - i * 64.f));
-        AddObject(pTile, GROUP_TYPE::TILE);
-    }
+    // ì”¬ ì¼ì‹œì •ì§€ í•´ì œ
+    SetPaused(false);
+    
+    // ë°°ê²½ í…ìŠ¤ì²˜ ë¡œë“œ
+    m_pBackgroundTexture = CResMgr::GetInst()->LoadTexture(L"TitleBackground", L"texture/UI/title_background.bmp");
+    
+    // ë¡œê³  ì• ë‹ˆë©”ì´í„° ìƒì„± ë° ì• ë‹ˆë©”ì´ì…˜ ë¡œë“œ
+    m_pLogoAnimator = new CAnimator();
+    
+    // JSON íŒŒì¼ì—ì„œ ì• ë‹ˆë©”ì´ì…˜ ë°ì´í„°ë¥¼ ì• ë‹ˆë©”ì´í„°ì— ë¡œë“œ
+    CAnimationDataMgr::GetInst()->LoadAnimationsIntoAnimator(m_pLogoAnimator, L"title_logo_animations.json");
+    
+    // ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ (JSONì— ì •ì˜ëœ ì• ë‹ˆë©”ì´ì…˜ ì´ë¦„ ì‚¬ìš©)
+    m_pLogoAnimator->Play(L"IDLE", true); // ë°˜ë³µ ì¬ìƒ
+    
+    // ìƒíƒœ ì´ˆê¸°í™”
+    m_bEnterPressed = false;
+    m_bTransitioning = false;
+    
+    // íƒ€ì´í‹€ BGM ë¡œë“œ ë° ì¬ìƒ
+    CSoundMgr::GetInst()->LoadSound(L"main_title", L"sound/main_title.mp3", SOUND_TYPE::BGM);
+    CSoundMgr::GetInst()->PlayBGM(L"main_title", true);
+    
+    // ì»¤ë¹„ íš¨ê³¼ìŒë“¤ ë¡œë“œ
+    CSoundMgr::GetInst()->LoadSound(L"kirby_run", L"sound/kirby_run.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_jump", L"sound/kirby_jump.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_slide", L"sound/kirby_slide.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_bounce", L"sound/kirby_bounce.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_beam", L"sound/kirby_beam.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_fire", L"sound/kirby_fire.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_spark", L"sound/kirby_spark.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"monster_damage", L"sound/monster_damage.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirbydance_short", L"sound/kirbydance_short.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_hover", L"sound/kirby_hover.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_inhale", L"sound/kirby_inhale.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_swallow", L"sound/kirby_swallow.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"exhale_air_puff", L"sound/exhale_air_puff.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"enter_door", L"sound/enter_door.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"enemy_death", L"sound/enemy_death.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"copy", L"sound/kirby_copy.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"damage", L"sound/damage.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"gameover", L"sound/gameover.wav", SOUND_TYPE::SFX);
+    
+    // ëª¬ìŠ¤í„° ê³µê²© íš¨ê³¼ìŒë“¤ ë¡œë“œ
+    CSoundMgr::GetInst()->LoadSound(L"sparky", L"sound/sparky.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"hothead", L"sound/hothead.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"waddledoo", L"sound/waddledoo.wav", SOUND_TYPE::SFX);
+    
+    // ë³´ìŠ¤ ê´€ë ¨ íš¨ê³¼ìŒë“¤ ë¡œë“œ
+    CSoundMgr::GetInst()->LoadSound(L"boss_HP_fill", L"sound/boss_HP_fill.wav", SOUND_TYPE::SFX);
+    
+    // í°ìƒ‰ í˜ì´ë“œ ì¸ ì‹œì‘ (ì”¬ ì§„ì…ì‹œ)
+    CFadeEffect::GetInst()->StartFadeIn(FADE_COLOR::WHITE, 1.0f);
 }
 
 void CScene_Start::Exit()
 {
-    DeleteAllObject();
+    // BGM ì •ì§€
+    CSoundMgr::GetInst()->StopBGM();
+    
+    // ë¦¬ì†ŒìŠ¤ ì •ë¦¬ëŠ” ì†Œë©¸ìì—ì„œ ì²˜ë¦¬
 }

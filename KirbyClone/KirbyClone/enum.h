@@ -55,6 +55,7 @@ enum class GROUP_TYPE
     TILE ,           // 타일/지형
     SPECIAL ,        // 특수 오브젝트 (문, 스위치 등)
     UI ,             // UI 요소
+    EFFECT,
 
     END = 32 ,
 };
@@ -88,6 +89,7 @@ enum class EVENT_TYPE
     PLAYER_DAMAGE ,          // 플레이어 데미지
     PLAYER_DEATH ,           // 플레이어 사망
     PLAYER_SLIDE_KICK_RECOIL , // 슬라이딩킥 반동
+    GAME_OVER ,              // 게임오버 (생명 감소)
 
     // === 몬스터 관련 이벤트 ===
     MONSTER_DAMAGE ,         // 몬스터 데미지
@@ -119,6 +121,7 @@ enum class EVENT_TYPE
     SOUND_PLAY ,             // 사운드 재생
     EFFECT_CREATE ,          // 이펙트 생성
     SCREEN_SHAKE ,           // 화면 진동
+    FADE_COMPLETE ,          // 페이드 효과 완료
 
     // === 환경 관련 이벤트 ===
     BLOCK_BREAK ,            // 블록 파괴
@@ -164,6 +167,13 @@ enum class PLAYER_STATE
     MOUTHFUL_FALL ,  // 머금은 상태 낙하
     MOUTHFUL_DAMAGE ,// 머금은 상태 피격
 
+    // === 공격 상태 ===
+    ATTACK ,         // 능력 공격 (0.5초)
+    ATTACK_HOLD ,    // 공격 홀드 (파이어/스파크 지속)
+
+    DOOR_ENTER ,
+    VICTORY_DANCE ,  // 승리 춤 (보스 격파 후)
+
     END
 };
 
@@ -199,6 +209,12 @@ enum class MONSTER_STATE
     ATTACK_READY ,   // 공격 준비 상태
     ATTACK ,         // 공격 상태
     FLY ,           // 비행 상태 (브론토 버트, 고르도)
+
+    // 보스 패배 상태들
+    DEFEAT1 ,        // 패배 애니메이션 1단계
+    DEFEAT3 ,        // 패배 애니메이션 3단계
+
+    EDITOR_IDLE,
 
     END
 };
@@ -262,11 +278,14 @@ enum class OBJECT_TYPE
     TILE_MOVING ,        // 움직이는 플랫폼
     TILE_BREAKABLE ,     // 부서지는 블록
     TILE_INVISIBLE ,     // 보이지 않는 벽
+    TILE_TRIGGER ,       // 트리거 (보스전 시작 등)
 
     // 특수 오브젝트
     OBJECT_DOOR ,            // 문
     OBJECT_SWITCH ,          // 스위치
     OBJECT_MIRROR ,          // 거울 (게임 제목에 맞게)
+
+    EFFECT,
 
     END
 };
@@ -293,6 +312,7 @@ enum class COLLISION_TYPE
     MOVING_PLATFORM ,     // 보라색 - 움직이는 플랫폼
     BREAKABLE_BLOCK ,     // 황토색 - 부서지는 블록
     INVISIBLE_WALL ,      // 회색 - 보이지 않는 벽
+    TRIGGER ,             // 마젠타색 - 트리거 (통과 가능, 이벤트 발생)
 
     END
 };
@@ -300,8 +320,9 @@ enum class COLLISION_TYPE
 // 스테이지 이미지 타입
 enum class STAGE_IMAGE_TYPE
 {
-    STAGE_01 ,           // 첫 번째 스테이지 (Green Hill 스타일)
-    STAGE_02 ,           // 두 번째 스테이지 (Castle 스타일)
+    STAGE_01 ,           // 첫 번째 스테이지
+    STAGE_02 ,           // 두 번째 스테이지
+    STAGE_03 ,
     CUSTOM ,             // 사용자 커스텀 스테이지
 
     END
@@ -310,9 +331,10 @@ enum class STAGE_IMAGE_TYPE
 enum class TILE_VISUAL_TYPE
 {
     TRANSPARENT_BLOCK ,      // 투명 충돌 블록 (기본)
+    BOSS_TRIGGER ,           // 보스전 시작 트리거
 
     // === 향후 구현 예정 (주석처리) ===
-    // GRASS_PLATFORM,        
+    // GRASS_PLATFORM,
     // DIRT_BLOCK,            
     // STONE_BLOCK,           
     // GRASS_BLOCK,           

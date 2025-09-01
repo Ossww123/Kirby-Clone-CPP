@@ -19,7 +19,7 @@ public:
     // === 공격 관련 인터페이스 ===
     bool CanAttack() const;                             // 공격 가능 여부
     void StartAttack();                                 // 공격 시작
-    void EndAttack();                                   // 공격 종료
+    virtual void EndAttack();                           // 공격 종료 (하위 클래스에서 오버라이드 가능)
 
     // === 카피 능력 관련 ===
     virtual void OnCopyAbilityGiven();                  // 카피 능력 제공 시 처리

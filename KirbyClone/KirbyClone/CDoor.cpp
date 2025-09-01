@@ -7,6 +7,15 @@
 #include "CTimeMgr.h"
 #include "CCamera.h"
 #include "CCore.h"
+#include "CPlayerDataMgr.h"
+#include "CSceneMgr.h"
+#include "CScene.h"
+#include "CPlayer.h"
+#include "CAnimator.h"
+#include "CAnimationDataMgr.h"
+#include "CResMgr.h"
+#include "CPlayerStateMachine.h"
+#include "CSoundMgr.h"
 
 CDoor::CDoor()
     : CSpecialObject()
@@ -15,17 +24,29 @@ CDoor::CDoor()
     , m_bPlayerNear(false)
     , m_bCanInteract(false)
 {
-    // ¹® Å¸ÀÔÀ¸·Î ¼³Á¤
+    // ë¬¸ íƒ€ì…ìœ¼ë¡œ ì„¤ì •
     SetSpecialType(OBJECT_TYPE::OBJECT_DOOR);
     SetType(OBJECT_TYPE::OBJECT_DOOR);
 
-    // ±âº» ¹® Å©±â ¼³Á¤
+    // ê¸°ë³¸ ë¬¸ í¬ê¸° ì„¤ì •
     SetScale(Vec2(64.f, 64.f));
 
-    // Ãæµ¹Ã¼ »ı¼º
+    // ì¶©ëŒì²´ ìƒì„±
     CreateCollider();
     GetCollider()->SetScale(Vec2(64.f, 64.f));
     GetCollider()->SetOffsetPos(Vec2(0.f, 0.f));
+
+    // ì• ë‹ˆë©”ì´í„° ìƒì„± ë° ì• ë‹ˆë©”ì´ì…˜ ë¡œë“œ
+    CreateAnimator();
+    CAnimator* pAnimator = GetAnimator();
+    if (pAnimator)
+    {
+        // door_animations.json ë¡œë“œ (CMonsterì™€ ê°™ì€ ë°©ì‹)
+        CAnimationDataMgr::GetInst()->LoadAnimationsIntoAnimator(pAnimator, L"door_animations.json");
+        
+        // ê¸°ë³¸ ì• ë‹ˆë©”ì´ì…˜ ì„¤ì • (IDLE ìƒíƒœë¡œ ë°˜ë³µ ì¬ìƒ)
+        pAnimator->Play(L"IDLE", true);
+    }
 }
 
 CDoor::~CDoor()
@@ -34,10 +55,16 @@ CDoor::~CDoor()
 
 void CDoor::Update()
 {
-    // ÇÃ·¹ÀÌ¾î¿ÍÀÇ »óÈ£ÀÛ¿ë Ã¼Å©
+    // ì• ë‹ˆë©”ì´í„° ì—…ë°ì´íŠ¸ (ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒì„ ìœ„í•´ í•„ìˆ˜!)
+    CAnimator* pAnimator = GetAnimator();
+    if (pAnimator)
+    {
+        pAnimator->Update();
+    }
+    // í”Œë ˆì´ì–´ì™€ì˜ ìƒí˜¸ì‘ìš© ì²´í¬
     CheckPlayerInteraction();
 
-    // »óÈ£ÀÛ¿ë °¡´ÉÇÒ ¶§ Å° ÀÔ·Â Ã¼Å©
+    // ìƒí˜¸ì‘ìš© ê°€ëŠ¥í•œ ìƒíƒœì—ì„œ í‚¤ ì…ë ¥ ì²´í¬
     if (m_bCanInteract)
     {
         if (KEY_TAP(KEY::UP) || KEY_TAP(KEY::W))
@@ -49,16 +76,16 @@ void CDoor::Update()
 
 void CDoor::Render(HDC _dc)
 {
-    // ¹® ½Ã°¢Àû Ç¥Çö ·»´õ¸µ
+    // ë¬¸ ì‹œê°ì  í‘œí˜„ ë Œë”ë§
     RenderDoorVisual(_dc);
 
-    // Äİ¶óÀÌ´õ ·»´õ¸µ Ãß°¡ (ÃÊ·Ï»ö »ç°¢Çü)
+    // ì½œë¼ì´ë” ë Œë”ë§ ì¶”ê°€ (ë…¹ìƒ‰ ì‚¬ê°í˜•)
     if (GetCollider())
     {
         GetCollider()->Render(_dc);
     }
 
-    // »óÈ£ÀÛ¿ë UI ·»´õ¸µ
+    // ìƒí˜¸ì‘ìš© UI ë Œë”ë§
     if (m_bCanInteract)
     {
         RenderInteractionUI(_dc);
@@ -69,7 +96,7 @@ void CDoor::OnCollisionEnter(CCollider* _pOther)
 {
     CObject* pObj = _pOther->GetOwner();
 
-    // ÇÃ·¹ÀÌ¾îÀÎÁö È®ÀÎ
+    // í”Œë ˆì´ì–´ì¸ì§€ í™•ì¸
     if (pObj && pObj->GetType() == OBJECT_TYPE::PLAYER)
     {
         m_bPlayerNear = true;
@@ -80,7 +107,7 @@ void CDoor::OnCollisionExit(CCollider* _pOther)
 {
     CObject* pObj = _pOther->GetOwner();
 
-    // ÇÃ·¹ÀÌ¾îÀÎÁö È®ÀÎ
+    // í”Œë ˆì´ì–´ì¸ì§€ í™•ì¸
     if (pObj && pObj->GetType() == OBJECT_TYPE::PLAYER)
     {
         m_bPlayerNear = false;
@@ -95,34 +122,60 @@ void CDoor::CheckPlayerInteraction()
 
 void CDoor::ProcessDoorTransition()
 {
-    // ¾À ÀüÈ¯ ÀÌº¥Æ® ¹ß»ı
-    tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)m_eTargetScene);
-    CEventMgr::GetInst()->AddEvent(event);
+    // í˜„ì¬ í”Œë ˆì´ì–´ ìƒíƒœ ì €ì¥
+    CScene* pCurrentScene = CSceneMgr::GetInst()->GetCurScene();
+    if (pCurrentScene)
+    {
+        // í”Œë ˆì´ì–´ ì°¾ê¸°
+        const vector<CObject*>& vecPlayer = pCurrentScene->GetGroupObject(GROUP_TYPE::PLAYER);
+        if (!vecPlayer.empty() && vecPlayer[0])
+        {
+            CPlayer* pPlayer = dynamic_cast<CPlayer*>(vecPlayer[0]);
+            if (pPlayer)
+            {
+                // í”Œë ˆì´ì–´ì—ê²Œ DOOR_ENTER ìƒíƒœ ê°•ì œ ë³€ê²½
+                pPlayer->GetStateMachine()->ForceStateChange(PLAYER_STATE::DOOR_ENTER);
+                
+                // í”Œë ˆì´ì–´ ìƒíƒœë¥¼ ë§¤ë‹ˆì €ì— ì €ì¥ (ëŠ¥ë ¥ ë“±)
+                CPlayerDataMgr::GetInst()->SavePlayerState(pPlayer);
+            }
+        }
+    }
 
-    // TODO: ÇÃ·¹ÀÌ¾î À§Ä¡ ¼³Á¤À» À§ÇÑ Ãß°¡ ÀÛ¾÷ ÇÊ¿ä
-    // ÇöÀç´Â °¢ ¾ÀÀÇ Enter()¿¡¼­ ±âº» À§Ä¡·Î ¼³Á¤µÊ
+    // ë¬¸ ì…ì¥ ì´ë²¤íŠ¸ ë°œìƒ (í˜ì´ë“œ ì•„ì›ƒê³¼ ì”¬ ë³€ê²½ì„ ìœ„í•´)
+    tEvent doorEvent(EVENT_TYPE::DOOR_ENTER, (DWORD_PTR)this, (DWORD_PTR)m_eTargetScene);
+    CEventMgr::GetInst()->AddEvent(doorEvent);
 
-    // ¹® »ç¿ë »ç¿îµå Àç»ı (ÃßÈÄ Ãß°¡)
-    // CSoundMgr::GetInst()->PlaySFX(L"door_open");
+    // ë¬¸ ì…ì¥ íš¨ê³¼ìŒ
+    CSoundMgr::GetInst()->PlaySFX(L"enter_door");
 }
 
 void CDoor::RenderDoorVisual(HDC _dc)
 {
+    // ì• ë‹ˆë©”ì´ì…˜ ë Œë”ë§
+    CAnimator* pAnimator = GetAnimator();
+    if (pAnimator)
+    {
+        pAnimator->Render(_dc);
+        return;
+    }
+
+    // ì• ë‹ˆë©”ì´ì…˜ì´ ì—†ëŠ” ê²½ìš° ê¸°ë³¸ ë Œë”ë§ (í´ë°±)
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
     Vec2 vScale = GetScale();
 
-    // ±âº» ¹® ¸ğ¾ç ±×¸®±â (ÀÓ½Ã - ÃßÈÄ ½ºÇÁ¶óÀÌÆ®·Î ±³Ã¼)
+    // ê¸°ë³¸ ë¬¸ ëª¨ì–‘ ê·¸ë¦¬ê¸° (ì„ì‹œ - ë²¡í„° ì˜ìƒ ì§€í˜•ì§€ë¬¼ë¡œ êµì²´)
     HBRUSH hBrush;
     HBRUSH hOldBrush;
 
     if (m_bCanInteract)
     {
-        // »óÈ£ÀÛ¿ë °¡´ÉÇÒ ¶§ ¹à°Ô Ç¥½Ã
-        hBrush = CreateSolidBrush(RGB(160, 82, 45)); // ¹àÀº °¥»ö
+        // ìƒí˜¸ì‘ìš© ê°€ëŠ¥í•œ ë¬¸ ìƒ‰ìƒ í‘œì‹œ
+        hBrush = CreateSolidBrush(RGB(160, 82, 45)); // ë°ì€ ê°ˆìƒ‰
     }
     else
     {
-        hBrush = CreateSolidBrush(RGB(101, 67, 33)); // ±âº» °¥»ö
+        hBrush = CreateSolidBrush(RGB(101, 67, 33)); // ê¸°ë³¸ ê°ˆìƒ‰
     }
 
     hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
@@ -136,8 +189,8 @@ void CDoor::RenderDoorVisual(HDC _dc)
     SelectObject(_dc, hOldBrush);
     DeleteObject(hBrush);
 
-    // ¹® ¼ÕÀâÀÌ ±×¸®±â
-    HBRUSH hKnobBrush = CreateSolidBrush(RGB(255, 215, 0)); // ±İ»ö
+    // ë¬¸ ì†ì¡ì´ ê·¸ë¦¬ê¸°
+    HBRUSH hKnobBrush = CreateSolidBrush(RGB(255, 215, 0)); // ê¸ˆìƒ‰
     hOldBrush = (HBRUSH)SelectObject(_dc, hKnobBrush);
 
     Ellipse(_dc,
@@ -154,7 +207,7 @@ void CDoor::RenderInteractionUI(HDC _dc)
 {
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(GetPos());
 
-    // »óÈ£ÀÛ¿ë ¾È³» ÅØ½ºÆ®
+    // ìƒí˜¸ì‘ìš© ì•ˆë‚´ í…ìŠ¤íŠ¸
     SetTextColor(_dc, RGB(255, 255, 0));
     SetBkMode(_dc, TRANSPARENT);
 

@@ -34,6 +34,9 @@ public:
 
     void SetOwnerType(GROUP_TYPE _eOwner) { m_eOwnerType = _eOwner; }
     GROUP_TYPE GetOwnerType() const { return m_eOwnerType; }
+    
+    // === 회전 빔용 특수 설정 ===
+    void SetRotationData(Vec2 _vCenter, float _fRadius, float _fStartAngle, float _fEndAngle, float _fDuration);
 
 private:
     // === 투사체 이동 처리 ===
@@ -62,4 +65,17 @@ private:
     
     // === 소유자 정보 ===
     GROUP_TYPE m_eOwnerType;            // 발사한 주체 (PLAYER, MONSTER 등)
+    
+    // === 회전 빔용 특수 데이터 ===
+    bool m_bIsRotatingBeam;             // 회전 빔 여부
+    Vec2 m_vRotationCenter;             // 회전 중심점
+    float m_fRotationRadius;            // 회전 반지름
+    float m_fStartAngle;                // 시작 각도
+    float m_fEndAngle;                  // 끝 각도
+    float m_fRotationDuration;          // 회전 지속시간
+    float m_fRotationTimer;             // 회전 경과시간
+    
+private:
+    // === 회전 빔 전용 업데이트 ===
+    void UpdateRotatingBeam();
 };

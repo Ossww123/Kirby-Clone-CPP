@@ -3,16 +3,20 @@
 
 #include "CTimeMgr.h"
 #include "CRigidBody.h"
+#include "CAnimator.h"
 #include "CSceneMgr.h"
 #include "CScene.h"
 #include "CPlayer.h"
 #include "CPlayerInhaleSystem.h"
+#include "CSoundMgr.h"
+#include "CDeathEffect.h"
 
 CBasicMonster::CBasicMonster()
     : CMonster()
     , m_bBeingInhaled(false)
     , m_fInhaleForce(0.f)
     , m_vPlayerPos(Vec2(0.f, 0.f))
+    , m_vDamageSourcePos(Vec2(0.f, 0.f))
     , m_bPlayerDetected(false)
     , m_fDetectionRange(100.f)
     , m_iHealth(1)                  // 기본 몬스터 체력 = 1
@@ -114,9 +118,20 @@ void CBasicMonster::Update()
     // 죽음 효과 처리 먼저 (최우선)
     UpdateDeathEffect();
 
-    // 죽는 중이면 다른 업데이트 중단
+    // 죽는 중이면 AI만 중단하고 물리 업데이트는 계속
     if (m_bIsDying)
+    {
+        // 물리 업데이트만 수행 (RigidBody, Animator)
+        if (nullptr != GetRigidBody())
+            GetRigidBody()->Update();
+        
+        if (nullptr != GetAnimator())
+            GetAnimator()->Update();
+        
+        // 상태 타이머도 업데이트 (CMonster에서 사용)
+        m_fStateTimer += CTimeMgr::GetInst()->GetfDT();
         return;
+    }
 
     // 부모 클래스의 일반 업데이트 호출
     CMonster::Update();
@@ -197,16 +212,25 @@ void CBasicMonster::TakeDamage()
     // 체력 감소
     m_iHealth--;
 
+    // 몬스터 데미지 사운드 재생
+    CSoundMgr::GetInst ( )->PlaySFX ( L"monster_damage" );
+
     // 체력이 0 이하이면 죽음 효과 시작
     if (m_iHealth <= 0)
     {
-        // 넉백 방향 계산 (플레이어 반대 방향)
-        Vec2 vKnockbackDir = GetPos() - m_vPlayerPos;
-        if (vKnockbackDir.Length() < 0.1f)  // 거의 같은 위치면 랜덤 방향
+        // 넉백 방향 계산 (데미지 소스 반대 방향)
+        Vec2 vMyPos = GetPos();
+        Vec2 vKnockbackDir = vMyPos - m_vDamageSourcePos;
+        float fDistance = vKnockbackDir.Length();
+        
+        if (fDistance < 0.1f)  // 거의 같은 위치면 랜덤 방향
         {
             vKnockbackDir = Vec2(1.f, 0.f);  // 기본적으로 오른쪽
         }
-        vKnockbackDir.Normalize();
+        else
+        {
+            vKnockbackDir.Normalize();  // 정규화
+        }
 
         StartDeathEffect(vKnockbackDir);
     }
@@ -222,7 +246,13 @@ void CBasicMonster::StartDeathEffect(Vec2 _vKnockbackDir)
     m_bIsDying = true;
     m_fDeathEffectTimer = 0.f;
     m_vKnockbackDir = _vKnockbackDir;
-    m_fKnockbackSpeed = 300.f;  // 넉백 초기 속도
+    m_fKnockbackSpeed = 500.f;  // 넉백 초기 속도 (더 명확한 넉백을 위해 증가)
+
+    // 넉백 중에는 중력 비활성화
+    if (GetRigidBody())
+    {
+        GetRigidBody()->SetUseGravity(false);
+    }
 
     // 죽음 상태로 변경
     ChangeState(MONSTER_STATE::DAMAGE);
@@ -233,6 +263,7 @@ void CBasicMonster::UpdateDeathEffect()
     if (!m_bIsDying)
         return;
 
+    Vec2 vPosBeforeUpdate = GetPos();
     float fDT = CTimeMgr::GetInst()->GetfDT();
     m_fDeathEffectTimer += fDT;
 
@@ -244,18 +275,57 @@ void CBasicMonster::UpdateDeathEffect()
         if (m_fKnockbackSpeed < 0.f)
             m_fKnockbackSpeed = 0.f;
 
-        // 넉백 이동
+        // 넉백 이동 (물리 체계 사용 여부 체크)
         if (GetRigidBody())
         {
-            GetRigidBody()->SetVelocity(m_vKnockbackDir * m_fKnockbackSpeed);
+            // RigidBody가 있으면 속도로 설정
+            Vec2 vKnockbackVel = m_vKnockbackDir * m_fKnockbackSpeed;
+            GetRigidBody()->SetVelocity(vKnockbackVel);
+            
+            // 설정 후 실제 속도 확인
+            Vec2 vCurrentVel = GetRigidBody()->GetVelocity();
+        }
+        else
+        {
+            // RigidBody가 없으면 직접 위치 이동
+            Vec2 vCurrentPos = GetPos();
+            Vec2 vMovement = m_vKnockbackDir * m_fKnockbackSpeed * fDT;
+            SetPos(vCurrentPos + vMovement);
         }
     }
 
-    // 0.3초 후 실제로 죽음 처리
-    if (m_fDeathEffectTimer >= 0.3f)
+    // 1.0초 후 실제로 죽음 처리 (넉백을 더 명확하게 보기 위해 증가)
+    if (m_fDeathEffectTimer >= 1.0f)
     {
+        // 죽음 이펙트 생성
+        CDeathEffect* pDeathEffect = new CDeathEffect();
+        pDeathEffect->SetPos(GetPos());
+        pDeathEffect->Init();
+        
+        // 현재 씬에 이펙트 추가
+        CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+        if (pCurScene)
+        {
+            pCurScene->AddObject(pDeathEffect, GROUP_TYPE::EFFECT);
+        }
+        
+        // 적 사망 효과음 (실제 사라지기 직전)
+        CSoundMgr::GetInst()->PlaySFX(L"enemy_death");
         SetDead();
     }
+}
+
+void CBasicMonster::UpdateDamage()
+{
+    // 죽는 중이면 넉백 효과만 처리하고 부모 클래스 호출하지 않음
+    if (m_bIsDying)
+    {
+        UpdateDeathEffect();
+        return;
+    }
+
+    // 일반 데미지는 부모 클래스에서 처리
+    CMonster::UpdateDamage();
 }
 
 void CBasicMonster::UpdateBeingInhaled()

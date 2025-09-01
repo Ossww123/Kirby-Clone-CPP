@@ -5,33 +5,33 @@ class CEditorCore;
 class CEditorCameraController
 {
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === ìƒì„±ì í•¨ìˆ˜ ===
     CEditorCameraController();
     ~CEditorCameraController();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === ë©”ì¸ ì§„ì…ì  í•¨ìˆ˜ ===
     void Initialize(CEditorCore* _pCore);
     void Update();
 
 private:
-    // === Ä«¸Ş¶ó ¿òÁ÷ÀÓ ³»ºÎ Ã³¸® ===
+    // === ì¹´ë©”ë¼ ì—…ë°ì´íŠ¸ ë‚´ë¶€ ì²˜ë¦¬ ===
     void UpdateCameraMovement();
     void UpdateCameraState();
     void ProcessKeyboardInput(Vec2& _vMoveDir, bool& _bInputDetected);
 
 public:
-    // === Ä«¸Ş¶ó ¼Óµµ Á¦¾î ===
+    // === ì¹´ë©”ë¼ ì†ë„ ì„¤ì • ===
     void SetCameraSpeed(float _fSpeed) { m_fCameraSpeed = _fSpeed; }
     void SetFastSpeed(float _fSpeed) { m_fFastSpeed = _fSpeed; }
     void SetSlowSpeed(float _fSpeed) { m_fSlowSpeed = _fSpeed; }
 
 private:
-    // === ¼Óµµ °è»ê ³»ºÎ ÇÔ¼ö ===
+    // === ì†ë„ ê³„ì‚° ê´€ë ¨ í•¨ìˆ˜ ===
     float GetCurrentSpeed();
 
 public:
-    // === Ä«¸Ş¶ó À§Ä¡ Á¦¾î ===
+    // === ì¹´ë©”ë¼ ìœ„ì¹˜ ì œì–´ ===
     void SetCameraPosition(Vec2 _vPos);
     void MoveCameraBy(Vec2 _vOffset);
     void CenterCameraOn(Vec2 _vTarget);
@@ -39,15 +39,15 @@ public:
     void ResetCameraToOrigin();
 
 public:
-    // === Ä«¸Ş¶ó ¹üÀ§ Á¦ÇÑ ===
+    // === ì¹´ë©”ë¼ ê²½ê³„ ì„¤ì • ===
     void SetCameraBounds(Vec2 _vMin, Vec2 _vMax);
 
 private:
-    // === ¹üÀ§ Á¦ÇÑ ³»ºÎ Ã³¸® ===
+    // === ê²½ê³„ ë²”ìœ„ ì œí•œ ì²˜ë¦¬ ===
     void ApplyCameraBounds(Vec2& _vCameraPos);
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter ï¿½Ô¼ï¿½ï¿½ï¿½ ===
     float GetCameraSpeed() const { return m_fCameraSpeed; }
     float GetFastSpeed() const { return m_fFastSpeed; }
     float GetSlowSpeed() const { return m_fSlowSpeed; }
@@ -60,21 +60,21 @@ public:
     bool IsCameraMoving() const { return m_bCameraMoving; }
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
 
-    // === ¿¡µğÅÍ ÄÚ¾î ÂüÁ¶ ===
-    CEditorCore* m_pEditorCore;     // ¿¡µğÅÍ ÄÚ¾î ÂüÁ¶
+    // === ì—ë””í„° ì½”ì–´ ì°¸ì¡° ===
+    CEditorCore* m_pEditorCore;     // ì—ë””í„° ì½”ì–´ ì°¸ì¡°
 
-    // === Ä«¸Ş¶ó ¼³Á¤ ===
-    float       m_fCameraSpeed;     // ±âº» ÀÌµ¿ ¼Óµµ
-    float       m_fFastSpeed;       // ºü¸¥ ÀÌµ¿ ¼Óµµ (Shift ´©¸¦ ¶§)
-    float       m_fSlowSpeed;       // ´À¸° ÀÌµ¿ ¼Óµµ (Ctrl ´©¸¦ ¶§)
+    // === ì¹´ë©”ë¼ ì†ë„ ===
+    float       m_fCameraSpeed;     // ê¸°ë³¸ ì´ë™ ì†ë„
+    float       m_fFastSpeed;       // ë¹ ë¥¸ ì´ë™ ì†ë„ (Shift ëˆ„ë¥¼ ë•Œ)
+    float       m_fSlowSpeed;       // ëŠë¦° ì´ë™ ì†ë„ (Ctrl ëˆ„ë¥¼ ë•Œ)
 
-    // === Ä«¸Ş¶ó »óÅÂ ===
-    bool        m_bCameraMoving;    // ÇöÀç Ä«¸Ş¶ó°¡ ¿òÁ÷ÀÌ°í ÀÖ´ÂÁö
-    Vec2        m_vLastCameraPos;   // ÀÌÀü ÇÁ·¹ÀÓ Ä«¸Ş¶ó À§Ä¡
+    // === ì¹´ë©”ë¼ ìƒíƒœ ===
+    bool        m_bCameraMoving;    // í˜„ì¬ ì¹´ë©”ë¼ ì›€ì§ì´ê³  ìˆëŠ”ì§€
+    Vec2        m_vLastCameraPos;   // ì´ì „ í”„ë ˆì„ì˜ ì¹´ë©”ë¼ ìœ„ì¹˜
 
-    // === Ä«¸Ş¶ó Á¦ÇÑ ===
-    Vec2        m_vCameraBoundsMin; // Ä«¸Ş¶ó ÃÖ¼Ò À§Ä¡
-    Vec2        m_vCameraBoundsMax; // Ä«¸Ş¶ó ÃÖ´ë À§Ä¡
+    // === ì¹´ë©”ë¼ ê²½ê³„ ===
+    Vec2        m_vCameraBoundsMin; // ì¹´ë©”ë¼ ìµœì†Œ ìœ„ì¹˜
+    Vec2        m_vCameraBoundsMax; // ì¹´ë©”ë¼ ìµœëŒ€ ìœ„ì¹˜
 };

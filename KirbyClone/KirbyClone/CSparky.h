@@ -7,35 +7,83 @@ public:
     CSparky();
     virtual ~CSparky();
 
+private:
+    // === ìŠ¤íŒŒí‚¤ ì í”„ íƒ€ì… ===
+    enum class SPARKY_JUMP_TYPE
+    {
+        SMALL_IN_PLACE ,     // ì œìë¦¬ ì‘ì€ ì í”„ (y: 0.5íƒ€ì¼)
+        SMALL_FORWARD ,      // ì‘ì€ ì „ì§„ ì í”„ (x: 1íƒ€ì¼, y: 0.5íƒ€ì¼)
+        BIG_FORWARD ,        // í° ì „ì§„ ì í”„ (x: 2íƒ€ì¼, y: 1.2íƒ€ì¼)
+        END
+    };
+
+    // === ìŠ¤íŒŒí‚¤ ìƒíƒœ ===
+    enum class SPARKY_STATE
+    {
+        IDLE ,               // ëŒ€ê¸° ìƒíƒœ
+        JUMP ,               // ì í”„ ìƒíƒœ
+        END
+    };
+
 public:
-    // === °¡»ó ÇÔ¼ö ±¸Çö ===
-    void Move() override;                                           // Á¡ÇÁ + Àü±â °ø°İ
-    void Attack() override;                                         // Àü±â °ø°İ
+    // === ê°€ìƒ í•¨ìˆ˜ êµ¬í˜„ ===
+    void Move() override;                                           // ì í”„ + ì „ê¸° ê³µê²©
+    void Attack() override;                                         // ì „ê¸° ê³µê²©
+    void UpdateAttackReady() override;                              // ê³µê²© ì¤€ë¹„ ìƒíƒœ ì—…ë°ì´íŠ¸
+    void UpdateAttack() override;                                   // ê³µê²© ìƒíƒœ ì—…ë°ì´íŠ¸
+    void EndAttack() override;                                      // ê³µê²© ì¢…ë£Œ í›„ IDLEë¡œ ë³µê·€
     COPY_ABILITY GetCopyAbility() const override { return COPY_ABILITY::SPARK; }
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤ ±¸Çö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì • êµ¬í˜„ ===
     void SetupAnimationMapping() override;
 
-    // === »óÅÂ ¾÷µ¥ÀÌÆ® ¿À¹ö¶óÀÌµå ===
+    // === ìƒíƒœ ì—…ë°ì´íŠ¸ ì˜¤ë²„ë¼ì´ë“œ ===
+    void UpdateIdle() override;
     void UpdateWalk() override;
 
 private:
-    // === ½ºÆÄÅ° Àü¿ë ÀÌµ¿ ===
-    void JumpMove();                                                // Á¡ÇÁ ÀÌµ¿
-    void UpdateJumpPattern();                                       // Á¡ÇÁ ÆĞÅÏ ¾÷µ¥ÀÌÆ®
+    // === ìŠ¤íŒŒí‚¤ ìƒíƒœ ê´€ë¦¬ ===
+    void UpdateSparkyState();                                       // ìŠ¤íŒŒí‚¤ ìƒíƒœ ì—…ë°ì´íŠ¸
+    void UpdateSparkyIdle();                                        // ìŠ¤íŒŒí‚¤ IDLE ìƒíƒœ ì—…ë°ì´íŠ¸
+    void UpdateSparkyJump();                                        // ìŠ¤íŒŒí‚¤ JUMP ìƒíƒœ ì—…ë°ì´íŠ¸
 
-    // === ½ºÆÄÅ° Àü¿ë °ø°İ ===
-    void CreateElectricField();                                     // Àü±âÀå »ı¼º
-    void CreateElectricSpark();                                     // Àü±â ½ºÆÄÅ© »ı¼º
+    // === ì í”„ ì‹œìŠ¤í…œ ===
+    void StartJump();                                               // ì í”„ ì‹œì‘
+    SPARKY_JUMP_TYPE SelectRandomJumpType();                       // ëœë¤ ì í”„ íƒ€ì… ì„ íƒ
+    void CalculateJumpTarget();                                     // ì í”„ ëª©í‘œ ê³„ì‚°
+    Vec2 CalculateParabolicPosition(float progress);                // í¬ë¬¼ì„  ìœ„ì¹˜ ê³„ì‚°
+    bool CheckJumpCollision(const Vec2& targetPos);                 // ì í”„ ì¤‘ ì¶©ëŒ ê²€ì‚¬
+    float FindGroundHeight(float xPos);                             // íŠ¹ì • X ìœ„ì¹˜ì—ì„œ ë°”ë‹¥ ë†’ì´ ì°¾ê¸°
+
+    // === ì»¤ë¹„ ì¶”ì  ===
+    void UpdateKirbyDirection();                                    // ì»¤ë¹„ ë°©í–¥ ì—…ë°ì´íŠ¸
+    void UpdatePlayerPosition();                                    // í”Œë ˆì´ì–´ ìœ„ì¹˜ ì—…ë°ì´íŠ¸
+    float GetTileSize() const { return 64.f; }                     // íƒ€ì¼ í¬ê¸° ë°˜í™˜
+
+    // === ìŠ¤íŒŒí‚¤ ì „ìš© ê³µê²© ===
+    void CreateElectricField();                                     // ì „ê¸°ì¥ ìƒì„±
+    void CreateElectricSpark();                                     // ì „ê¸° ìŠ¤íŒŒí¬ ìƒì„±
 
 private:
-    // === Á¡ÇÁ °ü·Ã ===
-    bool    m_bJumping;                                             // Á¡ÇÁ Áß »óÅÂ
-    float   m_fJumpTimer;                                           // Á¡ÇÁ Å¸ÀÌ¸Ó
-    float   m_fJumpInterval;                                        // Á¡ÇÁ °£°İ
-    float   m_fJumpForce;                                           // Á¡ÇÁ Èû
+    // === ìƒíƒœ ê´€ë¦¬ ===
+    SPARKY_STATE        m_eSparkyState;                             // ìŠ¤íŒŒí‚¤ ê³ ìœ  ìƒíƒœ
+    float               m_fIdleTimer;                               // IDLE ëŒ€ê¸° ì‹œê°„
+    float               m_fIdleDuration;                            // IDLE ì§€ì† ì‹œê°„ (ëœë¤)
 
-    // === °ø°İ °ü·Ã ===
-    bool    m_bElectricFieldCreated;                                // Àü±âÀå »ı¼º ¿©ºÎ
+    // === ì í”„ ê´€ë ¨ ===
+    SPARKY_JUMP_TYPE    m_eJumpType;                                // í˜„ì¬ ì í”„ íƒ€ì…
+    bool                m_bJumping;                                 // ì í”„ ì¤‘ ìƒíƒœ
+    Vec2                m_vJumpStartPos;                            // ì í”„ ì‹œì‘ ìœ„ì¹˜
+    Vec2                m_vJumpTargetPos;                           // ì í”„ ëª©í‘œ ìœ„ì¹˜
+    float               m_fJumpProgress;                            // ì í”„ ì§„í–‰ë„ (0~1)
+    float               m_fJumpDuration;                            // ì í”„ ì§€ì† ì‹œê°„
+
+    // === ì»¤ë¹„ ì¶”ì  ===
+    Vec2                m_vKirbyDirection;                          // ì»¤ë¹„ ë°©í–¥ ë²¡í„°
+
+    // === ê³µê²© ê´€ë ¨ ===
+    bool                m_bElectricFieldCreated;                    // ì „ê¸°ì¥ ìƒì„± ì—¬ë¶€
+    float               m_fSoundTimer;                              // ì‚¬ìš´ë“œ ë°˜ë³µ íƒ€ì´ë¨¸
+    float               m_fSoundInterval;                           // ì‚¬ìš´ë“œ ë°˜ë³µ ê°„ê²©
 };

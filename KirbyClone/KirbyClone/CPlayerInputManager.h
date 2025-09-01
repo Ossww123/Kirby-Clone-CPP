@@ -5,109 +5,109 @@ class CPlayerInputManager
 public:
     enum class INPUT_TYPE : uint32_t
     {
-        // === ±âº» ÀÔ·Âµé ===
-        MOVE_LEFT = 1 << 0,        // LEFT Å°
-        MOVE_RIGHT = 1 << 1,       // RIGHT Å°  
-        MOVE_UP = 1 << 2,          // UP Å°
-        MOVE_DOWN = 1 << 3,        // DOWN Å° (Å©¶ó¿ìÄ¡)
+        // === ê¸°ë³¸ ìž…ë ¥ë“¤ ===
+        MOVE_LEFT = 1 << 0 ,        // LEFT í‚¤
+        MOVE_RIGHT = 1 << 1 ,       // RIGHT í‚¤  
+        MOVE_UP = 1 << 2 ,          // UP í‚¤
+        MOVE_DOWN = 1 << 3 ,        // DOWN í‚¤ (í¬ë¼ìš°ì¹˜)
 
-        JUMP = 1 << 4,             // Z Å° (Á¡ÇÁ)
-        ACTION = 1 << 5,           // X Å° (Ä«ÇÇ´É·Â/½½¶óÀÌµå/ÈíÀÔ)
-        DROP_ABILITY = 1 << 6,     // BACKSPACE Å° (´É·Â ¹ö¸®±â)
+        JUMP = 1 << 4 ,             // Z í‚¤ (ì í”„)
+        ACTION = 1 << 5 ,           // X í‚¤ (ì¹´í”¼ëŠ¥ë ¥/ìŠ¬ë¼ì´ë“œ/ê³µê²©)
+        DROP_ABILITY = 1 << 6 ,     // BACKSPACE í‚¤ (ëŠ¥ë ¥ ë²„ë¦¬ê¸°)
 
-        // === TAP, HOLD, AWAY ±¸ºÐ ===
-        JUMP_TAP = 1 << 8,         // Z Å° TAP (¹æ±Ý ´­·¶À½)
-        JUMP_HOLD = 1 << 9,        // Z Å° HOLD (°è¼Ó ´©¸£°í ÀÖÀ½)
-        JUMP_AWAY = 1 << 10,       // Z Å° AWAY (¹æ±Ý ¶ÃÀ½)
+        // === TAP, HOLD, AWAY ì´ë²¤íŠ¸ ===
+        JUMP_TAP = 1 << 8 ,         // Z í‚¤ TAP (ì í”„ ì‹œìž‘)
+        JUMP_HOLD = 1 << 9 ,        // Z í‚¤ HOLD (ì í”„ ì§€ì† ë˜ëŠ” í˜¸ë²„)
+        JUMP_AWAY = 1 << 10 ,       // Z í‚¤ AWAY (ì í”„ ì¢…ë£Œ)
 
-        ACTION_TAP = 1 << 11,      // X Å° TAP
-        ACTION_HOLD = 1 << 12,     // X Å° HOLD  
-        ACTION_AWAY = 1 << 13,     // X Å° AWAY
+        ACTION_TAP = 1 << 11 ,      // X í‚¤ TAP
+        ACTION_HOLD = 1 << 12 ,     // X í‚¤ HOLD  
+        ACTION_AWAY = 1 << 13 ,     // X í‚¤ AWAY
 
-        DROP_ABILITY_TAP = 1 << 14, // BACKSPACE Å° TAP
+        DROP_ABILITY_TAP = 1 << 14 , // BACKSPACE í‚¤ TAP
 
-        // === ¹æÇâÅ° AWAY (ÇÊ¿ä½Ã) ===
-        MOVE_LEFT_AWAY = 1 << 16,   // LEFT Å° AWAY
-        MOVE_RIGHT_AWAY = 1 << 17,  // RIGHT Å° AWAY
+        // === ë°©í–¥í‚¤ AWAY (í•„ìš”ì‹œ) ===
+        MOVE_LEFT_AWAY = 1 << 16 ,   // LEFT í‚¤ AWAY
+        MOVE_RIGHT_AWAY = 1 << 17 ,  // RIGHT í‚¤ AWAY
 
-        // === ´õºíÅÇ °¨Áö ===
-        DOUBLE_TAP_LEFT = 1 << 16,
-        DOUBLE_TAP_RIGHT = 1 << 17,
+        // === ë”ë¸”íƒ­ ì§€ì› ===
+        DOUBLE_TAP_LEFT = 1 << 16 ,
+        DOUBLE_TAP_RIGHT = 1 << 17 ,
 
-        // === Á¶ÇÕ ÀÔ·Â (ÀÚÁÖ »ç¿ëµÇ´Â °Íµé) ===
-        MOVE_HORIZONTAL = MOVE_LEFT | MOVE_RIGHT,
+        // === ì¡°í•© ìž…ë ¥ (íŽ¸ì˜ì„± ëª©ì  ì—´ê±°í˜•) ===
+        MOVE_HORIZONTAL = MOVE_LEFT | MOVE_RIGHT ,
         ANY_MOVEMENT = MOVE_LEFT | MOVE_RIGHT | MOVE_UP | MOVE_DOWN
     };
 
     using InputFlags = uint32_t;
 
 public:
-    CPlayerInputManager();
-    ~CPlayerInputManager();
+    CPlayerInputManager ( );
+    ~CPlayerInputManager ( );
 
 public:
-    // === ÇÙ½É ÀÎÅÍÆäÀÌ½º ===
-    void Update();                              // ¸Å ÇÁ·¹ÀÓ È£Ãâ
-    InputFlags GetCurrentFrameInput() const;   // ÇöÀç ÇÁ·¹ÀÓ ÀÔ·Â
-    bool HasInput(InputFlags flags) const;     // Æ¯Á¤ ÀÔ·ÂÀÌ ÀÖ´ÂÁö Ã¼Å©
-    bool HasAllInputs(InputFlags flags) const; // ¸ðµç ÀÔ·ÂÀÌ ÀÖ´ÂÁö Ã¼Å©
-    bool HasAnyInput(InputFlags flags) const;  // ¾î¶² ÀÔ·ÂÀÌ¶óµµ ÀÖ´ÂÁö Ã¼Å©
+    // === ê¸°ë³¸ ì¸í„°íŽ˜ì´ìŠ¤ ===
+    void Update ( );                              // ë§¤ í”„ë ˆìž„ í˜¸ì¶œ
+    InputFlags GetCurrentFrameInput ( ) const;   // í˜„ìž¬ í”„ë ˆìž„ ìž…ë ¥
+    bool HasInput ( InputFlags flags ) const;     // íŠ¹ì • ìž…ë ¥ì´ ìžˆëŠ”ì§€ ì²´í¬
+    bool HasAllInputs ( InputFlags flags ) const; // ëª¨ë“  ìž…ë ¥ì´ ìžˆëŠ”ì§€ ì²´í¬
+    bool HasAnyInput ( InputFlags flags ) const;  // ì–´ë–¤ ìž…ë ¥ì´ë¼ë„ ìžˆëŠ”ì§€ ì²´í¬
 
 public:
-    // === °³º° ÀÔ·Â Ã¼Å© (ÆíÀÇ ÇÔ¼öµé) ===
-    bool IsMovingLeft() const { return HasInput((uint32_t)INPUT_TYPE::MOVE_LEFT); }
-    bool IsMovingRight() const { return HasInput((uint32_t)INPUT_TYPE::MOVE_RIGHT); }
-    bool IsMovingUp() const { return HasInput((uint32_t)INPUT_TYPE::MOVE_UP); }
-    bool IsMovingDown() const { return HasInput((uint32_t)INPUT_TYPE::MOVE_DOWN); }
-    // === Á¡ÇÁ ³ôÀÌ Á¶Àý °ü·Ã ===
-    bool IsJumpTap() const { return HasInput((uint32_t)INPUT_TYPE::JUMP_TAP); }
-    bool IsJumpHold() const { return HasInput((uint32_t)INPUT_TYPE::JUMP_HOLD); }
-    bool IsJumpAway() const { return HasInput((uint32_t)INPUT_TYPE::JUMP_AWAY); }
-    float GetJumpHoldRatio() const;            // Á¡ÇÁ Å°¸¦ ´©¸¥ ºñÀ² (0.0~1.0)
+    // === ê¸°ë³¸ ìž…ë ¥ ì²´í¬ (íŽ¸ì˜ í•¨ìˆ˜ë“¤) ===
+    bool IsMovingLeft ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_LEFT ); }
+    bool IsMovingRight ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_RIGHT ); }
+    bool IsMovingUp ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_UP ); }
+    bool IsMovingDown ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_DOWN ); }
+    // === ì í”„ í‚¤ì˜ ì„¸ë¶€ ìƒíƒœ ì²´í¬ ===
+    bool IsJumpTap ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::JUMP_TAP ); }
+    bool IsJumpHold ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::JUMP_HOLD ); }
+    bool IsJumpAway ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::JUMP_AWAY ); }
+    float GetJumpHoldRatio ( ) const;            // ì í”„ í‚¤ë¥¼ ëˆ„ë¥¸ ë¹„ìœ¨ (0.0~1.0)
 
-    // === ¾×¼Ç Å° °ü·Ã ===
-    bool IsActionTap() const { return HasInput((uint32_t)INPUT_TYPE::ACTION_TAP); }
-    bool IsActionHold() const { return HasInput((uint32_t)INPUT_TYPE::ACTION_HOLD); }
-    bool IsActionAway() const { return HasInput((uint32_t)INPUT_TYPE::ACTION_AWAY); }
+    // === ì•¡ì…˜ í‚¤ ìƒíƒœ ===
+    bool IsActionTap ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::ACTION_TAP ); }
+    bool IsActionHold ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::ACTION_HOLD ); }
+    bool IsActionAway ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::ACTION_AWAY ); }
 
-    // === ±âÅ¸ ===
-    bool IsDropAbilityTap() const { return HasInput((uint32_t)INPUT_TYPE::DROP_ABILITY_TAP); }
+    // === ê¸°íƒ€ ===
+    bool IsDropAbilityTap ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::DROP_ABILITY_TAP ); }
 
-    // === ´õºíÅÇ Ã¼Å© ===
-    bool IsDoubleTapLeft() const { return HasInput((uint32_t)INPUT_TYPE::DOUBLE_TAP_LEFT); }
-    bool IsDoubleTapRight() const { return HasInput((uint32_t)INPUT_TYPE::DOUBLE_TAP_RIGHT); }
+    // === ë”ë¸”íƒ­ ì²´í¬ ===
+    bool IsDoubleTapLeft ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::DOUBLE_TAP_LEFT ); }
+    bool IsDoubleTapRight ( ) const { return HasInput ( ( uint32_t ) INPUT_TYPE::DOUBLE_TAP_RIGHT ); }
 
-    // === ¹æÇâ ÀÔ·Â Ã¼Å© ===
-    int GetHorizontalInput() const;    // -1(¿ÞÂÊ), 0(¾øÀ½), 1(¿À¸¥ÂÊ)
-    int GetVerticalInput() const;      // -1(¾Æ·¡), 0(¾øÀ½), 1(À§)
-
-private:
-    // === ÀÔ·Â ¼öÁý ÇÔ¼öµé ===
-    void CollectKeyboardInput();
-    void ProcessDoubleTap();
-    void UpdateInputFlags();
-
-    // === ´õºíÅÇ °ü·Ã ³»ºÎ ÇÔ¼öµé ===
-    void CheckMovementStyleDoubleTap();
+    // === ë°©í–¥ ìž…ë ¥ ì²´í¬ ===
+    int GetHorizontalInput ( ) const;    // -1(ì™¼ìª½), 0(ì—†ìŒ), 1(ì˜¤ë¥¸ìª½)
+    int GetVerticalInput ( ) const;      // -1(ì•„ëž˜), 0(ì—†ìŒ), 1(ìœ„)
 
 private:
-    // === ÇöÀç ÇÁ·¹ÀÓ ÀÔ·Â »óÅÂ ===
-    InputFlags m_currentFrameInput;     // ÀÌ¹ø ÇÁ·¹ÀÓ ÀÔ·Â
+    // === ìž…ë ¥ ìˆ˜ì§‘ í•¨ìˆ˜ë“¤ ===
+    void CollectKeyboardInput ( );
+    void ProcessDoubleTap ( );
+    void UpdateInputFlags ( );
 
-    // === °¨Áö¿ë º¯¼öµé ===
+    // === ë”ë¸”íƒ­ ê°ì§€ ê´€ë ¨ í•¨ìˆ˜ë“¤ ===
+    void CheckMovementStyleDoubleTap ( );
+
+private:
+    // === í˜„ìž¬ í”„ë ˆìž„ ìž…ë ¥ ìƒíƒœ ===
+    InputFlags m_currentFrameInput;     // ì´ë²ˆ í”„ë ˆìž„ ìž…ë ¥
+
+    // === ì´ì „ ìƒíƒœ ì €ìž¥ ===
     bool m_bWasJumpPressed;
     bool m_bWasActionPressed;
 
-    // Movement ½ºÅ¸ÀÏ ´õºíÅÇ¿ë Ãß°¡ º¯¼öµé
-    bool m_bLeftDecelerating;           // ¿ÞÂÊ Å° °¨¼Ó Áß
-    bool m_bRightDecelerating;          // ¿À¸¥ÂÊ Å° °¨¼Ó Áß
-    int m_iLastMoveDirection;           // ¸¶Áö¸· ÀÌµ¿ ¹æÇâ
+    // Movement ìƒíƒœë¥¼ ì¶”ì í•˜ì—¬ì— ì¶”ê°€ ë³€ìˆ˜ë“¤
+    bool m_bLeftDecelerating;           // ì™¼ìª½ í‚¤ ë†“ì€ í›„
+    bool m_bRightDecelerating;          // ì˜¤ë¥¸ìª½ í‚¤ ë†“ì€ í›„
+    int m_iLastMoveDirection;           // ë§ˆì§€ë§‰ ì´ë™ ë°©í–¥
 
-    // === Á¡ÇÁ ³ôÀÌ Á¶Àý¿ë º¯¼öµé ===
-    float m_fJumpHoldTime;              // ZÅ°¸¦ ´©¸£°í ÀÖ´Â ½Ã°£
-    float m_fMaxJumpHoldTime;           // ÃÖ´ë Á¡ÇÁ È¦µå ½Ã°£ (0.3ÃÊ Á¤µµ)
-    bool m_bLeftCurrentlyPressed;       // ÇöÀç LEFT Å° »óÅÂ
-    bool m_bRightCurrentlyPressed;      // ÇöÀç RIGHT Å° »óÅÂ
-    bool m_bJumpCurrentlyPressed;       // ÇöÀç Z Å° »óÅÂ (Á¡ÇÁ ³ôÀÌ Á¶Àý¿ë)
+    // === ì í”„ í™€ë“œ ì‹œê°„ì„ ì¶”ì í•  ë³€ìˆ˜ë“¤ ===
+    float m_fJumpHoldTime;              // Zí‚¤ë¥¼ ëˆ„ë¥´ê³  ìžˆëŠ” ì‹œê°„
+    float m_fMaxJumpHoldTime;           // ìµœëŒ€ ì í”„ í™€ë“œ ì‹œê°„ (0.3ì´ˆ ì •ë„)
+    bool m_bLeftCurrentlyPressed;       // í˜„ìž¬ LEFT í‚¤ ìƒíƒœ
+    bool m_bRightCurrentlyPressed;      // í˜„ìž¬ RIGHT í‚¤ ìƒíƒœ
+    bool m_bJumpCurrentlyPressed;       // í˜„ìž¬ Z í‚¤ ìƒíƒœ (ì í”„ í™€ë“œ ì¶”ì ìš©)
     bool m_bActionCurrentlyPressed;
 };

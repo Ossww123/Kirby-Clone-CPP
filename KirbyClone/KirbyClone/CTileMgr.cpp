@@ -11,12 +11,12 @@ CTileMgr::CTileMgr()
 
 CTileMgr::~CTileMgr()
 {
-    // ÅØ½ºÃ³´Â CResMgr¿¡¼­ °ü¸®ÇÏ¹Ç·Î ¿©±â¼­´Â ¸Ê¸¸ Å¬¸®¾î
+    // í…ìŠ¤ì²˜ëŠ” CResMgrì—ì„œ ê´€ë¦¬í•˜ë¯€ë¡œ ì—¬ê¸°ì„œëŠ” ë§µë§Œ í´ë¦¬ì–´
     m_mapTileTexture.clear();
     m_mapTileInfo.clear();
 }
 
-// === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+// === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
 
 void CTileMgr::init()
 {
@@ -24,7 +24,7 @@ void CTileMgr::init()
     CreateDefaultTileTextures();
 }
 
-// === Å¸ÀÏ Á¤º¸ °ü¸® ===
+// === íƒ€ì¼ ì •ë³´ ê´€ë¦¬ ===
 
 void CTileMgr::RegisterTileInfo(const tTileInfo& _tileInfo)
 {
@@ -46,37 +46,37 @@ Vec2 CTileMgr::GetTileDefaultSize(TILE_VISUAL_TYPE _eType) const
     if (pInfo)
         return pInfo->vDefaultSize;
 
-    return Vec2(64.f, 64.f); // ±âº»°ª
+    return Vec2(64.f, 64.f); // ê¸°ë³¸ê°’
 }
 
 void CTileMgr::CreateDefaultTileInfos()
 {
-    // ÇöÀç Áö¿øÇÏ´Â Å¸ÀÏ
+    // í˜„ì¬ ì§€ì›í•˜ëŠ” íƒ€ì¼
     RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK, Vec2(64.f, 64.f), false, false, L""));
 
-    // ÇâÈÄ ±¸Çö ¿¹Á¤ Å¸ÀÏµé (¿¹½Ã)
+    // í–¥í›„ êµ¬í˜„ ì˜ˆì • íƒ€ì¼ë“¤ (ì˜ˆì‹œ)
     // RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::GRASS_PLATFORM, Vec2(64.f, 64.f), false, false, L"tiles\\grass_platform.bmp"));
     // RegisterTileInfo(tTileInfo(TILE_VISUAL_TYPE::DIRT_BLOCK, Vec2(64.f, 64.f), false, false, L"tiles\\dirt_block.bmp"));
 }
 
-// === Å¸ÀÏ ÅØ½ºÃ³ °ü¸® ===
+// === íƒ€ì¼ í…ìŠ¤ì²˜ ê´€ë¦¬ ===
 
 CTexture* CTileMgr::LoadTileTexture(TILE_VISUAL_TYPE _eVisualType, const wstring& _strTexturePath)
 {
-    // ÅØ½ºÃ³ °æ·Î°¡ ¾ø´Â Å¸ÀÏÀº ÅØ½ºÃ³ ¾øÀÌ »ç¿ë
+    // í…ìŠ¤ì²˜ ê²½ë¡œê°€ ì—†ëŠ” íƒ€ì¼ì€ í…ìŠ¤ì²˜ ì—†ì´ ì‚¬ìš©
     if (_strTexturePath.empty())
     {
         return nullptr;
     }
 
-    // ÀÌ¹Ì ·ÎµåµÈ ÅØ½ºÃ³°¡ ÀÖ´ÂÁö È®ÀÎ
+    // ì´ë¯¸ ë¡œë“œëœ í…ìŠ¤ì²˜ê°€ ìˆëŠ”ì§€ í™•ì¸
     CTexture* pTex = FindTileTexture(_eVisualType);
     if (nullptr != pTex)
     {
         return pTex;
     }
 
-    // Å¸ÀÏ Å¸ÀÔº° °íÀ¯ Å° »ı¼º
+    // íƒ€ì¼ íƒ€ì…ë³„ ê³ ìœ  í‚¤ ìƒì„±
     wstring strKey = L"Tile_";
 
     switch (_eVisualType)
@@ -84,7 +84,10 @@ CTexture* CTileMgr::LoadTileTexture(TILE_VISUAL_TYPE _eVisualType, const wstring
     case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK:
         strKey += L"TransparentBlock";
         break;
-        // ÇâÈÄ ±¸Çö ¿¹Á¤
+    case TILE_VISUAL_TYPE::BOSS_TRIGGER:
+        strKey += L"TriggerBox";
+        break;
+        // í–¥í›„ êµ¬í˜„ ì˜ˆì •
         // case TILE_VISUAL_TYPE::GRASS_PLATFORM:
         //     strKey += L"GrassPlatform";
         //     break;
@@ -100,14 +103,14 @@ CTexture* CTileMgr::LoadTileTexture(TILE_VISUAL_TYPE _eVisualType, const wstring
 
     if (nullptr == pTex)
     {
-        // ÅØ½ºÃ³ ·Îµå ½ÇÆĞ½Ã ·Î±× Ãâ·Â
+        // í…ìŠ¤ì²˜ ë¡œë“œ ì‹¤íŒ¨ì‹œ ë¡œê·¸ ì¶œë ¥
         wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Å¸ÀÏ ÅØ½ºÃ³ ·Îµå ½ÇÆĞ: %s", _strTexturePath.c_str());
-        // MessageBox(nullptr, szBuffer, L"Å¸ÀÏ ÅØ½ºÃ³ ·Îµå ½ÇÆĞ", MB_OK);
+        swprintf_s(szBuffer, L"íƒ€ì¼ í…ìŠ¤ì²˜ ë¡œë“œ ì‹¤íŒ¨: %s", _strTexturePath.c_str());
+        // MessageBox(nullptr, szBuffer, L"íƒ€ì¼ í…ìŠ¤ì²˜ ë¡œë“œ ì‹¤íŒ¨", MB_OK);
         return nullptr;
     }
 
-    // ¸Ê¿¡ Ãß°¡
+    // ë§µì— ì¶”ê°€
     m_mapTileTexture.insert(make_pair(_eVisualType, pTex));
 
     return pTex;
@@ -125,8 +128,8 @@ CTexture* CTileMgr::FindTileTexture(TILE_VISUAL_TYPE _eVisualType) const
 
 void CTileMgr::CreateDefaultTileTextures()
 {
-    // ÇâÈÄ ±¸Çö ¿¹Á¤: µî·ÏµÈ Å¸ÀÏ Á¤º¸¸¦ ±â¹İÀ¸·Î ÅØ½ºÃ³ ·Îµå
-    // ÇöÀç´Â Åõ¸í ºí·Ï¸¸ Áö¿øÇÏ¹Ç·Î ÅØ½ºÃ³ ·Îµù ¾øÀ½
+    // í–¥í›„ êµ¬í˜„ ì˜ˆì •: ë“±ë¡ëœ íƒ€ì¼ ì •ë³´ë¥¼ ê¸°ë°˜ìœ¼ë¡œ í…ìŠ¤ì²˜ ë¡œë“œ
+    // í˜„ì¬ëŠ” íˆ¬ëª… ë¸”ë¡ë§Œ ì§€ì›í•˜ë¯€ë¡œ í…ìŠ¤ì²˜ ë¡œë”© ì—†ìŒ
 
     /*
     for (auto& pair : m_mapTileInfo)
@@ -140,7 +143,7 @@ void CTileMgr::CreateDefaultTileTextures()
     */
 }
 
-// === Å¸ÀÏ ½Ã°¢ Å¸ÀÔ À¯Æ¿¸®Æ¼ ===
+// === íƒ€ì¼ ì‹œê° íƒ€ì… ìœ í‹¸ë¦¬í‹° ===
 
 const wchar_t* CTileMgr::GetTileVisualName(TILE_VISUAL_TYPE _eType) const
 {
@@ -148,7 +151,9 @@ const wchar_t* CTileMgr::GetTileVisualName(TILE_VISUAL_TYPE _eType) const
     {
     case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK:
         return L"Transparent Block";
-    // ÇâÈÄ ±¸Çö ¿¹Á¤
+    case TILE_VISUAL_TYPE::BOSS_TRIGGER:
+        return L"Trigger Box";
+    // í–¥í›„ êµ¬í˜„ ì˜ˆì •
     // case TILE_VISUAL_TYPE::GRASS_PLATFORM:
     //     return L"Grass Platform";
     // case TILE_VISUAL_TYPE::DIRT_BLOCK:
@@ -162,7 +167,7 @@ vector<TILE_VISUAL_TYPE> CTileMgr::GetAvailableTileVisualTypes() const
 {
     vector<TILE_VISUAL_TYPE> result;
 
-    // µî·ÏµÈ ¸ğµç Å¸ÀÏ Å¸ÀÔ ¹İÈ¯
+    // ë“±ë¡ëœ ëª¨ë“  íƒ€ì¼ íƒ€ì… ë°˜í™˜
     for (auto& pair : m_mapTileInfo)
     {
         result.push_back(pair.first);
@@ -171,28 +176,28 @@ vector<TILE_VISUAL_TYPE> CTileMgr::GetAvailableTileVisualTypes() const
     return result;
 }
 
-// === Å¸ÀÏ ¼Ó¼º ¼³Á¤ µµ¿ì¹Ì ===
+// === íƒ€ì¼ ì†ì„± ì„¤ì • ë„ìš°ë¯¸ ===
 
 void CTileMgr::SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType)
 {
     if (!_pTile)
         return;
 
-    // ±âº» Å©±â ¼³Á¤
+    // ê¸°ë³¸ í¬ê¸° ì„¤ì •
     Vec2 vDefaultSize = GetTileDefaultSize(_eVisualType);
     _pTile->SetScale(vDefaultSize);
 
-    // ½Ã°¢Àû Å¸ÀÔ ¼³Á¤
+    // ì‹œê°ì  íƒ€ì… ì„¤ì •
     _pTile->SetVisualType(_eVisualType);
 
-    // ÇâÈÄ ±¸Çö ¿¹Á¤: ÅØ½ºÃ³ ¼³Á¤
+    // í–¥í›„ êµ¬í˜„ ì˜ˆì •: í…ìŠ¤ì²˜ ì„¤ì •
     // CTexture* pTexture = FindTileTexture(_eVisualType);
     // if (pTexture)
     // {
     //     _pTile->SetTileTexture(pTexture);
     // }
 
-    // ½Ã°¢Àû Å¸ÀÔ¿¡ µû¸¥ ±âº» Ãæµ¹ ¼Ó¼º ¼³Á¤
+    // ì‹œê°ì  íƒ€ì…ì— ë”°ë¥¸ ê¸°ë³¸ ì¶©ëŒ ì†ì„± ì„¤ì •
     switch (_eVisualType)
     {
     case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK:
@@ -202,7 +207,14 @@ void CTileMgr::SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType)
         _pTile->SetOneWay(false);
         break;
 
-        // ÇâÈÄ ±¸Çö ¿¹Á¤
+    case TILE_VISUAL_TYPE::BOSS_TRIGGER:
+        _pTile->SetCollisionType(COLLISION_TYPE::TRIGGER);
+        _pTile->SetSolid(false);    // íŠ¸ë¦¬ê±°ëŠ” í†µê³¼ ê°€ëŠ¥
+        _pTile->SetHarmful(false);
+        _pTile->SetOneWay(false);
+        break;
+
+        // í–¥í›„ êµ¬í˜„ ì˜ˆì •
         // case TILE_VISUAL_TYPE::GRASS_PLATFORM:
         //     _pTile->SetCollisionType(COLLISION_TYPE::PLATFORM);
         //     _pTile->SetSolid(true);
@@ -211,7 +223,7 @@ void CTileMgr::SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType)
         //     break;
 
     default:
-        // ±âº»°ªÀº ÀÏ¹İ ¶¥ ºí·Ï
+        // ê¸°ë³¸ê°’ì€ ì¼ë°˜ ë•… ë¸”ë¡
         _pTile->SetCollisionType(COLLISION_TYPE::SOLID_GROUND);
         _pTile->SetSolid(true);
         _pTile->SetHarmful(false);
@@ -219,10 +231,13 @@ void CTileMgr::SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType)
         break;
     }
 
-    // Ãæµ¹Ã¼ ¼³Á¤
-    if (_pTile->IsSolid() || _pTile->IsHarmful())
+    // ì¶©ëŒì²´ ì„¤ì •
+    bool needsCollider = _pTile->IsSolid() || _pTile->IsHarmful() || 
+                        (_pTile->GetCollisionType() == COLLISION_TYPE::TRIGGER);
+    
+    if (needsCollider)
     {
-        // Ãæµ¹ÀÌ ÇÊ¿äÇÑ Å¸ÀÏÀÌ¸é Äİ¶óÀÌ´õ »ı¼º
+        // ì¶©ëŒì´ í•„ìš”í•œ íƒ€ì¼ì´ë©´ ì½œë¼ì´ë” ìƒì„±
         if (!_pTile->GetCollider())
         {
             _pTile->CreateCollider();
@@ -233,6 +248,12 @@ void CTileMgr::SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType)
         }
     }
 
-    // ±â´ÉÀû Å¸ÀÔ ¼³Á¤ (ÇöÀç´Â ¸ğµÎ TILE_GROUND)
-    _pTile->SetTileType(OBJECT_TYPE::TILE_GROUND);
+    // ê¸°ëŠ¥ì  íƒ€ì… ì„¤ì • - ì´ë¯¸ ì„¤ì •ëœ íƒ€ì¼ íƒ€ì…ì´ ìˆìœ¼ë©´ ìœ ì§€
+    OBJECT_TYPE currentTileType = _pTile->GetTileType();
+    if (currentTileType == OBJECT_TYPE::END || currentTileType == (OBJECT_TYPE)0)
+    {
+        // íƒ€ì¼ íƒ€ì…ì´ ì„¤ì •ë˜ì§€ ì•Šì€ ê²½ìš°ì—ë§Œ ê¸°ë³¸ê°’ìœ¼ë¡œ ì„¤ì •
+        _pTile->SetTileType(OBJECT_TYPE::TILE_GROUND);
+    }
+    // ì´ë¯¸ ì˜¬ë°”ë¥¸ íƒ€ì…(TILE_TRIGGER ë“±)ì´ ì„¤ì •ë˜ì–´ ìˆìœ¼ë©´ ê·¸ëŒ€ë¡œ ìœ ì§€
 }

@@ -9,6 +9,7 @@
 #include "CHotHead.h"
 #include "CSparky.h"
 #include "CWhispyWoods.h"
+#include "CApple.h"
 
 #include "CTileMgr.h"
 #include "CObject.h"
@@ -41,6 +42,7 @@ CObject* CObjectFactory::CreateObject ( OBJECT_TYPE _eType , Vec2 _vPos )
     case OBJECT_TYPE::MONSTER_GORDOS:
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
     case OBJECT_TYPE::MONSTER_SPARKY:
+    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
         pObject = CreateMonster ( _eType , _vPos );
         break;
 
@@ -63,6 +65,7 @@ CObject* CObjectFactory::CreateObject ( OBJECT_TYPE _eType , Vec2 _vPos )
     case OBJECT_TYPE::TILE_MOVING:
     case OBJECT_TYPE::TILE_BREAKABLE:
     case OBJECT_TYPE::TILE_INVISIBLE:
+    case OBJECT_TYPE::TILE_TRIGGER:
         pObject = CreateTile ( _eType , _vPos );
         break;
 
@@ -121,6 +124,9 @@ CObject* CObjectFactory::CreateMonster ( OBJECT_TYPE _eMonsterType , Vec2 _vPos 
     case OBJECT_TYPE::MONSTER_SPARKY:
         pMonster = CreateSparky ( _vPos );
         break;
+    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
+        pMonster = CreateWhispyWoods ( _vPos );
+        break;
     default:
         return nullptr;
     }
@@ -174,6 +180,15 @@ CObject* CObjectFactory::CreateTile ( OBJECT_TYPE _eTileType , Vec2 _vPos )
     COLLISION_TYPE collisionType = ConvertObjectTypeToCollisionType ( _eTileType );
     pTile->SetCollisionType ( collisionType );
 
+    // TILE_TRIGGER인 경우 자동으로 BOSS_TRIGGER 비주얼 타입 설정
+    if ( _eTileType == OBJECT_TYPE::TILE_TRIGGER )
+    {
+        pTile->SetVisualType ( TILE_VISUAL_TYPE::BOSS_TRIGGER );
+        
+        // 기본 카메라 잠금 위치 설정
+        pTile->SetBossLockPosition ( Vec2 ( 320.0f , 320.0f ) );
+    }
+
     // 위치 설정
     pTile->SetPos ( _vPos );
 
@@ -193,7 +208,7 @@ CObject* CObjectFactory::CreateSpecialObject ( OBJECT_TYPE _eObjectType , Vec2 _
 
         // 기본 문 설정
         pDoor->SetTargetScene ( SCENE_TYPE::STAGE_02 );
-        pDoor->SetTargetPosition ( Vec2 ( 100.f , 400.f ) );
+        pDoor->SetTargetPosition ( Vec2 ( 256.f , 384.f ) );
 
         pObject = pDoor;
     }
@@ -317,6 +332,19 @@ CWhispyWoods* CObjectFactory::CreateWhispyWoods ( Vec2 _vPos )
     return pWhispyWoods;
 }
 
+CApple* CObjectFactory::CreateApple ( Vec2 _vPos )
+{
+    CApple* pApple = new CApple;
+    pApple->SetPos ( _vPos );
+    pApple->SetScale ( Vec2 ( 32.f , 32.f ) );  // 작은 사과 크기
+
+    // 사과 전용 설정
+    pApple->SetGravity(true);        // 중력 적용
+    pApple->SetLifetime(10.f);       // 10초 생존시간
+
+    return pApple;
+}
+
 const wchar_t* CObjectFactory::GetObjectTypeName ( OBJECT_TYPE _eType )
 {
     switch ( _eType )
@@ -331,6 +359,7 @@ const wchar_t* CObjectFactory::GetObjectTypeName ( OBJECT_TYPE _eType )
     case OBJECT_TYPE::MONSTER_GORDOS: return L"Gordos";
     case OBJECT_TYPE::MONSTER_HOT_HEAD: return L"Hot Head";
     case OBJECT_TYPE::MONSTER_SPARKY: return L"Sparky";
+    case OBJECT_TYPE::MONSTER_WHISPY_WOODS: return L"Whispy Woods";
 
         // 아이템들
     case OBJECT_TYPE::ITEM_STAR: return L"Star";
@@ -340,6 +369,7 @@ const wchar_t* CObjectFactory::GetObjectTypeName ( OBJECT_TYPE _eType )
 
         // 충돌체/타일들 (새로운 이름들)
     case OBJECT_TYPE::TILE_GROUND: return L"Solid Ground";
+    case OBJECT_TYPE::TILE_TRIGGER: return L"Trigger box";
     case OBJECT_TYPE::TILE_PLATFORM: return L"Platform";
     case OBJECT_TYPE::TILE_ONE_WAY: return L"One-Way Platform";
     case OBJECT_TYPE::TILE_SPIKE: return L"Spike";
@@ -372,6 +402,7 @@ GROUP_TYPE CObjectFactory::GetObjectGroup ( OBJECT_TYPE _eType )
     case OBJECT_TYPE::MONSTER_GORDOS:
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
     case OBJECT_TYPE::MONSTER_SPARKY:
+    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
         return GROUP_TYPE::MONSTER;
 
     case OBJECT_TYPE::ITEM_STAR:
@@ -390,6 +421,7 @@ GROUP_TYPE CObjectFactory::GetObjectGroup ( OBJECT_TYPE _eType )
     case OBJECT_TYPE::TILE_BREAKABLE:
     case OBJECT_TYPE::TILE_INVISIBLE:
     case OBJECT_TYPE::TILE_WARP_STAR:
+    case OBJECT_TYPE::TILE_TRIGGER:
         return GROUP_TYPE::TILE;
 
     case OBJECT_TYPE::OBJECT_DOOR:
@@ -413,6 +445,7 @@ Vec2 CObjectFactory::GetDefaultScale ( OBJECT_TYPE _eType )
     case OBJECT_TYPE::MONSTER_GORDOS:       return Vec2 ( 80.f , 80.f );
     case OBJECT_TYPE::MONSTER_HOT_HEAD:     return Vec2 ( 64.f , 64.f );
     case OBJECT_TYPE::MONSTER_SPARKY:       return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::MONSTER_WHISPY_WOODS: return Vec2 ( 128.f , 160.f );
     case OBJECT_TYPE::ITEM_STAR:            return Vec2 ( 32.f , 32.f );
     case OBJECT_TYPE::ITEM_ENERGY_DRINK:    return Vec2 ( 48.f , 64.f );
     case OBJECT_TYPE::ITEM_1UP:             return Vec2 ( 64.f , 64.f );
@@ -427,6 +460,7 @@ Vec2 CObjectFactory::GetDefaultScale ( OBJECT_TYPE _eType )
     case OBJECT_TYPE::TILE_BREAKABLE:       return Vec2 ( 64.f , 64.f );
     case OBJECT_TYPE::TILE_INVISIBLE:       return Vec2 ( 64.f , 64.f );
     case OBJECT_TYPE::TILE_WARP_STAR:       return Vec2 ( 64.f , 64.f );
+    case OBJECT_TYPE::TILE_TRIGGER:         return Vec2 ( 64.f , 64.f );
     case OBJECT_TYPE::OBJECT_DOOR:          return Vec2 ( 64.f , 128.f );
     case OBJECT_TYPE::OBJECT_SWITCH:        return Vec2 ( 48.f , 32.f );
     case OBJECT_TYPE::OBJECT_MIRROR:        return Vec2 ( 96.f , 128.f );
@@ -451,6 +485,7 @@ vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory ( const wstring& _s
         result.push_back ( OBJECT_TYPE::MONSTER_GORDOS );
         result.push_back ( OBJECT_TYPE::MONSTER_HOT_HEAD );
         result.push_back ( OBJECT_TYPE::MONSTER_SPARKY );
+        result.push_back ( OBJECT_TYPE::MONSTER_WHISPY_WOODS );
     }
     else if ( _strCategory == L"Item" )
     {
@@ -462,6 +497,7 @@ vector<OBJECT_TYPE> CObjectFactory::GetObjectTypesByCategory ( const wstring& _s
     else if ( _strCategory == L"Collision" || _strCategory == L"Tile" )
     {
         result.push_back ( OBJECT_TYPE::TILE_GROUND );
+        result.push_back ( OBJECT_TYPE::TILE_TRIGGER );
         /*result.push_back(OBJECT_TYPE::TILE_PLATFORM);
         result.push_back(OBJECT_TYPE::TILE_ONE_WAY);
         result.push_back(OBJECT_TYPE::TILE_SPIKE);
@@ -505,6 +541,9 @@ COLLISION_TYPE CObjectFactory::ConvertObjectTypeToCollisionType ( OBJECT_TYPE _e
 
     case OBJECT_TYPE::TILE_WARP_STAR:
         return COLLISION_TYPE::PLATFORM;  // 워프스타를 플랫폼으로 처리
+
+    case OBJECT_TYPE::TILE_TRIGGER:
+        return COLLISION_TYPE::TRIGGER;   // 트리거 타일
 
         // 새로운 타일 타입들 추가 (기존 OBJECT_TYPE enum에 추가 필요)
     case OBJECT_TYPE::TILE_PLATFORM:
@@ -582,6 +621,7 @@ const wchar_t* CObjectFactory::GetCollisionTypeName ( COLLISION_TYPE _eType )
     case COLLISION_TYPE::MOVING_PLATFORM:   return L"Moving Platform";
     case COLLISION_TYPE::BREAKABLE_BLOCK:   return L"Breakable Block";
     case COLLISION_TYPE::INVISIBLE_WALL:    return L"Invisible Wall";
+    case COLLISION_TYPE::TRIGGER:           return L"Trigger Box";
     default:                                return L"Unknown";
     }
 }
@@ -599,6 +639,7 @@ COLORREF CObjectFactory::GetCollisionTypeColor ( COLLISION_TYPE _eType )
     case COLLISION_TYPE::MOVING_PLATFORM:   return RGB ( 255 , 0 , 255 );      // 보라색
     case COLLISION_TYPE::BREAKABLE_BLOCK:   return RGB ( 139 , 69 , 19 );      // 황토색
     case COLLISION_TYPE::INVISIBLE_WALL:    return RGB ( 128 , 128 , 128 );    // 회색
+    case COLLISION_TYPE::TRIGGER:           return RGB ( 255 , 0 , 255 );      // 마젠타색
     default:                                return RGB ( 0 , 0 , 255 );        // 기본 파란색
     }
 }
@@ -616,6 +657,7 @@ vector<COLLISION_TYPE> CObjectFactory::GetAvailableCollisionTypes ( )
     result.push_back ( COLLISION_TYPE::MOVING_PLATFORM );
     result.push_back ( COLLISION_TYPE::BREAKABLE_BLOCK );
     result.push_back ( COLLISION_TYPE::INVISIBLE_WALL );
+    result.push_back ( COLLISION_TYPE::TRIGGER );
 
     return result;
 }

@@ -2,6 +2,7 @@
 
 class CObject;
 class CPlayer;
+class CScene;
 
 class CEventMgr
 {
@@ -24,4 +25,11 @@ private:
     void ExecutePlayerDamage(tEvent& _event);
     void ExecutePlayerSlideKickRecoil(tEvent& _event);
     void ExecuteMonsterDamage(tEvent& _event);
+    void ExecutePlayerDeath(tEvent& _event);
+    void ExecuteGameOver(tEvent& _event);
+    void ExecuteFadeComplete(tEvent& _event);
+    void ExecuteBossBattleStart(tEvent& _event);
+    void ExecuteDoorEnter(tEvent& _event);
+    void ExecuteStageClear(tEvent& _event);
+    void RemoveAllTriggerBoxes(CScene* _pScene);
 };

@@ -15,8 +15,8 @@
 #include "CBackgroundMgr.h"
 #include "CStageImage.h"
 #include "CTexture.h"
-
-#include <commdlg.h>
+#include "CMonster.h"
+#include "CRigidBody.h"
 
 CEditorFileManager::CEditorFileManager()
     : m_pEditorCore(nullptr)
@@ -34,11 +34,11 @@ void CEditorFileManager::Initialize(CEditorCore* _pCore, CScene* _pScene)
     m_pEditorCore = _pCore;
     m_pScene = _pScene;
 
-    // ·¹º§ µğ·ºÅä¸® È®ÀÎ ¹× »ı¼º
+    // ë ˆë²¨ ë””ë ‰í† ë¦¬ í™•ì¸ ë° ìƒì„±
     EnsureLevelDirectoryExists();
 }
 
-// === ÆÄÀÏ ÀúÀå/·Îµå ÀÎÅÍÆäÀÌ½º ===
+// === íŒŒì¼ ì €ì¥/ë¡œë“œ ì¸í„°í˜ì´ìŠ¤ ===
 
 void CEditorFileManager::SaveAsDialog()
 {
@@ -68,24 +68,37 @@ void CEditorFileManager::QuickLoad()
     LoadLevel(m_strQuickSaveFile);
 }
 
-// === ·¹º§ ÆÄÀÏ Ã³¸® ===
+// === íŒŒì¼ ì²˜ë¦¬ ===
 
 void CEditorFileManager::SaveLevel(const wstring& _strFileName)
 {
-    // ·¹º§ µ¥ÀÌÅÍ »ı¼º
+    OutputDebugStringW(L"[SAVE_DEBUG] SaveLevel started\n");
+    
+    // ë ˆë²¨ ë°ì´í„° ìƒì„±
     tLevelData levelData = CreateLevelData(_strFileName);
+    
+    // WhispyWoods ì €ì¥ í™•ì¸
+    int whispyCount = 0;
+    for (const auto& objData : levelData.vecObjects)
+    {
+        if (objData.eGroupType == GROUP_TYPE::MONSTER && 
+            objData.iSubType == (int)OBJECT_TYPE::MONSTER_WHISPY_WOODS)
+        {
+            whispyCount++;
+        }
+    }
 
-    // ÆÄÀÏ °æ·Î »ı¼º
+    // íŒŒì¼ ê²½ë¡œ ìƒì„±
     wstring strFullPath = GetFullLevelPath(_strFileName);
 
-    // ·¹º§ µğ·ºÅä¸® È®ÀÎ
+    // íŒŒì¼ ë””ë ‰í† ë¦¬ í™•ì¸
     if (!EnsureLevelDirectoryExists())
     {
         ShowErrorMessage(L"Failed to create level directory!");
         return;
     }
 
-    // ÆÄÀÏ¿¡ ÀúÀå
+    // íŒŒì¼ì— ì €ì¥
     FILE* pFile = nullptr;
     _wfopen_s(&pFile, strFullPath.c_str(), L"wb");
 
@@ -97,27 +110,27 @@ void CEditorFileManager::SaveLevel(const wstring& _strFileName)
 
     try
     {
-        // ¹öÀü Á¤º¸ (v1)
+        // íŒŒì¼ ë²„ì „ (v1)
         int version = 1;
         fwrite(&version, sizeof(int), 1, pFile);
 
-        // ·¹º§ ÀÌ¸§ ±æÀÌ ¹× ÀÌ¸§
+        // ë ˆë²¨ ì´ë¦„ ê¸¸ì´ ë° ì´ë¦„
         size_t nameLen = levelData.strLevelName.length();
         fwrite(&nameLen, sizeof(size_t), 1, pFile);
         fwrite(levelData.strLevelName.c_str(), sizeof(wchar_t), nameLen, pFile);
 
-        // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡
+        // í”Œë ˆì´ì–´ ìŠ¤í° ìœ„ì¹˜
         fwrite(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-        // ¹è°æ Å¸ÀÔ Á¤º¸
+        // ë°°ê²½ íƒ€ì… ì €ì¥
         fwrite(&levelData.iBackgroundType, sizeof(int), 1, pFile);
 
-        // °æ°è Á¤º¸ ÀúÀå
+        // ë ˆë²¨ ë²”ìœ„ ì €ì¥
         fwrite(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
         fwrite(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
         fwrite(&levelData.fGameOverY, sizeof(float), 1, pFile);
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Á¤º¸
+        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì €ì¥
         int stageImageType = (int)levelData.eStageType;
         fwrite(&stageImageType, sizeof(int), 1, pFile);
 
@@ -128,14 +141,14 @@ void CEditorFileManager::SaveLevel(const wstring& _strFileName)
             fwrite(levelData.strStageImagePath.c_str(), sizeof(wchar_t), stagePathLen, pFile);
         }
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö À§Ä¡
+        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ìœ„ì¹˜
         fwrite(&levelData.vStageImagePos, sizeof(Vec2), 1, pFile);
 
-        // °´Ã¼ °³¼ö
+        // ì˜¤ë¸Œì íŠ¸ ì €ì¥
         size_t objCount = levelData.vecObjects.size();
         fwrite(&objCount, sizeof(size_t), 1, pFile);
 
-        // °¢ °´Ã¼ µ¥ÀÌÅÍ
+        // ê° ì˜¤ë¸Œì íŠ¸ ì €ì¥í•˜ê¸°
         for (const auto& objData : levelData.vecObjects)
         {
             fwrite(&objData, sizeof(tLevelObjectData), 1, pFile);
@@ -143,7 +156,7 @@ void CEditorFileManager::SaveLevel(const wstring& _strFileName)
 
         fclose(pFile);
 
-        // ¼º°ø ¸Ş½ÃÁö
+        // ì €ì¥ ë©”ì‹œì§€
         ShowSuccessMessage(_strFileName + L" saved successfully!", (int)objCount);
     }
     catch (...)
@@ -157,12 +170,12 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
 {
     wstring strFullPath = GetFullLevelPath(_strFileName);
 
-    // ÆÄÀÏ Á¸Àç È®ÀÎ
+    // íŒŒì¼ ì¡´ì¬ í™•ì¸
     if (!ValidateLevelFile(strFullPath))
     {
         if (_strFileName == m_strQuickSaveFile)
         {
-            // Äü·Îµå ÆÄÀÏÀÌ ¾øÀ¸¸é ±âº» ·¹º§ »ı¼º
+            // í€µë¡œë“œ íŒŒì¼ì´ ì—†ìœ¼ë©´ ê¸°ë³¸ ë ˆë²¨ ìƒì„±
             CreateDefaultLevel();
             ShowSuccessMessage(L"Default level created (no quicksave found)");
         }
@@ -184,7 +197,7 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
 
     try
     {
-        // ¹öÀü È®ÀÎ
+        // ë²„ì „ í™•ì¸
         int version;
         fread(&version, sizeof(int), 1, pFile);
 
@@ -195,68 +208,70 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
             return;
         }
 
-        // ¾À Å¬¸®¾î
+        // ì”¬ í´ë¦¬ì–´
         ClearScene();
 
         tLevelData levelData;
         levelData.iVersion = version;
 
-        // ·¹º§ ÀÌ¸§ ·Îµå
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½Îµï¿½
         size_t nameLen;
         fread(&nameLen, sizeof(size_t), 1, pFile);
-        if (nameLen > 0 && nameLen < 1000) // ¾ÈÀü¼º °Ë»ç
+        if (nameLen > 0 && nameLen < 1000) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½
         {
             levelData.strLevelName.resize(nameLen);
             fread(&levelData.strLevelName[0], sizeof(wchar_t), nameLen, pFile);
         }
 
-        // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡
+        // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         fread(&levelData.vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-        // ¹è°æ Å¸ÀÔ
+        // ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½
         fread(&levelData.iBackgroundType, sizeof(int), 1, pFile);
 
-        // °æ°è Á¤º¸
+        // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         fread(&levelData.vLevelBoundsMin, sizeof(Vec2), 1, pFile);
         fread(&levelData.vLevelBoundsMax, sizeof(Vec2), 1, pFile);
         fread(&levelData.fGameOverY, sizeof(float), 1, pFile);
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Å¸ÀÔ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½
         int stageImageType;
         fread(&stageImageType, sizeof(int), 1, pFile);
         levelData.eStageType = (STAGE_IMAGE_TYPE)stageImageType;
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö °æ·Î
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         size_t stagePathLen;
         fread(&stagePathLen, sizeof(size_t), 1, pFile);
-        if (stagePathLen > 0 && stagePathLen < 1000) // ¾ÈÀü¼º °Ë»ç
+        if (stagePathLen > 0 && stagePathLen < 1000) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½
         {
             levelData.strStageImagePath.resize(stagePathLen);
             fread(&levelData.strStageImagePath[0], sizeof(wchar_t), stagePathLen, pFile);
         }
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö À§Ä¡
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         fread(&levelData.vStageImagePos, sizeof(Vec2), 1, pFile);
 
-        // °´Ã¼ °³¼ö
+        // ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½
         size_t objCount;
         fread(&objCount, sizeof(size_t), 1, pFile);
-
-        // °´Ã¼ µ¥ÀÌÅÍ ·Îµå
+        
         levelData.vecObjects.reserve(objCount);
+        int whispyWoodsLoadCount = 0;
+        
         for (size_t i = 0; i < objCount; ++i)
         {
             tLevelObjectData objData;
             fread(&objData, sizeof(tLevelObjectData), 1, pFile);
+            
             levelData.vecObjects.push_back(objData);
         }
 
         fclose(pFile);
 
-        // ·ÎµåµÈ µ¥ÀÌÅÍ Àû¿ë
+        // ï¿½Îµï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         ApplyLoadedLevelData(levelData);
 
-        // ¼º°ø ¸Ş½ÃÁö
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ş½ï¿½ï¿½ï¿½
         ShowSuccessMessage(_strFileName + L" loaded successfully (v" + to_wstring(version) + L")", (int)objCount);
     }
     catch (...)
@@ -266,35 +281,38 @@ void CEditorFileManager::LoadLevel(const wstring& _strFileName)
     }
 }
 
-// === ·¹º§ µ¥ÀÌÅÍ »ı¼º/Ã³¸® ===
+// === ë ˆë²¨ ë°ì´í„° ìƒì„±/ì²˜ë¦¬ ===
 
 tLevelData CEditorFileManager::CreateLevelData(const wstring& _strLevelName)
 {
     tLevelData levelData;
     levelData.strLevelName = _strLevelName;
-    levelData.iVersion = 1; // ¹öÀü 1
+    levelData.iVersion = 1; // ë²„ì „ 1
 
-    // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
     if (m_pEditorCore->GetObjectManager())
     {
         levelData.vPlayerSpawn = m_pEditorCore->GetObjectManager()->GetPlayerSpawnPos();
     }
 
-    // ¹è°æ Á¤º¸
+    // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (m_pEditorCore->GetObjectManager())
     {
         levelData.iBackgroundType = (int)m_pEditorCore->GetObjectManager()->GetCurrentBackgroundType();
     }
 
-    // °æ°è Á¤º¸ (»õ·Î¿î ±âº»°ª)
+    // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½âº»ï¿½ï¿½)
     levelData.vLevelBoundsMin = Vec2(0.f, 0.f);
-    levelData.vLevelBoundsMax = Vec2(4096.f, 640.f);  // »õ·Î¿î ±âº» ¸Ê Å©±â
-    levelData.fGameOverY = 680.f;                      // »õ·Î¿î °ÔÀÓ¿À¹ö Y
+    
+    // í˜„ì¬ ì—ë””í„°ì˜ ì‹¤ì œ ë§µ í¬ê¸° ì‚¬ìš©
+    Vec2 vCurrentMapSize = m_pEditorCore->GetMapSize();
+    levelData.vLevelBoundsMax = vCurrentMapSize;
+    levelData.fGameOverY = vCurrentMapSize.y + 40.f;  // ë§µ í•˜ë‹¨ì—ì„œ 40px ì•„ë˜
 
-    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Á¤º¸ (¹öÀü 1¿¡¼­´Â ±âº» ½ºÅ×ÀÌÁö¸¸)
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½âº» ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
     levelData.eStageType = CStageMgr::GetInst()->GetCurrentStageType();
 
-    // Ä¿½ºÅÒ ÀÌ¹ÌÁöÀÎ °æ¿ì °æ·Î ÀúÀå
+    // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (levelData.eStageType == STAGE_IMAGE_TYPE::CUSTOM)
     {
         CStageImage* pCurrentStage = CStageMgr::GetInst()->GetCurrentStageImage();
@@ -308,10 +326,10 @@ tLevelData CEditorFileManager::CreateLevelData(const wstring& _strLevelName)
         levelData.strStageImagePath = L"";
     }
 
-    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö À§Ä¡ (±âº»°ª)
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ (ï¿½âº»ï¿½ï¿½)
     levelData.vStageImagePos = Vec2(0.f, 0.f);
 
-    // ¸ğµç ±×·ìÀÇ °´Ã¼µé ¼öÁı
+    // ï¿½ï¿½ï¿½ ï¿½×·ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     CollectSceneObjects(levelData);
 
     return levelData;
@@ -322,12 +340,14 @@ void CEditorFileManager::CollectSceneObjects(tLevelData& _levelData)
     if (!m_pScene)
         return;
 
-    // °¢ ±×·ìº°·Î °´Ã¼µé ¼öÁı
+    int whispyWoodsFound = 0;
+
+    // ï¿½ï¿½ ï¿½×·ìº°ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
         GROUP_TYPE eGroupType = (GROUP_TYPE)i;
 
-        // ÇÃ·¹ÀÌ¾î ±×·ìÀº Á¦¿Ü (½ºÆù À§Ä¡¸¸ ÀúÀå)
+        // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½×·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         if (eGroupType == GROUP_TYPE::PLAYER)
             continue;
 
@@ -346,32 +366,31 @@ void CEditorFileManager::CollectSceneObjects(tLevelData& _levelData)
 
 void CEditorFileManager::ApplyLoadedLevelData(const tLevelData& _levelData)
 {
-    // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡ ¼³Á¤
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
     if (m_pEditorCore->GetObjectManager())
     {
         m_pEditorCore->GetObjectManager()->SetPlayerSpawnPos(_levelData.vPlayerSpawn);
     }
 
-    // ¹è°æ ¼³Á¤
+    // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (m_pEditorCore->GetObjectManager())
     {
         BACKGROUND_TYPE bgType = (BACKGROUND_TYPE)_levelData.iBackgroundType;
         m_pEditorCore->GetObjectManager()->ChangeBackground(bgType);
     }
 
-    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ½Ã½ºÅÛ Àû¿ë
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½Ã½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (_levelData.eStageType == STAGE_IMAGE_TYPE::CUSTOM && !_levelData.strStageImagePath.empty())
     {
-        // Ä¿½ºÅÒ ÀÌ¹ÌÁö ·Îµå (ÇâÈÄ ±¸Çö)
+        // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½Îµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         // CStageMgr::GetInst()->LoadCustomStageImage(_levelData.strStageImagePath);
     }
     else
     {
-        // ±âº» ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ¼³Á¤
+        // ï¿½âº» ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         CStageMgr::GetInst()->SetCurrentStageImage(_levelData.eStageType);
     }
 
-    // °´Ã¼µé »ı¼º
     for (const auto& objData : _levelData.vecObjects)
     {
         CObject* pObj = CreateObjectFromData(objData);
@@ -382,11 +401,11 @@ void CEditorFileManager::ApplyLoadedLevelData(const tLevelData& _levelData)
         }
     }
 
-    // °æ°è Á¤º¸ Àû¿ë
+    // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     ApplyLevelBounds(_levelData);
 }
 
-// === °´Ã¼ º¯È¯ ===
+// === ì˜¤ë¸Œì íŠ¸ ë³€í™˜ ===
 
 CObject* CEditorFileManager::CreateObjectFromData(const tLevelObjectData& _objData)
 {
@@ -397,7 +416,29 @@ CObject* CEditorFileManager::CreateObjectFromData(const tLevelObjectData& _objDa
     case GROUP_TYPE::MONSTER:
     {
         OBJECT_TYPE monsterType = (OBJECT_TYPE)_objData.iSubType;
+        
         pObj = CObjectFactory::CreateObject(monsterType, _objData.vPos);
+        
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        if (pObj)
+        {
+            CMonster* pMonster = dynamic_cast<CMonster*>(pObj);
+            if (pMonster)
+            {
+                pMonster->SetDirection(_objData.fDirection);
+                
+                // ì—ë””í„° ëª¨ë“œë¡œ ì„¤ì •í•˜ì—¬ EDITOR_IDLE ìƒíƒœ ìœ ì§€
+                pMonster->SetEditorMode(true);
+                pMonster->ChangeState(MONSTER_STATE::EDITOR_IDLE);
+                
+                // ì¤‘ë ¥ ë¹„í™œì„±í™”
+                if (pMonster->GetRigidBody())
+                {
+                    pMonster->GetRigidBody()->SetUseGravity(false);
+                    pMonster->GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
+                }
+            }
+        }
     }
     break;
 
@@ -406,22 +447,32 @@ CObject* CEditorFileManager::CreateObjectFromData(const tLevelObjectData& _objDa
         OBJECT_TYPE tileType = (OBJECT_TYPE)_objData.iSubType;
         pObj = CObjectFactory::CreateObject(tileType, _objData.vPos);
 
-        // Å¸ÀÏ ½Ã°¢ Å¸ÀÔ ¹× Ãæµ¹Ã¼ Å¸ÀÔ Àû¿ë
+        // Å¸ï¿½ï¿½ ï¿½Ã°ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½ ï¿½æµ¹Ã¼ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (pObj)
         {
             CTile* pTile = dynamic_cast<CTile*>(pObj);
             if (pTile)
             {
-                // ½Ã°¢Àû Å¸ÀÔ º¹¿ø
+                // íƒ€ì¼ íƒ€ì…ì„ ë¨¼ì € ì„¤ì • (ì¤‘ìš”!)
+                pTile->SetTileType((OBJECT_TYPE)_objData.iSubType);
+                pTile->SetType((OBJECT_TYPE)_objData.iSubType);  // CObjectì˜ ê¸°ë³¸ íƒ€ì…ë„ ì„¤ì •
+                
+                // ï¿½Ã°ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 if (_objData.iTileVisualType >= 0)
                 {
                     pTile->SetVisualType((TILE_VISUAL_TYPE)_objData.iTileVisualType);
                 }
 
-                // Ãæµ¹ Å¸ÀÔ º¹¿ø
+                // ï¿½æµ¹ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 if (_objData.iCollisionType >= 0)
                 {
                     pTile->SetCollisionType((COLLISION_TYPE)_objData.iCollisionType);
+                }
+                
+                // íŠ¸ë¦¬ê±° íƒ€ì¼ì¸ ê²½ìš° ì¹´ë©”ë¼ ì¢Œí‘œ ë³µì›
+                if (pTile->GetTileType() == OBJECT_TYPE::TILE_TRIGGER)
+                {
+                    pTile->SetBossLockPosition(_objData.vBossLockPos);
                 }
             }
         }
@@ -461,9 +512,9 @@ tLevelObjectData CEditorFileManager::CreateObjectData(CObject* _pObj, GROUP_TYPE
     objData.eGroupType = _eGroupType;
     objData.vPos = _pObj->GetPos();
     objData.vScale = _pObj->GetScale();
-    objData.iSubType = 0; // ±âº»°ª
+    objData.iSubType = 0; // ï¿½âº»ï¿½ï¿½
 
-    // Å¸ÀÏÀÇ °æ¿ì ½Ã°¢ Å¸ÀÔ°ú Ãæµ¹ Å¸ÀÔ Á¤º¸µµ ÀúÀå
+    // Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ Å¸ï¿½Ô°ï¿½ ï¿½æµ¹ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (objData.eGroupType == GROUP_TYPE::TILE)
     {
         CTile* pTile = dynamic_cast<CTile*>(_pObj);
@@ -472,19 +523,32 @@ tLevelObjectData CEditorFileManager::CreateObjectData(CObject* _pObj, GROUP_TYPE
             objData.iSubType = (int)pTile->GetTileType();
             objData.iTileVisualType = (int)pTile->GetVisualType();
             objData.iCollisionType = (int)pTile->GetCollisionType();
+            
+            // íŠ¸ë¦¬ê±° íƒ€ì¼ì¸ ê²½ìš° ì¹´ë©”ë¼ ì¢Œí‘œ ì €ì¥
+            if (pTile->GetTileType() == OBJECT_TYPE::TILE_TRIGGER)
+            {
+                objData.vBossLockPos = pTile->GetBossLockPosition();
+            }
         }
     }
-    // ¸ó½ºÅÍÀÇ °æ¿ì ¸ó½ºÅÍ Å¸ÀÔ Á¤º¸ ÀúÀå
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ + ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     else if (objData.eGroupType == GROUP_TYPE::MONSTER)
     {
         objData.iSubType = (int)_pObj->GetType();
+
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        CMonster* pMonster = dynamic_cast<CMonster*>(_pObj);
+        if (pMonster)
+        {
+            objData.fDirection = pMonster->GetDirection();
+        }
     }
-    // ¾ÆÀÌÅÛÀÇ °æ¿ì ¾ÆÀÌÅÛ Å¸ÀÔ Á¤º¸ ÀúÀå
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     else if (objData.eGroupType == GROUP_TYPE::ITEM)
     {
         objData.iSubType = (int)_pObj->GetType();
     }
-    // Æ¯¼ö °´Ã¼ÀÇ °æ¿ì
+    // Æ¯ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½
     else if (objData.eGroupType == GROUP_TYPE::SPECIAL)
     {
         objData.iSubType = (int)_pObj->GetType();
@@ -493,11 +557,11 @@ tLevelObjectData CEditorFileManager::CreateObjectData(CObject* _pObj, GROUP_TYPE
     return objData;
 }
 
-// === ¾À °ü¸® ===
+// === ì”¬ ê´€ë¦¬ ===
 
 void CEditorFileManager::ClearScene()
 {
-    // ÇÃ·¹ÀÌ¾î¸¦ Á¦¿ÜÇÑ ¸ğµç °´Ã¼ »èÁ¦
+    // ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
         if (i == (UINT)GROUP_TYPE::PLAYER) continue;
@@ -511,22 +575,22 @@ void CEditorFileManager::ClearScene()
             }
         }
     }
-    // ¼±ÅÃ ÇØÁ¦
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     m_pEditorCore->DeselectObject();
 }
 
 void CEditorFileManager::CreateDefaultLevel()
 {
-    // ±âº» ·¹º§ »ı¼º (ºó ·¹º§)
+    // ï¿½âº» ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
     ClearScene();
 
-    // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡ ÃÊ±âÈ­ (»õ·Î¿î ¸Ê Å©±â¿¡ ¸Â°Ô)
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½Ê±ï¿½È­ (ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ Å©ï¿½â¿¡ ï¿½Â°ï¿½)
     m_pEditorCore->GetObjectManager()->SetPlayerSpawnPos(Vec2(320.f, 320.f));
 
-    // ±âº» ¹è°æ ¼³Á¤
+    // ï¿½âº» ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     m_pEditorCore->GetObjectManager()->SetCurrentBackgroundType(BACKGROUND_TYPE::BACKGROUND1);
 
-    // ±âº» Ä«¸Ş¶ó °æ°è ¼³Á¤ (»õ·Î¿î ¸Ê Å©±â)
+    // ï¿½âº» Ä«ï¿½Ş¶ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ Å©ï¿½ï¿½)
     CEditorCameraController* pCameraController = m_pEditorCore->GetCameraController();
     if (pCameraController)
     {
@@ -539,18 +603,18 @@ void CEditorFileManager::ApplyLevelBounds(const tLevelData& _levelData)
     CEditorCameraController* pCameraController = m_pEditorCore->GetCameraController();
     if (pCameraController)
     {
-        // ·ÎµåµÈ ·¹º§ÀÇ °æ°è Á¤º¸ Àû¿ë
+        // ï¿½Îµï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         pCameraController->SetCameraBounds(_levelData.vLevelBoundsMin, _levelData.vLevelBoundsMax);
 
-        // Ä«¸Ş¶ó¸¦ ·¹º§ °æ°è ³» ÀûÀıÇÑ À§Ä¡·Î ÀÌµ¿
+        // Ä«ï¿½Ş¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ìµï¿½
         Vec2 vSafePos = Vec2(
-            max(_levelData.vLevelBoundsMin.x + 480.f, 480.f), // È­¸é Àı¹İ °í·Á
-            min(_levelData.vLevelBoundsMax.y - 320.f, 320.f)  // È­¸é Àı¹İ °í·Á
+            max(_levelData.vLevelBoundsMin.x + 480.f, 480.f), // È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            min(_levelData.vLevelBoundsMax.y - 320.f, 320.f)  // È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         );
         pCameraController->SetCameraPosition(vSafePos);
     }
 
-    // Åø¹Ù¿¡ ¸Ê Å©±â Á¤º¸ ¾÷µ¥ÀÌÆ®
+    // ï¿½ï¿½ï¿½Ù¿ï¿½ ï¿½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
     if (m_pEditorCore->GetToolbar())
     {
         Vec2 vMapSize = _levelData.vLevelBoundsMax - _levelData.vLevelBoundsMin;
@@ -558,7 +622,7 @@ void CEditorFileManager::ApplyLevelBounds(const tLevelData& _levelData)
     }
 }
 
-// === ÆÄÀÏ °æ·Î À¯Æ¿¸®Æ¼ ===
+// === íŒŒì¼ ê²½ë¡œ ìœ í‹¸ë¦¬í‹° ===
 
 wstring CEditorFileManager::GetLevelDirectory() const
 {
@@ -577,7 +641,7 @@ bool CEditorFileManager::EnsureLevelDirectoryExists()
     return CreateDirectory(strLevelDir.c_str(), nullptr) || GetLastError() == ERROR_ALREADY_EXISTS;
 }
 
-// === ÆÄÀÏ ´ëÈ­»óÀÚ ÇïÆÛ ===
+// === íŒŒì¼ ëŒ€í™”ìƒì ì²˜ë¦¬ ===
 
 bool CEditorFileManager::ShowSaveDialog(wstring& _strFileName)
 {
@@ -585,7 +649,7 @@ bool CEditorFileManager::ShowSaveDialog(wstring& _strFileName)
     wchar_t szFile[260] = { 0 };
     wchar_t szFileTitle[260] = { 0 };
 
-    // ±âº» ÆÄÀÏ¸í ¼³Á¤
+    // ê¸°ë³¸ íŒŒì¼ëª… ì„¤ì •
     wcscpy_s(szFile, L"NewLevel.lvl");
 
     ZeroMemory(&ofn, sizeof(ofn));
@@ -598,7 +662,7 @@ bool CEditorFileManager::ShowSaveDialog(wstring& _strFileName)
     ofn.lpstrInitialDir = GetLevelDirectory().c_str();
     ofn.lpstrFilter = L"Kirby Level Files (*.lvl)\0*.lvl\0All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
-    ofn.lpstrTitle = L"·¹º§ ÆÄÀÏ ÀúÀå";
+    ofn.lpstrTitle = L"ë ˆë²¨ íŒŒì¼ ì €ì¥";
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = L"lvl";
 
@@ -606,7 +670,7 @@ bool CEditorFileManager::ShowSaveDialog(wstring& _strFileName)
     {
         _strFileName = szFileTitle;
 
-        // È®ÀåÀÚ Á¦°Å
+        // í™•ì¥ì ì œê±°
         size_t dotPos = _strFileName.rfind(L'.');
         if (dotPos != wstring::npos)
         {
@@ -635,14 +699,14 @@ bool CEditorFileManager::ShowOpenDialog(wstring& _strFileName)
     ofn.lpstrInitialDir = GetLevelDirectory().c_str();
     ofn.lpstrFilter = L"Kirby Level Files (*.lvl)\0*.lvl\0All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
-    ofn.lpstrTitle = L"·¹º§ ÆÄÀÏ ¿­±â";
+    ofn.lpstrTitle = L"ë ˆë²¨ íŒŒì¼ ì €ì¥";
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
     if (GetOpenFileName(&ofn))
     {
         _strFileName = szFileTitle;
 
-        // È®ÀåÀÚ Á¦°Å
+        // í™•ì¥ì ì œê±°
         size_t dotPos = _strFileName.rfind(L'.');
         if (dotPos != wstring::npos)
         {
@@ -655,7 +719,7 @@ bool CEditorFileManager::ShowOpenDialog(wstring& _strFileName)
     return false;
 }
 
-// === ÆÄÀÏ °ËÁõ ===
+// === íŒŒì¼ ê²€ì¦ ===
 
 bool CEditorFileManager::ValidateLevelFile(const wstring& _strFilePath)
 {
@@ -665,20 +729,20 @@ bool CEditorFileManager::ValidateLevelFile(const wstring& _strFilePath)
     if (!pFile)
         return false;
 
-    // ÃÖ¼ÒÇÑÀÇ ÆÄÀÏ Å©±â °Ë»ç
+    // ìµœì†Œí•œì˜ íŒŒì¼ í¬ê¸° ê²€ì‚¬
     fseek(pFile, 0, SEEK_END);
     long fileSize = ftell(pFile);
     fclose(pFile);
 
-    return fileSize > sizeof(int); // ÃÖ¼ÒÇÑ ¹öÀü Á¤º¸´Â ÀÖ¾î¾ß ÇÔ
+    return fileSize > sizeof(int); // ìµœì†Œí•œ ë²„ì „ ì •ë³´ëŠ” ìˆì–´ì•¼ í•¨
 }
 
 bool CEditorFileManager::IsValidVersion(int _iVersion) const
 {
-    return _iVersion == 1; // ÇöÀç´Â ¹öÀü 1¸¸ Áö¿ø
+    return _iVersion == 1; // í˜„ì¬ëŠ” ë²„ì „ 1ë§Œ ì§€ì›
 }
 
-// === ¸Ş½ÃÁö ½Ã½ºÅÛ ===
+// === ë©”ì‹œì§€ ì‹œìŠ¤í…œ ===
 
 void CEditorFileManager::ShowErrorMessage(const wstring& _strMessage)
 {

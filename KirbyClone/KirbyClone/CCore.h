@@ -5,50 +5,57 @@ class CCore
     SINGLE(CCore);
 
 public:
-    // === Á¤Àû »ó¼öµé ===
-    static constexpr int GAME_WIDTH = 960;      // °ÔÀÓº¸ÀÌ 4¹è (240*4)
-    static constexpr int GAME_HEIGHT = 640;     // °ÔÀÓº¸ÀÌ 4¹è (160*4)
-    static constexpr int TOOL_WIDTH = 1920;     // Åø ÇØ»óµµ (·¹º§ ¿¡µğÅÍ)
-    static constexpr int TOOL_HEIGHT = 1080;    // Åø ÇØ»óµµ (·¹º§ ¿¡µğÅÍ)
-    static constexpr float PIXEL_SCALE = 4.0f;  // ½ºÇÁ¶óÀÌÆ® 4¹è È®´ë
+    // === ê²Œì„ ìƒìˆ˜ë“¤ ===
+    static constexpr int GAME_WIDTH = 960;      // ê²Œì„ë³´ì´ í•´ìƒë„ 4ë°° (240*4)
+    static constexpr int GAME_HEIGHT = 640;     // ê²Œì„ë³´ì´ í•´ìƒë„ 4ë°° (160*4)
+    static constexpr int TOOL_WIDTH = 1920;     // íˆ´ í•´ìƒë„ (í’€ ìŠ¤í¬ë¦°)
+    static constexpr int TOOL_HEIGHT = 1080;    // íˆ´ í•´ìƒë„ (í’€ ìŠ¤í¬ë¦°)
+    static constexpr float PIXEL_SCALE = 4.0f;  // í”½ì…€ì•„íŠ¸ 4ë°° í™•ëŒ€
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === ë©”ì¸ ì§„ì…ì  í•¨ìˆ˜ë“¤ ===
     int init(HWND _hWnd, POINT _ptResolution);
     void progress();
 
 private:
-    void update();          // progress()¿¡¼­ È£Ãâ - ¹°Ã¼µéÀÇ º¯°æÁ¡ Ã¼Å©
-    void render();          // progress()¿¡¼­ È£Ãâ - È­¸é ·»´õ¸µ
+    void update();          // progress()ì—ì„œ í˜¸ì¶œ - ì „ì²´ê²Œì„ ë¡œì§ ì²´í¬
+    void render();          // progress()ì—ì„œ í˜¸ì¶œ - í™”ë©´ ë Œë”ë§
 
 public:
-    // === ÇØ»óµµ °ü¸® ===
-    void SetGameResolution();                           // °ÔÀÓ ÇØ»óµµ·Î º¯°æ (960x640)
-    void SetToolResolution();                           // Åø ÇØ»óµµ·Î º¯°æ (1920x1080)
+    // === í•´ìƒë„ ì„¤ì • ===
+    void SetGameResolution();                           // ê²Œì„ í•´ìƒë„ë¡œ ì„¤ì • (960x640)
+    void SetToolResolution();                           // íˆ´ í•´ìƒë„ë¡œ ì„¤ì • (1920x1080)
 
 private:
-    // === ÇØ»óµµ °ü¸® ³»ºÎ ±¸Çö ===
-    void ChangeResolution(int _iWidth, int _iHeight);   // ÇØ»óµµ º¯°æ
-    void RecreateBackBuffer();                          // ¹é¹öÆÛ Àç»ı¼º ºĞ¸®
-    void UpdateWindowSize();                            // À©µµ¿ì Å©±â Á¶Á¤ ºĞ¸®
+    // === í•´ìƒë„ ë³€ê²½ ë‚´ë¶€ í•¨ìˆ˜ ===
+    void ChangeResolution(int _iWidth, int _iHeight);   // í•´ìƒë„ ë³€ê²½
+    void RecreateBackBuffer();                          // ë°±ë²„í¼ ì¬ìƒì„± í•¨ìˆ˜
+    void UpdateWindowSize();                            // ìœˆë„ìš° í¬ê¸° ë³€ê²½ í•¨ìˆ˜
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     HDC GetMainDC() const { return m_hDC; }
     HWND GetMainHwnd() const { return m_hWnd; }
     Vec2 GetResolution() const { return Vec2((float)m_ptResolution.x, (float)m_ptResolution.y); }
 
-    // === Á¤Àû À¯Æ¿¸®Æ¼ ÇÔ¼öµé ===
+    // === ì •ì  ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ë“¤ ===
     static float GetPixelScale() { return PIXEL_SCALE; }
     static Vec2 GetGameBoyResolution() { return Vec2(160.f, 144.f); }
+    
+    // === ë””ë²„ê·¸ ê°€ì‹œì„± í† ê¸€ ===
+    static bool IsDebugVisualsVisible() { return s_bShowDebugVisuals; }
+    static void ToggleDebugVisuals() { s_bShowDebugVisuals = !s_bShowDebugVisuals; }
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    HWND    m_hWnd;         // ¸ŞÀÎ À©µµ¿ì ÇÚµé
-    POINT   m_ptResolution; // ¸ŞÀÎ À©µµ¿ì ÇØ»óµµ
-    HDC     m_hDC;          // ¸ŞÀÎ À©µµ¿ì¿¡ Draw ÇÒ DC
+    // === ìœˆë„ìš° ë³€ìˆ˜ë“¤ ===
+    HWND    m_hWnd;         // ë©”ì¸ ìœˆë„ìš° í•¸ë“¤
+    POINT   m_ptResolution; // ë©”ì¸ ìœˆë„ìš° í•´ìƒë„
+    HDC     m_hDC;          // ë©”ì¸ ìœˆë„ìš°ì— Draw í•  DC
 
-    // ´õºí ¹öÆÛ¸µ¿ë
-    HBITMAP m_hBit;         // ¹é¹öÆÛ¿ë ºñÆ®¸Ê (È­¸é Å©±â¿Í µ¿ÀÏ)
-    HDC     m_memDC;        // ¹é¹öÆÛ¿ë ¸Ş¸ğ¸® DC (¿ÀÇÁ½ºÅ©¸° ·»´õ¸µ)
+    // ë”ë¸” ë²„í¼ë§ìš©
+    HBITMAP m_hBit;         // ë°±ë²„í¼ìš© ë¹„íŠ¸ë§µ (í™”ë©´ í¬ê¸°ì™€ ë™ì¼)
+    HDC     m_memDC;        // ë°±ë²„í¼ìš© ë©”ëª¨ë¦¬ DC (ë”ë¸”ë²„í¼ë§ í•µì‹¬)
+    
+    // === ì •ì  ë©¤ë²„ ë³€ìˆ˜ ===
+    static bool s_bShowDebugVisuals; // ë””ë²„ê·¸ ì‹œê° ìš”ì†Œ í‘œì‹œ ì—¬ë¶€
 };

@@ -221,6 +221,8 @@ const char* CPlayerStateTransitionTable::PlayerStateToString(PLAYER_STATE state)
     case PLAYER_STATE::MOUTHFUL_JUMP:     return "MOUTHFUL_JUMP";
     case PLAYER_STATE::MOUTHFUL_FALL:     return "MOUTHFUL_FALL";
     case PLAYER_STATE::MOUTHFUL_DAMAGE:   return "MOUTHFUL_DAMAGE";
+    case PLAYER_STATE::ATTACK:            return "ATTACK";
+    case PLAYER_STATE::ATTACK_HOLD:       return "ATTACK_HOLD";
     case PLAYER_STATE::END:               return "END";
     default:                              return "UNKNOWN";
     }

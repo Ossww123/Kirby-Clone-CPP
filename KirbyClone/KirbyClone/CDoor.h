@@ -1,7 +1,9 @@
 #pragma once
 #include "CSpecialObject.h"
 
-// CSpecialObject¸¦ »ó¼Ó¹Ş´Â ¹® Å¬·¡½º
+class CAnimator;
+
+// CSpecialObjectë¥¼ ìƒì†ë°›ëŠ” ë¬¸ í´ë˜ìŠ¤
 class CDoor : public CSpecialObject
 {
 public:
@@ -9,43 +11,43 @@ public:
     virtual ~CDoor();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === ë©”ì¸ ì§„ì…ì  í•¨ìˆ˜ë“¤ ===
     void Update() override;
     void Render(HDC _dc) override;
 
 public:
-    // === Ãæµ¹ Ã³¸® ===
+    // === ì¶©ëŒ ì²˜ë¦¬ ===
     void OnCollisionEnter(CCollider* _pOther) override;
     void OnCollisionExit(CCollider* _pOther) override;
 
 private:
-    // === »óÈ£ÀÛ¿ë ½Ã½ºÅÛ ===
+    // === ìƒí˜¸ì‘ìš© ì‹œìŠ¤í…œ ===
     void CheckPlayerInteraction();
 
-    // === ¹® ÀüÈ¯ Ã³¸® ===
+    // === ì”¬ ì „í™˜ ì²˜ë¦¬ ===
     void ProcessDoorTransition();
 
 private:
-    // === ·»´õ¸µ ½Ã½ºÅÛ ===
+    // === ë Œë”ë§ ì‹œìŠ¤í…œ ===
     void RenderDoorVisual(HDC _dc);
     void RenderInteractionUI(HDC _dc);
 
 public:
-    // === Setter ÇÔ¼öµé ===
+    // === Setter í•¨ìˆ˜ë“¤ ===
     void SetTargetScene(SCENE_TYPE _eScene) { m_eTargetScene = _eScene; }
     void SetTargetPosition(Vec2 _vPos) { m_vTargetPosition = _vPos; }
 
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     SCENE_TYPE GetTargetScene() const { return m_eTargetScene; }
     Vec2 GetTargetPosition() const { return m_vTargetPosition; }
     bool CanInteract() const { return m_bCanInteract; }
 
 private:
-    // === ¹® ÀÌµ¿ Á¤º¸ ===
-    SCENE_TYPE      m_eTargetScene;         // ÀÌµ¿ÇÒ ¾À
-    Vec2            m_vTargetPosition;      // ¸ñÇ¥ ¾À¿¡¼­ÀÇ ÇÃ·¹ÀÌ¾î À§Ä¡
+    // === ì”¬ ì´ë™ ì •ë³´ ===
+    SCENE_TYPE      m_eTargetScene;         // ì´ë™í•  ì”¬
+    Vec2            m_vTargetPosition;      // ëª©í‘œ ì”¬ì—ì„œì˜ í”Œë ˆì´ì–´ ìœ„ì¹˜
 
-    // === »óÈ£ÀÛ¿ë »óÅÂ ===
-    bool            m_bPlayerNear;          // ÇÃ·¹ÀÌ¾î°¡ ±ÙÃ³¿¡ ÀÖ´ÂÁö
-    bool            m_bCanInteract;         // »óÈ£ÀÛ¿ë °¡´ÉÇÑÁö
+    // === ìƒí˜¸ì‘ìš© ìƒíƒœ ===
+    bool            m_bPlayerNear;          // í”Œë ˆì´ì–´ ê·¼ì²˜ì— ìˆëŠ”ì§€
+    bool            m_bCanInteract;         // ìƒí˜¸ì‘ìš© ê°€ëŠ¥í•œì§€
 };

@@ -37,6 +37,7 @@ public:
     virtual void Move() = 0;                    // 이동 패턴 (순수 가상)
     virtual bool CanBeInhaled() const = 0;      // 빨아들임 가능 여부 (순수 가상)
     virtual bool HasAttack() const { return false; }   // 공격 가능 여부
+    virtual bool IsBoss() const { return false; }      // 보스 여부 (기본: false)
 
 protected:
     // === 애니메이션 시스템 (자식 클래스에서 사용) ===
@@ -55,6 +56,15 @@ public:
     // === 액션 함수들 ===
     virtual void TakeDamage();
     void TurnAround();
+    
+    // === 방향 관련 함수들 ===
+    bool IsFacingRight() const { return m_iDir > 0; }
+    void SetDirection(int _iDir) { m_iDir = _iDir; }
+    int GetDirection() const { return m_iDir; }
+    
+    // === 에디터 관련 함수들 ===
+    void SetEditorMode(bool _bEditorMode);
+    bool IsInEditorMode() const { return m_bEditorMode; }
 
 protected:
     // === 공통 이동 함수들 (자식 클래스에서 사용) ===
@@ -79,11 +89,13 @@ protected:
     virtual void UpdateBeingInhaled();
     virtual void UpdateAttackReady();
     virtual void UpdateAttack();
+    virtual void UpdateEditorIdle();  // 에디터 전용 IDLE 상태
 
 public:
     // === 충돌 체크 유틸리티 ===
     bool CheckWallAhead();
     bool CheckGroundAhead();
+    void CheckStageBounds();                   // 스테이지 경계 체크
 
 protected:
     // === 애니메이션 매핑 (자식 클래스에서 설정) ===
@@ -108,4 +120,7 @@ protected:
 
     // === 공통 텍스처 ===
     CTexture* m_pEnemyTex;      // enemies.bmp 텍스처
+    
+    // === 에디터 관련 ===
+    bool    m_bEditorMode;      // 에디터 모드 여부
 };

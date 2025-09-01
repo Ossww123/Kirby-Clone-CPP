@@ -14,392 +14,441 @@
 #include "CStageMgr.h"
 #include "CObject.h"
 #include "CDoor.h"
+#include "CMonster.h"
+#include "CTile.h"
 
-CEditorUI::CEditorUI()
-    : m_pEditorCore(nullptr)
-    , m_pScene(nullptr)
+CEditorUI::CEditorUI ( )
+    : m_pEditorCore ( nullptr )
+    , m_pScene ( nullptr )
 {
 }
 
-CEditorUI::~CEditorUI()
+CEditorUI::~CEditorUI ( )
 {
 }
 
-void CEditorUI::Initialize(CEditorCore* _pCore, CScene* _pScene)
+void CEditorUI::Initialize ( CEditorCore* _pCore , CScene* _pScene )
 {
     m_pEditorCore = _pCore;
     m_pScene = _pScene;
 
-    // È­¸é ÇØ»óµµ °¡Á®¿À±â
+    // í™”ë©´ í•´ìƒë„ ê°€ì ¸ì˜¤ê¸°
     RECT screenRect;
-    GetClientRect(CCore::GetInst()->GetMainHwnd(), &screenRect);
+    GetClientRect ( CCore::GetInst ( )->GetMainHwnd ( ) , &screenRect );
     int screenWidth = screenRect.right - screenRect.left;
 
-    // ¿ÀºêÁ§Æ® ÆÈ·¹Æ® ·¹ÀÌ¾Æ¿ô ¼³Á¤ - ¿À¸¥ÂÊ¿¡ ¿ÏÀüÈ÷ ºÙÀÌ±â
-    m_iPaletteWidth = 280;           // ÆĞ³Î ³Êºñ
-    m_iPaletteHeight = 600;          // ÆĞ³Î ³ôÀÌ
-    m_iPaletteX = screenWidth - m_iPaletteWidth - 10;  // È­¸é ¿À¸¥ÂÊ ³¡¿¡¼­ 10px ¶³¾îÁø À§Ä¡
-    m_iPaletteY = 60;                // Åø¹Ù ¾Æ·¡
-    m_iItemSize = 60;                // ¾ÆÀÌÅÛ Å©±â
-    m_iItemPadding = 8;              // ¾ÆÀÌÅÛ °£°İ
-    m_iItemsPerRow = 4;              // ÇÑ ÁÙ¿¡ 4°³¾¿
+    // ì˜¤ë¸Œì íŠ¸ íŒ”ë ˆíŠ¸ ë ˆì´ì•„ì›ƒ ì„¤ì • - í™”ë©´ ì˜¤ë¥¸ìª½ì— ê³ ì •ëœ ì‚¬ì´ì¦ˆ
+    m_iPaletteWidth = 280;           // íŒ¨ë„ ë„ˆë¹„
+    m_iPaletteHeight = 600;          // íŒ¨ë„ ë†’ì´
+    m_iPaletteX = screenWidth - m_iPaletteWidth - 10;  // í™”ë©´ ì˜¤ë¥¸ìª½ì—ì„œ 10px ì—¬ë°±ì„ ë‘ê³  ë°°ì¹˜
+    m_iPaletteY = 60;                // ìƒë‹¨ ì•„ë˜
+    m_iItemSize = 60;                // ì•„ì´í…œ í¬ê¸°
+    m_iItemPadding = 8;              // ì•„ì´í…œ ê°„ê²©
+    m_iItemsPerRow = 4;              // í•œ ì¤„ì— 4ê°œì”©
     m_iScrollOffset = 0;
 
-    // ¼Ó¼º ÆĞ³Î ·¹ÀÌ¾Æ¿ô ¼³Á¤ - ÆÈ·¹Æ® ¹Ù·Î ¾Æ·¡
-    m_iPropertyPanelX = m_iPaletteX;                           // ÆÈ·¹Æ®¿Í °°Àº X
-    m_iPropertyPanelY = m_iPaletteY + m_iPaletteHeight + 10;   // ÆÈ·¹Æ® ¾Æ·¡ 10px °£°İ
-    m_iPropertyPanelWidth = m_iPaletteWidth;                   // ÆÈ·¹Æ®¿Í °°Àº ³Êºñ
+    // ì†ì„± íŒ¨ë„ ë ˆì´ì•„ì›ƒ ì„¤ì • - íŒ”ë ˆíŠ¸ ë°”ë¡œ ì•„ë˜
+    m_iPropertyPanelX = m_iPaletteX;                           // íŒ”ë ˆíŠ¸ì™€ ê°™ì€ X
+    m_iPropertyPanelY = m_iPaletteY + m_iPaletteHeight + 10;   // íŒ”ë ˆíŠ¸ ì•„ë˜ 10px ê°„ê²©
+    m_iPropertyPanelWidth = m_iPaletteWidth;                   // íŒ”ë ˆíŠ¸ì™€ ê°™ì€ ë„ˆë¹„
     m_iPropertyPanelHeight = 250;
 
-    CalculatePaletteLayout();
+    CalculatePaletteLayout ( );
 }
 
-void CEditorUI::Render(HDC _dc)
+void CEditorUI::Render ( HDC _dc )
 {
-    if (!m_pEditorCore->IsShowUI())
+    if ( !m_pEditorCore->IsShowUI ( ) )
         return;
 
-    RenderObjectPalette(_dc);
-    RenderPropertyPanel(_dc);
+    RenderObjectPalette ( _dc );
+    RenderPropertyPanel ( _dc );
 }
 
-void CEditorUI::SetupTextStyle(HDC _dc, COLORREF color)
+void CEditorUI::SetupTextStyle ( HDC _dc , COLORREF color )
 {
-    SetTextColor(_dc, color);
-    SetBkMode(_dc, TRANSPARENT);
+    SetTextColor ( _dc , color );
+    SetBkMode ( _dc , TRANSPARENT );
 }
 
-void CEditorUI::RenderText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color)
+void CEditorUI::RenderText ( HDC _dc , int x , int y , const wchar_t* text , COLORREF color )
 {
-    SetTextColor(_dc, color);
-    TextOut(_dc, x, y, text, (int)wcslen(text));
+    SetTextColor ( _dc , color );
+    TextOut ( _dc , x , y , text , ( int ) wcslen ( text ) );
 }
 
-void CEditorUI::RenderBoldText(HDC _dc, int x, int y, const wchar_t* text, COLORREF color)
+void CEditorUI::RenderBoldText ( HDC _dc , int x , int y , const wchar_t* text , COLORREF color )
 {
-    HFONT hFont = CreateUIFont(14, true);
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+    HFONT hFont = CreateUIFont ( 14 , true );
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
 
-    SetTextColor(_dc, color);
-    TextOut(_dc, x, y, text, (int)wcslen(text));
+    SetTextColor ( _dc , color );
+    TextOut ( _dc , x , y , text , ( int ) wcslen ( text ) );
 
-    SelectObject(_dc, hOldFont);
-    DeleteObject(hFont);
+    SelectObject ( _dc , hOldFont );
+    DeleteObject ( hFont );
 }
 
-int CEditorUI::GetPaletteItemAt(Vec2 vMousePos) const
+int CEditorUI::GetPaletteItemAt ( Vec2 vMousePos ) const
 {
     int startY = m_iPaletteY + 50;
-    int relativeX = (int)vMousePos.x - (m_iPaletteX + 10);
-    int relativeY = (int)vMousePos.y - startY + m_iScrollOffset;
+    int relativeX = ( int ) vMousePos.x - ( m_iPaletteX + 10 );
+    int relativeY = ( int ) vMousePos.y - startY + m_iScrollOffset;
 
-    if (relativeX < 0 || relativeY < 0)
+    if ( relativeX < 0 || relativeY < 0 )
         return -1;
 
-    int col = relativeX / (m_iItemSize + m_iItemPadding);
-    int row = relativeY / (m_iItemSize + m_iItemPadding);
+    int col = relativeX / ( m_iItemSize + m_iItemPadding );
+    int row = relativeY / ( m_iItemSize + m_iItemPadding );
 
-    if (col >= m_iItemsPerRow)
+    if ( col >= m_iItemsPerRow )
         return -1;
 
     int itemIndex = row * m_iItemsPerRow + col;
     return itemIndex;
 }
 
-bool CEditorUI::IsInPaletteArea(Vec2 vMousePos) const
+bool CEditorUI::IsInPaletteArea ( Vec2 vMousePos ) const
 {
     return vMousePos.x >= m_iPaletteX && vMousePos.x <= m_iPaletteX + m_iPaletteWidth &&
         vMousePos.y >= m_iPaletteY && vMousePos.y <= m_iPaletteY + m_iPaletteHeight;
 }
 
-void CEditorUI::RenderPropertyPanel(HDC _dc)
+void CEditorUI::RenderPropertyPanel ( HDC _dc )
 {
-    // ¹è°æ ·»´õ¸µ
-    RenderPropertyPanelBackground(_dc);
+    // ë°°ê²½ ê·¸ë¦¬ê¸°
+    RenderPropertyPanelBackground ( _dc );
 
-    // Çì´õ ·»´õ¸µ
-    RenderPropertyPanelHeader(_dc);
+    // í—¤ë” ê·¸ë¦¬ê¸°
+    RenderPropertyPanelHeader ( _dc );
 
-    // ¼±ÅÃµÈ ¿ÀºêÁ§Æ®¿¡ µû¸¥ ¼Ó¼º ·»´õ¸µ
-    CObject* pSelected = m_pEditorCore->GetSelectedObject();
-    if (!pSelected)
+    // ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ì— ë”°ë¥¸ ì†ì„± íŒ¨ë„ë“¤
+    CObject* pSelected = m_pEditorCore->GetSelectedObject ( );
+    if ( !pSelected )
     {
-        RenderNoSelection(_dc);
+        RenderNoSelection ( _dc );
         return;
     }
 
-    // ¿ÀºêÁ§Æ® Å¸ÀÔ¿¡ µû¸¥ ¼Ó¼º ÆĞ³Î
-    if (pSelected->GetType() == OBJECT_TYPE::OBJECT_DOOR)
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì…ì— ë”°ë¥¸ ì†ì„± íŒ¨ë„
+    if ( pSelected->GetType ( ) == OBJECT_TYPE::OBJECT_DOOR )
     {
-        CDoor* pDoor = dynamic_cast<CDoor*>(pSelected);
-        if (pDoor)
+        CDoor* pDoor = dynamic_cast< CDoor* >( pSelected );
+        if ( pDoor )
         {
-            RenderDoorProperties(_dc, pDoor);
+            RenderDoorProperties ( _dc , pDoor );
         }
     }
-    // ´Ù¸¥ ¿ÀºêÁ§Æ® Å¸ÀÔµéµµ ÃßÈÄ Ãß°¡ °¡´É
+    // ëª¬ìŠ¤í„° íƒ€ì…ë“¤ ì²˜ë¦¬
+    else if ( pSelected->GetType ( ) >= OBJECT_TYPE::MONSTER_WADDLE_DEE &&
+             pSelected->GetType ( ) <= OBJECT_TYPE::MONSTER_WHISPY_WOODS )
+    {
+        CMonster* pMonster = dynamic_cast< CMonster* >( pSelected );
+        if ( pMonster )
+        {
+            RenderMonsterProperties ( _dc , pMonster );
+        }
+    }
+    // íƒ€ì¼ íƒ€ì…ë“¤ ì²˜ë¦¬
+    else if ( pSelected->GetType ( ) == OBJECT_TYPE::TILE_GROUND ||
+             pSelected->GetType ( ) == OBJECT_TYPE::TILE_TRIGGER )
+    {
+        CTile* pTile = dynamic_cast< CTile* >( pSelected );
+        if ( pTile )
+        {
+            RenderTileProperties ( _dc , pTile );
+        }
+    }
+    // ë‹¤ë¥¸ ì˜¤ë¸Œì íŠ¸ íƒ€ì…ë“¤ë„ ì—¬ê¸° ì¶”ê°€ ì˜ˆì •
 }
 
-bool CEditorUI::HandlePropertyPanelClick(Vec2 vMousePos)
+bool CEditorUI::HandlePropertyPanelClick ( Vec2 vMousePos )
 {
+    CObject* pSelected = m_pEditorCore->GetSelectedObject ( );
+    if ( !pSelected )
+        return false;
+
+    // ëª¬ìŠ¤í„° ì†ì„± í¸ì§‘
+    if ( pSelected->GetType ( ) >= OBJECT_TYPE::MONSTER_WADDLE_DEE &&
+        pSelected->GetType ( ) <= OBJECT_TYPE::MONSTER_WHISPY_WOODS )
+    {
+        CMonster* pMonster = dynamic_cast< CMonster* >( pSelected );
+        if ( pMonster )
+        {
+            return HandleMonsterPropertyEdit ( pMonster , vMousePos );
+        }
+    }
+
+    // íƒ€ì¼ ì†ì„± í¸ì§‘
+    if ( pSelected->GetType ( ) == OBJECT_TYPE::TILE_GROUND ||
+        pSelected->GetType ( ) == OBJECT_TYPE::TILE_TRIGGER )
+    {
+        CTile* pTile = dynamic_cast< CTile* >( pSelected );
+        if ( pTile )
+        {
+            return HandleTilePropertyEdit ( pTile , vMousePos );
+        }
+    }
+
     return false;
 }
 
-bool CEditorUI::IsInPropertyPanelArea(Vec2 vMousePos) const
+bool CEditorUI::IsInPropertyPanelArea ( Vec2 vMousePos ) const
 {
-    return false;
+    return vMousePos.x >= m_iPropertyPanelX && vMousePos.x <= m_iPropertyPanelX + m_iPropertyPanelWidth &&
+           vMousePos.y >= m_iPropertyPanelY && vMousePos.y <= m_iPropertyPanelY + m_iPropertyPanelHeight;
 }
 
-void CEditorUI::RenderPropertyPanelBackground(HDC _dc)
+void CEditorUI::RenderPropertyPanelBackground ( HDC _dc )
 {
-    // ¹è°æ»ö (ÆÈ·¹Æ®¿Í µ¿ÀÏÇÑ ½ºÅ¸ÀÏ)
-    HBRUSH hBrush = CreateSolidBrush(RGB(40, 40, 40));
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+    // ë°°ê²½ (íŒ”ë ˆíŠ¸ì™€ ë™ì¼í•œ ìŠ¤íƒ€ì¼)
+    HBRUSH hBrush = CreateSolidBrush ( RGB ( 40 , 40 , 40 ) );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
 
-    Rectangle(_dc,
-        m_iPropertyPanelX,
-        m_iPropertyPanelY,
-        m_iPropertyPanelX + m_iPropertyPanelWidth,
-        m_iPropertyPanelY + m_iPropertyPanelHeight);
+    Rectangle ( _dc ,
+        m_iPropertyPanelX ,
+        m_iPropertyPanelY ,
+        m_iPropertyPanelX + m_iPropertyPanelWidth ,
+        m_iPropertyPanelY + m_iPropertyPanelHeight );
 
-    // Å×µÎ¸®
-    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
+    // í…Œë‘ë¦¬
+    HPEN hPen = CreatePen ( PS_SOLID , 2 , RGB ( 100 , 100 , 100 ) );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
 
-    HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    HBRUSH hOldHollowBrush = (HBRUSH)SelectObject(_dc, hHollowBrush);
+    HBRUSH hHollowBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+    HBRUSH hOldHollowBrush = ( HBRUSH ) SelectObject ( _dc , hHollowBrush );
 
-    Rectangle(_dc,
-        m_iPropertyPanelX,
-        m_iPropertyPanelY,
-        m_iPropertyPanelX + m_iPropertyPanelWidth,
-        m_iPropertyPanelY + m_iPropertyPanelHeight);
+    Rectangle ( _dc ,
+        m_iPropertyPanelX ,
+        m_iPropertyPanelY ,
+        m_iPropertyPanelX + m_iPropertyPanelWidth ,
+        m_iPropertyPanelY + m_iPropertyPanelHeight );
 
-    SelectObject(_dc, hOldBrush);
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldHollowBrush);
-    DeleteObject(hBrush);
-    DeleteObject(hPen);
+    SelectObject ( _dc , hOldBrush );
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldHollowBrush );
+    DeleteObject ( hBrush );
+    DeleteObject ( hPen );
 }
 
-void CEditorUI::RenderPropertyPanelHeader(HDC _dc)
+void CEditorUI::RenderPropertyPanelHeader ( HDC _dc )
 {
-    // Çì´õ ¹è°æ
-    HBRUSH hHeaderBrush = CreateSolidBrush(RGB(60, 60, 60));
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hHeaderBrush);
+    // í—¤ë” ë°°ê²½
+    HBRUSH hHeaderBrush = CreateSolidBrush ( RGB ( 60 , 60 , 60 ) );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hHeaderBrush );
 
-    Rectangle(_dc,
-        m_iPropertyPanelX,
-        m_iPropertyPanelY,
-        m_iPropertyPanelX + m_iPropertyPanelWidth,
-        m_iPropertyPanelY + 30);
+    Rectangle ( _dc ,
+        m_iPropertyPanelX ,
+        m_iPropertyPanelY ,
+        m_iPropertyPanelX + m_iPropertyPanelWidth ,
+        m_iPropertyPanelY + 30 );
 
-    // Çì´õ ÅØ½ºÆ®
-    SetBkMode(_dc, TRANSPARENT);
-    SetTextColor(_dc, RGB(255, 255, 255));
+    // í—¤ë” í…ìŠ¤íŠ¸
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
 
-    HFONT hFont = CreateUIFont(14, true);
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+    HFONT hFont = CreateUIFont ( 14 , true );
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
 
-    TextOut(_dc, m_iPropertyPanelX + 10, m_iPropertyPanelY + 8, L"¼Ó¼º", 2);
+    TextOut ( _dc , m_iPropertyPanelX + 10 , m_iPropertyPanelY + 8 , L"Properties" , 10 );
 
-    SelectObject(_dc, hOldBrush);
-    SelectObject(_dc, hOldFont);
-    DeleteObject(hHeaderBrush);
-    DeleteObject(hFont);
+    SelectObject ( _dc , hOldBrush );
+    SelectObject ( _dc , hOldFont );
+    DeleteObject ( hHeaderBrush );
+    DeleteObject ( hFont );
 }
 
-void CEditorUI::RenderDoorProperties(HDC _dc, CDoor* _pDoor)
+void CEditorUI::RenderDoorProperties ( HDC _dc , CDoor* _pDoor )
 {
-    int currentY = m_iPropertyPanelY + 40;  // Çì´õ ¾Æ·¡ºÎÅÍ ½ÃÀÛ
+    int currentY = m_iPropertyPanelY + 40;  // í—¤ë” ì•„ë˜ë¶€í„° ì‹œì‘
     int leftMargin = m_iPropertyPanelX + 10;
     int lineHeight = 20;
 
-    SetBkMode(_dc, TRANSPARENT);
-    SetTextColor(_dc, RGB(255, 255, 255));
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
 
-    // ¿ÀºêÁ§Æ® Å¸ÀÔ Ç¥½Ã
-    RenderBoldText(_dc, leftMargin, currentY, L"¹® ¿ÀºêÁ§Æ®", RGB(255, 255, 100));
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì… í‘œì‹œ
+    RenderBoldText ( _dc , leftMargin , currentY , L"Door Object" , RGB ( 255 , 255 , 100 ) );
     currentY += lineHeight + 5;
 
-    // ±¸ºĞ¼±
-    HPEN hLinePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hLinePen);
-    MoveToEx(_dc, leftMargin, currentY, NULL);
-    LineTo(_dc, m_iPropertyPanelX + m_iPropertyPanelWidth - 10, currentY);
+    // êµ¬ë¶„ì„ 
+    HPEN hLinePen = CreatePen ( PS_SOLID , 1 , RGB ( 100 , 100 , 100 ) );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hLinePen );
+    MoveToEx ( _dc , leftMargin , currentY , NULL );
+    LineTo ( _dc , m_iPropertyPanelX + m_iPropertyPanelWidth - 10 , currentY );
     currentY += 10;
 
-    // ÇöÀç ¼³Á¤ Á¤º¸
-    SetTextColor(_dc, RGB(200, 200, 200));
-    TextOut(_dc, leftMargin, currentY, L"ÇöÀç ¼³Á¤:", 5);
+    // í˜„ì¬ ì„¤ì • í‘œì‹œ
+    SetTextColor ( _dc , RGB ( 200 , 200 , 200 ) );
+    TextOut ( _dc , leftMargin , currentY , L"Current Settings:" , 17 );
     currentY += lineHeight;
 
-    // ¸ñÇ¥ ¾À Á¤º¸
-    SCENE_TYPE targetScene = _pDoor->GetTargetScene();
-    wchar_t szSceneInfo[64];
-    swprintf_s(szSceneInfo, L"  ¾À: %s", GetSceneName(targetScene));
-    SetTextColor(_dc, RGB(255, 255, 255));
-    TextOut(_dc, leftMargin, currentY, szSceneInfo, (int)wcslen(szSceneInfo));
+    // ëª©í‘œ ì”¬ ì •ë³´
+    SCENE_TYPE targetScene = _pDoor->GetTargetScene ( );
+    wchar_t szSceneInfo[ 64 ];
+    swprintf_s ( szSceneInfo , L"  Scene: %s" , GetSceneName ( targetScene ) );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+    TextOut ( _dc , leftMargin , currentY , szSceneInfo , ( int ) wcslen ( szSceneInfo ) );
     currentY += lineHeight;
 
-    // ¸ñÇ¥ À§Ä¡ Á¤º¸
-    Vec2 targetPos = _pDoor->GetTargetPosition();
-    wchar_t szPosInfo[64];
-    swprintf_s(szPosInfo, L"  À§Ä¡: (%.0f, %.0f)", targetPos.x, targetPos.y);
-    TextOut(_dc, leftMargin, currentY, szPosInfo, (int)wcslen(szPosInfo));
+    // ëª©í‘œ ìœ„ì¹˜ ì •ë³´
+    Vec2 targetPos = _pDoor->GetTargetPosition ( );
+    wchar_t szPosInfo[ 64 ];
+    swprintf_s ( szPosInfo , L"  Position: (%.0f, %.0f)" , targetPos.x , targetPos.y );
+    TextOut ( _dc , leftMargin , currentY , szPosInfo , ( int ) wcslen ( szPosInfo ) );
     currentY += lineHeight + 10;
 
-    // ÆíÁı °¡ÀÌµå
-    SetTextColor(_dc, RGB(200, 200, 100));
-    TextOut(_dc, leftMargin, currentY, L"ÆíÁı ¹æ¹ı:", 5);
+    // ì¡°ì‘ ê°€ì´ë“œ
+    SetTextColor ( _dc , RGB ( 200 , 200 , 100 ) );
+    TextOut ( _dc , leftMargin , currentY , L"Controls:" , 9 );
     currentY += lineHeight;
 
-    SetTextColor(_dc, RGB(180, 180, 180));
+    SetTextColor ( _dc , RGB ( 180 , 180 , 180 ) );
 
-    // ¾À º¯°æ ¾È³»
-    TextOut(_dc, leftMargin, currentY, L"¾À º¯°æ:", 4);
+    // ì”¬ ë³€ê²½ ì•ˆë‚´
+    TextOut ( _dc , leftMargin , currentY , L"Scene Change:" , 13 );
     currentY += lineHeight - 5;
-    TextOut(_dc, leftMargin + 10, currentY, L"[1] ½ºÅ×ÀÌÁö 1", 10);
+    TextOut ( _dc , leftMargin + 10 , currentY , L"[1] Stage 1" , 11 );
     currentY += lineHeight - 5;
-    TextOut(_dc, leftMargin + 10, currentY, L"[2] ½ºÅ×ÀÌÁö 2", 10);
+    TextOut ( _dc , leftMargin + 10 , currentY , L"[2] Stage 2" , 11 );
     currentY += lineHeight;
 
-    // À§Ä¡ Á¶Á¤ ¾È³»
-    TextOut(_dc, leftMargin, currentY, L"À§Ä¡ Á¶Á¤:", 5);
+    // ìœ„ì¹˜ ì¡°ì‘ ì•ˆë‚´
+    TextOut ( _dc , leftMargin , currentY , L"Position Control:" , 17 );
     currentY += lineHeight - 5;
-    TextOut(_dc, leftMargin + 10, currentY, L"[Q/W] ÁÂ/¿ì ÀÌµ¿", 11);
+    TextOut ( _dc , leftMargin + 10 , currentY , L"[Q/W] Left/Right Move" , 20 );
     currentY += lineHeight - 5;
-    TextOut(_dc, leftMargin + 10, currentY, L"[A/S] À§/¾Æ·¡ ÀÌµ¿", 12);
+    TextOut ( _dc , leftMargin + 10 , currentY , L"[A/S] Up/Down Move" , 17 );
     currentY += lineHeight - 5;
-    TextOut(_dc, leftMargin + 10, currentY, L"[R] ±âº» À§Ä¡·Î ¸®¼Â", 13);
+    TextOut ( _dc , leftMargin + 10 , currentY , L"[R] Reset to Default Position" , 29 );
 
-    SelectObject(_dc, hOldPen);
-    DeleteObject(hLinePen);
+    SelectObject ( _dc , hOldPen );
+    DeleteObject ( hLinePen );
 }
 
-void CEditorUI::RenderNoSelection(HDC _dc)
+void CEditorUI::RenderNoSelection ( HDC _dc )
 {
     int centerY = m_iPropertyPanelY + m_iPropertyPanelHeight / 2;
     int centerX = m_iPropertyPanelX + m_iPropertyPanelWidth / 2;
 
-    SetBkMode(_dc, TRANSPARENT);
-    SetTextColor(_dc, RGB(128, 128, 128));
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 128 , 128 , 128 ) );
 
-    // ÅØ½ºÆ® Áß¾Ó Á¤·ÄÀ» À§ÇÑ Å©±â °è»ê
-    const wchar_t* text = L"¿ÀºêÁ§Æ®¸¦ ¼±ÅÃÇÏ¼¼¿ä";
+    // í…ìŠ¤íŠ¸ ì¤‘ì•™ ì •ë ¬ì„ ìœ„í•œ í¬ê¸° ì¸¡ì •
+    const wchar_t* text = L"Select Object";
     SIZE textSize;
-    GetTextExtentPoint32(_dc, text, (int)wcslen(text), &textSize);
+    GetTextExtentPoint32 ( _dc , text , ( int ) wcslen ( text ) , &textSize );
 
-    TextOut(_dc,
-        centerX - textSize.cx / 2,
-        centerY - textSize.cy / 2,
-        text,
-        (int)wcslen(text));
+    TextOut ( _dc ,
+        centerX - textSize.cx / 2 ,
+        centerY - textSize.cy / 2 ,
+        text ,
+        ( int ) wcslen ( text ) );
 }
 
-bool CEditorUI::HandleDoorPropertyEdit(CDoor* _pDoor, Vec2 _vPos)
+bool CEditorUI::HandleDoorPropertyEdit ( CDoor* _pDoor , Vec2 _vPos )
 {
     return false;
 }
 
-void CEditorUI::RenderSceneDropdown(HDC _dc, SCENE_TYPE _currentScene, int _x, int _y, int _width, int _height)
+void CEditorUI::RenderSceneDropdown ( HDC _dc , SCENE_TYPE _currentScene , int _x , int _y , int _width , int _height )
 {
 }
 
-void CEditorUI::RenderInputField(HDC _dc, const wchar_t* _label, float _value, int _x, int _y, int _width)
+void CEditorUI::RenderInputField ( HDC _dc , const wchar_t* _label , float _value , int _x , int _y , int _width )
 {
 }
 
-const wchar_t* CEditorUI::GetSceneName(SCENE_TYPE _eScene) const
+const wchar_t* CEditorUI::GetSceneName ( SCENE_TYPE _eScene ) const
 {
-    switch (_eScene)
+    switch ( _eScene )
     {
-    case SCENE_TYPE::STAGE_01: return L"½ºÅ×ÀÌÁö 1";
-    case SCENE_TYPE::STAGE_02: return L"½ºÅ×ÀÌÁö 2";
-    case SCENE_TYPE::START: return L"½ÃÀÛ È­¸é";
-    default: return L"¾Ë ¼ö ¾øÀ½";
+    case SCENE_TYPE::STAGE_01: return L"Stage 1";
+    case SCENE_TYPE::STAGE_02: return L"Stage 2";
+    case SCENE_TYPE::START: return L"Start Screen";
+    default: return L"Unknown";
     }
 }
 
-void CEditorUI::CalculatePaletteLayout()
+void CEditorUI::CalculatePaletteLayout ( )
 {
-    // ½ºÅ©·Ñ ÃÖ´ë°ª °è»ê µî ·¹ÀÌ¾Æ¿ô °ü·Ã °è»ê
-    const vector<OBJECT_TYPE>& vecCategory = m_pEditorCore->GetObjectManager()->GetCurrentCategory();
-    int totalRows = ((int)vecCategory.size() + m_iItemsPerRow - 1) / m_iItemsPerRow;
-    int visibleRows = (m_iPaletteHeight - 60) / (m_iItemSize + m_iItemPadding);
-    m_iMaxScroll = max(0, (totalRows - visibleRows) * (m_iItemSize + m_iItemPadding));
+    // ìŠ¤í¬ë¡¤ ìµœëŒ“ê°’ ê³„ì‚° ë° ë ˆì´ì•„ì›ƒ ê°±ì‹  ë¡œì§
+    const vector<OBJECT_TYPE>& vecCategory = m_pEditorCore->GetObjectManager ( )->GetCurrentCategory ( );
+    int totalRows = ( ( int ) vecCategory.size ( ) + m_iItemsPerRow - 1 ) / m_iItemsPerRow;
+    int visibleRows = ( m_iPaletteHeight - 60 ) / ( m_iItemSize + m_iItemPadding );
+    m_iMaxScroll = max ( 0 , ( totalRows - visibleRows ) * ( m_iItemSize + m_iItemPadding ) );
 }
 
-void CEditorUI::RenderObjectPalette(HDC _dc)
+void CEditorUI::RenderObjectPalette ( HDC _dc )
 {
-    // ¹èÄ¡ ¸ğµå°¡ ¾Æ´Ï¸é ÆÈ·¹Æ® Ç¥½Ã ¾ÈÇÔ
-    EDITOR_MODE eMode = m_pEditorCore->GetCurrentMode();
-    if (eMode != EDITOR_MODE::PLACE_MONSTER &&
+    // ë°°ì¹˜ ëª¨ë“œê°€ ì•„ë‹ˆë©´ íŒ”ë ˆíŠ¸ í‘œì‹œ ì•ˆí•¨
+    EDITOR_MODE eMode = m_pEditorCore->GetCurrentMode ( );
+    if ( eMode != EDITOR_MODE::PLACE_MONSTER &&
         eMode != EDITOR_MODE::PLACE_ITEM &&
         eMode != EDITOR_MODE::PLACE_TILE &&
-        eMode != EDITOR_MODE::PLACE_SPECIAL)
+        eMode != EDITOR_MODE::PLACE_SPECIAL )
     {
         return;
     }
 
-    RenderPaletteBackground(_dc);
-    RenderPaletteHeader(_dc);
-    RenderPaletteItems(_dc);
+    RenderPaletteBackground ( _dc );
+    RenderPaletteHeader ( _dc );
+    RenderPaletteItems ( _dc );
 }
 
-bool CEditorUI::HandlePaletteClick(Vec2 vMousePos)
+bool CEditorUI::HandlePaletteClick ( Vec2 vMousePos )
 {
-    if (!IsInPaletteArea(vMousePos))
+    if ( !IsInPaletteArea ( vMousePos ) )
         return false;
 
-    EDITOR_MODE currentMode = m_pEditorCore->GetCurrentMode();
+    EDITOR_MODE currentMode = m_pEditorCore->GetCurrentMode ( );
 
-    // Stage Image ¸ğµåÀÎ °æ¿ì º°µµ Ã³¸®
-    if (currentMode == EDITOR_MODE::PLACE_STAGE)
+    // Stage Image ëª¨ë“œì¼ ë•ŒëŠ” ë³„ë„ ì²˜ë¦¬
+    if ( currentMode == EDITOR_MODE::PLACE_STAGE )
     {
-        return HandleStageImagePaletteClick(vMousePos);
+        return HandleStageImagePaletteClick ( vMousePos );
     }
 
-    // ±âÁ¸ °´Ã¼ ÆÈ·¹Æ® Å¬¸¯ Ã³¸®
-    int clickedIndex = GetPaletteItemAt(vMousePos);
-    if (clickedIndex >= 0)
+    // ì¼ë°˜ ì˜¤ë¸Œì íŠ¸ íŒ”ë ˆíŠ¸ í´ë¦­ ì²˜ë¦¬
+    int clickedIndex = GetPaletteItemAt ( vMousePos );
+    if ( clickedIndex >= 0 )
     {
-        m_pEditorCore->GetObjectManager()->SetCurrentSubType(clickedIndex);
+        m_pEditorCore->GetObjectManager ( )->SetCurrentSubType ( clickedIndex );
         return true;
     }
 
     return false;
 }
 
-bool CEditorUI::HandleStageImagePaletteClick(Vec2 vMousePos)
+bool CEditorUI::HandleStageImagePaletteClick ( Vec2 vMousePos )
 {
-    // »ç¿ë °¡´ÉÇÑ ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Å¸ÀÔµé °¡Á®¿À±â
-    vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst()->GetAvailableStageImageTypes();
+    // ì‚¬ìš© ê°€ëŠ¥í•œ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ íƒ€ì…ë“¤ ê°€ì ¸ì˜¤ê¸°
+    vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst ( )->GetAvailableStageImageTypes ( );
 
-    if (availableTypes.empty())
+    if ( availableTypes.empty ( ) )
         return false;
 
-    // Å¬¸¯µÈ Ç×¸ñ °è»ê
-    int relativeX = (int)vMousePos.x - (m_iPaletteX + 10);
-    int relativeY = (int)vMousePos.y - (m_iPaletteY + 50) + m_iScrollOffset;
+    // í´ë¦­í•œ ì•„ì´í…œ ì¸ë±ìŠ¤
+    int relativeX = ( int ) vMousePos.x - ( m_iPaletteX + 10 );
+    int relativeY = ( int ) vMousePos.y - ( m_iPaletteY + 50 ) + m_iScrollOffset;
 
-    if (relativeX < 0 || relativeY < 0)
+    if ( relativeX < 0 || relativeY < 0 )
         return false;
 
-    int col = relativeX / (m_iItemSize + m_iItemPadding);
-    int row = relativeY / (m_iItemSize + m_iItemPadding);
+    int col = relativeX / ( m_iItemSize + m_iItemPadding );
+    int row = relativeY / ( m_iItemSize + m_iItemPadding );
     int clickedIndex = row * m_iItemsPerRow + col;
 
-    // À¯È¿ÇÑ ÀÎµ¦½ºÀÎÁö È®ÀÎ
-    if (clickedIndex >= 0 && clickedIndex < (int)availableTypes.size())
+    // ìœ íš¨í•œ ì¸ë±ìŠ¤ì¸ì§€ í™•ì¸
+    if ( clickedIndex >= 0 && clickedIndex < ( int ) availableTypes.size ( ) )
     {
-        STAGE_IMAGE_TYPE selectedType = availableTypes[clickedIndex];
-        CStageMgr::GetInst()->SetCurrentStageImage(selectedType);
+        STAGE_IMAGE_TYPE selectedType = availableTypes[ clickedIndex ];
+        CStageMgr::GetInst ( )->SetCurrentStageImage ( selectedType );
 
-        wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"Stage Image selected: %s",
-            CStageMgr::GetInst()->GetStageImageName(selectedType));
-        SetWindowText(CCore::GetInst()->GetMainHwnd(), szBuffer);
+        wchar_t szBuffer[ 256 ];
+        swprintf_s ( szBuffer , L"Stage Image selected: %s" ,
+            CStageMgr::GetInst ( )->GetStageImageName ( selectedType ) );
+        SetWindowText ( CCore::GetInst ( )->GetMainHwnd ( ) , szBuffer );
 
         return true;
     }
@@ -407,45 +456,45 @@ bool CEditorUI::HandleStageImagePaletteClick(Vec2 vMousePos)
     return false;
 }
 
-void CEditorUI::RenderPaletteBackground(HDC _dc)
+void CEditorUI::RenderPaletteBackground ( HDC _dc )
 {
-    // ÆÈ·¹Æ® ¹è°æ
-    HBRUSH hBrush = CreateSolidBrush(RGB(40, 40, 40));
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Rectangle(_dc, m_iPaletteX, m_iPaletteY,
-        m_iPaletteX + m_iPaletteWidth, m_iPaletteY + m_iPaletteHeight);
+    // íŒ”ë ˆíŠ¸ ë°°ê²½
+    HBRUSH hBrush = CreateSolidBrush ( RGB ( 40 , 40 , 40 ) );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
+    Rectangle ( _dc , m_iPaletteX , m_iPaletteY ,
+        m_iPaletteX + m_iPaletteWidth , m_iPaletteY + m_iPaletteHeight );
 
-    // Å×µÎ¸®
-    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    SelectObject(_dc, hHollowBrush);
-    Rectangle(_dc, m_iPaletteX, m_iPaletteY,
-        m_iPaletteX + m_iPaletteWidth, m_iPaletteY + m_iPaletteHeight);
+    // í…Œë‘ë¦¬
+    HPEN hPen = CreatePen ( PS_SOLID , 2 , RGB ( 100 , 100 , 100 ) );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    HBRUSH hHollowBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+    SelectObject ( _dc , hHollowBrush );
+    Rectangle ( _dc , m_iPaletteX , m_iPaletteY ,
+        m_iPaletteX + m_iPaletteWidth , m_iPaletteY + m_iPaletteHeight );
 
-    SelectObject(_dc, hOldBrush);
-    SelectObject(_dc, hOldPen);
-    DeleteObject(hBrush);
-    DeleteObject(hPen);
+    SelectObject ( _dc , hOldBrush );
+    SelectObject ( _dc , hOldPen );
+    DeleteObject ( hBrush );
+    DeleteObject ( hPen );
 }
 
-void CEditorUI::RenderPaletteHeader(HDC _dc)
+void CEditorUI::RenderPaletteHeader ( HDC _dc )
 {
-    // Çì´õ ¹è°æ
-    HBRUSH hHeaderBrush = CreateSolidBrush(RGB(80, 80, 80));
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hHeaderBrush);
-    Rectangle(_dc, m_iPaletteX, m_iPaletteY, m_iPaletteX + m_iPaletteWidth, m_iPaletteY + 40);
+    // í—¤ë” ë°°ê²½
+    HBRUSH hHeaderBrush = CreateSolidBrush ( RGB ( 80 , 80 , 80 ) );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hHeaderBrush );
+    Rectangle ( _dc , m_iPaletteX , m_iPaletteY , m_iPaletteX + m_iPaletteWidth , m_iPaletteY + 40 );
 
-    // Çì´õ ÅØ½ºÆ®
-    HFONT hFont = CreateUIFont(16, true);
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
-    SetTextColor(_dc, RGB(255, 255, 255));
-    SetBkMode(_dc, TRANSPARENT);
+    // í—¤ë” í…ìŠ¤íŠ¸
+    HFONT hFont = CreateUIFont ( 16 , true );
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+    SetBkMode ( _dc , TRANSPARENT );
 
     const wchar_t* szTitle;
-    EDITOR_MODE currentMode = m_pEditorCore->GetCurrentMode();
+    EDITOR_MODE currentMode = m_pEditorCore->GetCurrentMode ( );
 
-    switch (currentMode)
+    switch ( currentMode )
     {
     case EDITOR_MODE::PLACE_MONSTER:
         szTitle = L"Monsters";
@@ -459,7 +508,7 @@ void CEditorUI::RenderPaletteHeader(HDC _dc)
     case EDITOR_MODE::PLACE_SPECIAL:
         szTitle = L"Special Objects";
         break;
-    case EDITOR_MODE::PLACE_STAGE:      // »õ·Î Ãß°¡
+    case EDITOR_MODE::PLACE_STAGE:      // ìƒˆë¡œ ì¶”ê°€
         szTitle = L"Stage Images";
         break;
     default:
@@ -467,498 +516,803 @@ void CEditorUI::RenderPaletteHeader(HDC _dc)
         break;
     }
 
-    TextOut(_dc, m_iPaletteX + 10, m_iPaletteY + 12, szTitle, (int)wcslen(szTitle));
+    TextOut ( _dc , m_iPaletteX + 10 , m_iPaletteY + 12 , szTitle , ( int ) wcslen ( szTitle ) );
 
-    // Stage Image ¸ğµåÀÎ °æ¿ì ÇöÀç ½ºÅ×ÀÌÁö Á¤º¸ Ç¥½Ã
-    if (currentMode == EDITOR_MODE::PLACE_STAGE)
+    // Stage Image ëª¨ë“œì¼ ë•ŒëŠ” í˜„ì¬ ì„ íƒëœ ìŠ¤í…Œì´ì§€ í‘œì‹œ
+    if ( currentMode == EDITOR_MODE::PLACE_STAGE )
     {
-        STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
-        const wchar_t* currentStageName = CStageMgr::GetInst()->GetStageImageName(currentType);
+        STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst ( )->GetCurrentStageType ( );
+        const wchar_t* currentStageName = CStageMgr::GetInst ( )->GetStageImageName ( currentType );
 
-        wchar_t szInfo[256];
-        swprintf_s(szInfo, L"Current: %s", currentStageName);
-        TextOut(_dc, m_iPaletteX + 10, m_iPaletteY + 28, szInfo, (int)wcslen(szInfo));
+        wchar_t szInfo[ 256 ];
+        swprintf_s ( szInfo , L"Current: %s" , currentStageName );
+        TextOut ( _dc , m_iPaletteX + 10 , m_iPaletteY + 28 , szInfo , ( int ) wcslen ( szInfo ) );
     }
     else
     {
-        // ´Ù¸¥ ¸ğµå¿¡¼­´Â ±âÁ¸ Á¤º¸ Ç¥½Ã
-        const vector<OBJECT_TYPE>& vecCategory = m_pEditorCore->GetObjectManager()->GetCurrentCategory();
-        wchar_t szInfo[256];
-        swprintf_s(szInfo, L"(%d/%d)",
-            m_pEditorCore->GetObjectManager()->GetCurrentSubType() + 1,
-            (int)vecCategory.size());
-        TextOut(_dc, m_iPaletteX + 200, m_iPaletteY + 12, szInfo, (int)wcslen(szInfo));
+        // ë‹¤ë¥¸ ëª¨ë“œì—ì„œëŠ” í˜„ì¬ ì„ íƒ í‘œì‹œ
+        const vector<OBJECT_TYPE>& vecCategory = m_pEditorCore->GetObjectManager ( )->GetCurrentCategory ( );
+        wchar_t szInfo[ 256 ];
+        swprintf_s ( szInfo , L"(%d/%d)" ,
+            m_pEditorCore->GetObjectManager ( )->GetCurrentSubType ( ) + 1 ,
+            ( int ) vecCategory.size ( ) );
+        TextOut ( _dc , m_iPaletteX + 200 , m_iPaletteY + 12 , szInfo , ( int ) wcslen ( szInfo ) );
     }
 
-    SelectObject(_dc, hOldBrush);
-    SelectObject(_dc, hOldFont);
-    DeleteObject(hHeaderBrush);
-    DeleteObject(hFont);
+    SelectObject ( _dc , hOldBrush );
+    SelectObject ( _dc , hOldFont );
+    DeleteObject ( hHeaderBrush );
+    DeleteObject ( hFont );
 }
 
-void CEditorUI::RenderPaletteItems(HDC _dc)
+void CEditorUI::RenderPaletteItems ( HDC _dc )
 {
-    // ÇöÀç Ä«Å×°í¸®ÀÇ °´Ã¼µé °¡Á®¿À±â
-    const vector<OBJECT_TYPE>& vecCategory = m_pEditorCore->GetObjectManager()->GetCurrentCategory();
-    if (vecCategory.empty())
+    // í˜„ì¬ ì¹´í…Œê³ ë¦¬ì˜ ì˜¤ë¸Œì íŠ¸ë“¤ ê°€ì ¸ì˜¤ê¸°
+    const vector<OBJECT_TYPE>& vecCategory = m_pEditorCore->GetObjectManager ( )->GetCurrentCategory ( );
+    if ( vecCategory.empty ( ) )
         return;
 
-    // ÇöÀç ¼±ÅÃµÈ ¼­ºê Å¸ÀÔ
-    int currentSubType = m_pEditorCore->GetObjectManager()->GetCurrentSubType();
+    // í˜„ì¬ ì„ íƒëœ ì„œë¸Œ íƒ€ì…
+    int currentSubType = m_pEditorCore->GetObjectManager ( )->GetCurrentSubType ( );
 
-    // ¾ÆÀÌÅÛµé ·»´õ¸µ ½ÃÀÛ À§Ä¡
+    // ì•„ì´í…œë“¤ì„ ê·¸ë¦¬ê¸° ì‹œì‘ ìœ„ì¹˜
     int startX = m_iPaletteX + 10;
-    int startY = m_iPaletteY + 50; // Çì´õ ¾Æ·¡
+    int startY = m_iPaletteY + 50; // í—¤ë” ì•„ë˜
 
-    // ½ºÅ©·Ñ ¿ÀÇÁ¼Â Àû¿ë
+    // ìŠ¤í¬ë¡¤ ì˜¤í”„ì…‹ ì ìš©
     int renderY = startY - m_iScrollOffset;
 
-    for (size_t i = 0; i < vecCategory.size(); ++i)
+    for ( size_t i = 0; i < vecCategory.size ( ); ++i )
     {
-        // ±×¸®µå À§Ä¡ °è»ê
+        // ì•„ì´í…œ ìœ„ì¹˜ ê³„ì‚°
         int col = i % m_iItemsPerRow;
         int row = i / m_iItemsPerRow;
 
-        int itemX = startX + col * (m_iItemSize + m_iItemPadding);
-        int itemY = renderY + row * (m_iItemSize + m_iItemPadding);
+        int itemX = startX + col * ( m_iItemSize + m_iItemPadding );
+        int itemY = renderY + row * ( m_iItemSize + m_iItemPadding );
 
-        // È­¸é ¹ÛÀÌ¸é ½ºÅµ (ÃÖÀûÈ­)
-        if (itemY + m_iItemSize < m_iPaletteY + 50 ||
-            itemY > m_iPaletteY + m_iPaletteHeight)
+        // í™”ë©´ ë²”ìœ„ë¥¼ ë²—ì–´ë‚¨ (ìµœì í™”)
+        if ( itemY + m_iItemSize < m_iPaletteY + 50 ||
+            itemY > m_iPaletteY + m_iPaletteHeight )
         {
             continue;
         }
 
-        // ¼±ÅÃ ¿©ºÎ È®ÀÎ
-        bool isSelected = (i == currentSubType);
+        // ì„ íƒ ì—¬ë¶€ í™•ì¸
+        bool isSelected = ( i == currentSubType );
 
-        // ¾ÆÀÌÅÛ ·»´õ¸µ
-        RenderPaletteItem(_dc, (int)i, vecCategory[i], itemX, itemY, isSelected);
+        // ì•„ì´í…œ ë Œë”ë§
+        RenderPaletteItem ( _dc , ( int ) i , vecCategory[ i ] , itemX , itemY , isSelected );
     }
 }
 
-void CEditorUI::RenderPaletteItem(HDC _dc, int index, OBJECT_TYPE objType, int x, int y, bool selected)
+void CEditorUI::RenderPaletteItem ( HDC _dc , int index , OBJECT_TYPE objType , int x , int y , bool selected )
 {
-    // ¾ÆÀÌÅÛ ¹è°æ
-    COLORREF bgColor = selected ? RGB(100, 150, 100) : RGB(60, 60, 60);
-    HBRUSH hBrush = CreateSolidBrush(bgColor);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Rectangle(_dc, x, y, x + m_iItemSize, y + m_iItemSize);
+    // ì•„ì´í…œ ë°°ê²½
+    COLORREF bgColor = selected ? RGB ( 100 , 150 , 100 ) : RGB ( 60 , 60 , 60 );
+    HBRUSH hBrush = CreateSolidBrush ( bgColor );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
+    Rectangle ( _dc , x , y , x + m_iItemSize , y + m_iItemSize );
 
-    // Å×µÎ¸®
-    COLORREF borderColor = selected ? RGB(150, 200, 150) : RGB(100, 100, 100);
-    HPEN hPen = CreatePen(PS_SOLID, selected ? 3 : 1, borderColor);
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    SelectObject(_dc, hHollowBrush);
-    Rectangle(_dc, x, y, x + m_iItemSize, y + m_iItemSize);
+    // í…Œë‘ë¦¬
+    COLORREF borderColor = selected ? RGB ( 150 , 200 , 150 ) : RGB ( 100 , 100 , 100 );
+    HPEN hPen = CreatePen ( PS_SOLID , selected ? 3 : 1 , borderColor );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    HBRUSH hHollowBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+    SelectObject ( _dc , hHollowBrush );
+    Rectangle ( _dc , x , y , x + m_iItemSize , y + m_iItemSize );
 
-    // °´Ã¼ ¾ÆÀÌÄÜ ·»´õ¸µ
-    RenderObjectIcon(_dc, objType, x + 5, y + 5, m_iItemSize - 10);
+    // ì˜¤ë¸Œì íŠ¸ ì•„ì´ì½˜ ë Œë”ë§
+    RenderObjectIcon ( _dc , objType , x + 5 , y + 5 , m_iItemSize - 10 );
 
-    // °´Ã¼ ÀÌ¸§ Ç¥½Ã (°³¼±µÊ)
-    SetBkMode(_dc, TRANSPARENT);
-    SetTextColor(_dc, RGB(255, 255, 255));
-    HFONT hFont = CreateUIFont(8, false);  // ´õ ÀÛÀº ÆùÆ® »ç¿ë
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+    // ì˜¤ë¸Œì íŠ¸ ì´ë¦„ í‘œì‹œ (í•˜ë‹¨ì—)
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+    HFONT hFont = CreateUIFont ( 8 , false );  // ì‘ì€ í°íŠ¸ ì‚¬ìš©
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
 
-    // Å¸ÀÏ/Ãæµ¹Ã¼ Å¸ÀÔÀÎÁö È®ÀÎ
-    bool bIsTileType = (objType >= OBJECT_TYPE::TILE_GROUND && objType <= OBJECT_TYPE::TILE_INVISIBLE);
+    // íƒ€ì¼/ì¶©ëŒì²´ íƒ€ì…ì¸ì§€ í™•ì¸
+    bool bIsTileType = ( objType >= OBJECT_TYPE::TILE_GROUND && objType <= OBJECT_TYPE::TILE_TRIGGER );
 
-    wchar_t szDisplayName[32];
-    if (bIsTileType)
+    wchar_t szDisplayName[ 32 ];
+    if ( bIsTileType )
     {
-        // Ãæµ¹Ã¼ Å¸ÀÔÀº Ãæµ¹Ã¼ ÀÌ¸§ »ç¿ë
-        COLLISION_TYPE collisionType = CObjectFactory::ConvertObjectTypeToCollisionType(objType);
-        const wchar_t* szCollisionName = CObjectFactory::GetCollisionTypeName(collisionType);
+        // ì¶©ëŒì²´ íƒ€ì…ì€ ì¶©ëŒì²´ ì´ë¦„ í‘œì‹œ
+        COLLISION_TYPE collisionType = CObjectFactory::ConvertObjectTypeToCollisionType ( objType );
+        const wchar_t* szCollisionName = CObjectFactory::GetCollisionTypeName ( collisionType );
 
-        // ÀÌ¸§À» ÁÙ¿©¼­ Ç¥½Ã
-        if (wcslen(szCollisionName) > 10)
+        // ì´ë¦„ì´ ê¸¸ë©´ ì¶•ì•½ í‘œì‹œ
+        if ( wcslen ( szCollisionName ) > 10 )
         {
-            wcsncpy_s(szDisplayName, szCollisionName, 8);
-            szDisplayName[8] = L'.';
-            szDisplayName[9] = L'.';
-            szDisplayName[10] = L'\0';
+            wcsncpy_s ( szDisplayName , szCollisionName , 8 );
+            szDisplayName[ 8 ] = L'.';
+            szDisplayName[ 9 ] = L'.';
+            szDisplayName[ 10 ] = L'\0';
         }
         else
         {
-            wcscpy_s(szDisplayName, szCollisionName);
+            wcscpy_s ( szDisplayName , szCollisionName );
         }
     }
     else
     {
-        // ±âÁ¸ °´Ã¼µéÀº ±âÁ¸ ÀÌ¸§ »ç¿ë
-        const wchar_t* szName = CObjectFactory::GetObjectTypeName(objType);
-        if (wcslen(szName) > 10)
+        // ë‹¤ë¥¸ ì˜¤ë¸Œì íŠ¸ëŠ” ê¸°ë³¸ ì´ë¦„ í‘œì‹œ
+        const wchar_t* szName = CObjectFactory::GetObjectTypeName ( objType );
+        if ( wcslen ( szName ) > 10 )
         {
-            wcsncpy_s(szDisplayName, szName, 8);
-            szDisplayName[8] = L'.';
-            szDisplayName[9] = L'.';
-            szDisplayName[10] = L'\0';
+            wcsncpy_s ( szDisplayName , szName , 8 );
+            szDisplayName[ 8 ] = L'.';
+            szDisplayName[ 9 ] = L'.';
+            szDisplayName[ 10 ] = L'\0';
         }
         else
         {
-            wcscpy_s(szDisplayName, szName);
+            wcscpy_s ( szDisplayName , szName );
         }
     }
 
-    // ÅØ½ºÆ®¸¦ ¾ÆÀÌÅÛ ÇÏ´Ü¿¡ Ç¥½Ã (2ÁÙ·Î ³ª´©¾î¼­ Ç¥½Ã)
+    // í…ìŠ¤íŠ¸ë¥¼ ì•„ì´í…œ í•˜ë‹¨ì— í‘œì‹œ (2ì¤„ë¡œ ë‚˜ëˆ ì„œ í‘œì‹œ)
     RECT textRect = { x + 2, y + m_iItemSize - 18, x + m_iItemSize - 2, y + m_iItemSize - 2 };
-    DrawText(_dc, szDisplayName, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_WORD_ELLIPSIS);
+    DrawTextW ( _dc , szDisplayName , -1 , &textRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_WORD_ELLIPSIS );
 
-    // Ãæµ¹Ã¼ÀÎ °æ¿ì Ãß°¡ Á¤º¸ Ç¥½Ã
-    if (bIsTileType && selected)
+    // ì¶©ëŒì²´ì¼ ë•Œ ì¶”ê°€ ì •ë³´ í‘œì‹œ
+    if ( bIsTileType && selected )
     {
-        COLLISION_TYPE collisionType = CObjectFactory::ConvertObjectTypeToCollisionType(objType);
+        COLLISION_TYPE collisionType = CObjectFactory::ConvertObjectTypeToCollisionType ( objType );
 
-        // ¼Ó¼º Ç¥½Ã (ÀÛÀº ¾ÆÀÌÄÜµé)
+        // ì†ì„± í‘œì‹œ (ì‘ì€ ì•„ì´ì½˜ë“¤)
         int iconY = y + m_iItemSize - 32;
         int iconX = x + 2;
 
-        // ´Ü´ÜÇÔ Ç¥½Ã
-        if (collisionType == COLLISION_TYPE::SOLID_GROUND ||
+        // ë‹¨ë‹¨í•¨ í‘œì‹œ
+        if ( collisionType == COLLISION_TYPE::SOLID_GROUND ||
             collisionType == COLLISION_TYPE::SPIKE ||
             collisionType == COLLISION_TYPE::BREAKABLE_BLOCK ||
-            collisionType == COLLISION_TYPE::INVISIBLE_WALL)
+            collisionType == COLLISION_TYPE::INVISIBLE_WALL )
         {
-            SetTextColor(_dc, RGB(100, 100, 255));
-            TextOut(_dc, iconX, iconY, L"sol", 1);  // ´Ü´ÜÇÔ Ç¥½Ã
-            iconX += 10;
+            SetTextColor ( _dc , RGB ( 100 , 100 , 255 ) );
+            TextOut ( _dc , iconX , iconY , L"Solid" , 5 );  // Solid display
+            iconX += 20;
         }
 
-        // µ¥¹ÌÁö Ç¥½Ã
-        if (collisionType == COLLISION_TYPE::SPIKE ||
-            collisionType == COLLISION_TYPE::LAVA)
+        // ìœ„í—˜í•¨ í‘œì‹œ
+        if ( collisionType == COLLISION_TYPE::SPIKE ||
+            collisionType == COLLISION_TYPE::LAVA )
         {
-            SetTextColor(_dc, RGB(255, 100, 100));
-            TextOut(_dc, iconX, iconY, L"war", 1);  // À§Çè Ç¥½Ã
-            iconX += 10;
+            SetTextColor ( _dc , RGB ( 255 , 100 , 100 ) );
+            TextOut ( _dc , iconX , iconY , L"Danger" , 6 );  // Danger display
+            iconX += 20;
         }
 
-        // ÀÏ¹æÅëÇà Ç¥½Ã
-        if (collisionType == COLLISION_TYPE::PLATFORM ||
-            collisionType == COLLISION_TYPE::ONE_WAY_PLATFORM)
+        // ì¼ë°©í†µí–‰ í‘œì‹œ
+        if ( collisionType == COLLISION_TYPE::PLATFORM ||
+            collisionType == COLLISION_TYPE::ONE_WAY_PLATFORM )
         {
-            SetTextColor(_dc, RGB(100, 255, 100));
-            TextOut(_dc, iconX, iconY, L"upp", 1);  // À§·Î¸¸ Ãæµ¹
+            SetTextColor ( _dc , RGB ( 100 , 255 , 100 ) );
+            TextOut ( _dc , iconX , iconY , L"TopOnly" , 7 );  // Top only collision
         }
     }
 
-    SelectObject(_dc, hOldBrush);
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldFont);
-    DeleteObject(hBrush);
-    DeleteObject(hPen);
-    DeleteObject(hFont);
+    SelectObject ( _dc , hOldBrush );
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldFont );
+    DeleteObject ( hBrush );
+    DeleteObject ( hPen );
+    DeleteObject ( hFont );
 }
 
-void CEditorUI::RenderObjectIcon(HDC _dc, OBJECT_TYPE objType, int x, int y, int size)
+void CEditorUI::RenderObjectIcon ( HDC _dc , OBJECT_TYPE objType , int x , int y , int size )
 {
-    // °´Ã¼ Å¸ÀÔ¿¡ µû¸¥ °£´ÜÇÑ ¾ÆÀÌÄÜ ·»´õ¸µ
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì…ì— ë”°ë¥¸ ì•„ì´ì½˜ ìƒ‰ìƒ ê²°ì •
     HBRUSH hIconBrush = nullptr;
-    COLORREF iconColor = RGB(200, 200, 200); // ±âº»»ö
+    COLORREF iconColor = RGB ( 200 , 200 , 200 ); // ê¸°ë³¸ìƒ‰
 
-    // Å¸ÀÏ/Ãæµ¹Ã¼ Å¸ÀÔÀÎÁö È®ÀÎ
-    bool bIsTileType = (objType >= OBJECT_TYPE::TILE_GROUND && objType <= OBJECT_TYPE::TILE_INVISIBLE);
+    // íƒ€ì¼/ì¶©ëŒì²´ íƒ€ì…ì¸ì§€ í™•ì¸
+    bool bIsTileType = ( objType >= OBJECT_TYPE::TILE_GROUND && objType <= OBJECT_TYPE::TILE_TRIGGER );
 
-    if (bIsTileType)
+    if ( bIsTileType )
     {
-        // Å¸ÀÏ/Ãæµ¹Ã¼ Å¸ÀÔÀº »ö±ò ¹Ú½º·Î Ç¥½Ã
-        COLLISION_TYPE collisionType = CObjectFactory::ConvertObjectTypeToCollisionType(objType);
-        iconColor = CObjectFactory::GetCollisionTypeColor(collisionType);
+        // íƒ€ì¼/ì¶©ëŒì²´ íƒ€ì…ì€ ìƒ‰ìƒ ë°•ìŠ¤ë¡œ í‘œì‹œ
+        COLLISION_TYPE collisionType = CObjectFactory::ConvertObjectTypeToCollisionType ( objType );
+        iconColor = CObjectFactory::GetCollisionTypeColor ( collisionType );
 
-        // Ãæµ¹Ã¼ ¹Ú½º ½ºÅ¸ÀÏ·Î ·»´õ¸µ
-        hIconBrush = CreateSolidBrush(iconColor);
-        HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hIconBrush);
+        // ì¶©ëŒì²´ ë°•ìŠ¤ ìŠ¤íƒ€ì¼ë¡œ ë Œë”ë§
+        hIconBrush = CreateSolidBrush ( iconColor );
+        HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hIconBrush );
 
-        // »ç°¢ÇüÀ¸·Î ±×¸®±â (Å¸ÀÏ°ú °°Àº ¸ğ¾ç)
-        Rectangle(_dc, x + 8, y + 8, x + size - 8, y + size - 8);
+        // ì‚¬ê°í˜•ìœ¼ë¡œ ê·¸ë¦¬ê¸° (íƒ€ì¼ê³¼ ê°™ì€ ëª¨ì–‘)
+        Rectangle ( _dc , x + 8 , y + 8 , x + size - 8 , y + size - 8 );
 
-        // Å×µÎ¸® ±×¸®±â (´õ ÁøÇÑ »öÀ¸·Î)
-        COLORREF borderColor = RGB(
-            GetRValue(iconColor) / 2,
-            GetGValue(iconColor) / 2,
-            GetBValue(iconColor) / 2
+        // í…Œë‘ë¦¬ ê·¸ë¦¬ê¸° (ë” ì–´ë‘ìš´ ìƒ‰ìƒ)
+        COLORREF borderColor = RGB (
+            GetRValue ( iconColor ) / 2 ,
+            GetGValue ( iconColor ) / 2 ,
+            GetBValue ( iconColor ) / 2
         );
 
-        HPEN hBorderPen = CreatePen(PS_SOLID, 2, borderColor);
-        HPEN hOldPen = (HPEN)SelectObject(_dc, hBorderPen);
-        HBRUSH hHollowBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-        HBRUSH hOldBrush2 = (HBRUSH)SelectObject(_dc, hHollowBrush);
+        HPEN hBorderPen = CreatePen ( PS_SOLID , 2 , borderColor );
+        HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hBorderPen );
+        HBRUSH hHollowBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+        HBRUSH hOldBrush2 = ( HBRUSH ) SelectObject ( _dc , hHollowBrush );
 
-        Rectangle(_dc, x + 8, y + 8, x + size - 8, y + size - 8);
+        Rectangle ( _dc , x + 8 , y + 8 , x + size - 8 , y + size - 8 );
 
-        // Æ¯¼ö Ç¥½Ã ¾ÆÀÌÄÜ Ãß°¡
-        RenderCollisionIcon(_dc, collisionType, x + size / 2, y + size / 2);
+        // íŠ¹ìˆ˜ í‘œì‹œ ì•„ì´ì½˜ ì¶”ê°€
+        RenderCollisionIcon ( _dc , collisionType , x + size / 2 , y + size / 2 );
 
-        SelectObject(_dc, hOldBrush);
-        SelectObject(_dc, hOldPen);
-        SelectObject(_dc, hOldBrush2);
-        DeleteObject(hIconBrush);
-        DeleteObject(hBorderPen);
+        SelectObject ( _dc , hOldBrush );
+        SelectObject ( _dc , hOldPen );
+        SelectObject ( _dc , hOldBrush2 );
+        DeleteObject ( hIconBrush );
+        DeleteObject ( hBorderPen );
     }
     else
     {
-        // ±âÁ¸ °´Ã¼µéÀº ¿øÇü ¾ÆÀÌÄÜÀ¸·Î Ç¥½Ã
-        switch (objType)
+        // ë‹¤ë¥¸ ì˜¤ë¸Œì íŠ¸ëŠ” ìƒ‰ìƒ ì›í˜•ìœ¼ë¡œ í‘œì‹œ
+        switch ( objType )
         {
         case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-            iconColor = RGB(255, 180, 100); // ÁÖÈ²»ö
+            iconColor = RGB ( 255 , 180 , 100 ); // ì£¼í™©ìƒ‰
             break;
         case OBJECT_TYPE::MONSTER_GORDOS:
-            iconColor = RGB(128, 128, 128); // È¸»ö (°¡½Ã)
+            iconColor = RGB ( 128 , 128 , 128 ); // íšŒìƒ‰ (ê°€ì‹œ)
             break;
         case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-            iconColor = RGB(100, 255, 255); // ÇÏ´Ã»ö
+            iconColor = RGB ( 100 , 255 , 255 ); // í•˜ëŠ˜ìƒ‰
             break;
         case OBJECT_TYPE::MONSTER_HOT_HEAD:
-            iconColor = RGB(255, 100, 100); // »¡°£»ö
+            iconColor = RGB ( 255 , 100 , 100 ); // ë¹¨ê°„ìƒ‰
             break;
         case OBJECT_TYPE::ITEM_STAR:
-            iconColor = RGB(255, 255, 100); // ³ë¶õ»ö
+            iconColor = RGB ( 255 , 255 , 100 ); // ë…¸ë€ìƒ‰
             break;
         case OBJECT_TYPE::ITEM_ENERGY_DRINK:
-            iconColor = RGB(100, 255, 100); // ÃÊ·Ï»ö
+            iconColor = RGB ( 100 , 255 , 100 ); // ì´ˆë¡ìƒ‰
             break;
         case OBJECT_TYPE::ITEM_1UP:
-            iconColor = RGB(255, 100, 255); // ÀÚÁÖ»ö
+            iconColor = RGB ( 255 , 100 , 255 ); // ë³´ë¼ìƒ‰
             break;
         case OBJECT_TYPE::ITEM_ABILITY_STAR:
-            iconColor = RGB(100, 100, 255); // ÆÄ¶õ»ö
+            iconColor = RGB ( 100 , 100 , 255 ); // íŒŒë€ìƒ‰
             break;
         case OBJECT_TYPE::OBJECT_DOOR:
-            iconColor = RGB(139, 69, 19);   // °¥»ö
+            iconColor = RGB ( 139 , 69 , 19 );   // ê°ˆìƒ‰
             break;
         case OBJECT_TYPE::OBJECT_SWITCH:
-            iconColor = RGB(255, 215, 0);   // ±İ»ö
+            iconColor = RGB ( 255 , 215 , 0 );   // ê¸ˆìƒ‰
             break;
         case OBJECT_TYPE::OBJECT_MIRROR:
-            iconColor = RGB(192, 192, 192); // Àº»ö
+            iconColor = RGB ( 192 , 192 , 192 ); // ì€ìƒ‰
             break;
         default:
-            iconColor = RGB(150, 150, 150);
+            iconColor = RGB ( 150 , 150 , 150 );
             break;
         }
 
-        hIconBrush = CreateSolidBrush(iconColor);
-        HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hIconBrush);
+        hIconBrush = CreateSolidBrush ( iconColor );
+        HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hIconBrush );
 
-        // °£´ÜÇÑ µµÇüÀ¸·Î ¾ÆÀÌÄÜ Ç¥Çö
-        Ellipse(_dc, x + 8, y + 8, x + size - 8, y + size - 8);
+        // ì›í˜•ìœ¼ë¡œ ì˜¤ë¸Œì íŠ¸ ì•„ì´ì½˜ í‘œì‹œ
+        Ellipse ( _dc , x + 8 , y + 8 , x + size - 8 , y + size - 8 );
 
-        SelectObject(_dc, hOldBrush);
-        DeleteObject(hIconBrush);
+        SelectObject ( _dc , hOldBrush );
+        DeleteObject ( hIconBrush );
     }
 }
 
-HFONT CEditorUI::CreateUIFont(int size, bool bold)
+HFONT CEditorUI::CreateUIFont ( int size , bool bold )
 {
-    return CreateFont(size, 0, 0, 0, bold ? FW_BOLD : FW_NORMAL, FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
+    return CreateFont ( size , 0 , 0 , 0 , bold ? FW_BOLD : FW_NORMAL , FALSE , FALSE , FALSE ,
+        DEFAULT_CHARSET , OUT_DEFAULT_PRECIS , CLIP_DEFAULT_PRECIS ,
+        DEFAULT_QUALITY , DEFAULT_PITCH | FF_DONTCARE , L"Arial" );
 }
 
-void CEditorUI::RenderCollisionIcon(HDC _dc, COLLISION_TYPE collisionType, int centerX, int centerY)
+void CEditorUI::RenderCollisionIcon ( HDC _dc , COLLISION_TYPE collisionType , int centerX , int centerY )
 {
-    SetBkMode(_dc, TRANSPARENT);
-    SetTextColor(_dc, RGB(255, 255, 255));
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
 
-    HFONT hFont = CreateUIFont(12, true);
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+    HFONT hFont = CreateUIFont ( 12 , true );
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
 
-    wchar_t szIcon[4] = L"";
+    wchar_t szIcon[ 16 ] = L"";
 
-    switch (collisionType)
+    switch ( collisionType )
     {
     case COLLISION_TYPE::SOLID_GROUND:
-        wcscpy_s(szIcon, L"sol");  // ´Ü´ÜÇÑ ºí·Ï
+        wcscpy_s ( szIcon , L"Ground" );  // ë‹¨ë‹¨í•œ ë•…
         break;
-    //case COLLISION_TYPE::PLATFORM:
-    //    wcscpy_s(szIcon, L"plf");  // ÇÃ·§Æû
-    //    break;
-    //case COLLISION_TYPE::SPIKE:
-    //    wcscpy_s(szIcon, L"spk");  // °¡½Ã (»ï°¢Çü)
-    //    break;
-    //case COLLISION_TYPE::WATER:
-    //    wcscpy_s(szIcon, L"wat");  // ¹°°á
-    //    break;
-    //case COLLISION_TYPE::LAVA:
-    //    wcscpy_s(szIcon, L"dia");  // ´ÙÀÌ¾Æ¸óµå (¿ë¾Ï)
-    //    break;
-    //case COLLISION_TYPE::ONE_WAY_PLATFORM:
-    //    wcscpy_s(szIcon, L"upp");  // À§ÂÊ È­»ìÇ¥
-    //    break;
-    //case COLLISION_TYPE::MOVING_PLATFORM:
-    //    wcscpy_s(szIcon, L"lr");  // ÁÂ¿ì È­»ìÇ¥
-    //    break;
-    //case COLLISION_TYPE::BREAKABLE_BLOCK:
-    //    wcscpy_s(szIcon, L"emp");  // ºó ¹Ú½º
-    //    break;
-    //case COLLISION_TYPE::INVISIBLE_WALL:
-    //    wcscpy_s(szIcon, L"?");  // ¹°À½Ç¥
-    //    break;
+    case COLLISION_TYPE::TRIGGER:
+        wcscpy_s ( szIcon , L"Trigger" );  // íŠ¸ë¦¬ê±°
+        break;
+        //case COLLISION_TYPE::PLATFORM:
+        //    wcscpy_s(szIcon, L"ë°œíŒ");  // í”Œë«í¼
+        //    break;
+        //case COLLISION_TYPE::SPIKE:
+        //    wcscpy_s(szIcon, L"ê°€ì‹œ");  // ê°€ì‹œ (ì‚¼ê°í˜•)
+        //    break;
+        //case COLLISION_TYPE::WATER:
+        //    wcscpy_s(szIcon, L"ë¬¼");  // ë¬¼
+        //    break;
+        //case COLLISION_TYPE::LAVA:
+        //    wcscpy_s(szIcon, L"ìš©ì•”");  // ìš©ì•” (ë‹¤ì´ì•„ëª¬ë“œ ëª¨ì–‘)
+        //    break;
+        //case COLLISION_TYPE::ONE_WAY_PLATFORM:
+        //    wcscpy_s(szIcon, L"ìœ„");  // ìœ„ìª½ í™”ì‚´í‘œ
+        //    break;
+        //case COLLISION_TYPE::MOVING_PLATFORM:
+        //    wcscpy_s(szIcon, L"ì´ë™");  // ì¢Œìš° í™”ì‚´í‘œ
+        //    break;
+        //case COLLISION_TYPE::BREAKABLE_BLOCK:
+        //    wcscpy_s(szIcon, L"ê¹¨ì§");  // ë¹ˆ ë°•ìŠ¤
+        //    break;
+        //case COLLISION_TYPE::INVISIBLE_WALL:
+        //    wcscpy_s(szIcon, L"?");  // ë¬¼ìŒí‘œ
+        //    break;
     default:
-        wcscpy_s(szIcon, L"nor");  // ±âº» ºí·Ï
+        wcscpy_s ( szIcon , L"Default" );  // Default type
         break;
     }
 
-    if (wcslen(szIcon) > 0)
+    if ( wcslen ( szIcon ) > 0 )
     {
-        // ÅØ½ºÆ® Å©±â ÃøÁ¤
+        // í…ìŠ¤íŠ¸ í¬ê¸° ì¸¡ì •
         SIZE textSize;
-        GetTextExtentPoint32(_dc, szIcon, (int)wcslen(szIcon), &textSize);
+        GetTextExtentPoint32 ( _dc , szIcon , ( int ) wcslen ( szIcon ) , &textSize );
 
-        // Áß¾Ó¿¡ ¹èÄ¡
-        TextOut(_dc,
-            centerX - textSize.cx / 2,
-            centerY - textSize.cy / 2,
-            szIcon,
-            (int)wcslen(szIcon));
+        // ì¤‘ì•™ì— ë°°ì¹˜
+        TextOut ( _dc ,
+            centerX - textSize.cx / 2 ,
+            centerY - textSize.cy / 2 ,
+            szIcon ,
+            ( int ) wcslen ( szIcon ) );
     }
 
-    SelectObject(_dc, hOldFont);
-    DeleteObject(hFont);
+    SelectObject ( _dc , hOldFont );
+    DeleteObject ( hFont );
 }
 
-void CEditorUI::RenderStageImagePalette(HDC _dc)
+void CEditorUI::RenderStageImagePalette ( HDC _dc )
 {
-    // »ç¿ë °¡´ÉÇÑ ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Å¸ÀÔµé °¡Á®¿À±â
-    vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst()->GetAvailableStageImageTypes();
-    STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst()->GetCurrentStageType();
+    // ì‚¬ìš© ê°€ëŠ¥í•œ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ íƒ€ì…ë“¤ ê°€ì ¸ì˜¤ê¸°
+    vector<STAGE_IMAGE_TYPE> availableTypes = CStageMgr::GetInst ( )->GetAvailableStageImageTypes ( );
+    STAGE_IMAGE_TYPE currentType = CStageMgr::GetInst ( )->GetCurrentStageType ( );
 
-    // ÆÈ·¹Æ® ¹è°æ
-    RenderPaletteBackground(_dc);
-    RenderPaletteHeader(_dc);
+    // íŒ”ë ˆíŠ¸ ë°°ê²½
+    RenderPaletteBackground ( _dc );
+    RenderPaletteHeader ( _dc );
 
-    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Ç×¸ñµé ·»´õ¸µ
+    // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì•„ì´í…œë“¤ ë Œë”ë§
     int startX = m_iPaletteX + 10;
     int startY = m_iPaletteY + 50;
     int renderY = startY - m_iScrollOffset;
 
-    for (size_t i = 0; i < availableTypes.size(); ++i)
+    for ( size_t i = 0; i < availableTypes.size ( ); ++i )
     {
-        STAGE_IMAGE_TYPE stageType = availableTypes[i];
-        bool isSelected = (stageType == currentType);
+        STAGE_IMAGE_TYPE stageType = availableTypes[ i ];
+        bool isSelected = ( stageType == currentType );
 
-        // Ç×¸ñ À§Ä¡ °è»ê
+        // ì•„ì´í…œ ìœ„ì¹˜ ê³„ì‚°
         int col = i % m_iItemsPerRow;
         int row = i / m_iItemsPerRow;
 
-        int itemX = startX + col * (m_iItemSize + m_iItemPadding);
-        int itemY = renderY + row * (m_iItemSize + m_iItemPadding);
+        int itemX = startX + col * ( m_iItemSize + m_iItemPadding );
+        int itemY = renderY + row * ( m_iItemSize + m_iItemPadding );
 
-        // È­¸é ¹ÛÀÌ¸é ½ºÅµ
-        if (itemY + m_iItemSize < m_iPaletteY + 50 ||
-            itemY > m_iPaletteY + m_iPaletteHeight)
+        // í™”ë©´ ë²”ìœ„ë¥¼ ë²—ì–´ë‚¨
+        if ( itemY + m_iItemSize < m_iPaletteY + 50 ||
+            itemY > m_iPaletteY + m_iPaletteHeight )
         {
             continue;
         }
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Ç×¸ñ ·»´õ¸µ
-        RenderStageImageItem(_dc, stageType, itemX, itemY, isSelected);
+        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì•„ì´í…œ ë Œë”ë§
+        RenderStageImageItem ( _dc , stageType , itemX , itemY , isSelected );
     }
 }
 
-void CEditorUI::RenderStageImageItem(HDC _dc, STAGE_IMAGE_TYPE stageType, int x, int y, bool selected)
+void CEditorUI::RenderStageImageItem ( HDC _dc , STAGE_IMAGE_TYPE stageType , int x , int y , bool selected )
 {
-    // ¾ÆÀÌÅÛ ¹è°æ
-    COLORREF bgColor = selected ? RGB(100, 150, 100) : RGB(60, 60, 60);
-    HBRUSH hBrush = CreateSolidBrush(bgColor);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Rectangle(_dc, x, y, x + m_iItemSize, y + m_iItemSize);
+    // ì•„ì´í…œ ë°°ê²½
+    COLORREF bgColor = selected ? RGB ( 100 , 150 , 100 ) : RGB ( 60 , 60 , 60 );
+    HBRUSH hBrush = CreateSolidBrush ( bgColor );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
+    Rectangle ( _dc , x , y , x + m_iItemSize , y + m_iItemSize );
 
-    // Å×µÎ¸®
-    COLORREF borderColor = selected ? RGB(150, 200, 150) : RGB(100, 100, 100);
-    HPEN hPen = CreatePen(PS_SOLID, selected ? 2 : 1, borderColor);
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    Rectangle(_dc, x, y, x + m_iItemSize, y + m_iItemSize);
+    // í…Œë‘ë¦¬
+    COLORREF borderColor = selected ? RGB ( 150 , 200 , 150 ) : RGB ( 100 , 100 , 100 );
+    HPEN hPen = CreatePen ( PS_SOLID , selected ? 2 : 1 , borderColor );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    Rectangle ( _dc , x , y , x + m_iItemSize , y + m_iItemSize );
 
-    // ½ºÅ×ÀÌÁö Å¸ÀÔ¿¡ µû¸¥ ¾ÆÀÌÄÜ/¹Ì¸®º¸±â
+    // ìŠ¤í…Œì´ì§€ íƒ€ì…ì— ë”°ë¥¸ ì•„ì´ì½˜/ì´ë¯¸ì§€í‘œì‹œ
     int centerX = x + m_iItemSize / 2;
     int centerY = y + m_iItemSize / 2;
 
-    // ½ÇÁ¦ ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö°¡ ÀÖÀ¸¸é ½æ³×ÀÏ Ç¥½Ã, ¾øÀ¸¸é ¾ÆÀÌÄÜ
-    CStageImage* pStageImage = CStageMgr::GetInst()->FindStageImage(stageType);
-    if (pStageImage && pStageImage->GetStageTexture())
+    // ì‹¤ì œ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ê°€ ë¡œë“œë˜ì–´ ìˆìœ¼ë©´ ì¸ë„¤ì¼ í‘œì‹œ, ì—†ìœ¼ë©´ ì•„ì´ì½˜
+    CStageImage* pStageImage = CStageMgr::GetInst ( )->FindStageImage ( stageType );
+    if ( pStageImage && pStageImage->GetStageTexture ( ) )
     {
-        // ¹Ì´Ï ½æ³×ÀÏ ·»´õ¸µ (Ãà¼ÒµÈ ¹öÀü)
-        CTexture* pTexture = pStageImage->GetStageTexture();
+        // ë¯¸ë‹ˆ ì¸ë„¤ì¼ ë Œë”ë§ (ì¶•ì†Œëœ ë²„ì „)
+        CTexture* pTexture = pStageImage->GetStageTexture ( );
 
         int thumbnailSize = m_iItemSize - 10;
         int thumbnailX = x + 5;
         int thumbnailY = y + 5;
 
-        // ÅØ½ºÃ³¸¦ Ãà¼ÒÇØ¼­ ·»´õ¸µ
-        pTexture->RenderWithColorKey(_dc,
-            Vec2((float)thumbnailX, (float)thumbnailY),
-            Vec2((float)thumbnailSize, (float)thumbnailSize),
-            RGB(255, 0, 255)); // ¸¶Á¨Å¸ ÄÃ·¯Å°
+        // í…ìŠ¤ì²˜ë¥¼ ì¶•ì†Œí•´ì„œ ë Œë”ë§
+        pTexture->RenderWithColorKey ( _dc ,
+            Vec2 ( ( float ) thumbnailX , ( float ) thumbnailY ) ,
+            Vec2 ( ( float ) thumbnailSize , ( float ) thumbnailSize ) ,
+            RGB ( 255 , 0 , 255 ) ); // ë§ˆì  íƒ€ ì»¬ëŸ¬í‚¤
     }
     else
     {
-        // ÅØ½ºÃ³°¡ ¾øÀ¸¸é Å¸ÀÔº° ¾ÆÀÌÄÜ Ç¥½Ã
-        RenderStageImageIcon(_dc, stageType, centerX, centerY);
+        // í…ìŠ¤ì²˜ê°€ ì—†ìœ¼ë©´ íƒ€ì…ë³„ ì•„ì´ì½˜ í‘œì‹œ
+        RenderStageImageIcon ( _dc , stageType , centerX , centerY );
     }
 
-    // ½ºÅ×ÀÌÁö ÀÌ¸§ Ç¥½Ã (¾ÆÀÌÅÛ ÇÏ´Ü)
-    const wchar_t* stageName = CStageMgr::GetInst()->GetStageImageName(stageType);
-    HFONT hFont = CreateUIFont(10);
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
-    SetTextColor(_dc, RGB(255, 255, 255));
-    SetBkMode(_dc, TRANSPARENT);
+    // ìŠ¤í…Œì´ì§€ ì´ë¦„ í‘œì‹œ (ì•„ì´í…œ í•˜ë‹¨)
+    const wchar_t* stageName = CStageMgr::GetInst ( )->GetStageImageName ( stageType );
+    HFONT hFont = CreateUIFont ( 10 );
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+    SetBkMode ( _dc , TRANSPARENT );
 
     RECT textRect = { x, y + m_iItemSize - 20, x + m_iItemSize, y + m_iItemSize };
-    DrawText(_dc, stageName, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextW ( _dc , stageName , -1 , &textRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
 
-    SelectObject(_dc, hOldFont);
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hFont);
-    DeleteObject(hPen);
-    DeleteObject(hBrush);
+    SelectObject ( _dc , hOldFont );
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hFont );
+    DeleteObject ( hPen );
+    DeleteObject ( hBrush );
 }
 
-void CEditorUI::RenderStageImageIcon(HDC _dc, STAGE_IMAGE_TYPE stageType, int centerX, int centerY)
+void CEditorUI::RenderStageImageIcon ( HDC _dc , STAGE_IMAGE_TYPE stageType , int centerX , int centerY )
 {
     COLORREF iconColor;
     const wchar_t* iconText;
 
-    switch (stageType)
+    switch ( stageType )
     {
     case STAGE_IMAGE_TYPE::STAGE_01:
-        iconColor = RGB(100, 255, 100);  // ÃÊ·Ï»ö (Green Hill)
+        iconColor = RGB ( 100 , 255 , 100 );  // ì´ˆë¡ìƒ‰ (Green Hill)
         iconText = L"S1";
         break;
     case STAGE_IMAGE_TYPE::STAGE_02:
-        iconColor = RGB(150, 150, 150);  // È¸»ö (Castle)
+        iconColor = RGB ( 150 , 150 , 150 );  // íšŒìƒ‰ (Castle)
         iconText = L"S2";
         break;
     case STAGE_IMAGE_TYPE::CUSTOM:
-        iconColor = RGB(255, 255, 100);  // ³ë¶õ»ö (Custom)
+        iconColor = RGB ( 255 , 255 , 100 );  // ë…¸ë€ìƒ‰ (Custom)
         iconText = L"CU";
         break;
     default:
-        iconColor = RGB(255, 255, 255);
+        iconColor = RGB ( 255 , 255 , 255 );
         iconText = L"??";
         break;
     }
 
-    // ¾ÆÀÌÄÜ ¹è°æ ¿ø
-    HBRUSH hBrush = CreateSolidBrush(iconColor);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
-    Ellipse(_dc, centerX - 15, centerY - 15, centerX + 15, centerY + 15);
+    // ì•„ì´ì½˜ ë°°ê²½ ì›
+    HBRUSH hBrush = CreateSolidBrush ( iconColor );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
+    Ellipse ( _dc , centerX - 15 , centerY - 15 , centerX + 15 , centerY + 15 );
 
-    // ¾ÆÀÌÄÜ ÅØ½ºÆ®
-    HFONT hFont = CreateUIFont(12, true);
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
-    SetTextColor(_dc, RGB(0, 0, 0));
-    SetBkMode(_dc, TRANSPARENT);
+    // ì•„ì´ì½˜ í…ìŠ¤íŠ¸
+    HFONT hFont = CreateUIFont ( 12 , true );
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
+    SetTextColor ( _dc , RGB ( 0 , 0 , 0 ) );
+    SetBkMode ( _dc , TRANSPARENT );
 
     RECT textRect = { centerX - 15, centerY - 8, centerX + 15, centerY + 8 };
-    DrawText(_dc, iconText, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextW ( _dc , iconText , -1 , &textRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
 
-    SelectObject(_dc, hOldFont);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hFont);
-    DeleteObject(hBrush);
+    SelectObject ( _dc , hOldFont );
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hFont );
+    DeleteObject ( hBrush );
+}
+
+void CEditorUI::RenderMonsterProperties ( HDC _dc , CMonster* _pMonster )
+{
+    int currentY = m_iPropertyPanelY + 40;  // í—¤ë” ì•„ë˜ë¶€í„° ì‹œì‘
+    int leftMargin = m_iPropertyPanelX + 10;
+    int lineHeight = 25;
+
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì… í‘œì‹œ
+    RenderBoldText ( _dc , leftMargin , currentY , L"Monster Object" , RGB ( 255 , 255 , 100 ) );
+    currentY += lineHeight;
+
+    // ëª¬ìŠ¤í„° ë°©í–¥ ì„¤ì • ì„¹ì…˜
+    RenderText ( _dc , leftMargin , currentY , L"Initial Direction:" );
+    currentY += lineHeight;
+
+    // ë°©í–¥ ë²„íŠ¼ë“¤
+    int buttonWidth = 60;
+    int buttonHeight = 25;
+    int buttonSpacing = 10;
+    int leftButtonX = leftMargin;
+    int rightButtonX = leftMargin + buttonWidth + buttonSpacing;
+
+    bool facingLeft = ( _pMonster->GetDirection ( ) < 0 );
+    bool facingRight = ( _pMonster->GetDirection ( ) > 0 );
+
+    // ì™¼ìª½ ë²„íŠ¼
+    HBRUSH leftBrush = CreateSolidBrush ( facingLeft ? RGB ( 100 , 150 , 255 ) : RGB ( 70 , 70 , 70 ) );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , leftBrush );
+    Rectangle ( _dc , leftButtonX , currentY , leftButtonX + buttonWidth , currentY + buttonHeight );
+
+    SetTextColor ( _dc , facingLeft ? RGB ( 255 , 255 , 255 ) : RGB ( 180 , 180 , 180 ) );
+    RECT leftTextRect = { leftButtonX, currentY, leftButtonX + buttonWidth, currentY + buttonHeight };
+    DrawTextW ( _dc , L"Left" , -1 , &leftTextRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+    // ì˜¤ë¥¸ìª½ ë²„íŠ¼  
+    HBRUSH rightBrush = CreateSolidBrush ( facingRight ? RGB ( 100 , 150 , 255 ) : RGB ( 70 , 70 , 70 ) );
+    SelectObject ( _dc , rightBrush );
+    Rectangle ( _dc , rightButtonX , currentY , rightButtonX + buttonWidth , currentY + buttonHeight );
+
+    SetTextColor ( _dc , facingRight ? RGB ( 255 , 255 , 255 ) : RGB ( 180 , 180 , 180 ) );
+    RECT rightTextRect = { rightButtonX, currentY, rightButtonX + buttonWidth, currentY + buttonHeight };
+    DrawTextW ( _dc , L"Right" , -1 , &rightTextRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( leftBrush );
+    DeleteObject ( rightBrush );
+}
+
+void CEditorUI::RenderTileProperties ( HDC _dc , CTile* _pTile )
+{
+    int currentY = m_iPropertyPanelY + 40;  // í—¤ë” ì•„ë˜ë¶€í„° ì‹œì‘
+    int leftMargin = m_iPropertyPanelX + 10;
+    int lineHeight = 25;
+
+    SetBkMode ( _dc , TRANSPARENT );
+    SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì… í‘œì‹œ
+    if ( _pTile->GetType ( ) == OBJECT_TYPE::TILE_TRIGGER )
+    {
+        RenderBoldText ( _dc , leftMargin , currentY , L"Trigger Block" , RGB ( 255 , 100 , 255 ) );
+    }
+    else
+    {
+        RenderBoldText ( _dc , leftMargin , currentY , L"Tile Object" , RGB ( 255 , 255 , 100 ) );
+    }
+    currentY += lineHeight;
+
+    // íŠ¸ë¦¬ê±° ë¸”ë¡ì˜ ê²½ìš°ì—ë§Œ ì¹´ë©”ë¼ ì¢Œí‘œ ì„¤ì • í‘œì‹œ
+    if ( _pTile->GetType ( ) == OBJECT_TYPE::TILE_TRIGGER )
+    {
+        // ì¹´ë©”ë¼ ì ê¸ˆ ì¢Œí‘œ ì„¹ì…˜
+        RenderText ( _dc , leftMargin , currentY , L"Boss Camera Lock Position:" );
+        currentY += lineHeight;
+
+        Vec2 vLockPos = _pTile->GetBossLockPosition ( );
+        int buttonSize = 25;
+        int valueWidth = 60;
+        int buttonSpacing = 5;
+
+        // X ì¢Œí‘œ ì¡°ì •
+        wchar_t szXValue[32];
+        swprintf_s ( szXValue , L"X: %.0f" , vLockPos.x );
+        RenderText ( _dc , leftMargin , currentY , szXValue );
+        
+        int xButtonStartX = leftMargin + 80;
+        
+        // X- ë²„íŠ¼
+        HBRUSH xMinusBrush = CreateSolidBrush ( RGB ( 200 , 100 , 100 ) );
+        HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , xMinusBrush );
+        Rectangle ( _dc , xButtonStartX , currentY , xButtonStartX + buttonSize , currentY + buttonSize );
+        SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+        RECT xMinusRect = { xButtonStartX, currentY, xButtonStartX + buttonSize, currentY + buttonSize };
+        DrawTextW ( _dc , L"-" , -1 , &xMinusRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+        // X+ ë²„íŠ¼
+        HBRUSH xPlusBrush = CreateSolidBrush ( RGB ( 100 , 200 , 100 ) );
+        SelectObject ( _dc , xPlusBrush );
+        int xPlusX = xButtonStartX + buttonSize + buttonSpacing;
+        Rectangle ( _dc , xPlusX , currentY , xPlusX + buttonSize , currentY + buttonSize );
+        RECT xPlusRect = { xPlusX, currentY, xPlusX + buttonSize, currentY + buttonSize };
+        DrawTextW ( _dc , L"+" , -1 , &xPlusRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+        currentY += buttonSize + 10;
+
+        // Y ì¢Œí‘œ ì¡°ì •
+        wchar_t szYValue[32];
+        swprintf_s ( szYValue , L"Y: %.0f" , vLockPos.y );
+        RenderText ( _dc , leftMargin , currentY , szYValue );
+        
+        int yButtonStartX = leftMargin + 80;
+        
+        // Y- ë²„íŠ¼
+        HBRUSH yMinusBrush = CreateSolidBrush ( RGB ( 200 , 100 , 100 ) );
+        SelectObject ( _dc , yMinusBrush );
+        Rectangle ( _dc , yButtonStartX , currentY , yButtonStartX + buttonSize , currentY + buttonSize );
+        RECT yMinusRect = { yButtonStartX, currentY, yButtonStartX + buttonSize, currentY + buttonSize };
+        DrawTextW ( _dc , L"-" , -1 , &yMinusRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+        // Y+ ë²„íŠ¼
+        HBRUSH yPlusBrush = CreateSolidBrush ( RGB ( 100 , 200 , 100 ) );
+        SelectObject ( _dc , yPlusBrush );
+        int yPlusX = yButtonStartX + buttonSize + buttonSpacing;
+        Rectangle ( _dc , yPlusX , currentY , yPlusX + buttonSize , currentY + buttonSize );
+        RECT yPlusRect = { yPlusX, currentY, yPlusX + buttonSize, currentY + buttonSize };
+        DrawTextW ( _dc , L"+" , -1 , &yPlusRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+        currentY += buttonSize + 15;
+
+        // ì¶”ê°€ ê¸°ëŠ¥ ë²„íŠ¼ë“¤
+        int utilButtonWidth = 80;
+        int utilButtonHeight = 20;
+
+        // Reset ë²„íŠ¼
+        HBRUSH resetBrush = CreateSolidBrush ( RGB ( 150 , 150 , 150 ) );
+        SelectObject ( _dc , resetBrush );
+        Rectangle ( _dc , leftMargin , currentY , leftMargin + utilButtonWidth , currentY + utilButtonHeight );
+        SetTextColor ( _dc , RGB ( 255 , 255 , 255 ) );
+        RECT resetRect = { leftMargin, currentY, leftMargin + utilButtonWidth, currentY + utilButtonHeight };
+        DrawTextW ( _dc , L"Reset" , -1 , &resetRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+        // Use Camera ë²„íŠ¼
+        HBRUSH cameraBrush = CreateSolidBrush ( RGB ( 100 , 100 , 200 ) );
+        SelectObject ( _dc , cameraBrush );
+        int cameraButtonX = leftMargin + utilButtonWidth + 10;
+        Rectangle ( _dc , cameraButtonX , currentY , cameraButtonX + utilButtonWidth + 20 , currentY + utilButtonHeight );
+        RECT cameraRect = { cameraButtonX, currentY, cameraButtonX + utilButtonWidth + 20, currentY + utilButtonHeight };
+        DrawTextW ( _dc , L"Use Camera" , -1 , &cameraRect , DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+
+        SelectObject ( _dc , hOldBrush );
+        DeleteObject ( xMinusBrush );
+        DeleteObject ( xPlusBrush );
+        DeleteObject ( yMinusBrush );
+        DeleteObject ( yPlusBrush );
+        DeleteObject ( resetBrush );
+        DeleteObject ( cameraBrush );
+    }
+
+    // ì¶©ëŒ íƒ€ì… ì •ë³´ í‘œì‹œ
+    currentY += lineHeight + 10;
+    RenderText ( _dc , leftMargin , currentY , L"Collision Type:" );
+    currentY += 20;
+
+    COLLISION_TYPE collisionType = _pTile->GetCollisionType ( );
+    const wchar_t* collisionName = L"Unknown";
+    
+    switch ( collisionType )
+    {
+        case COLLISION_TYPE::SOLID_GROUND: collisionName = L"Solid Ground"; break;
+        case COLLISION_TYPE::PLATFORM: collisionName = L"Platform"; break;
+        case COLLISION_TYPE::SPIKE: collisionName = L"Spike"; break;
+        case COLLISION_TYPE::WATER: collisionName = L"Water"; break;
+        case COLLISION_TYPE::TRIGGER: collisionName = L"Trigger"; break;
+        default: collisionName = L"Unknown"; break;
+    }
+    
+    RenderText ( _dc , leftMargin , currentY , collisionName );
+}
+
+bool CEditorUI::HandleMonsterPropertyEdit ( CMonster* _pMonster , Vec2 _vPos )
+{
+    // ë°©í–¥ ë²„íŠ¼ í´ë¦­ ì²´í¬
+    int buttonY = m_iPropertyPanelY + 90; // í—¤ë”(40) + "ëª¬ìŠ¤í„° ì˜¤ë¸Œì íŠ¸"(25) + "ì´ˆê¸° ë°©í–¥:"(25) = 90
+    int buttonWidth = 60;
+    int buttonHeight = 25;
+    int leftMargin = m_iPropertyPanelX + 10;
+    int buttonSpacing = 10;
+
+    int leftButtonX = leftMargin;
+    int rightButtonX = leftMargin + buttonWidth + buttonSpacing;
+
+    // ì™¼ìª½ ë²„íŠ¼ í´ë¦­ ì²´í¬
+    if ( _vPos.x >= leftButtonX && _vPos.x <= leftButtonX + buttonWidth &&
+        _vPos.y >= buttonY && _vPos.y <= buttonY + buttonHeight )
+    {
+        _pMonster->SetDirection ( -1 ); // ì™¼ìª½ ë°©í–¥
+        return true;
+    }
+
+    // ì˜¤ë¥¸ìª½ ë²„íŠ¼ í´ë¦­ ì²´í¬
+    if ( _vPos.x >= rightButtonX && _vPos.x <= rightButtonX + buttonWidth &&
+        _vPos.y >= buttonY && _vPos.y <= buttonY + buttonHeight )
+    {
+        _pMonster->SetDirection ( 1 ); // ì˜¤ë¥¸ìª½ ë°©í–¥
+        return true;
+    }
+
+    return false;
+}
+
+bool CEditorUI::HandleTilePropertyEdit ( CTile* _pTile , Vec2 _vPos )
+{
+    // íŠ¸ë¦¬ê±° ë¸”ë¡ì´ ì•„ë‹Œ ê²½ìš°ëŠ” í¸ì§‘í•  ë‚´ìš©ì´ ì—†ìŒ
+    if ( _pTile->GetType ( ) != OBJECT_TYPE::TILE_TRIGGER )
+        return false;
+
+    int leftMargin = m_iPropertyPanelX + 10;
+    int buttonSize = 25;
+    int buttonSpacing = 5;
+    
+    // UI ë ˆì´ì•„ì›ƒ ê³„ì‚°
+    // í—¤ë”(40) + "Trigger Block"(25) + "Boss Camera Lock Position:"(25) = 90
+    int xControlY = m_iPropertyPanelY + 90;
+    int yControlY = xControlY + buttonSize + 10;  // X ì»¨íŠ¸ë¡¤ ì•„ë˜ + ê°„ê²©
+    int utilButtonY = yControlY + buttonSize + 15; // Y ì»¨íŠ¸ë¡¤ ì•„ë˜ + ê°„ê²©
+    
+    int xButtonStartX = leftMargin + 80;
+    int yButtonStartX = leftMargin + 80;
+    
+    Vec2 vCurrentPos = _pTile->GetBossLockPosition ( );
+    const float GRID_SIZE = 32.0f;
+    const float MIN_COORD = 0.0f;
+    const float MAX_X = 1600.0f;
+    const float MAX_Y = 1200.0f;
+    
+    // X- ë²„íŠ¼ í´ë¦­
+    if ( _vPos.x >= xButtonStartX && _vPos.x <= xButtonStartX + buttonSize &&
+        _vPos.y >= xControlY && _vPos.y <= xControlY + buttonSize )
+    {
+        float newX = max ( MIN_COORD , vCurrentPos.x - GRID_SIZE );
+        _pTile->SetBossLockPosition ( Vec2 ( newX , vCurrentPos.y ) );
+        return true;
+    }
+    
+    // X+ ë²„íŠ¼ í´ë¦­
+    int xPlusX = xButtonStartX + buttonSize + buttonSpacing;
+    if ( _vPos.x >= xPlusX && _vPos.x <= xPlusX + buttonSize &&
+        _vPos.y >= xControlY && _vPos.y <= xControlY + buttonSize )
+    {
+        float newX = min ( MAX_X , vCurrentPos.x + GRID_SIZE );
+        _pTile->SetBossLockPosition ( Vec2 ( newX , vCurrentPos.y ) );
+        return true;
+    }
+    
+    // Y- ë²„íŠ¼ í´ë¦­
+    if ( _vPos.x >= yButtonStartX && _vPos.x <= yButtonStartX + buttonSize &&
+        _vPos.y >= yControlY && _vPos.y <= yControlY + buttonSize )
+    {
+        float newY = max ( MIN_COORD , vCurrentPos.y - GRID_SIZE );
+        _pTile->SetBossLockPosition ( Vec2 ( vCurrentPos.x , newY ) );
+        return true;
+    }
+    
+    // Y+ ë²„íŠ¼ í´ë¦­
+    int yPlusX = yButtonStartX + buttonSize + buttonSpacing;
+    if ( _vPos.x >= yPlusX && _vPos.x <= yPlusX + buttonSize &&
+        _vPos.y >= yControlY && _vPos.y <= yControlY + buttonSize )
+    {
+        float newY = min ( MAX_Y , vCurrentPos.y + GRID_SIZE );
+        _pTile->SetBossLockPosition ( Vec2 ( vCurrentPos.x , newY ) );
+        return true;
+    }
+    
+    // Reset ë²„íŠ¼ í´ë¦­
+    int utilButtonWidth = 80;
+    int utilButtonHeight = 20;
+    if ( _vPos.x >= leftMargin && _vPos.x <= leftMargin + utilButtonWidth &&
+        _vPos.y >= utilButtonY && _vPos.y <= utilButtonY + utilButtonHeight )
+    {
+        _pTile->SetBossLockPosition ( Vec2 ( 400.0f , 300.0f ) ); // ê¸°ë³¸ê°’
+        return true;
+    }
+    
+    // Use Camera ë²„íŠ¼ í´ë¦­
+    int cameraButtonX = leftMargin + utilButtonWidth + 10;
+    int cameraButtonWidth = utilButtonWidth + 20;
+    if ( _vPos.x >= cameraButtonX && _vPos.x <= cameraButtonX + cameraButtonWidth &&
+        _vPos.y >= utilButtonY && _vPos.y <= utilButtonY + utilButtonHeight )
+    {
+        // í˜„ì¬ ì¹´ë©”ë¼ ìœ„ì¹˜ë¥¼ ê°€ì ¸ì™€ì„œ ì„¤ì • (ì¹´ë©”ë¼ ì‹œìŠ¤í…œ ì¶”ê°€ í•„ìš”)
+        // ì„ì‹œë¡œ í˜„ì¬ ìœ„ì¹˜ë¥¼ ê·¸ë¦¬ë“œì— ë§ì¶°ì„œ ì„¤ì •
+        float gridX = floor ( vCurrentPos.x / GRID_SIZE ) * GRID_SIZE;
+        float gridY = floor ( vCurrentPos.y / GRID_SIZE ) * GRID_SIZE;
+        _pTile->SetBossLockPosition ( Vec2 ( gridX , gridY ) );
+        return true;
+    }
+    
+    return false;
 }

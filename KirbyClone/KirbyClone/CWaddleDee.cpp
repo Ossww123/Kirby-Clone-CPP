@@ -1,50 +1,64 @@
 #include "pch.h"
 #include "CWaddleDee.h"
+#include "CRigidBody.h"
 
-CWaddleDee::CWaddleDee()
+CWaddleDee::CWaddleDee ( )
 {
-    // ¿ÀºêÁ§Æ® Å¸ÀÔ ¼³Á¤
-    SetType(OBJECT_TYPE::MONSTER_WADDLE_DEE);
+    // ì˜¤ë¸Œì íŠ¸ íƒ€ì… ì„¤ì •
+    SetType ( OBJECT_TYPE::MONSTER_WADDLE_DEE );
 
-    // ¿şÀÌµé µğ Àü¿ë ¼³Á¤
+    // ì´ë™ ì†ë„ ê°’ ì„¤ì •
     m_fSpeed = 80.f;
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ·Îµå
-    LoadAnimationsFromFile(L"waddle_dee_animations.json");
+    // ì• ë‹ˆë©”ì´ì…˜ ë¡œë“œ
+    LoadAnimationsFromFile ( L"waddle_dee_animations.json" );
 
-    // ÃÊ±â »óÅÂ ¼³Á¤
-    ChangeState(MONSTER_STATE::IDLE);
+    // ì´ˆê¸° ìƒíƒœ ì„¤ì •
+    ChangeState ( MONSTER_STATE::IDLE );
 }
 
-CWaddleDee::~CWaddleDee()
+CWaddleDee::~CWaddleDee ( )
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸®
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì—ì„œ ì²˜ë¦¬
 }
 
-void CWaddleDee::Move()
+void CWaddleDee::Move ( )
 {
-    // ¾Õ¹æ¿¡ º®ÀÌ ÀÖ°Å³ª ¹Ù´ÚÀÌ ¾øÀ¸¸é ¹æÇâ ÀüÈ¯
-    if (CheckWallAhead() || !CheckGroundAhead())
+    // TURN ìƒíƒœì´ê±°ë‚˜ íŠ¹ì • ìƒíƒœì—ì„œëŠ” Move ë¡œì§ ì‹¤í–‰í•˜ì§€ ì•ŠìŒ
+    MONSTER_STATE eCurrentState = GetCurrentState ( );
+    if ( eCurrentState == MONSTER_STATE::TURN ||
+        eCurrentState == MONSTER_STATE::DAMAGE ||
+        eCurrentState == MONSTER_STATE::BEING_INHALED )
     {
-        ChangeState(MONSTER_STATE::TURN);
         return;
     }
 
-    // °è¼Ó °È±â
-    MoveHorizontal(m_fSpeed);
+    // ë²½ ì²´í¬ì™€ ë°”ë‹¥ ì²´í¬ ê²°ê³¼ í™•ì¸
+    bool wallAhead = CheckWallAhead ( );
+    bool groundAhead = CheckGroundAhead ( );
+
+    // ì•ë°©ì— ë²½ì´ ìˆê±°ë‚˜ ë°”ë‹¥ì´ ì—†ìœ¼ë©´ ë°©í–¥ ì „í™˜
+    if ( wallAhead || !groundAhead )
+    {
+        ChangeState ( MONSTER_STATE::TURN );
+        return;
+    }
+
+    // ê³„ì† ê±·ê¸°
+    MoveHorizontal ( m_fSpeed );
 }
 
-void CWaddleDee::SetupAnimationMapping()
+void CWaddleDee::SetupAnimationMapping ( )
 {
-    // ¿şÀÌµé µğÀÇ »óÅÂ ¡æ ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤
-    m_mapStateToAnimation[MONSTER_STATE::IDLE] = L"IDLE";
-    m_mapStateToAnimation[MONSTER_STATE::WALK] = L"WALK";
-    m_mapStateToAnimation[MONSTER_STATE::TURN] = L"WALK";  // ¹æÇâÀüÈ¯ ½Ã¿¡µµ °È±â ¾Ö´Ï¸ŞÀÌ¼Ç
-    m_mapStateToAnimation[MONSTER_STATE::DAMAGE] = L"DAMAGE";
+    // ì™€ë“¤ë”” ìƒíƒœë³„ ë° ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì •
+    m_mapStateToAnimation[ MONSTER_STATE::IDLE ] = L"IDLE";
+    m_mapStateToAnimation[ MONSTER_STATE::WALK ] = L"WALK";
+    m_mapStateToAnimation[ MONSTER_STATE::TURN ] = L"WALK";
+    m_mapStateToAnimation[ MONSTER_STATE::DAMAGE ] = L"DAMAGE";
 }
 
-void CWaddleDee::ChangeDirection()
+void CWaddleDee::ChangeDirection ( )
 {
-    // ´Ü¼øÇÑ ¹æÇâ ÀüÈ¯
-    TurnAround();
+    // ë‹¨ìˆœí•œ ë°©í–¥ ì „í™˜
+    TurnAround ( );
 }

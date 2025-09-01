@@ -61,6 +61,22 @@ public:
     CPlayerHealthSystem* GetHealthSystem() const { return m_pHealthSystem; }
     CPlayerStateMachine* GetStateMachine() const { return m_pStateMachine; }
 
+    // === 상태 저장/로드 ===
+    void LoadFromSavedData();       // CPlayerDataMgr에서 저장된 상태 복원
+    
+    // === 게임 오버 관련 ===
+    void StartGameOverSequence();   // 게임 오버 시퀀스 시작
+    void UpdateGameOverSequence();  // 게임 오버 시퀀스 업데이트
+    void ResetGameOverSequence();   // 게임 오버 시퀀스 리셋
+    
+    // === 보스 격파 관련 ===
+    void SetBossDefeatWaiting(bool _bWaiting) { m_bBossDefeatWaiting = _bWaiting; }
+    bool IsBossDefeatWaiting() const { return m_bBossDefeatWaiting; }
+    
+    // === 승리 시퀀스 관련 ===
+    void SetVictorySequenceWaiting(bool _bWaiting) { m_bVictorySequenceWaiting = _bWaiting; }
+    bool IsVictorySequenceWaiting() const { return m_bVictorySequenceWaiting; }
+
 private:
     // === 렌더링 헬퍼 함수 ===
     void RenderInvincible(HDC _dc);
@@ -71,6 +87,7 @@ private:
 
     // === 애니메이션 생성 함수 ===
     void CreateAnimation();
+    void LoadCopyAbilityAnimations(COPY_ABILITY _eCopyAbility);  // 카피 능력별 애니메이션 로드
 
     // === 컴포넌트들 ===
     CPlayerStateMachine* m_pStateMachine;   // 상태 관리 시스템
@@ -90,6 +107,16 @@ private:
     
     // === 슬라이딩킥 반동 플래그 ===
     bool m_bSlideKickRecoilRequested; // 슬라이딩킥 반동 요청 플래그
+    
+    // === 게임 오버 관련 ===
+    bool m_bGameOverSequence;         // 게임 오버 시퀀스 진행 중
+    float m_fGameOverTimer;           // 게임 오버 타이머
+    int m_iGameOverPhase;             // 게임 오버 단계 (0:정지, 1:상승, 2:하강)
+    
+    // === 보스 격파 관련 ===
+    bool m_bBossDefeatWaiting;        // 보스 격파 대기 중 (입력 차단)
+    bool m_bVictorySequenceWaiting;   // 승리 시퀀스 대기 중 (입력 차단)
 
     friend class CPlayerStateMachine;
+    friend class CPlayerInhaleSystem;
 };

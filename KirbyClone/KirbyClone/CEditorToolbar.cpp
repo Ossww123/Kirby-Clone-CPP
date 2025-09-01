@@ -7,6 +7,8 @@
 
 #include "CGrid.h"
 #include "CCore.h"
+#include "CStageMgr.h"
+#include "CStageImage.h"
 
 #include "CTimeMgr.h"
 
@@ -22,7 +24,7 @@ CEditorToolbar::CEditorToolbar()
     , m_bMouseDown(false)
     , m_pHoveredButton(nullptr)
     , m_fTooltipTimer(0.f)
-    , m_vCurrentMapSize(3840.f, 2160.f)  // ±âº» Áß°£ Å©±â
+    , m_vCurrentMapSize(3840.f, 2160.f)
     , m_vDefaultMapSize(3840.f, 2160.f)
 {
 }
@@ -41,7 +43,7 @@ void CEditorToolbar::Update()
 {
     UpdateButtonStates();
 
-    // ÅøÆÁ Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ®
+    // íˆ´íŒ íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸
     if (m_pHoveredButton)
     {
         m_fTooltipTimer += CTimeMgr::GetInst()->GetfDT();
@@ -54,10 +56,10 @@ void CEditorToolbar::Update()
 
 void CEditorToolbar::Render(HDC _dc)
 {
-    // Åø¹Ù ¹è°æ ·»´õ¸µ
+    // íˆ´ë°” ë°°ê²½ ë Œë”ë§
     RenderToolbarBackground(_dc);
 
-    // ¹öÆ°µé ·»´õ¸µ
+    // ë²„íŠ¼ë“¤ ë Œë”ë§
     for (const auto& button : m_vecButtons)
     {
         if (button.iButtonID != (int)TOOLBAR_BUTTON_ID::SEPARATOR_1 &&
@@ -80,10 +82,10 @@ void CEditorToolbar::Render(HDC _dc)
         }
     }
 
-    // ¸Ê Å©±â ¹× Ä«¸Ş¶ó ÁÂÇ¥ Á¤º¸ Ç¥½Ã Ãß°¡
+    // ë§µ í¬ê¸° ë° ì¹´ë©”ë¼ ì¢Œí‘œ ì •ë³´ í‘œì‹œ ì¶”ê°€
     RenderInfoArea(_dc);
 
-    // ÅøÆÁ ·»´õ¸µ (¸¶¿ì½º°¡ ¹öÆ° À§¿¡ 1ÃÊ ÀÌ»ó ÀÖÀ» ¶§)
+    // íˆ´íŒ ë Œë”ë§ (ë§ˆìš°ìŠ¤ê°€ ë²„íŠ¼ ìœ„ì— 1ì´ˆ ì´ìƒ ìˆì„ ë•Œ)
     if (m_pHoveredButton && m_fTooltipTimer > 1.0f)
     {
         RenderTooltip(_dc);
@@ -94,23 +96,23 @@ bool CEditorToolbar::HandleMouseMove(Vec2 vMousePos)
 {
     m_vMousePos = vMousePos;
 
-    // ÀÌÀü È£¹ö »óÅÂ ÃÊ±âÈ­
+    // ê¸°ì¡´ í˜¸ë²„ ìƒíƒœ ì´ˆê¸°í™”
     if (m_pHoveredButton)
     {
         m_pHoveredButton->bHovered = false;
         m_pHoveredButton = nullptr;
     }
 
-    // ÇöÀç ¸¶¿ì½º À§Ä¡ÀÇ ¹öÆ° È®ÀÎ
+    // í˜„ì¬ ë§ˆìš°ìŠ¤ ìœ„ì¹˜ì˜ ë²„íŠ¼ í™•ì¸
     tToolbarButton* pButton = GetButtonAt(vMousePos);
     if (pButton && pButton->bEnabled)
     {
         pButton->bHovered = true;
         m_pHoveredButton = pButton;
-        return true; // Åø¹Ù¿¡¼­ ¸¶¿ì½º ÀÌº¥Æ® Ã³¸®ÇÔ
+        return true; // íˆ´ë°”ì—ì„œ ë§ˆìš°ìŠ¤ ì´ë²¤íŠ¸ ì²˜ë¦¬ë¨
     }
 
-    return IsInToolbarArea(vMousePos); // Åø¹Ù ¿µ¿ª¿¡ ÀÖÀ¸¸é ÀÌº¥Æ® ¼Òºñ
+    return IsInToolbarArea(vMousePos); // íˆ´ë°” ì˜ì—­ì— ìˆìœ¼ë©´ ì´ë²¤íŠ¸ ì†Œë¹„
 }
 
 bool CEditorToolbar::HandleMouseClick(Vec2 vMousePos)
@@ -127,7 +129,7 @@ bool CEditorToolbar::HandleMouseClick(Vec2 vMousePos)
         return true;
     }
 
-    return true; // Åø¹Ù ¿µ¿ª Å¬¸¯Àº Ç×»ó ¼Òºñ
+    return true;
 }
 
 bool CEditorToolbar::HandleMouseUp(Vec2 vMousePos)
@@ -137,7 +139,7 @@ bool CEditorToolbar::HandleMouseUp(Vec2 vMousePos)
 
     m_bMouseDown = false;
 
-    // ¸ğµç ¹öÆ°ÀÇ pressed »óÅÂ ÇØÁ¦
+    // ëª¨ë“  ë²„íŠ¼ì˜ pressed ìƒíƒœ í•´ì œ
     for (auto& button : m_vecButtons)
     {
         button.bPressed = false;
@@ -146,7 +148,7 @@ bool CEditorToolbar::HandleMouseUp(Vec2 vMousePos)
     if (!IsInToolbarArea(vMousePos))
         return false;
 
-    // ¹öÆ° ¾×¼Ç ½ÇÇà
+    // ë²„íŠ¼ ì•¡ì…˜ ì‹¤í–‰
     tToolbarButton* pButton = GetButtonAt(vMousePos);
     if (pButton && pButton->bEnabled)
     {
@@ -166,7 +168,7 @@ void CEditorToolbar::SetMapSize(Vec2 vSize)
 {
     m_vCurrentMapSize = vSize;
 
-    // ¿¡µğÅÍ ÄÚ¾î¿¡µµ ¸Ê Å©±â ¼³Á¤ (Áß¿ä!)
+    // ì—ë””í„° ìì²´ì˜ ë§µ í¬ê¸° ì„¤ì •
     if (m_pEditorCore)
     {
         m_pEditorCore->SetMapSize(vSize);
@@ -174,21 +176,27 @@ void CEditorToolbar::SetMapSize(Vec2 vSize)
 
     if (m_pEditorCore && m_pEditorCore->GetCameraController())
     {
-        // ½ÇÁ¦ Ä«¸Ş¶ó ¹üÀ§: (0,0) ~ (width, height) - ±âÁ¸ ÁÂÇ¥°è ±×´ë·Î
+        // ì›”ë“œ ì¹´ë©”ë¼ ë²”ìœ„: (0,0) ~ (width, height) - ì›”ë“œ ì¢Œí‘œë¥¼ ê·¸ëŒ€ë¡œ
         Vec2 vMin = Vec2(0.f, 0.f);
         Vec2 vMax = Vec2(vSize.x, vSize.y);
 
         m_pEditorCore->GetCameraController()->SetCameraBounds(vMin, vMax);
 
-        // Ä«¸Ş¶ó¸¦ UI»ó (0,0) À§Ä¡·Î ÀÌµ¿ = ½ÇÁ¦ (0, height)
+        // ì¹´ë©”ë¼ UIì˜ (0,0) ìœ„ì¹˜ë¡œ ì´ë™ = ì›”ë“œ (0, height)
         Vec2 vUIZeroPos = Vec2(0.f, vSize.y);
         m_pEditorCore->GetCameraController()->SetCameraPosition(vUIZeroPos);
+        
+        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ìœ„ì¹˜ë¥¼ ìƒˆë¡œìš´ ë§µ í¬ê¸°ì— ë§ê²Œ ì—…ë°ì´íŠ¸
+        CStageImage* pCurrentStage = CStageMgr::GetInst()->GetCurrentStageImage();
+        if (pCurrentStage)
+        {
+            pCurrentStage->SetImageToBottomLeft(vSize);
+        }
     }
 
     UpdateMapSizeButtons();
 }
 
-// ¸Ê Å©±â ¹öÆ° »óÅÂ ¾÷µ¥ÀÌÆ®
 void CEditorToolbar::UpdateMapSizeButtons()
 {
     for (auto& button : m_vecButtons)
@@ -229,22 +237,21 @@ void CEditorToolbar::UpdateMapSizeButtons()
     }
 }
 
-// »ç¿ëÀÚ Á¤ÀÇ ¸Ê Å©±â ´ÙÀÌ¾ó·Î±× Ç¥½Ã
 void CEditorToolbar::ShowCustomMapSizeDialog()
 {
     wchar_t szMessage[512];
     swprintf_s(szMessage,
-        L"ÇöÀç ¸Ê Å©±â: %.0f x %.0f\n\n"
-        L"¸Ş¸ğÀå¿¡ '³Êºñ,³ôÀÌ' Çü½ÄÀ¸·Î ÀÔ·Â ÈÄ º¹»çÇÏ¼¼¿ä\n"
-        L"¿¹½Ã: 1920,1080\n"
-        L"ÃÖ¼Ò Å©±â: 960x640 (°ÔÀÓ ÇØ»óµµ)\n\n"
-        L"º¹»çÇßÀ¸¸é È®ÀÎÀ» ´©¸£¼¼¿ä.",
+        L"Current Map Size: %.0f x %.0f\n\n"
+        L"Copy 'width,height' format to clipboard and click OK\n"
+        L"Example: 1920,1080\n"
+        L"Minimum Size: 960x640 (screen resolution)\n\n"
+        L"Click OK after copying to clipboard.",
         m_vCurrentMapSize.x, m_vCurrentMapSize.y);
 
-    if (MessageBox(CCore::GetInst()->GetMainHwnd(), szMessage, L"Ä¿½ºÅÒ ¸Ê Å©±â", MB_OKCANCEL) != IDOK)
+    if (MessageBox(CCore::GetInst()->GetMainHwnd(), szMessage, L"Custom Map Size", MB_OKCANCEL) != IDOK)
         return;
 
-    // Å¬¸³º¸µå¿¡¼­ ÀĞ±â
+    // í´ë¦½ë³´ë“œì—ì„œ ì½ê¸°
     wchar_t szInput[128] = L"";
     if (OpenClipboard(CCore::GetInst()->GetMainHwnd()))
     {
@@ -261,11 +268,11 @@ void CEditorToolbar::ShowCustomMapSizeDialog()
         CloseClipboard();
     }
 
-    // ½°Ç¥·Î ºĞ¸®
+    // ì¢Œí‘œê°’ ë¶„ë¦¬
     wchar_t* pComma = wcschr(szInput, L',');
     if (!pComma)
     {
-        MessageBox(CCore::GetInst()->GetMainHwnd(), L"Çü½Ä ¿À·ù: '³Êºñ,³ôÀÌ' Çü½ÄÀ¸·Î ÀÔ·ÂÇÏ¼¼¿ä", L"¿À·ù", MB_OK);
+        MessageBox(CCore::GetInst()->GetMainHwnd(), L"Invalid format: Enter 'width,height' format", L"Error", MB_OK);
         return;
     }
 
@@ -273,12 +280,12 @@ void CEditorToolbar::ShowCustomMapSizeDialog()
     float width = (float)_wtof(szInput);
     float height = (float)_wtof(pComma + 1);
 
-    // ÃÖ¼Ò°ª Á¦ÇÑ: 960x640 (°ÔÀÓ ÇØ»óµµ)
+    // ìµœì†Œê°’ ê²€ì‚¬: 960x640 (í™”ë©´ í•´ìƒë„)
     if (width < 960 || width > 20000 || height < 640 || height > 20000)
     {
         MessageBox(CCore::GetInst()->GetMainHwnd(),
-            L"Å©±â ¹üÀ§ ¿À·ù:\n³Êºñ: 960-20000\n³ôÀÌ: 640-20000\n(ÃÖ¼Ò: 960x640)",
-            L"¿À·ù", MB_OK);
+            L"Size range error:\nWidth: 960-20000\nHeight: 640-20000\n(Minimum: 960x640)",
+            L"Error", MB_OK);
         return;
     }
 
@@ -286,101 +293,101 @@ void CEditorToolbar::ShowCustomMapSizeDialog()
 }
 
 
-void CEditorToolbar::CreateButtons()
+void CEditorToolbar::CreateButtons ( )
 {
-    m_vecButtons.clear();
+    m_vecButtons.clear ( );
 
     int currentX = m_iButtonMargin;
-    int buttonY = (m_iToolbarHeight - m_iButtonHeight) / 2;
+    int buttonY = ( m_iToolbarHeight - m_iButtonHeight ) / 2;
 
-    // ÆÄÀÏ °ü·Ã ¹öÆ°µé (±âÁ¸°ú µ¿ÀÏ)
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::NEW_LEVEL, currentX, buttonY, 60, m_iButtonHeight, L"New", L"»õ ·¹º§ »ı¼º");
+    // íŒŒì¼ ê´€ë ¨ ë²„íŠ¼ë“¤ (í…ìŠ¤íŠ¸ ë³€ê²½)
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::NEW_LEVEL , currentX , buttonY , 60 , m_iButtonHeight , L"New" , L"ìƒˆ ë ˆë²¨ ìƒì„±" );
     currentX += 60 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SAVE_LEVEL, currentX, buttonY, 60, m_iButtonHeight, L"Save", L"·¹º§ ÀúÀå (Ctrl+S)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::SAVE_LEVEL , currentX , buttonY , 60 , m_iButtonHeight , L"Save" , L"ë ˆë²¨ ì €ì¥ (Ctrl+S)" );
     currentX += 60 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::LOAD_LEVEL, currentX, buttonY, 60, m_iButtonHeight, L"Load", L"·¹º§ ºÒ·¯¿À±â (Ctrl+O)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::LOAD_LEVEL , currentX , buttonY , 60 , m_iButtonHeight , L"Load" , L"ë ˆë²¨ ë¶ˆëŸ¬ì˜¤ê¸° (Ctrl+O)" );
     currentX += 60 + m_iButtonMargin;
 
-    // ±¸ºĞ¼± 1
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_1, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
+    // ë¶„ë¦¬ì„  1
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::SEPARATOR_1 , currentX , buttonY , m_iSeparatorWidth , m_iButtonHeight , L"" , L"" );
     currentX += m_iSeparatorWidth + m_iButtonMargin;
 
-    // ¸ğµå ¹öÆ°µé (±âÁ¸°ú µ¿ÀÏ)
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_MONSTER, currentX, buttonY, 70, m_iButtonHeight, L"Monster", L"¸ó½ºÅÍ ¹èÄ¡ ¸ğµå (M)");
+    // ëª¨ë“œ ë²„íŠ¼ë“¤ (í…ìŠ¤íŠ¸ ë³€ê²½)
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MODE_MONSTER , currentX , buttonY , 70 , m_iButtonHeight , L"Monster" , L"ëª¬ìŠ¤í„° ë°°ì¹˜ ëª¨ë“œ (M)" );
     currentX += 70 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_ITEM, currentX, buttonY, 50, m_iButtonHeight, L"Item", L"¾ÆÀÌÅÛ ¹èÄ¡ ¸ğµå (I)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MODE_ITEM , currentX , buttonY , 50 , m_iButtonHeight , L"Item" , L"ì•„ì´í…œ ë°°ì¹˜ ëª¨ë“œ (I)" );
     currentX += 50 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_TILE, currentX, buttonY, 50, m_iButtonHeight, L"Tile", L"Å¸ÀÏ ¹èÄ¡ ¸ğµå (T)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MODE_TILE , currentX , buttonY , 50 , m_iButtonHeight , L"Tile" , L"íƒ€ì¼ ë°°ì¹˜ ëª¨ë“œ (T)" );
     currentX += 50 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_SPECIAL, currentX, buttonY, 65, m_iButtonHeight, L"Special", L"Æ¯¼ö ¿ÀºêÁ§Æ® ¹èÄ¡ ¸ğµå (S)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MODE_SPECIAL , currentX , buttonY , 65 , m_iButtonHeight , L"Special" , L"íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ ë°°ì¹˜ ëª¨ë“œ (S)" );
     currentX += 65 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MODE_BACKGROUND, currentX, buttonY, 80, m_iButtonHeight, L"Background", L"¹è°æ ¸ğµå (B)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MODE_BACKGROUND , currentX , buttonY , 80 , m_iButtonHeight , L"Background" , L"ë°°ê²½ ëª¨ë“œ (B)" );
     currentX += 80 + m_iButtonMargin;
 
-    // ±¸ºĞ¼± 2
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_2, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
+    // ë¶„ë¦¬ì„  2
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::SEPARATOR_2 , currentX , buttonY , m_iSeparatorWidth , m_iButtonHeight , L"" , L"" );
     currentX += m_iSeparatorWidth + m_iButtonMargin;
 
-    // ±×¸®µå/½º³À ¹öÆ°µé
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::GRID_TOGGLE, currentX, buttonY, 50, m_iButtonHeight, L"Grid", L"±×¸®µå Ç¥½Ã Åä±Û (G)");
+    // ê·¸ë¦¬ë“œ/ìŠ¤ëƒ… ë²„íŠ¼ë“¤
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::GRID_TOGGLE , currentX , buttonY , 50 , m_iButtonHeight , L"Grid" , L"ê·¸ë¦¬ë“œ í‘œì‹œ í† ê¸€ (G)" );
     currentX += 50 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SNAP_TOGGLE, currentX, buttonY, 50, m_iButtonHeight, L"Snap", L"±×¸®µå ½º³À Åä±Û (F)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::SNAP_TOGGLE , currentX , buttonY , 50 , m_iButtonHeight , L"Snap" , L"ê·¸ë¦¬ë“œ ìŠ¤ëƒ… í† ê¸€ (F)" );
     currentX += 50 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::UI_TOGGLE, currentX, buttonY, 40, m_iButtonHeight, L"UI", L"UI Ç¥½Ã Åä±Û (H)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::UI_TOGGLE , currentX , buttonY , 40 , m_iButtonHeight , L"UI" , L"UI í‘œì‹œ í† ê¸€ (H)" );
     currentX += 40 + m_iButtonMargin;
 
-    // ±¸ºĞ¼± 3
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_3, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
+    // ë¶„ë¦¬ì„  3
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::SEPARATOR_3 , currentX , buttonY , m_iSeparatorWidth , m_iButtonHeight , L"" , L"" );
     currentX += m_iSeparatorWidth + m_iButtonMargin;
 
-    // ¸Ê Å©±â ·¹ÀÌºí ¹× ¹öÆ°µé
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LABEL, currentX, buttonY, 60, m_iButtonHeight, L"Map Size:", L"");
+    // ë§µ í¬ê¸° ë ˆì´ë¸” ë° ë²„íŠ¼ë“¤
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MAP_SIZE_LABEL , currentX , buttonY , 60 , m_iButtonHeight , L"Map Size:" , L"" );
     currentX += 60 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL, currentX, buttonY, 45, m_iButtonHeight, L"Small", L"ÀÛÀº ¸Ê (1920x1080)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL , currentX , buttonY , 45 , m_iButtonHeight , L"Small" , L"Small Map (1920x1080)" );
     currentX += 45 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM, currentX, buttonY, 50, m_iButtonHeight, L"Medium", L"Áß°£ ¸Ê (3840x2160)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MAP_SIZE_MEDIUM , currentX , buttonY , 50 , m_iButtonHeight , L"Medium" , L"Medium Map (3840x2160)" );
     currentX += 50 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE, currentX, buttonY, 45, m_iButtonHeight, L"Large", L"Å« ¸Ê (7680x4320)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MAP_SIZE_LARGE , currentX , buttonY , 45 , m_iButtonHeight , L"Large" , L"Large Map (7680x4320)" );
     currentX += 45 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM, currentX, buttonY, 55, m_iButtonHeight, L"Custom", L"»ç¿ëÀÚ Á¤ÀÇ ¸Ê Å©±â");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::MAP_SIZE_CUSTOM , currentX , buttonY , 55 , m_iButtonHeight , L"Custom" , L"Custom Map Size" );
     currentX += 55 + m_iButtonMargin;
 
-    // ±¸ºĞ¼± 4
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::SEPARATOR_4, currentX, buttonY, m_iSeparatorWidth, m_iButtonHeight, L"", L"");
+    // ë¶„ë¦¬ì„  4
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::SEPARATOR_4 , currentX , buttonY , m_iSeparatorWidth , m_iButtonHeight , L"" , L"" );
     currentX += m_iSeparatorWidth + m_iButtonMargin;
 
-    // ºü¸¥ ÀúÀå/·Îµå
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::QUICK_SAVE, currentX, buttonY, 40, m_iButtonHeight, L"Q.S", L"ºü¸¥ ÀúÀå (F5)");
+    // ë¹ ë¥¸ ì €ì¥/ë¡œë“œ
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::QUICK_SAVE , currentX , buttonY , 40 , m_iButtonHeight , L"Q.S" , L"ë¹ ë¥¸ ì €ì¥ (F5)" );
     currentX += 40 + m_iButtonMargin;
 
-    m_vecButtons.emplace_back((int)TOOLBAR_BUTTON_ID::QUICK_LOAD, currentX, buttonY, 40, m_iButtonHeight, L"Q.L", L"ºü¸¥ ·Îµå (F9)");
+    m_vecButtons.emplace_back ( ( int ) TOOLBAR_BUTTON_ID::QUICK_LOAD , currentX , buttonY , 40 , m_iButtonHeight , L"Q.L" , L"ë¹ ë¥¸ ë¡œë“œ (F9)" );
     currentX += 40 + m_iButtonMargin;
 
-    // Á¤º¸ Ç¥½Ã ¿µ¿ª ¼³Á¤ (¹öÆ°µé ³¡¿¡¼­ ½ÃÀÛ)
-    m_iInfoAreaX = currentX + 20;  // ¹öÆ° ³¡¿¡¼­ 20ÇÈ¼¿ °£°İ
-    m_iInfoAreaWidth = 300;        // Á¤º¸ Ç¥½Ã ¿µ¿ª ³Êºñ
+    // ì •ë³´ í‘œì‹œ ì˜ì—­ ì„¤ì • (ë²„íŠ¼ë“¤ ì˜¤ë¥¸ìª½ ë)
+    m_iInfoAreaX = currentX + 20;  // ë²„íŠ¼ ëì—ì„œ 20í”½ì…€ ê°„ê²©
+    m_iInfoAreaWidth = 300;        // ì •ë³´ í‘œì‹œ ì˜ì—­ ë„ˆë¹„
 }
 
 void CEditorToolbar::UpdateButtonStates()
 {
-    // ÇöÀç ¸ğµå¿¡ µû¸¥ ¸ğµå ¹öÆ°µéÀÇ »ö»ó º¯°æ
+    // í˜„ì¬ ëª¨ë“œì— ë”°ë¥¸ ëª¨ë“œ ë²„íŠ¼ë“¤ì˜ ìƒíƒœ ì„¤ì •
     EDITOR_MODE currentMode = m_pEditorCore->GetCurrentMode();
 
     for (auto& button : m_vecButtons)
     {
-        // ¸ğµå ¹öÆ°µéÀÇ È°¼º »óÅÂ Ç¥½Ã
+        // ëª¨ë“œ ë²„íŠ¼ë“¤ì˜ í™œì„± ìƒíƒœ í‘œì‹œ
         if (IsModeButton((TOOLBAR_BUTTON_ID)button.iButtonID))
         {
             bool isActive = false;
@@ -416,7 +423,7 @@ void CEditorToolbar::UpdateButtonStates()
             }
         }
 
-        // ±×¸®µå/½º³À ¹öÆ° »óÅÂ ¾÷µ¥ÀÌÆ®
+        // ê·¸ë¦¬ë“œ/ìŠ¤ëƒ… ë²„íŠ¼ ìƒíƒœ ì—…ë°ì´íŠ¸
         if (button.iButtonID == (int)TOOLBAR_BUTTON_ID::GRID_TOGGLE)
         {
             if (CGrid::GetInst()->IsShowGrid())
@@ -460,7 +467,7 @@ void CEditorToolbar::UpdateButtonStates()
         }
     }
 
-    // ¸Ê Å©±â ¹öÆ° »óÅÂ ¾÷µ¥ÀÌÆ®
+    // ë§µ í¬ê¸° ë²„íŠ¼ ìƒíƒœ ì—…ë°ì´íŠ¸
     UpdateMapSizeButtons();
 }
 
@@ -543,7 +550,6 @@ void CEditorToolbar::ExecuteButtonAction(TOOLBAR_BUTTON_ID buttonID)
         m_pEditorCore->GetFileManager()->QuickLoad();
         break;
 
-        // ¸Ê Å©±â °ü·Ã ¹öÆ°µé
     case TOOLBAR_BUTTON_ID::MAP_SIZE_SMALL:
         SetMapSize(Vec2(1920.f, 1080.f));
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Map size set to Small (1920x1080)");
@@ -567,14 +573,14 @@ void CEditorToolbar::ExecuteButtonAction(TOOLBAR_BUTTON_ID buttonID)
 
 void CEditorToolbar::RenderButton(HDC _dc, const tToolbarButton& button)
 {
-    // ¹öÆ° ¹è°æ »ö»ó °áÁ¤
+    // ë²„íŠ¼ ë°°ê²½ ìƒ‰ìƒ ì„¤ì •
     COLORREF bgColor = GetButtonColor(button);
 
-    // ¹öÆ° ¹è°æ ±×¸®±â
+    // ë²„íŠ¼ ë°°ê²½ ê·¸ë¦¬ê¸°
     HBRUSH hBrush = CreateSolidBrush(bgColor);
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
 
-    // ¹öÆ° Å×µÎ¸®
+    // ë²„íŠ¼ í…Œë‘ë¦¬
     HPEN hPen = CreatePen(PS_SOLID, 1, RGB(120, 120, 120));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
@@ -585,7 +591,7 @@ void CEditorToolbar::RenderButton(HDC _dc, const tToolbarButton& button)
     DeleteObject(hBrush);
     DeleteObject(hPen);
 
-    // ¹öÆ° ÅØ½ºÆ® ±×¸®±â
+    // ë²„íŠ¼ í…ìŠ¤íŠ¸ ê·¸ë¦¬ê¸°
     SetBkMode(_dc, TRANSPARENT);
     SetTextColor(_dc, RGB(255, 255, 255));
 
@@ -594,7 +600,7 @@ void CEditorToolbar::RenderButton(HDC _dc, const tToolbarButton& button)
         DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
     HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
 
-    // ÅØ½ºÆ® Áß¾Ó Á¤·Ä
+    // í…ìŠ¤íŠ¸ ì¤‘ì•™ ì •ë ¬
     SIZE textSize;
     GetTextExtentPoint32(_dc, button.strText.c_str(), (int)button.strText.length(), &textSize);
 
@@ -625,24 +631,24 @@ void CEditorToolbar::RenderTooltip(HDC _dc)
     if (!m_pHoveredButton || m_pHoveredButton->strTooltip.empty())
         return;
 
-    // ÅøÆÁ ÅØ½ºÆ® Å©±â °è»ê
+    // íˆ´íŒ í…ìŠ¤íŠ¸ í¬ê¸° ì¸¡ì •
     SIZE textSize;
     GetTextExtentPoint32(_dc, m_pHoveredButton->strTooltip.c_str(),
         (int)m_pHoveredButton->strTooltip.length(), &textSize);
 
-    // ÅøÆÁ ¹Ú½º À§Ä¡ °è»ê
+    // íˆ´íŒ ë°•ìŠ¤ ìœ„ì¹˜ ê³„ì‚°
     int tooltipX = (int)m_vMousePos.x + 10;
     int tooltipY = m_iToolbarHeight + 5;
     int tooltipWidth = textSize.cx + 10;
     int tooltipHeight = textSize.cy + 6;
 
-    // È­¸é °æ°è Ã¼Å©
+    // í™”ë©´ ê²½ê³„ ì²´í¬
     RECT clientRect;
     GetClientRect(CCore::GetInst()->GetMainHwnd(), &clientRect);
     if (tooltipX + tooltipWidth > clientRect.right)
         tooltipX = (int)m_vMousePos.x - tooltipWidth - 10;
 
-    // ÅøÆÁ ¹è°æ
+    // íˆ´íŒ ë°°ê²½
     HBRUSH hBrush = CreateSolidBrush(RGB(255, 255, 200));
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
     HPEN hPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
@@ -650,7 +656,7 @@ void CEditorToolbar::RenderTooltip(HDC _dc)
 
     Rectangle(_dc, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight);
 
-    // ÅøÆÁ ÅØ½ºÆ®
+    // íˆ´íŒ í…ìŠ¤íŠ¸
     SetBkMode(_dc, TRANSPARENT);
     SetTextColor(_dc, RGB(0, 0, 0));
 
@@ -672,14 +678,14 @@ void CEditorToolbar::RenderTooltip(HDC _dc)
 
 void CEditorToolbar::RenderToolbarBackground(HDC _dc)
 {
-    // Åø¹Ù ¹è°æ
+    // íˆ´ë°” ë°°ê²½
     HBRUSH hBrush = CreateSolidBrush(RGB(45, 45, 45));
     HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
 
-    RECT toolbarRect = { 0, 0, 1920, m_iToolbarHeight }; // ÃæºĞÈ÷ ³Ğ°Ô
+    RECT toolbarRect = { 0, 0, 1920, m_iToolbarHeight };
     FillRect(_dc, &toolbarRect, hBrush);
 
-    // ÇÏ´Ü °æ°è¼±
+    // í•˜ë‹¨ ê²½ê³„ì„ 
     HPEN hPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
@@ -694,7 +700,7 @@ void CEditorToolbar::RenderToolbarBackground(HDC _dc)
 
 void CEditorToolbar::RenderMapSizeLabel(HDC _dc, const tToolbarButton& button)
 {
-    // ¶óº§Àº ¹öÆ°°ú ´Ù¸£°Ô ·»´õ¸µ (¹è°æ ¾øÀ½)
+    // ì¼ë°˜ ë²„íŠ¼ê³¼ ë‹¤ë¥¸ê²Œ ë Œë”ë§ (ë°°ê²½ ì—†ìŒ)
     SetBkMode(_dc, TRANSPARENT);
     SetTextColor(_dc, RGB(200, 200, 200));
 
@@ -703,7 +709,7 @@ void CEditorToolbar::RenderMapSizeLabel(HDC _dc, const tToolbarButton& button)
         DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
     HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
 
-    // ÅØ½ºÆ® Áß¾Ó Á¤·Ä
+    // í…ìŠ¤íŠ¸ ì¤‘ì•™ ì •ë ¬
     SIZE textSize;
     GetTextExtentPoint32(_dc, button.strText.c_str(), (int)button.strText.length(), &textSize);
 
@@ -718,24 +724,24 @@ void CEditorToolbar::RenderMapSizeLabel(HDC _dc, const tToolbarButton& button)
 
 void CEditorToolbar::RenderInfoArea(HDC _dc)
 {
-    // Ä«¸Ş¶ó ÁÂÇ¥ °¡Á®¿À±â (½ÇÁ¦ ÁÂÇ¥)
+    // ì¹´ë©”ë¼ ì¢Œí‘œ ê°€ì ¸ì˜¤ê¸° (ì›”ë“œ ì¢Œí‘œ)
     Vec2 vCameraPos(0.f, 0.f);
     if (m_pEditorCore && m_pEditorCore->GetCameraController())
     {
         vCameraPos = m_pEditorCore->GetCameraController()->GetCameraPosition();
     }
 
-    // UI¿ë ÁÂÇ¥ º¯È¯: ½ÇÁ¦ Y¸¦ UI Y·Î º¯È¯
+    // UIìš© ì¢Œí‘œ ë³€í™˜: ì›”ë“œ Yë¥¼ UI Yë¡œ ë³€í™˜
     float uiY = m_vCurrentMapSize.y - vCameraPos.y;
 
-    // Á¤º¸ ÅØ½ºÆ® »ı¼º (UI ÁÂÇ¥·Î Ç¥½Ã)
+    // ì •ë³´ í…ìŠ¤íŠ¸ ìƒì„± (UI ì¢Œí‘œë¡œ í‘œì‹œ)
     wchar_t szMapInfo[128];
     wchar_t szCameraInfo[128];
 
     swprintf_s(szMapInfo, L"Map: %.0fx%.0f", m_vCurrentMapSize.x, m_vCurrentMapSize.y);
     swprintf_s(szCameraInfo, L"Cam: (%.0f, %.0f)", vCameraPos.x, uiY);
 
-    // ÅØ½ºÆ® ½ºÅ¸ÀÏ ¼³Á¤
+    // í…ìŠ¤íŠ¸ ë Œë”ë§ ì„¤ì •
     SetBkMode(_dc, TRANSPARENT);
     SetTextColor(_dc, RGB(200, 200, 200));
 

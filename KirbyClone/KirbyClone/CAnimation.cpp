@@ -26,25 +26,25 @@ void CAnimation::Update()
     if (m_bFinish || m_vecFrame.empty())
         return;
 
-    // µ¨Å¸Å¸ÀÓ ´©Àû
+    // ë¸íƒ€íƒ€ì„ ëˆ„ì 
     m_fAccTime += CTimeMgr::GetInst()->GetfDT();
 
-    // ÇöÀç ÇÁ·¹ÀÓÀÇ Áö¼Ó½Ã°£À» ³Ñ¾ú´Ù¸é ´ÙÀ½ ÇÁ·¹ÀÓÀ¸·Î
+    // í˜„ì¬ í”„ë ˆì„ì˜ ì§€ì†ì‹œê°„ì„ ë„˜ì—ˆë‹¤ë©´ ë‹¤ìŒ í”„ë ˆì„ìœ¼ë¡œ
     if (m_fAccTime >= m_vecFrame[m_iCurFrame].fDuration)
     {
         ++m_iCurFrame;
         m_fAccTime = 0.f;
 
-        // ¸¶Áö¸· ÇÁ·¹ÀÓ¿¡ µµ´ŞÇß´Ù¸é
+        // ë§ˆì§€ë§‰ í”„ë ˆì„ì— ë„ë‹¬í–ˆë‹¤ë©´
         if (m_iCurFrame >= (int)m_vecFrame.size())
         {
             if (m_bLoop)
             {
-                m_iCurFrame = 0;  // ¹İº¹
+                m_iCurFrame = 0;  // ë°˜ë³µ
             }
             else
             {
-                --m_iCurFrame;   // ¸¶Áö¸· ÇÁ·¹ÀÓ¿¡¼­ Á¤Áö
+                --m_iCurFrame;   // ë§ˆì§€ë§‰ í”„ë ˆì„ì—ì„œ ìœ ì§€
                 m_bFinish = true;
             }
         }
@@ -53,7 +53,7 @@ void CAnimation::Update()
 
 void CAnimation::Render(HDC _dc, Vec2 _vPos)
 {
-    // ±âº» Å©±â(1.0¹è)·Î ·»´õ¸µ
+    // ï¿½âº» Å©ï¿½ï¿½(1.0ï¿½ï¿½)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     RenderScaled(_dc, _vPos, 1.0f);
 }
 
@@ -67,18 +67,18 @@ void CAnimation::Reset()
 void CAnimation::Create(CTexture* _pTex, Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
     float _fDuration, int _iFrameCount, bool _bLoop)
 {
-    // À¯È¿¼º °Ë»ç
+    // ìœ íš¨ì„± ê²€ì‚¬
     if (nullptr == _pTex || _iFrameCount <= 0 || _fDuration <= 0.f)
         return;
 
-    // ±âº» ¼³Á¤
+    // ê¸°ë³¸ ì„¤ì •
     m_pTex = _pTex;
     m_bLoop = _bLoop;
 
-    // ±âÁ¸ ÇÁ·¹ÀÓµé Á¦°Å
+    // ê¸°ì¡´ í”„ë ˆì„ë“¤ ì‚­ì œ
     m_vecFrame.clear();
 
-    // ÇÁ·¹ÀÓµé »ı¼º
+    // í”„ë ˆì„ë“¤ ìƒì„±
     for (int i = 0; i < _iFrameCount; ++i)
     {
         tAnimFrame frame;
@@ -94,7 +94,7 @@ void CAnimation::Create(CTexture* _pTex, Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vSte
 
 void CAnimation::AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration)
 {
-    // À¯È¿¼º °Ë»ç
+    // ìœ íš¨ì„± ê²€ì‚¬
     if (_fDuration <= 0.f)
         return;
 
@@ -114,18 +114,18 @@ void CAnimation::ClearFrames()
     m_bFinish = false;
 }
 
-void CAnimation::RenderScaled(HDC _dc, Vec2 _vPos, float _fScale)
+void CAnimation::RenderScaled(HDC _dc, Vec2 _vPos, float _fScale, bool _bFlipX)
 {
     if (!IsValidRenderState())
         return;
 
-    // ·»´õ¸µ Á¤º¸ °è»ê
+    // ì¹´ë©”ë¼ ì¢Œí‘œ ë³€í™˜
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(_vPos);
     const tAnimFrame& frame = m_vecFrame[m_iCurFrame];
     Vec2 vDestSize = frame.vSlice * _fScale;
 
-    // ½ÇÁ¦ ·»´õ¸µ ¼öÇà
-    RenderFrame(_dc, vRenderPos, frame, vDestSize);
+    // ì‹¤ì œ í”„ë ˆì„ ë Œë”ë§ (í”Œë¦½ í¬í•¨)
+    RenderFrame(_dc, vRenderPos, frame, vDestSize, _bFlipX);
 }
 
 bool CAnimation::IsValidCreateParams(CTexture* _pTex, int _iFrameCount, float _fDuration) const
@@ -154,17 +154,85 @@ void CAnimation::CreateFrameSequence(Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
 }
 
 void CAnimation::RenderFrame(HDC _dc, const Vec2& _vRenderPos, const tAnimFrame& _frame,
-    const Vec2& _vDestSize)
+    const Vec2& _vDestSize, bool _bFlipX)
 {
-    TransparentBlt(_dc,
-        (int)(_vRenderPos.x - _vDestSize.x / 2.f),
-        (int)(_vRenderPos.y - _vDestSize.y / 2.f),
-        (int)_vDestSize.x,
-        (int)_vDestSize.y,
-        m_pTex->GetDC(),
-        (int)_frame.vLT.x,
-        (int)_frame.vLT.y,
-        (int)_frame.vSlice.x,
-        (int)_frame.vSlice.y,
-        RGB(255, 0, 255));  // ¸¶Á¨Å¸ ÄÃ·¯Å°
+    if (_bFlipX)
+    {
+        // í”Œë¦½ì„ ìœ„í•œ ë©”ëª¨ë¦¬ DC 2ê°œ ìƒì„± (íˆ¬ëª…ë„ ì²˜ë¦¬ìš©)
+        HDC memDC1 = CreateCompatibleDC(_dc);
+        HDC memDC2 = CreateCompatibleDC(_dc);
+        HBITMAP memBmp1 = CreateCompatibleBitmap(_dc, (int)_vDestSize.x, (int)_vDestSize.y);
+        HBITMAP memBmp2 = CreateCompatibleBitmap(_dc, (int)_vDestSize.x, (int)_vDestSize.y);
+        HBITMAP oldBmp1 = (HBITMAP)SelectObject(memDC1, memBmp1);
+        HBITMAP oldBmp2 = (HBITMAP)SelectObject(memDC2, memBmp2);
+        
+        // ì²« ë²ˆì§¸ DCë¥¼ ë§ˆì  íƒ€ë¡œ ì±„ì›€ (íˆ¬ëª…ìƒ‰)
+        HBRUSH magentaBrush = CreateSolidBrush(RGB(255, 0, 255));
+        RECT fillRect = {0, 0, (int)_vDestSize.x, (int)_vDestSize.y};
+        FillRect(memDC1, &fillRect, magentaBrush);
+        DeleteObject(magentaBrush);
+        
+        // ì›ë³¸ ì´ë¯¸ì§€ë¥¼ ì²« ë²ˆì§¸ DCì— íˆ¬ëª… ë¸”ë¦¿
+        TransparentBlt(memDC1,
+            0, 0,
+            (int)_vDestSize.x,
+            (int)_vDestSize.y,
+            m_pTex->GetDC(),
+            (int)_frame.vLT.x,
+            (int)_frame.vLT.y,
+            (int)_frame.vSlice.x,
+            (int)_frame.vSlice.y,
+            RGB(255, 0, 255));
+        
+        // ë‘ ë²ˆì§¸ DCë¥¼ ë§ˆì  íƒ€ë¡œ ì±„ì›€
+        HBRUSH magentaBrush2 = CreateSolidBrush(RGB(255, 0, 255));
+        FillRect(memDC2, &fillRect, magentaBrush2);
+        DeleteObject(magentaBrush2);
+        
+        // ì²« ë²ˆì§¸ DCë¥¼ ë‘ ë²ˆì§¸ DCì— í”Œë¦½í•´ì„œ ë³µì‚¬
+        StretchBlt(memDC2,
+            (int)_vDestSize.x - 1, 0,  // xDest, yDest (ì‹œì‘ X, Y)
+            -(int)_vDestSize.x,        // wDest (ìŒìˆ˜ ë„ˆë¹„ë¡œ í”Œë¦½)
+            (int)_vDestSize.y,         // hDest (ë†’ì´)
+            memDC1,                    // hdcSrc
+            0, 0,                      // xSrc, ySrc
+            (int)_vDestSize.x,         // wSrc
+            (int)_vDestSize.y,         // hSrc
+            SRCCOPY);
+        
+        // í”Œë¦½ëœ ì´ë¯¸ì§€ë¥¼ í™”ë©´ì— íˆ¬ëª… ë¸”ë¦¿
+        TransparentBlt(_dc,
+            (int)(_vRenderPos.x - _vDestSize.x / 2.f),
+            (int)(_vRenderPos.y - _vDestSize.y / 2.f),
+            (int)_vDestSize.x,
+            (int)_vDestSize.y,
+            memDC2,
+            0, 0,
+            (int)_vDestSize.x,
+            (int)_vDestSize.y,
+            RGB(255, 0, 255));
+        
+        // ë¦¬ì†ŒìŠ¤ ì •ë¦¬
+        SelectObject(memDC1, oldBmp1);
+        SelectObject(memDC2, oldBmp2);
+        DeleteObject(memBmp1);
+        DeleteObject(memBmp2);
+        DeleteDC(memDC1);
+        DeleteDC(memDC2);
+    }
+    else
+    {
+        // ì¼ë°˜ ë Œë”ë§
+        TransparentBlt(_dc,
+            (int)(_vRenderPos.x - _vDestSize.x / 2.f),
+            (int)(_vRenderPos.y - _vDestSize.y / 2.f),
+            (int)_vDestSize.x,
+            (int)_vDestSize.y,
+            m_pTex->GetDC(),
+            (int)_frame.vLT.x,
+            (int)_frame.vLT.y,
+            (int)_frame.vSlice.x,
+            (int)_frame.vSlice.y,
+            RGB(255, 0, 255));  // ë§ˆì  íƒ€ ì»¬ëŸ¬í‚¤
+    }
 }

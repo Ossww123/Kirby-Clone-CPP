@@ -20,6 +20,7 @@
 #include "CPlayerMovement.h"
 #include "CPlayerHealthSystem.h"
 #include "CPlayerCollisionSystem.h"
+#include "CPlayerDataMgr.h"
 
 CPlayer::CPlayer()
     : m_pStateMachine(nullptr)
@@ -30,6 +31,11 @@ CPlayer::CPlayer()
     , m_bDamageRequested(false)
     , m_vDamageKnockback(Vec2(0.f, 0.f))
     , m_bSlideKickRecoilRequested(false)
+    , m_bGameOverSequence(false)
+    , m_fGameOverTimer(0.f)
+    , m_iGameOverPhase(0)
+    , m_bBossDefeatWaiting(false)
+    , m_bVictorySequenceWaiting(false)
 {
     SetType(OBJECT_TYPE::PLAYER);
 
@@ -109,6 +115,34 @@ CPlayer::~CPlayer()
 
 void CPlayer::Update()
 {
+    // === 보스 격파 대기 중에는 업데이트 중지 ===
+    if (m_bBossDefeatWaiting)
+    {
+        return;  // 입력 차단 및 업데이트 중지
+    }
+    
+    // === 승리 시퀀스 대기 중에는 입력만 차단, StateMachine은 계속 ===
+    if (m_bVictorySequenceWaiting)
+    {
+        // 물리, 애니메이션, StateMachine 업데이트 (입력 처리만 건너뛰기)
+        GetRigidBody()->Update();
+        GetAnimator()->Update();
+        
+        // StateMachine 업데이트 (상태 전환 허용)
+        if (m_pStateMachine)
+        {
+            m_pStateMachine->Update();
+        }
+        return;
+    }
+    
+    // === 게임 오버 시퀀스 처리 ===
+    if (m_bGameOverSequence)
+    {
+        UpdateGameOverSequence();
+        return;  // 게임 오버 중에는 다른 업데이트 중지
+    }
+
     // === 체력 시스템 업데이트 ===
     if (m_pHealthSystem)
         m_pHealthSystem->Update();
@@ -145,6 +179,11 @@ void CPlayer::Update()
     CAnimator* pAnimator = GetAnimator();
     if (pAnimator)
         pAnimator->Update();
+
+    // === 플레이어 위치를 카메라 경계 내로 제한 ===
+    Vec2 vCurrentPos = GetPos();
+    CCamera::GetInst()->ClampPositionToCameraBounds(vCurrentPos);
+    SetPos(vCurrentPos);
 }
 
 void CPlayer::Render(HDC _dc)
@@ -160,6 +199,9 @@ void CPlayer::Render(HDC _dc)
     CAnimator* pAnimator = GetAnimator();
     if (pAnimator)
     {
+        // 커비는 기본적으로 오른쪽을 보므로, 왼쪽을 볼 때 플립
+        bool shouldFlip = !IsFacingRight();
+        pAnimator->SetFlipX(shouldFlip);
         pAnimator->Render(_dc);
     }
     else
@@ -288,6 +330,20 @@ void CPlayer::ClearSlideKickRecoilRequest()
     m_bSlideKickRecoilRequested = false;
 }
 
+// === 상태 저장/로드 ===
+void CPlayer::LoadFromSavedData()
+{
+    // CPlayerDataMgr에서 저장된 데이터가 있는지 확인
+    if (CPlayerDataMgr::GetInst()->HasSavedData())
+    {
+        // 저장된 상태 복원
+        CPlayerDataMgr::GetInst()->LoadPlayerState(this);
+        
+        // 데이터 사용 완료 후 클리어
+        CPlayerDataMgr::GetInst()->ClearSavedData();
+    }
+}
+
 // === 렌더링 헬퍼 함수들 ===
 void CPlayer::RenderInvincible(HDC _dc)
 {
@@ -380,4 +436,135 @@ void CPlayer::CreateAnimation()
 
     // 기본 애니메이션 설정
     pAnimator->Play(L"IDLE", true);
+}
+
+void CPlayer::LoadCopyAbilityAnimations(COPY_ABILITY _eCopyAbility)
+{
+    CAnimator* pAnimator = GetAnimator();
+    if (!pAnimator)
+        return;
+
+    // 능력별 애니메이션 파일 경로 결정
+    wstring abilityAnimationFile;
+    switch (_eCopyAbility)
+    {
+    case COPY_ABILITY::FIRE:
+        abilityAnimationFile = L"player_fire_animations.json";
+        break;
+    case COPY_ABILITY::BEAM:
+        abilityAnimationFile = L"player_beam_animations.json";
+        break;
+    case COPY_ABILITY::SPARK:
+        abilityAnimationFile = L"player_spark_animations.json";
+        break;
+    case COPY_ABILITY::NONE:
+        // 기본 애니메이션으로 복구
+        abilityAnimationFile = L"player_animations.json";
+        break;
+    default:
+        // 알 수 없는 능력은 기본 애니메이션 사용
+        abilityAnimationFile = L"player_animations.json";
+        break;
+    }
+
+    // 새 애니메이션 로드 (기존 애니메이션은 자동으로 교체됨)
+    CAnimationDataMgr::GetInst()->LoadAnimationsIntoAnimator(pAnimator, abilityAnimationFile);
+    
+    // IDLE 애니메이션으로 시작
+    pAnimator->Play(L"IDLE", true);
+}
+
+void CPlayer::StartGameOverSequence()
+{
+    m_bGameOverSequence = true;
+    m_fGameOverTimer = 0.f;
+    m_iGameOverPhase = 0;
+    
+    // GAMEOVER 애니메이션 시작
+    if (GetAnimator())
+    {
+        GetAnimator()->Play(L"GAMEOVER", false);
+    }
+    
+    // 물리 효과 초기화 (중력 비활성화)
+    if (GetRigidBody())
+    {
+        GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
+        GetRigidBody()->SetUseGravity(false);
+    }
+}
+
+void CPlayer::UpdateGameOverSequence()
+{
+    float fDT = CTimeMgr::GetInst()->GetfDT();
+    m_fGameOverTimer += fDT;
+    
+    Vec2 vPos = GetPos();
+    
+    switch (m_iGameOverPhase)
+    {
+    case 0: // 0.5초간 정지 (더 빠르게)
+        if (m_fGameOverTimer >= 0.5f)
+        {
+            m_iGameOverPhase = 1;
+            m_fGameOverTimer = 0.f;
+        }
+        break;
+        
+    case 1: // 위로 상승 (0.5초간, 더 빠르게)
+        {
+            float fUpSpeed = 800.f;  // 위쪽으로 800픽셀/초 (더 빠르게)
+            vPos.y -= fUpSpeed * fDT;
+            SetPos(vPos);
+            
+            if (m_fGameOverTimer >= 0.2f)
+            {
+                m_iGameOverPhase = 2;
+                m_fGameOverTimer = 0.f;
+                // 중력 다시 활성화
+                if (GetRigidBody())
+                {
+                    GetRigidBody()->SetUseGravity(true);
+                    GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
+                }
+            }
+        }
+        break;
+        
+    case 2: // 아래로 낙하
+        // 중력으로 자연스럽게 낙하
+        if (m_fGameOverTimer >= 1.0f)  // 1초 후 게임 오버 이벤트 발생 (더 빠르게)
+        {
+            // 게임 오버 이벤트 발생 (한 번만)
+            tEvent gameOverEvent = {};
+            gameOverEvent.eType = EVENT_TYPE::GAME_OVER;
+            gameOverEvent.wParam = (DWORD_PTR)this;
+            CEventMgr::GetInst()->AddEvent(gameOverEvent);
+            
+            m_iGameOverPhase = 3;  // 완료 상태로 변경하여 중복 실행 방지
+        }
+        break;
+        
+    case 3: // 완료 상태 (더 이상 이벤트 발생 안 함)
+        // 아무것도 하지 않음 (대기 상태)
+        break;
+    }
+    
+    // 애니메이터는 계속 업데이트
+    if (GetAnimator())
+        GetAnimator()->Update();
+}
+
+void CPlayer::ResetGameOverSequence()
+{
+    m_bGameOverSequence = false;
+    m_fGameOverTimer = 0.f;
+    m_iGameOverPhase = 0;
+    
+    // 물리 효과 정상화
+    if (GetRigidBody())
+    {
+        GetRigidBody()->SetUseGravity(true);
+        GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
+    }
 }

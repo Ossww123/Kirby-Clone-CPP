@@ -7,6 +7,7 @@
 #include "CObject.h"
 #include "CTile.h"
 #include "CMonster.h"
+#include "CProjectile.h"
 #include "CRigidBody.h"
 #include "CTimeMgr.h"
 #include "CScene.h"
@@ -124,6 +125,7 @@ void CPlayerCollisionSystem::HandleCollisionEnter(CCollider* _pOther)
     CObject* pOtherObj = _pOther->GetOwner();
     if (!pOtherObj) return;
 
+
     // 무적 상태 확인
     if (IsInvincibleState())
     {
@@ -153,6 +155,13 @@ void CPlayerCollisionSystem::HandleCollisionEnter(CCollider* _pOther)
     {
         HandleSpecialObjectCollisionEnter(pOtherObj);
     }
+    else if (dynamic_cast<CProjectile*>(pOtherObj))
+    {
+        // 투사체(PROJ_MONSTER) 충돌 처리
+        CProjectile* pProjectile = dynamic_cast<CProjectile*>(pOtherObj);
+        if (pProjectile)
+            HandleProjectileCollisionEnter(pProjectile);
+    }
 }
 
 void CPlayerCollisionSystem::HandleCollision(CCollider* _pOther)
@@ -170,6 +179,11 @@ void CPlayerCollisionSystem::HandleCollision(CCollider* _pOther)
         CTile* pTile = dynamic_cast<CTile*>(pOtherObj);
         if (pTile)
             HandleTileCollision(pTile);
+    }
+    else if (eType == OBJECT_TYPE::MONSTER_WHISPY_WOODS)
+    {
+        // WhispyWoods를 벽처럼 처리
+        HandleWhispyWoodsWallCollision(pOtherObj);
     }
 }
 
@@ -195,7 +209,29 @@ void CPlayerCollisionSystem::HandleCollisionExit(CCollider* _pOther)
 
 void CPlayerCollisionSystem::HandleTileCollisionEnter(CTile* _pTile)
 {
-    if (!_pTile || !_pTile->IsSolid()) return;
+    if (!_pTile) return;
+
+
+    // 보스 트리거 타일 체크
+    if (_pTile->GetVisualType() == TILE_VISUAL_TYPE::BOSS_TRIGGER)
+    {
+        // 트리거가 비활성화된 경우 무시
+        if (!_pTile->IsTriggerActive())
+        {
+            return;
+        }
+        
+        // 보스 트리거 이벤트 발생
+        tEvent evn = {};
+        evn.eType = EVENT_TYPE::BOSS_BATTLE_START;
+        evn.lParam = (DWORD_PTR)_pTile; // 트리거 타일 참조 전달 (카메라 고정 위치 정보 포함)
+        evn.wParam = 0; // 추가 데이터
+        CEventMgr::GetInst()->AddEvent(evn);
+        return;
+    }
+
+    // 기존 Solid 타일 처리
+    if (!_pTile->IsSolid()) return;
 
     // 타일 진입 시 특별한 처리가 필요하면 여기에 추가
 }
@@ -396,6 +432,23 @@ void CPlayerCollisionSystem::HandleSpecialObjectCollisionEnter(CObject* _pSpecia
     // 예: 문, 스위치, 이동 플랫폼 등
 }
 
+void CPlayerCollisionSystem::HandleProjectileCollisionEnter(CProjectile* _pProjectile)
+{
+    if (!_pProjectile || !m_pOwner) return;
+
+    // 몬스터 투사체와의 충돌 시 플레이어가 데미지를 받음
+    float fDamage = _pProjectile->GetDamage();
+    
+    // 투사체 방향에 따른 넉백 방향 계산 (왼쪽 또는 오른쪽)
+    Vec2 knockbackDir = Vec2(_pProjectile->GetDirection().x * 200.f, 0.f);
+    
+    // 플레이어 데미지 처리 (넉백 포함)
+    m_pOwner->TakeDamage((int)fDamage, knockbackDir);
+    
+    // 투사체 삭제
+    _pProjectile->SetDead();
+}
+
 // === 타일 충돌 세부 처리 ===
 
 bool CPlayerCollisionSystem::ShouldSetGroundState(CTile* _pTile) const
@@ -520,7 +573,7 @@ bool CPlayerCollisionSystem::IsMonsterType(OBJECT_TYPE _eType)
 bool CPlayerCollisionSystem::IsTileType(OBJECT_TYPE _eType)
 {
     return _eType >= OBJECT_TYPE::TILE_GROUND &&
-        _eType <= OBJECT_TYPE::TILE_INVISIBLE;
+        _eType <= OBJECT_TYPE::TILE_TRIGGER;
 }
 
 bool CPlayerCollisionSystem::IsItemType(OBJECT_TYPE _eType)
@@ -533,4 +586,98 @@ bool CPlayerCollisionSystem::IsSpecialObjectType(OBJECT_TYPE _eType)
 {
     return _eType >= OBJECT_TYPE::OBJECT_DOOR &&
         _eType <= OBJECT_TYPE::OBJECT_MIRROR;
+}
+
+void CPlayerCollisionSystem::HandleWhispyWoodsWallCollision(CObject* _pWhispyWoods)
+{
+    if (!_pWhispyWoods || !m_pOwner) return;
+
+    // 플레이어와 WhispyWoods의 충돌체 정보 가져오기
+    CCollider* pPlayerCollider = m_pOwner->GetCollider();
+    CCollider* pWhispyCollider = _pWhispyWoods->GetCollider();
+    
+    if (!pPlayerCollider || !pWhispyCollider) return;
+
+    // 플레이어와 WhispyWoods의 위치와 크기
+    Vec2 vPlayerPos = m_pOwner->GetPos();
+    Vec2 vPlayerScale = pPlayerCollider->GetScale();
+    
+    Vec2 vWhispyPos = _pWhispyWoods->GetPos();
+    Vec2 vWhispyScale = pWhispyCollider->GetScale();
+
+    // 충돌 영역 계산
+    float fPlayerLeft = vPlayerPos.x - vPlayerScale.x * 0.5f;
+    float fPlayerRight = vPlayerPos.x + vPlayerScale.x * 0.5f;
+    float fPlayerTop = vPlayerPos.y - vPlayerScale.y * 0.5f;
+    float fPlayerBottom = vPlayerPos.y + vPlayerScale.y * 0.5f;
+
+    float fWhispyLeft = vWhispyPos.x - vWhispyScale.x * 0.5f;
+    float fWhispyRight = vWhispyPos.x + vWhispyScale.x * 0.5f;
+    float fWhispyTop = vWhispyPos.y - vWhispyScale.y * 0.5f;
+    float fWhispyBottom = vWhispyPos.y + vWhispyScale.y * 0.5f;
+
+    // 겹침 계산
+    float fOverlapX = min(fPlayerRight, fWhispyRight) - max(fPlayerLeft, fWhispyLeft);
+    float fOverlapY = min(fPlayerBottom, fWhispyBottom) - max(fPlayerTop, fWhispyTop);
+
+    if (fOverlapX > 0 && fOverlapY > 0)
+    {
+        Vec2 vSeparation(0.f, 0.f);
+
+        // 더 작은 겹침 방향으로 플레이어를 밀어냄
+        if (fOverlapX < fOverlapY)
+        {
+            // 수평 방향으로 분리
+            if (vPlayerPos.x < vWhispyPos.x)
+            {
+                vSeparation.x = -fOverlapX; // 왼쪽으로 밀어냄
+            }
+            else
+            {
+                vSeparation.x = fOverlapX;  // 오른쪽으로 밀어냄
+            }
+        }
+        else
+        {
+            // 수직 방향으로 분리
+            if (vPlayerPos.y < vWhispyPos.y)
+            {
+                vSeparation.y = -fOverlapY; // 위로 밀어냄
+            }
+            else
+            {
+                vSeparation.y = fOverlapY;  // 아래로 밀어냄
+            }
+        }
+
+        // 플레이어 위치 조정
+        Vec2 vNewPos = vPlayerPos + vSeparation;
+        m_pOwner->SetPos(vNewPos);
+
+        // 플레이어가 WhispyWoods 쪽으로 이동하려는 속도를 제거
+        CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
+        if (pRigidBody)
+        {
+            Vec2 vVelocity = pRigidBody->GetVelocity();
+            
+            if (fOverlapX < fOverlapY) // 수평 분리
+            {
+                if ((vSeparation.x < 0 && vVelocity.x > 0) || // 왼쪽으로 밀렸는데 오른쪽으로 가려 함
+                    (vSeparation.x > 0 && vVelocity.x < 0))   // 오른쪽으로 밀렸는데 왼쪽으로 가려 함
+                {
+                    vVelocity.x = 0.f;
+                    pRigidBody->SetVelocity(vVelocity);
+                }
+            }
+            else // 수직 분리
+            {
+                if ((vSeparation.y < 0 && vVelocity.y > 0) || // 위로 밀렸는데 아래로 가려 함
+                    (vSeparation.y > 0 && vVelocity.y < 0))   // 아래로 밀렸는데 위로 가려 함
+                {
+                    vVelocity.y = 0.f;
+                    pRigidBody->SetVelocity(vVelocity);
+                }
+            }
+        }
+    }
 }

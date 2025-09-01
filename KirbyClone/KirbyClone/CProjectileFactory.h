@@ -1,5 +1,6 @@
 #pragma once
 
+class CObject;
 class CProjectile;
 
 class CProjectileFactory
@@ -21,6 +22,9 @@ public:
     static CProjectile* CreateFire(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
     static CProjectile* CreateBeam(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
     static CProjectile* CreateElectricField(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::PLAYER);
+    
+    // === 특수 투사체 생성 함수들 ===
+    static CProjectile* CreateRotatingBeam(Vec2 _vCenter, float _fRadius, float _fStartAngle, float _fEndAngle, float _fDuration, CObject* _pOwner);
 
     // === 몬스터 투사체 전용 생성 함수들 ===
     static CProjectile* CreateBossAirPuff(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner = GROUP_TYPE::MONSTER);

@@ -11,6 +11,7 @@ CBackground::CBackground()
     , m_vScrollSpeed(Vec2(0.5f, 0.f))
     , m_fScrollOffset(0.f)
     , m_bScrollable(true)
+    , m_vStageSize(Vec2(4096.f, 640.f))  // Default stage size
 {
 }
 
@@ -20,11 +21,28 @@ CBackground::~CBackground()
 
 void CBackground::Update()
 {
-    if (m_bScrollable)
+    if (m_bScrollable && nullptr != m_pBackgroundTex)
     {
-        // ƒ´∏ﬁ∂Û ¿ßƒ°ø° µ˚∏• ∆–∑≤∑¢Ω∫ Ω∫≈©∑—∏µ
+        // Get camera position and screen resolution
         Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
-        m_fScrollOffset = vCameraPos.x * m_vScrollSpeed.x;
+        Vec2 vResolution = CCore::GetInst()->GetResolution();
+        
+        // Get background texture size (scaled)
+        float fScale = CCore::GetPixelScale();
+        UINT bgWidth = m_pBackgroundTex->GetWidth();
+        UINT scaledBgWidth = (UINT)(bgWidth * fScale);
+        
+        // Calculate proportional offset based on camera position relative to stage
+        // Formula: bgOffsetX = (cameraX / stageWidth) * (bgWidth - screenWidth)
+        if (m_vStageSize.x > 0 && scaledBgWidth > vResolution.x)
+        {
+            float cameraRatio = vCameraPos.x / m_vStageSize.x;
+            m_fScrollOffset = cameraRatio * (scaledBgWidth - vResolution.x);
+        }
+        else
+        {
+            m_fScrollOffset = 0.f;
+        }
     }
 }
 
@@ -37,32 +55,36 @@ void CBackground::Render(HDC _dc)
     UINT bgWidth = m_pBackgroundTex->GetWidth();
     UINT bgHeight = m_pBackgroundTex->GetHeight();
 
-    // πË∞Êµµ 4πË∑Œ »Æ¥Î
+    // 4Î∞∞ Ïä§ÏºÄÏùº Ï†ÅÏö©
     float fScale = CCore::GetPixelScale();
     UINT scaledWidth = (UINT)(bgWidth * fScale);
     UINT scaledHeight = (UINT)(bgHeight * fScale);
 
     if (m_bScrollable)
     {
-        // π´«— Ω∫≈©∑—¿ª ¿ß«— πË∞Ê π›∫π ∑ª¥ı∏µ (4πË »Æ¥Î)
-        int startX = (int)(-m_fScrollOffset * fScale) % scaledWidth;
-        if (startX > 0) startX -= scaledWidth;
-
-        for (int x = startX; x < (int)vResolution.x; x += scaledWidth)
-        {
-            // πË∞Ê¿ª »≠∏È ≈©±‚ø° ∏¬√Á Ω∫ƒ…¿œ∏µ«œø© ∑ª¥ı∏µ
-            StretchBlt(_dc,
-                x, 0,
-                scaledWidth, (int)vResolution.y,
-                m_pBackgroundTex->GetDC(),
-                0, 0,
-                bgWidth, bgHeight,
-                SRCCOPY);
-        }
+        // Proportional background rendering - show portion of single image
+        // Calculate source rectangle based on scroll offset
+        int srcX = (int)(m_fScrollOffset / fScale);
+        int srcWidth = (int)(vResolution.x / fScale);
+        int srcHeight = bgHeight;
+        
+        // Clamp source rectangle to background texture bounds
+        if (srcX < 0) srcX = 0;
+        if (srcX + srcWidth > (int)bgWidth) srcWidth = bgWidth - srcX;
+        if (srcWidth < 0) srcWidth = 0;
+        
+        // Render the portion of background that corresponds to current camera position
+        StretchBlt(_dc,
+            0, 0,
+            (int)vResolution.x, (int)vResolution.y,
+            m_pBackgroundTex->GetDC(),
+            srcX, 0,
+            srcWidth, srcHeight,
+            SRCCOPY);
     }
     else
     {
-        // ∞Ì¡§ πË∞Ê - »≠∏È ¿¸√ºø° Ω∫∆Æ∑πƒ° («»ºø æ∆∆Æ ¥¿≥¶ ¿Ø¡ˆ)
+        // Static background - stretch entire image to fill screen
         StretchBlt(_dc,
             0, 0,
             (int)vResolution.x, (int)vResolution.y,
@@ -80,17 +102,17 @@ void CBackground::SetupBackground(BACKGROUND_TYPE _eType)
     switch (_eType)
     {
     case BACKGROUND_TYPE::BACKGROUND1:
-        m_vScrollSpeed = Vec2(0.3f, 0.f);   // ¥¿∏∞ ∆–∑≤∑¢Ω∫
+        m_vScrollSpeed = Vec2(0.3f, 0.f);   // Ï≤úÏ≤úÌûà Ìå®Îü¥Î†âÏä§
         m_bScrollable = true;
         break;
 
     case BACKGROUND_TYPE::BACKGROUND2:
-        m_vScrollSpeed = Vec2(0.4f, 0.f);   // ¡ﬂ∞£ º”µµ ∆–∑≤∑¢Ω∫
+        m_vScrollSpeed = Vec2(0.4f, 0.f);   // Ï§ëÍ∞Ñ ÏÜçÎèÑ Ìå®Îü¥Î†âÏä§
         m_bScrollable = true;
         break;
 
     case BACKGROUND_TYPE::BACKGROUND3:
-        m_vScrollSpeed = Vec2(0.2f, 0.f);   // ¥ı ¥¿∏∞ ∆–∑≤∑¢Ω∫ (∏÷∏Æ ¿÷¥¬ ¥¿≥¶)
+        m_vScrollSpeed = Vec2(0.2f, 0.f);   // Îçî ÎäêÎ¶∞ Ìå®Îü¥Î†âÏä§ (Î©ÄÎ¶¨ ÏûàÎäî Î∞∞Í≤Ω)
         m_bScrollable = true;
         break;
 

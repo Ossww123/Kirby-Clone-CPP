@@ -6,6 +6,7 @@ class CObject;
 class CTile;
 class CMonster;
 class CRigidBody;
+class CProjectile;
 
 class CPlayerCollisionSystem
 {
@@ -46,6 +47,7 @@ private:
     void HandleMonsterCollisionEnter(CMonster* _pMonster);
     void HandleItemCollisionEnter(CObject* _pItem);
     void HandleSpecialObjectCollisionEnter(CObject* _pSpecialObject);
+    void HandleProjectileCollisionEnter(CProjectile* _pProjectile);
 
     // === 타일 충돌 세부 처리 ===
     bool ShouldSetGroundState(CTile* _pTile) const;
@@ -61,6 +63,9 @@ private:
 
     // === 무적 상태 체크 ===
     bool IsInvincibleState() const;
+
+    // === 특수 몬스터 충돌 처리 ===
+    void HandleWhispyWoodsWallCollision(CObject* _pWhispyWoods);
 
     // === 오브젝트 타입 유틸리티 함수들 ===
     static bool IsMonsterType(OBJECT_TYPE _eType);

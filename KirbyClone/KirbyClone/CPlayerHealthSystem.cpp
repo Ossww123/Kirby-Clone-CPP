@@ -8,6 +8,7 @@
 #include "CCamera.h"
 #include "CSceneMgr.h"
 #include "CPlayerStateMachine.h"
+#include "CEventMgr.h"
 
 CPlayerHealthSystem::CPlayerHealthSystem(CPlayer* _pOwner)
     : m_pOwner(_pOwner)
@@ -18,7 +19,7 @@ CPlayerHealthSystem::CPlayerHealthSystem(CPlayer* _pOwner)
     , m_fInvincibleTimer(0.0f)
     , m_fBlinkInterval(0.1f)
     , m_bIsGameOver(false)
-    , m_fGameOverY(1280.0f)
+    , m_fGameOverY(1600.0f)
     , m_fGameOverTimer(0.0f)
     , m_fGameOverDelay(2.0f)
     , m_bKnockbackActive(false)
@@ -34,7 +35,7 @@ CPlayerHealthSystem::~CPlayerHealthSystem()
 
 void CPlayerHealthSystem::Init()
 {
-    // Ã¼·Â ¿ÏÀü È¸º¹
+    // ì²´ë ¥ ì™„ì „ íšŒë³µ
     m_iCurrentHP = m_iMaxHP;
     m_bIsGameOver = false;
     m_bIsInvincible = false;
@@ -49,14 +50,14 @@ void CPlayerHealthSystem::Update()
     if (!m_pOwner)
         return;
 
-    // °ÔÀÓ¿À¹ö »óÅÂ Ã³¸®
+    // ê²Œì„ì˜¤ë²„ ìƒíƒœ ì²˜ë¦¬
     if (m_bIsGameOver)
     {
         UpdateGameOver();
         return;
     }
 
-    // ÀÏ¹İ ¾÷µ¥ÀÌÆ®
+    // ì¼ë°˜ ì—…ë°ì´íŠ¸
     UpdateInvincible();
     UpdateKnockback();
     CheckGameOverConditions();
@@ -64,28 +65,28 @@ void CPlayerHealthSystem::Update()
 
 void CPlayerHealthSystem::Render(HDC _dc)
 {
-    // Ã¼·Â UI´Â Ç×»ó ·»´õ¸µ
-    RenderHealthUI(_dc);
-
-    // °ÔÀÓ¿À¹ö UI
+    // UI ë Œë”ë§ì€ CUIMgrì—ì„œ í†µí•© ì²˜ë¦¬
+    // ê¸°ì¡´ UI ë Œë”ë§ ì œê±°
+    
+    // ê²Œì„ì˜¤ë²„ UIë§Œ ìœ ì§€ (CUIMgrì—ì„œ ì²˜ë¦¬í•˜ì§€ ì•ŠëŠ” íŠ¹ìˆ˜ UI)
     if (m_bIsGameOver)
     {
         RenderGameOverUI(_dc);
     }
 }
 
-// === Ã¼·Â °ü¸® ÇÔ¼öµé ===
+// === ì²´ë ¥ ê´€ë¦¬ í•¨ìˆ˜ë“¤ ===
 
 void CPlayerHealthSystem::TakeDamage(int _iDamage, Vec2 _vKnockbackDir)
 {
-    // ¹«Àû »óÅÂ°Å³ª °ÔÀÓ¿À¹ö »óÅÂ¸é µ¥¹ÌÁö ¹«½Ã
+    // ë¬´ì  ìƒíƒœê±°ë‚˜ ê²Œì„ì˜¤ë²„ ìƒíƒœë©´ ë°ë¯¸ì§€ ë¬´ì‹œ
     if (m_bIsInvincible || m_bIsGameOver)
         return;
 
-    // Ã¼·Â °¨¼Ò
+    // ì²´ë ¥ ê°ì†Œ
     m_iCurrentHP -= _iDamage;
 
-    // Ã¼·ÂÀÌ 0 ÀÌÇÏ°¡ µÇ¸é °ÔÀÓ¿À¹ö
+    // ì²´ë ¥ì´ 0 ì´í•˜ê°€ ë˜ë©´ ê²Œì„ì˜¤ë²„
     if (m_iCurrentHP <= 0)
     {
         m_iCurrentHP = 0;
@@ -93,11 +94,11 @@ void CPlayerHealthSystem::TakeDamage(int _iDamage, Vec2 _vKnockbackDir)
         return;
     }
 
-    // ÇÇ°İ È¿°ú
+    // í”¼ê²© íš¨ê³¼
     StartInvincible();
     PlayDamageEffects();
 
-    // ³Ë¹é Àû¿ë
+    // ë„‰ë°± ì ìš©
     if (_vKnockbackDir.Length() > 0.1f)
     {
         ApplyKnockback(_vKnockbackDir);
@@ -111,7 +112,7 @@ void CPlayerHealthSystem::Heal(int _iHeal)
 
     m_iCurrentHP += _iHeal;
 
-    // ÃÖ´ë Ã¼·Â Á¦ÇÑ
+    // ìµœëŒ€ ì²´ë ¥ ì œí•œ
     if (m_iCurrentHP > m_iMaxHP)
         m_iCurrentHP = m_iMaxHP;
 
@@ -122,13 +123,13 @@ void CPlayerHealthSystem::SetHP(int _iHP)
 {
     m_iCurrentHP = _iHP;
 
-    // ¹üÀ§ Á¦ÇÑ
+    // ë²”ìœ„ ì œí•œ
     if (m_iCurrentHP < 0)
         m_iCurrentHP = 0;
     if (m_iCurrentHP > m_iMaxHP)
         m_iCurrentHP = m_iMaxHP;
 
-    // Ã¼·ÂÀÌ 0ÀÌ¸é °ÔÀÓ¿À¹ö
+    // ì²´ë ¥ì´ 0ì´ë©´ ê²Œì„ì˜¤ë²„
     if (m_iCurrentHP <= 0)
         ForceGameOver();
 }
@@ -137,19 +138,19 @@ void CPlayerHealthSystem::SetMaxHP(int _iMaxHP)
 {
     m_iMaxHP = _iMaxHP;
 
-    // ÇöÀç Ã¼·ÂÀÌ ÃÖ´ëÄ¡¸¦ ³ÑÀ¸¸é Á¶Á¤
+    // í˜„ì¬ ì²´ë ¥ì´ ìµœëŒ€ì¹˜ë¥¼ ë„˜ìœ¼ë©´ ì¡°ì •
     if (m_iCurrentHP > m_iMaxHP)
         m_iCurrentHP = m_iMaxHP;
 }
 
-// === »óÅÂ Ã¼Å© ÇÔ¼öµé ===
+// === ìƒíƒœ ì²´í¬ í•¨ìˆ˜ë“¤ ===
 
 bool CPlayerHealthSystem::ShouldRenderBlink() const
 {
     if (!m_bIsInvincible)
         return false;
 
-    // ±ôºıÀÓ ÆĞÅÏ °è»ê
+    // ê¹œë¹¡ì„ íŒ¨í„´ ê³„ì‚°
     int iBlinkCount = (int)(m_fInvincibleTimer / m_fBlinkInterval);
     return (iBlinkCount % 2 == 0);
 }
@@ -159,20 +160,26 @@ void CPlayerHealthSystem::ForceGameOver()
     m_bIsGameOver = true;
     m_fGameOverTimer = 0.0f;
     PlayGameOverEffects();
+    
+    // í”Œë ˆì´ì–´ ì£½ìŒ ì´ë²¤íŠ¸ ë°œìƒ
+    tEvent deathEvent = {};
+    deathEvent.eType = EVENT_TYPE::PLAYER_DEATH;
+    deathEvent.wParam = (DWORD_PTR)m_pOwner;
+    CEventMgr::GetInst()->AddEvent(deathEvent);
 }
 
 void CPlayerHealthSystem::RestartStage()
 {
-    // »óÅÂ ÃÊ±âÈ­
+    // ìƒíƒœ ì´ˆê¸°í™”
     Init();
 
-    // ÇÃ·¹ÀÌ¾î À§Ä¡ ¹× »óÅÂ ¸®¼Â
+    // í”Œë ˆì´ì–´ ìœ„ì¹˜ ë° ìƒíƒœ ë¦¬ì…‹
     if (m_pOwner)
     {
-        // ½ÃÀÛ À§Ä¡·Î ÀÌµ¿
+        // ì‹œì‘ ìœ„ì¹˜ë¡œ ì´ë™
         m_pOwner->SetPos(Vec2(640.f, 384.f));
 
-        // ¼Óµµ ÃÊ±âÈ­
+        // ì†ë„ ì´ˆê¸°í™”
         CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
         if (pRigidBody)
         {
@@ -180,13 +187,13 @@ void CPlayerHealthSystem::RestartStage()
             pRigidBody->SetGround(false);
         }
 
-        // === ½Ã½ºÅÛ ·¹º§ »óÅÂ ÃÊ±âÈ­ ===
+        // === ì‹œìŠ¤í…œ ë ˆë²¨ ìƒíƒœ ì´ˆê¸°í™” ===
         if (m_pOwner->GetStateMachine())
         {
             m_pOwner->GetStateMachine()->ForceStateForSystemReset(PLAYER_STATE::IDLE);
         }
 
-        // ÈíÀÔ ½Ã½ºÅÛ ÃÊ±âÈ­
+        // í¡ì… ì‹œìŠ¤í…œ ì´ˆê¸°í™”
         if (m_pOwner->GetInhaleSystem())
         {
             m_pOwner->StopInhale();
@@ -203,7 +210,7 @@ void CPlayerHealthSystem::StartInvincible(float _fTime)
     m_fInvincibleTimer = 0.0f;
 }
 
-// === ¾÷µ¥ÀÌÆ® ÇÔ¼öµé ===
+// === ì—…ë°ì´íŠ¸ í•¨ìˆ˜ë“¤ ===
 
 void CPlayerHealthSystem::UpdateInvincible()
 {
@@ -222,7 +229,7 @@ void CPlayerHealthSystem::UpdateGameOver()
 {
     m_fGameOverTimer += CTimeMgr::GetInst()->GetfDT();
 
-    // ¼³Á¤µÈ ´ë±â ½Ã°£ ÈÄ Àç½ÃÀÛ
+    // ì„¤ì •ëœ ëŒ€ê¸° ì‹œê°„ í›„ ì¬ì‹œì‘
     if (m_fGameOverTimer >= m_fGameOverDelay)
     {
         RestartStage();
@@ -236,18 +243,18 @@ void CPlayerHealthSystem::UpdateKnockback()
 
     m_fKnockbackTimer += CTimeMgr::GetInst()->GetfDT();
 
-    // ³Ë¹é Áö¼Ó ½Ã°£ÀÌ ³¡³ª¸é Á¤Áö
+    // ë„‰ë°± ì§€ì† ì‹œê°„ì´ ëë‚˜ë©´ ì •ì§€
     if (m_fKnockbackTimer >= m_fKnockbackDuration)
     {
         m_bKnockbackActive = false;
         m_fKnockbackTimer = 0.0f;
 
-        // ³Ë¹é Èû Á¦°Å
+        // ë„‰ë°± í˜ ì œê±°
         CRigidBody* pRigidBody = m_pOwner->GetRigidBody();
         if (pRigidBody)
         {
             Vec2 vCurrentVel = pRigidBody->GetVelocity();
-            // YÃà ¼Óµµ´Â À¯Áö (Áß·Â ¶§¹®)
+            // Yì¶• ì†ë„ëŠ” ìœ ì§€ (ì¤‘ë ¥ ë•Œë¬¸)
             pRigidBody->SetVelocity(Vec2(0.f, vCurrentVel.y));
         }
     }
@@ -258,7 +265,7 @@ void CPlayerHealthSystem::CheckGameOverConditions()
     if (!m_pOwner || m_bIsGameOver)
         return;
 
-    // YÃà ³«»ç Ã¼Å©
+    // Yì¶• ë‚™ì‚¬ ì²´í¬
     Vec2 vPos = m_pOwner->GetPos();
     if (vPos.y > m_fGameOverY)
     {
@@ -266,16 +273,16 @@ void CPlayerHealthSystem::CheckGameOverConditions()
     }
 }
 
-// === ·»´õ¸µ ÇÔ¼öµé ===
+// === ë Œë”ë§ í•¨ìˆ˜ë“¤ ===
 
 void CPlayerHealthSystem::RenderHealthUI(HDC _dc)
 {
-    // È­¸é °íÁ¤ À§Ä¡¿¡ Ã¼·Â Ç¥½Ã
+    // í™”ë©´ ê³ ì • ìœ„ì¹˜ì— ì²´ë ¥ í‘œì‹œ
     Vec2 vUIPos(50.f, 50.f);
     float fHeartSize = 28.f;
     float fHeartSpacing = 35.f;
 
-    // ¹è°æ »ç°¢Çü
+    // ë°°ê²½ ì‚¬ê°í˜•
     HBRUSH hBgBrush = CreateSolidBrush(RGB(0, 0, 0));
     HBRUSH hOldBgBrush = (HBRUSH)SelectObject(_dc, hBgBrush);
 
@@ -290,7 +297,7 @@ void CPlayerHealthSystem::RenderHealthUI(HDC _dc)
     SelectObject(_dc, hOldBgBrush);
     DeleteObject(hBgBrush);
 
-    // ÇÏÆ® ·»´õ¸µ
+    // í•˜íŠ¸ ë Œë”ë§
     for (int i = 0; i < m_iMaxHP; ++i)
     {
         Vec2 vHeartPos = vUIPos + Vec2(i * fHeartSpacing, 0.f);
@@ -303,7 +310,7 @@ void CPlayerHealthSystem::RenderHealthUI(HDC _dc)
         HPEN hHeartPen = CreatePen(PS_SOLID, 2, RGB(150, 50, 50));
         HPEN hOldHeartPen = (HPEN)SelectObject(_dc, hHeartPen);
 
-        // ÇÏÆ® ¸ğ¾ç (°£´ÜÇÑ ¿øÇü)
+        // í•˜íŠ¸ ëª¨ì–‘ (ê°„ë‹¨í•œ ì›í˜•)
         Ellipse(_dc,
             (int)(vHeartPos.x - fHeartSize / 2),
             (int)(vHeartPos.y - fHeartSize / 2),
@@ -316,7 +323,7 @@ void CPlayerHealthSystem::RenderHealthUI(HDC _dc)
         DeleteObject(hHeartPen);
     }
 
-    // Ã¼·Â ÅØ½ºÆ®
+    // ì²´ë ¥ í…ìŠ¤íŠ¸
     HFONT hFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
@@ -340,14 +347,14 @@ void CPlayerHealthSystem::RenderGameOverUI(HDC _dc)
     int screenWidth = clientRect.right - clientRect.left;
     int screenHeight = clientRect.bottom - clientRect.top;
 
-    // ¹İÅõ¸í ¹è°æ
+    // ë°˜íˆ¬ëª… ë°°ê²½
     HBRUSH hBgBrush = CreateSolidBrush(RGB(0, 0, 0));
     HBRUSH hOldBgBrush = (HBRUSH)SelectObject(_dc, hBgBrush);
     Rectangle(_dc, 0, 0, screenWidth, screenHeight);
     SelectObject(_dc, hOldBgBrush);
     DeleteObject(hBgBrush);
 
-    // "GAME OVER" ÅØ½ºÆ®
+    // "GAME OVER" í…ìŠ¤íŠ¸
     HFONT hTitleFont = CreateFont(64, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
@@ -367,7 +374,7 @@ void CPlayerHealthSystem::RenderGameOverUI(HDC _dc)
     SelectObject(_dc, hOldTitleFont);
     DeleteObject(hTitleFont);
 
-    // Àç½ÃÀÛ Ä«¿îÆ®´Ù¿î
+    // ì¬ì‹œì‘ ì¹´ìš´íŠ¸ë‹¤ìš´
     HFONT hSubFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
@@ -388,7 +395,7 @@ void CPlayerHealthSystem::RenderGameOverUI(HDC _dc)
     DeleteObject(hSubFont);
 }
 
-// === È¿°ú ÇÔ¼öµé ===
+// === íš¨ê³¼ í•¨ìˆ˜ë“¤ ===
 
 void CPlayerHealthSystem::ApplyKnockback(Vec2 _vDirection, float _fPower)
 {
@@ -399,35 +406,35 @@ void CPlayerHealthSystem::ApplyKnockback(Vec2 _vDirection, float _fPower)
     if (!pRigidBody)
         return;
 
-    // ³Ë¹é ¹æÇâ Á¤±ÔÈ­
+    // ë„‰ë°± ë°©í–¥ ì •ê·œí™”
     _vDirection.Normalize();
 
-    // ³Ë¹é Èû °è»ê
+    // ë„‰ë°± í˜ ê³„ì‚°
     m_vKnockbackForce = _vDirection * _fPower;
 
-    // Áï½Ã ¼Óµµ Àû¿ë
+    // ì¦‰ì‹œ ì†ë„ ì ìš©
     pRigidBody->AddVelocity(m_vKnockbackForce);
 
-    // ³Ë¹é »óÅÂ ½ÃÀÛ
+    // ë„‰ë°± ìƒíƒœ ì‹œì‘
     m_bKnockbackActive = true;
     m_fKnockbackTimer = 0.0f;
 }
 
 void CPlayerHealthSystem::PlayDamageEffects()
 {
-    // TODO: ÇÇ°İ È¿°úÀ½ Àç»ı
-    // TODO: È­¸é Èçµé¸² È¿°ú
-    // TODO: ÆÄÆ¼Å¬ È¿°ú µî
+    // TODO: í”¼ê²© íš¨ê³¼ìŒ ì¬ìƒ
+    // TODO: í™”ë©´ í”ë“¤ë¦¼ íš¨ê³¼
+    // TODO: íŒŒí‹°í´ íš¨ê³¼ ë“±
 }
 
 void CPlayerHealthSystem::PlayHealEffects()
 {
-    // TODO: È¸º¹ È¿°úÀ½ Àç»ı
-    // TODO: È¸º¹ ÆÄÆ¼Å¬ È¿°ú
+    // TODO: íšŒë³µ íš¨ê³¼ìŒ ì¬ìƒ
+    // TODO: íšŒë³µ íŒŒí‹°í´ íš¨ê³¼
 }
 
 void CPlayerHealthSystem::PlayGameOverEffects()
 {
-    // TODO: °ÔÀÓ¿À¹ö È¿°úÀ½ Àç»ı
-    // TODO: °ÔÀÓ¿À¹ö ¾Ö´Ï¸ŞÀÌ¼Ç
+    // TODO: ê²Œì„ì˜¤ë²„ íš¨ê³¼ìŒ ì¬ìƒ
+    // TODO: ê²Œì„ì˜¤ë²„ ì• ë‹ˆë©”ì´ì…˜
 }

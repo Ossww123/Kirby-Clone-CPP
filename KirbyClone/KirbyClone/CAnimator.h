@@ -11,44 +11,50 @@ public:
     ~CAnimator();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === ê¸°ë³¸ ì‹œìŠ¤í…œ í•¨ìˆ˜ë“¤ ===
     void Update();
     void Render(HDC _dc);
 
 public:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç »ı¼º ¹× °ü¸® ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ìƒì„± ë° ê´€ë¦¬ ===
     void CreateAnimation(const wstring& _strName, CTexture* _pTex, Vec2 _vLT,
         Vec2 _vSliceSize, Vec2 _vStep, float _fDuration,
         int _iFrameCount, bool _bLoop = true);
     void AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim);
 
 private:
-    // === ÆÄÀÏ ÀÔÃâ·Â (¹Ì±¸Çö) ===
+    // === íŒŒì¼ ê´€ë¦¬ (ë¯¸êµ¬í˜„) ===
     void LoadAnimation(const wstring& _strRelativePath);
     void SaveAnimation(const wstring& _strRelativePath);
 
 public:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı Á¦¾î ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ ì œì–´ ===
     void Play(const wstring& _strName, bool _bRepeat);
 
 public:
-    // === ·»´õ¸µ ¿É¼Çµé ===
+    // === ë Œë”ë§ ì˜µì…˜ë“¤ ===
     void RenderScaled(HDC _dc, float _fScale);
+    void RenderAtPosition(HDC _dc, Vec2 _vPos, float _fScale = 0.f); // ì§€ì •ëœ ìœ„ì¹˜ì— ë Œë”ë§
 
 private:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç °Ë»ö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ê²€ìƒ‰ ===
     CAnimation* FindAnimation(const wstring& _strName);
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     CAnimation* GetCurAnim() const { return m_pCurAnim; }
+    
+    // === í”Œë¦½ ê´€ë ¨ í•¨ìˆ˜ë“¤ ===
+    void SetFlipX(bool _bFlip) { m_bFlipX = _bFlip; }
+    bool IsFlipX() const { return m_bFlipX; }
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    CObject* m_pOwner;                          // ¼ÒÀ¯ÀÚ ¿ÀºêÁ§Æ®
-    map<wstring, CAnimation*> m_mapAnim;        // ¾Ö´Ï¸ŞÀÌ¼Ç ¸Ê
-    CAnimation* m_pCurAnim;                     // ÇöÀç Àç»ıÁßÀÎ ¾Ö´Ï¸ŞÀÌ¼Ç
-    bool m_bRepeat;                             // ¹İº¹ Àç»ı ¿©ºÎ
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
+    CObject* m_pOwner;                          // ì†Œìœ ì ì˜¤ë¸Œì íŠ¸
+    map<wstring, CAnimation*> m_mapAnim;        // ì• ë‹ˆë©”ì´ì…˜ ë§µ
+    CAnimation* m_pCurAnim;                     // í˜„ì¬ ì¬ìƒì¤‘ì¸ ì• ë‹ˆë©”ì´ì…˜
+    bool m_bRepeat;                             // ë°˜ë³µ ì¬ìƒ ìƒíƒœ
+    bool m_bFlipX;                              // Xì¶• í”Œë¦½ ì—¬ë¶€
 
     friend class CObject;
 };

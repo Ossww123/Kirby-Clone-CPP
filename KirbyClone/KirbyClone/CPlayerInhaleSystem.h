@@ -3,68 +3,97 @@
 
 class CPlayer;
 class CRigidBody;
+class CAirParticle;
+
+// === ë¹¨ì•„ë“¤ì´ê¸° ëŒ€ìƒ ì¶”ì  êµ¬ì¡°ì²´ ===
+struct InhaleTargetInfo
+{
+    CObject* pTarget;           // ëŒ€ìƒ ì˜¤ë¸Œì íŠ¸
+    Vec2 vInitialPos;          // ë¹¨ì•„ë“¤ì´ê¸° ì‹œì‘ ìœ„ì¹˜
+    float fInhaleTimer;        // ë¹¨ì•„ë“¤ì´ê¸° ì‹œê°„ (0.3ì´ˆê¹Œì§€)
+
+    InhaleTargetInfo ( CObject* _pTarget , Vec2 _vPos )
+        : pTarget ( _pTarget ) , vInitialPos ( _vPos ) , fInhaleTimer ( 0.f )
+    {}
+};
 
 class CPlayerInhaleSystem
 {
 private:
-    // === ¼ÒÀ¯ÀÚ ÂüÁ¶ ===
-    CPlayer* m_pOwner;              // ÇÃ·¹ÀÌ¾î ÂüÁ¶
+    // === ì†Œìœ ì ì°¸ì¡° ===
+    CPlayer* m_pOwner;              // í”Œë ˆì´ì–´ ì°¸ì¡°
 
-    // === »¡¾ÆµéÀÌ±â °ü·Ã ===
-    bool            m_bInhaling;        // »¡¾ÆµéÀÌ±â ÁßÀÎÁö
-    float           m_fInhaleTime;      // »¡¾ÆµéÀÌ±â Áö¼Ó ½Ã°£
-    float           m_fInhaleRange;     // »¡¾ÆµéÀÌ±â ¹üÀ§
-    Vec2            m_vInhaleDir;       // »¡¾ÆµéÀÌ±â ¹æÇâ
-    vector<CObject*> m_vecInhaleTargets; // »¡¾ÆµéÀÌ±â ´ë»óµé
+    // === ë¹¨ì•„ë“¤ì´ê¸° ìƒíƒœ ===
+    bool            m_bInhaling;        // ë¹¨ì•„ë“¤ì´ê¸° ìƒíƒœ
+    float           m_fInhaleTime;      // ë¹¨ì•„ë“¤ì´ê¸° ì§€ì† ì‹œê°„
+    float           m_fInhaleRange;     // ë¹¨ì•„ë“¤ì´ê¸° ë²”ìœ„
+    Vec2            m_vInhaleDir;       // ë¹¨ì•„ë“¤ì´ê¸° ë°©í–¥
+    vector<InhaleTargetInfo> m_vecInhaleTargets; // ë¹¨ì•„ë“¤ì´ê¸° ëŒ€ìƒ ì •ë³´
 
-    // === ¹°°í ÀÖ´Â °ÍÀÇ Á¤º¸ ===
-    bool            m_bHasMouthful;     // ÀÔ¿¡ ¹º°¡ ¹°°í ÀÖ´ÂÁö
-    CObject*        m_pMouthfulTarget;  // ¹°°í ÀÖ´Â °Í
-    OBJECT_TYPE     m_eMouthfulType;    // ¹°°í ÀÖ´Â °ÍÀÇ Å¸ÀÔ
+    // === ì…ì— ë¬¼ê³  ìˆëŠ” ìƒíƒœ ê´€ë¦¬ ===
+    bool            m_bHasMouthful;     // ì…ì— ë¬¼ê³  ìˆëŠ” ìƒíƒœ
+    CObject* m_pMouthfulTarget;  // ë¬¼ê³  ìˆëŠ” ê²ƒ
+    OBJECT_TYPE     m_eMouthfulType;    // ë¬¼ê³  ìˆëŠ” ê²ƒì˜ íƒ€ì…
+    
+    // === íŒŒí‹°í´ ì‹œìŠ¤í…œ ===
+    vector<CAirParticle*> m_vecAirParticles;  // ê³µê¸° íŒŒí‹°í´ë“¤
+    float           m_fParticleSpawnTimer;    // íŒŒí‹°í´ ìƒì„± íƒ€ì´ë¨¸
+    float           m_fParticleSpawnInterval; // íŒŒí‹°í´ ìƒì„± ê°„ê²©
+    
+    // === ì‚¬ìš´ë“œ ì‹œìŠ¤í…œ ===
+    bool            m_bInhaleSoundPlaying;    // í¡ì… ì‚¬ìš´ë“œ ì¬ìƒ ì¤‘ì¸ì§€
 
 public:
-    CPlayerInhaleSystem(CPlayer* _pOwner);
-    ~CPlayerInhaleSystem();
+    CPlayerInhaleSystem ( CPlayer* _pOwner );
+    ~CPlayerInhaleSystem ( );
 
 public:
-    // === ÃÊ±âÈ­ ¹× ¾÷µ¥ÀÌÆ® ===
-    void Init();
-    void Update();
+    // === ì´ˆê¸°í™” ë° ì—…ë°ì´íŠ¸ ===
+    void Init ( );
+    void Update ( );
 
-    // === »¡¾ÆµéÀÌ±â Á¦¾î ===
-    void StartInhale();
-    void UpdateInhale();
-    void StopInhale();
+    // === ë¹¨ì•„ë“¤ì´ê¸° ê´€ë¦¬ ===
+    void StartInhale ( );
+    void UpdateInhale ( );
+    void StopInhale ( );
 
-    // === ´ë»ó °ü¸® ===
-    void UpdateInhaleTargets();
-    void SwallowTarget(CObject* _pTarget);
+    // === í¡ìˆ˜ ê´€ë¦¬ ===
+    void UpdateInhaleTargets ( );
+    void SwallowTarget ( CObject* _pTarget );
 
-    // === ¹ñ±â °ü·Ã ===
-    void SpitOut();
-    void ReleaseMouthful();
+    // === ë±‰ê¸° ê´€ë¦¬ ===
+    void SpitOut ( );
+    void ReleaseMouthful ( );
 
-    // === ·»´õ¸µ ===
-    void RenderInhaleEffect(HDC _dc);
+    // === ë Œë”ë§ ===
+    void RenderInhaleEffect ( HDC _dc );
+    
+    // === íŒŒí‹°í´ ì‹œìŠ¤í…œ ===
+    void UpdateParticles();         // íŒŒí‹°í´ ì—…ë°ì´íŠ¸
+    void SpawnParticles();          // íŒŒí‹°í´ ìƒì„±
+    void ClearParticles();          // ëª¨ë“  íŒŒí‹°í´ ì œê±°
 
-    // === Getter ÇÔ¼öµé ===
-    bool IsInhaling() const { return m_bInhaling; }
-    bool HasMouthful() const { return m_bHasMouthful; }
-    float GetInhaleTime() const { return m_fInhaleTime; }
-    float GetInhaleRange() const { return m_fInhaleRange; }
-    const Vec2& GetInhaleDir() const { return m_vInhaleDir; }
-    const vector<CObject*>& GetInhaleTargets() const { return m_vecInhaleTargets; }
-    CObject* GetMouthfulTarget() const { return m_pMouthfulTarget; }
-    OBJECT_TYPE GetMouthfulType() const { return m_eMouthfulType; }
+    // === Getter í•¨ìˆ˜ë“¤ ===
+    bool IsInhaling ( ) const { return m_bInhaling; }
+    bool HasMouthful ( ) const { return m_bHasMouthful; }
+    float GetInhaleTime ( ) const { return m_fInhaleTime; }
+    float GetInhaleRange ( ) const { return m_fInhaleRange; }
+    const Vec2& GetInhaleDir ( ) const { return m_vInhaleDir; }
+    const vector<InhaleTargetInfo>& GetInhaleTargets ( ) const { return m_vecInhaleTargets; }
+    CObject* GetMouthfulTarget ( ) const { return m_pMouthfulTarget; }
+    OBJECT_TYPE GetMouthfulType ( ) const { return m_eMouthfulType; }
+    
+    // === ìƒíƒœ í™•ì¸ í•¨ìˆ˜ë“¤ ===
+    bool HasBeingInhaledMonsters ( ) const;  // ì”¬ì— ë¹¨ì•„ë“¤ì—¬ì§€ëŠ” ì¤‘ì¸ ëª¬ìŠ¤í„°ê°€ ìˆëŠ”ì§€ í™•ì¸
 
-    // === Setter ÇÔ¼öµé ===
-    void SetMouthful(bool _bMouthful) { m_bHasMouthful = _bMouthful; }
-    void SetInhaleRange(float _fRange) { m_fInhaleRange = _fRange; }
+    // === Setter í•¨ìˆ˜ë“¤ ===
+    void SetMouthful ( bool _bMouthful ) { m_bHasMouthful = _bMouthful; }
+    void SetInhaleRange ( float _fRange ) { m_fInhaleRange = _fRange; }
 
 private:
-    // === ³»ºÎ ÇïÆÛ ÇÔ¼öµé ===
-    void UpdateInhaleDirection();       // »¡¾ÆµéÀÌ±â ¹æÇâ ¾÷µ¥ÀÌÆ®
-    bool IsValidInhaleTarget(CObject* _pTarget);  // À¯È¿ÇÑ »¡¾ÆµéÀÌ±â ´ë»óÀÎÁö È®ÀÎ
-    void ApplyInhaleForce(CObject* _pTarget);     // »¡¾ÆµéÀÌ±â Èû Àû¿ë
-    Vec2 CalculateInhaleDirection();    // ÇöÀç ÇÃ·¹ÀÌ¾î ¹æÇâ¿¡ µû¸¥ »¡¾ÆµéÀÌ±â ¹æÇâ °è»ê
+    // === ë‚´ë¶€ ì²˜ë¦¬ í•¨ìˆ˜ë“¤ ===
+    void UpdateInhaleDirection ( );       // ë¹¨ì•„ë“¤ì´ê¸° ë°©í–¥ ì—…ë°ì´íŠ¸
+    bool IsValidInhaleTarget ( CObject* _pTarget );  // ìœ íš¨í•œ ë¹¨ì•„ë“¤ì´ê¸° ëŒ€ìƒì¸ì§€ í™•ì¸
+    void ApplyInhaleForce ( CObject* _pTarget );     // ë¹¨ì•„ë“¤ì´ê¸° í˜ ì ìš©
+    Vec2 CalculateInhaleDirection ( );    // í˜„ì¬ í”Œë ˆì´ì–´ ë°©í–¥ì— ë”°ë¥¸ ë¹¨ì•„ë“¤ì´ê¸° ë°©í–¥ ê³„ì‚°
 };

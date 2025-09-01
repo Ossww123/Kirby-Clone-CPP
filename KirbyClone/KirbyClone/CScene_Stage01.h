@@ -6,40 +6,40 @@ class CBackground;
 class CScene_Stage01 : public CScene
 {
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
     void Enter() override;
     void Exit() override;
     void Update() override;
     void Render(HDC _dc) override;
 
 private:
-    // === ·¹º§ ·Îµå °ü·Ã ÇÔ¼öµé ===
+    // === ë ˆë²¨ ë¡œë“œ ê´€ë ¨ í•¨ìˆ˜ë“¤ ===
     void LoadStageLevel(const wstring& _strFileName);
     CObject* CreateObjectFromData(const tLevelObjectData& _objData);
     void CreateDefaultLevel();
     void ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _eBgType, STAGE_IMAGE_TYPE _eStageType);
 
 private:
-    // === ½ºÅ×ÀÌÁöº° ÃÊ±â ¼³Á¤ ===
+    // === ìŠ¤í…Œì´ì§€ë³„ ì´ˆê¸° ì„¤ì • ===
     void InitializeStage();
 
 private:
-    // === ¹è°æ ½Ã½ºÅÛ °ü·Ã ÇÔ¼öµé ===
+    // === ë°°ê²½ ì‹œìŠ¤í…œ ê´€ë ¨ í•¨ìˆ˜ë“¤ ===
     void InitializeBackgroundSystem();
     void ChangeBackground(BACKGROUND_TYPE _eBgType);
 
 public:
-    // === »ı¼ºÀÚ/¼Ò¸êÀÚ ===
+    // === ìƒì„±ì/ì†Œë©¸ì ===
     CScene_Stage01();
     ~CScene_Stage01();
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
 
-    // === ·¹º§ ÆÄÀÏ °ü¸® ===
-    wstring         m_strLevelFile;         // ·ÎµåÇÒ ·¹º§ ÆÄÀÏ¸í
+    // === ë ˆë²¨ íŒŒì¼ ê´€ë¦¬ ===
+    wstring         m_strLevelFile;         // ë¡œë“œí•  ë ˆë²¨ íŒŒì¼ëª…
 
-    // === ¹è°æ ½Ã½ºÅÛ ===
-    CBackground* m_pCurrentBackground;   // ÇöÀç ¹è°æ
-    BACKGROUND_TYPE m_eCurrentBgType;       // ÇöÀç ¹è°æ Å¸ÀÔ
+    // === ë°°ê²½ ì‹œìŠ¤í…œ ===
+    CBackground* m_pCurrentBackground;   // í˜„ì¬ ë°°ê²½
+    BACKGROUND_TYPE m_eCurrentBgType;       // í˜„ì¬ ë°°ê²½ íƒ€ì…
 };

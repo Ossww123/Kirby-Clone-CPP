@@ -8,6 +8,7 @@ class CGordo;
 class CHotHead;
 class CSparky;
 class CWhispyWoods;
+class CApple;
 
 class CObjectFactory
 {
@@ -35,6 +36,7 @@ public:
     static CHotHead* CreateHotHead ( Vec2 _vPos );
     static CSparky* CreateSparky ( Vec2 _vPos );
     static CWhispyWoods* CreateWhispyWoods ( Vec2 _vPos );
+    static CApple* CreateApple ( Vec2 _vPos );
 
 
     // 유틸리티 함수들

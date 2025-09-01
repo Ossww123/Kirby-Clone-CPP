@@ -32,6 +32,7 @@ protected:
     void UpdateWalk() override;
     void UpdateFly() override;          // 비행 상태도 추가
     void UpdateTurn() override;
+    void UpdateDamage() override;       // 데미지 상태 처리 (넉백 포함)
     void UpdateBeingInhaled() override; // 빨아들려지는 상태 처리
 
 public:
@@ -46,6 +47,7 @@ protected:
     bool    m_bPlayerDetected;      // 플레이어 감지 여부
     float   m_fDetectionRange;      // 플레이어 감지 범위
     Vec2    m_vPlayerPos;           // 플레이어 위치
+    Vec2    m_vDamageSourcePos;     // 데미지 소스 위치 (넉백 방향 계산용)
 
     // === 빨아들임 관련 내부 처리 ===
     void ProcessInhaleMovement();           // 빨아들임 중 이동 처리
@@ -80,6 +82,6 @@ public:
     // === 데미지 처리 오버라이드 ===
     void TakeDamage() override;
     
-    // === 데미지 소스 위치 설정 (이벤트 시스템용) ===
-    void SetDamageSourcePos(Vec2 _vPos) { m_vPlayerPos = _vPos; }
+    // === 데미지 소스 위치 설정 (넉백 계산용) ===
+    void SetDamageSourcePos(Vec2 _vPos) { m_vDamageSourcePos = _vPos; }
 };

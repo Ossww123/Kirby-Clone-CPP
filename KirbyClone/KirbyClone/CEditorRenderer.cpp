@@ -9,6 +9,7 @@
 #include "CGrid.h"
 #include "CObjectFactory.h"
 #include "CObject.h"
+#include "CMonster.h"
 
 CEditorRenderer::CEditorRenderer()
     : m_pEditorCore(nullptr)
@@ -24,394 +25,405 @@ void CEditorRenderer::Initialize(CEditorCore* _pCore)
     m_pEditorCore = _pCore;
 }
 
-void CEditorRenderer::Render(HDC _dc)
+void CEditorRenderer::Render ( HDC _dc )
 {
-    // ·»´õ¸µ ¼ø¼­ (z-order)
+    // ë Œë”ë§ ìˆœì„œ (z-order)
 
-    // 0. ³«»ç °æ°í¼± (¹è°æ À§¿¡, ¿ÀºêÁ§Æ® ¾Æ·¡)
-    RenderGameOverLine(_dc);     // ¼öÆò ³«»ç¼±
-    RenderLeftBoundaryLine(_dc); // ¼öÁ÷ °æ°è¼±
+    // 0. ê²Œìž„ ê²½ê³„ì„  (ëª¨ë“  ì˜¤ë¸Œì íŠ¸ ì•„ëž˜)
+    RenderGameOverLine ( _dc );     // ê²Œìž„ ì˜¤ë²„ì„ 
+    RenderLeftBoundaryLine ( _dc ); // ì™¼ìª½ ê²½ê³„ì„ 
 
-    // 1. ÇÃ·¹ÀÌ¾î ½ºÆù Æ÷ÀÎÆ® (¹è°æ À§¿¡)
-    if (m_pEditorCore->GetObjectManager()->IsShowPlayerSpawn())
+    // 1. í”Œë ˆì´ì–´ ìŠ¤í° í¬ì¸íŠ¸ (ê°€ìž¥ ë’¤ìª½)
+    if ( m_pEditorCore->GetObjectManager ( )->IsShowPlayerSpawn ( ) )
     {
-        RenderPlayerSpawnPoint(_dc);
+        RenderPlayerSpawnPoint ( _dc );
     }
 
-    // 2. ¼±ÅÃµÈ ¿ÀºêÁ§Æ® ÇÏÀÌ¶óÀÌÆ®
-    RenderSelectedObject(_dc);
+    // 2. ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ í•˜ì´ë¼ì´íŠ¸
+    RenderSelectedObject ( _dc );
 
-    // 3. ¹èÄ¡ ¹Ì¸®º¸±â (¸¶¿ì½º À§¿¡)
-    RenderPreview(_dc);
+    // 3. ë°°ì¹˜ ë¯¸ë¦¬ë³´ê¸° (ë§ˆìš°ìŠ¤ ì»¤ì„œ)
+    RenderPreview ( _dc );
 
-    // 4. ¸¶¿ì½º Ä¿¼­ (¸Ç À§)
-    RenderMouse(_dc);
+    // 4. ë§ˆìš°ìŠ¤ ì»¤ì„œ (ë§¨ ìœ„)
+    RenderMouse ( _dc );
 }
 
-void CEditorRenderer::RenderMouse(HDC _dc)
+void CEditorRenderer::RenderMouse ( HDC _dc )
 {
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_pEditorCore->GetMousePos());
-    COLORREF cursorColor = GetModeColor();
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( m_pEditorCore->GetMousePos ( ) );
+    COLORREF cursorColor = GetModeColor ( );
 
-    // ¸¶¿ì½º Ä¿¼­ ±×¸®±â
-    RenderMouseCursor(_dc, vRenderPos, cursorColor);
+    // ë§ˆìš°ìŠ¤ ì»¤ì„œ ê·¸ë¦¬ê¸°
+    RenderMouseCursor ( _dc , vRenderPos , cursorColor );
 
-    // Å¬¸¯ÇßÀ» ¶§ ¿ø ±×¸®±â
-    if (KEY_HOLD(KEY::MOUSE_LEFT))
+    // í´ë¦­í–ˆì„ ë•Œ ë§ ê·¸ë¦¬ê¸°
+    if ( KEY_HOLD ( KEY::MOUSE_LEFT ) )
     {
-        HPEN hClickPen = CreatePen(PS_SOLID, 3, cursorColor);
-        HPEN hOldClickPen = (HPEN)SelectObject(_dc, hClickPen);
-        HBRUSH hBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-        HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+        HPEN hClickPen = CreatePen ( PS_SOLID , 3 , cursorColor );
+        HPEN hOldClickPen = ( HPEN ) SelectObject ( _dc , hClickPen );
+        HBRUSH hBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+        HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
 
-        Ellipse(_dc,
-            (int)vRenderPos.x - 15, (int)vRenderPos.y - 15,
-            (int)vRenderPos.x + 15, (int)vRenderPos.y + 15);
+        Ellipse ( _dc ,
+            ( int ) vRenderPos.x - 15 , ( int ) vRenderPos.y - 15 ,
+            ( int ) vRenderPos.x + 15 , ( int ) vRenderPos.y + 15 );
 
-        SelectObject(_dc, hOldClickPen);
-        SelectObject(_dc, hOldBrush);
-        DeleteObject(hClickPen);
+        SelectObject ( _dc , hOldClickPen );
+        SelectObject ( _dc , hOldBrush );
+        DeleteObject ( hClickPen );
     }
 }
 
-void CEditorRenderer::RenderPreview(HDC _dc)
+void CEditorRenderer::RenderPreview ( HDC _dc )
 {
-    EDITOR_MODE eMode = m_pEditorCore->GetCurrentMode();
+    EDITOR_MODE eMode = m_pEditorCore->GetCurrentMode ( );
 
-    // ¹èÄ¡ ¸ðµåµé¿¡¼­ ¹Ì¸®º¸±â
-    if (eMode == EDITOR_MODE::PLACE_MONSTER ||
+    // ë°°ì¹˜ ëª¨ë“œì—ì„œ ë¯¸ë¦¬ë³´ê¸°
+    if ( eMode == EDITOR_MODE::PLACE_MONSTER ||
         eMode == EDITOR_MODE::PLACE_ITEM ||
         eMode == EDITOR_MODE::PLACE_TILE ||
-        eMode == EDITOR_MODE::PLACE_SPECIAL)
+        eMode == EDITOR_MODE::PLACE_SPECIAL )
     {
-        Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_pEditorCore->GetMousePos());
-        OBJECT_TYPE eObjectType = m_pEditorCore->GetObjectManager()->GetCurrentObjectType();
-        Vec2 vObjectSize = CObjectFactory::GetDefaultScale(eObjectType);
-        COLORREF previewColor = GetPreviewColor();
+        Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( m_pEditorCore->GetMousePos ( ) );
+        OBJECT_TYPE eObjectType = m_pEditorCore->GetObjectManager ( )->GetCurrentObjectType ( );
+        Vec2 vObjectSize = CObjectFactory::GetDefaultScale ( eObjectType );
+        COLORREF previewColor = GetPreviewColor ( );
 
-        RenderPreviewObject(_dc, vRenderPos, vObjectSize, previewColor);
+        RenderPreviewObject ( _dc , vRenderPos , vObjectSize , previewColor );
     }
-    // »èÁ¦ ¸ðµå¿¡¼­ »èÁ¦ ´ë»ó Ç¥½Ã
-    else if (eMode == EDITOR_MODE::ERASE)
+    // ì‚­ì œ ëª¨ë“œì—ì„œ ì‚­ì œ ëŒ€ìƒ í‘œì‹œ
+    else if ( eMode == EDITOR_MODE::ERASE )
     {
-        CObject* pTargetObj = m_pEditorCore->GetObjectManager()->FindObjectAtPos(m_pEditorCore->GetMousePos());
-        if (pTargetObj)
+        CObject* pTargetObj = m_pEditorCore->GetObjectManager ( )->FindObjectAtPos ( m_pEditorCore->GetMousePos ( ) );
+        if ( pTargetObj )
         {
-            RenderDeletePreview(_dc, pTargetObj);
+            RenderDeletePreview ( _dc , pTargetObj );
         }
     }
 }
 
-void CEditorRenderer::RenderSelectedObject(HDC _dc)
+void CEditorRenderer::RenderSelectedObject ( HDC _dc )
 {
-    CObject* pSelectedObj = m_pEditorCore->GetSelectedObject();
-    if (!pSelectedObj)
+    CObject* pSelectedObj = m_pEditorCore->GetSelectedObject ( );
+    if ( !pSelectedObj )
         return;
 
-    RenderSelectionBox(_dc, pSelectedObj);
+    RenderSelectionBox ( _dc , pSelectedObj );
 
-    // µå·¡±× ÁßÀÌ¸é ÀÌµ¿ °æ·Î Ç¥½Ã
-    if (m_pEditorCore->IsDragging())
+    // ëª¬ìŠ¤í„°ì¸ ê²½ìš° ë°©í–¥ í™”ì‚´í‘œ í‘œì‹œ
+    if ( pSelectedObj->GetType ( ) >= OBJECT_TYPE::MONSTER_WADDLE_DEE &&
+        pSelectedObj->GetType ( ) <= OBJECT_TYPE::MONSTER_WHISPY_WOODS )
     {
-        Vec2 vDragStartRender = CCamera::GetInst()->GetRenderPos(m_pEditorCore->GetDragStartPos());
-        Vec2 vCurrentRender = CCamera::GetInst()->GetRenderPos(pSelectedObj->GetPos());
+        CMonster* pMonster = dynamic_cast< CMonster* >( pSelectedObj );
+        if ( pMonster )
+        {
+            RenderMonsterDirectionArrow ( _dc , pMonster );
+        }
+    }
 
-        // Á¡¼±À¸·Î ÀÌµ¿ °æ·Î Ç¥½Ã
-        HPEN hDragPen = CreatePen(PS_DOT, 1, RGB(255, 255, 100));
-        HPEN hOldDragPen = (HPEN)SelectObject(_dc, hDragPen);
+    // ë“œëž˜ê·¸ ì¤‘ì´ë©´ ì´ë™ ê²½ë¡œ í‘œì‹œ
+    if ( m_pEditorCore->IsDragging ( ) )
+    {
+        Vec2 vDragStartRender = CCamera::GetInst ( )->GetRenderPos ( m_pEditorCore->GetDragStartPos ( ) );
+        Vec2 vCurrentRender = CCamera::GetInst ( )->GetRenderPos ( pSelectedObj->GetPos ( ) );
 
-        MoveToEx(_dc, (int)vDragStartRender.x, (int)vDragStartRender.y, nullptr);
-        LineTo(_dc, (int)vCurrentRender.x, (int)vCurrentRender.y);
+        // ì ì„ ìœ¼ë¡œ ì´ë™ ê²½ë¡œ í‘œì‹œ
+        HPEN hDragPen = CreatePen ( PS_DOT , 1 , RGB ( 255 , 255 , 100 ) );
+        HPEN hOldDragPen = ( HPEN ) SelectObject ( _dc , hDragPen );
 
-        SelectObject(_dc, hOldDragPen);
-        DeleteObject(hDragPen);
+        MoveToEx ( _dc , ( int ) vDragStartRender.x , ( int ) vDragStartRender.y , nullptr );
+        LineTo ( _dc , ( int ) vCurrentRender.x , ( int ) vCurrentRender.y );
+
+        SelectObject ( _dc , hOldDragPen );
+        DeleteObject ( hDragPen );
     }
 }
 
-void CEditorRenderer::RenderPlayerSpawnPoint(HDC _dc)
+void CEditorRenderer::RenderPlayerSpawnPoint ( HDC _dc )
 {
-    Vec2 vSpawnPos = m_pEditorCore->GetObjectManager()->GetPlayerSpawnPos();
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vSpawnPos);
+    Vec2 vSpawnPos = m_pEditorCore->GetObjectManager ( )->GetPlayerSpawnPos ( );
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( vSpawnPos );
 
-    // ÇÃ·¹ÀÌ¾î ½ºÆù Æ÷ÀÎÆ® Ç¥½Ã (ÃÊ·Ï»ö ¿ø°ú ½ÊÀÚ°¡)
-    HPEN hPen = CreatePen(PS_SOLID, 3, RGB(0, 255, 0));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+    // í”Œë ˆì´ì–´ ìŠ¤í° í¬ì¸íŠ¸ í‘œì‹œ (ì´ˆë¡ìƒ‰ ì›ê³¼ ì‹­ìžê°€)
+    HPEN hPen = CreatePen ( PS_SOLID , 3 , RGB ( 0 , 255 , 0 ) );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    HBRUSH hBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
 
-    // ¿Ü°û ¿ø
-    Ellipse(_dc,
-        (int)vRenderPos.x - 20, (int)vRenderPos.y - 20,
-        (int)vRenderPos.x + 20, (int)vRenderPos.y + 20);
+    // ì›í˜• í…Œë‘ë¦¬
+    Ellipse ( _dc ,
+        ( int ) vRenderPos.x - 20 , ( int ) vRenderPos.y - 20 ,
+        ( int ) vRenderPos.x + 20 , ( int ) vRenderPos.y + 20 );
 
-    // ½ÊÀÚ°¡
-    DrawCross(_dc, vRenderPos, 15, RGB(0, 255, 0), 3);
+    // ì‹­ìžê°€
+    DrawCross ( _dc , vRenderPos , 15 , RGB ( 0 , 255 , 0 ) , 3 );
 
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hPen);
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hPen );
 
-    // "SPAWN" ÅØ½ºÆ® Ç¥½Ã
-    DrawTextWithBackground(_dc,
-        Vec2(vRenderPos.x - 15, vRenderPos.y - 35),
-        L"SPAWN",
-        RGB(0, 255, 0),
-        RGB(0, 0, 0));
+    // "SPAWN" í…ìŠ¤íŠ¸ í‘œì‹œ
+    DrawTextWithBackground ( _dc ,
+        Vec2 ( vRenderPos.x - 15 , vRenderPos.y - 35 ) ,
+        L"SPAWN" ,
+        RGB ( 0 , 255 , 0 ) ,
+        RGB ( 0 , 0 , 0 ) );
 }
 
-void CEditorRenderer::RenderMouseCursor(HDC _dc, Vec2 vRenderPos, COLORREF color)
+void CEditorRenderer::RenderMouseCursor ( HDC _dc , Vec2 vRenderPos , COLORREF color )
 {
-    // ¸¶¿ì½º Ä¿¼­ ±×¸®±â (½ÊÀÚ°¡)
-    DrawCross(_dc, vRenderPos, 8, color);
+    // ë§ˆìš°ìŠ¤ ì»¤ì„œ ê·¸ë¦¬ê¸° (ì‹­ìžê°€)
+    DrawCross ( _dc , vRenderPos , 8 , color );
 
-    // ±×¸®µå ½º³ÀÀÌ È°¼ºÈ­µÈ °æ¿ì ±×¸®µå ¼¿ Ç¥½Ã
-    if (CGrid::GetInst()->IsSnapToGrid())
+    // ê·¸ë¦¬ë“œ ìŠ¤ëƒ…ì´ í™œì„±í™”ëœ ê²½ìš° ê·¸ë¦¬ë“œ ì…€ í‘œì‹œ
+    if ( CGrid::GetInst ( )->IsSnapToGrid ( ) )
     {
-        RenderGridPreview(_dc, vRenderPos);
+        RenderGridPreview ( _dc , vRenderPos );
     }
 }
 
-void CEditorRenderer::RenderPreviewObject(HDC _dc, Vec2 vRenderPos, Vec2 vObjectSize, COLORREF color)
+void CEditorRenderer::RenderPreviewObject ( HDC _dc , Vec2 vRenderPos , Vec2 vObjectSize , COLORREF color )
 {
-    // ¹ÝÅõ¸í È¿°ú¸¦ À§ÇÑ Ææ°ú ºê·¯½Ã ¼³Á¤
-    HPEN hPen = CreatePen(PS_SOLID, 2, color);
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hBrush = CreateHatchBrush(HS_DIAGCROSS, color);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+    // ë°˜íˆ¬ëª… íš¨ê³¼ë¥¼ ìœ„í•œ í•´ì¹˜ ë¸ŒëŸ¬ì‹œ ì‚¬ìš©
+    HPEN hPen = CreatePen ( PS_SOLID , 2 , color );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    HBRUSH hBrush = CreateHatchBrush ( HS_DIAGCROSS , color );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
 
-    // ¹Ì¸®º¸±â »ç°¢Çü ±×¸®±â
-    Rectangle(_dc,
-        (int)(vRenderPos.x - vObjectSize.x / 2.f),
-        (int)(vRenderPos.y - vObjectSize.y / 2.f),
-        (int)(vRenderPos.x + vObjectSize.x / 2.f),
-        (int)(vRenderPos.y + vObjectSize.y / 2.f));
+    // ë¯¸ë¦¬ë³´ê¸° ì‚¬ê°í˜• ê·¸ë¦¬ê¸°
+    Rectangle ( _dc ,
+        ( int ) ( vRenderPos.x - vObjectSize.x / 2.f ) ,
+        ( int ) ( vRenderPos.y - vObjectSize.y / 2.f ) ,
+        ( int ) ( vRenderPos.x + vObjectSize.x / 2.f ) ,
+        ( int ) ( vRenderPos.y + vObjectSize.y / 2.f ) );
 
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hPen);
-    DeleteObject(hBrush);
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hPen );
+    DeleteObject ( hBrush );
 
-    // ¿ÀºêÁ§Æ® ÀÌ¸§ Ç¥½Ã
-    const wchar_t* szObjectName = m_pEditorCore->GetObjectManager()->GetCurrentObjectName();
-    Vec2 vTextPos = Vec2(vRenderPos.x, vRenderPos.y - vObjectSize.y / 2.f - 20);
-    DrawTextWithBackground(_dc, vTextPos, szObjectName, color);
+    // ì˜¤ë¸Œì íŠ¸ ì´ë¦„ í‘œì‹œ
+    const wchar_t* szObjectName = m_pEditorCore->GetObjectManager ( )->GetCurrentObjectName ( );
+    Vec2 vTextPos = Vec2 ( vRenderPos.x , vRenderPos.y - vObjectSize.y / 2.f - 20 );
+    DrawTextWithBackground ( _dc , vTextPos , szObjectName , color );
 
-    // Å¸ÀÏ ¸ðµåÀÎ °æ¿ì ½Ã°¢ Å¸ÀÔµµ Ç¥½Ã
-    if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_TILE)
+    // íƒ€ì¼ ëª¨ë“œì¼ ë•Œ ë¹„ì£¼ì–¼ íƒ€ìž…ë„ í‘œì‹œ
+    if ( m_pEditorCore->GetCurrentMode ( ) == EDITOR_MODE::PLACE_TILE )
     {
-        const wchar_t* szTileVisual = m_pEditorCore->GetObjectManager()->GetTileVisualName(
-            m_pEditorCore->GetObjectManager()->GetCurrentTileVisual());
+        const wchar_t* szTileVisual = m_pEditorCore->GetObjectManager ( )->GetTileVisualName (
+            m_pEditorCore->GetObjectManager ( )->GetCurrentTileVisual ( ) );
 
-        Vec2 vTileTextPos = Vec2(vRenderPos.x, vRenderPos.y - vObjectSize.y / 2.f - 35);
-        DrawTextWithBackground(_dc, vTileTextPos, szTileVisual, RGB(200, 200, 255));
+        Vec2 vTileTextPos = Vec2 ( vRenderPos.x , vRenderPos.y - vObjectSize.y / 2.f - 35 );
+        DrawTextWithBackground ( _dc , vTileTextPos , szTileVisual , RGB ( 200 , 200 , 255 ) );
     }
 }
 
-void CEditorRenderer::RenderDeletePreview(HDC _dc, CObject* pTargetObj)
+void CEditorRenderer::RenderDeletePreview ( HDC _dc , CObject* pTargetObj )
 {
-    Vec2 vPos = pTargetObj->GetPos();
-    Vec2 vScale = pTargetObj->GetScale();
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
+    Vec2 vPos = pTargetObj->GetPos ( );
+    Vec2 vScale = pTargetObj->GetScale ( );
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( vPos );
 
-    // »èÁ¦ ´ë»ó Ç¥½Ã (»¡°£»ö XÇ¥½Ã)
-    int halfSize = (int)(max(vScale.x, vScale.y) / 2.f + 10);
-    DrawX(_dc, vRenderPos, halfSize, RGB(255, 100, 100));
+    // ì‚­ì œ ëŒ€ìƒ í‘œì‹œ (ë¹¨ê°„ìƒ‰ Xí‘œì‹œ)
+    int halfSize = ( int ) ( max ( vScale.x , vScale.y ) / 2.f + 10 );
+    DrawX ( _dc , vRenderPos , halfSize , RGB ( 255 , 100 , 100 ) );
 
-    // "DELETE" ÅØ½ºÆ® Ç¥½Ã
-    Vec2 vTextPos = Vec2(vRenderPos.x - 20, vRenderPos.y - halfSize - 20);
-    DrawTextWithBackground(_dc, vTextPos, L"DELETE", RGB(255, 100, 100));
+    // "DELETE" í…ìŠ¤íŠ¸ í‘œì‹œ
+    Vec2 vTextPos = Vec2 ( vRenderPos.x - 20 , vRenderPos.y - halfSize - 20 );
+    DrawTextWithBackground ( _dc , vTextPos , L"DELETE" , RGB ( 255 , 100 , 100 ) );
 }
 
-void CEditorRenderer::RenderSelectionBox(HDC _dc, CObject* pObj)
+void CEditorRenderer::RenderSelectionBox ( HDC _dc , CObject* pObj )
 {
-    Vec2 vPos = pObj->GetPos();
-    Vec2 vScale = pObj->GetScale();
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(vPos);
+    Vec2 vPos = pObj->GetPos ( );
+    Vec2 vScale = pObj->GetScale ( );
+    Vec2 vRenderPos = CCamera::GetInst ( )->GetRenderPos ( vPos );
 
-    // ¼±ÅÃ Ç¥½Ã (³ë¶õ»ö Å×µÎ¸®)
-    HPEN hPen = CreatePen(PS_SOLID, 3, RGB(255, 255, 0));
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
-    HBRUSH hBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBrush);
+    // ì„ íƒ í‘œì‹œ (ë…¸ëž€ìƒ‰ í…Œë‘ë¦¬)
+    HPEN hPen = CreatePen ( PS_SOLID , 3 , RGB ( 255 , 255 , 0 ) );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
+    HBRUSH hBrush = ( HBRUSH ) GetStockObject ( HOLLOW_BRUSH );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBrush );
 
-    // ¼±ÅÃ »ç°¢Çü (¾à°£ ´õ Å©°Ô)
-    Rectangle(_dc,
-        (int)(vRenderPos.x - vScale.x / 2.f - 3),
-        (int)(vRenderPos.y - vScale.y / 2.f - 3),
-        (int)(vRenderPos.x + vScale.x / 2.f + 3),
-        (int)(vRenderPos.y + vScale.y / 2.f + 3));
+    // ì„ íƒ ì‚¬ê°í˜• (ì•½ê°„ í° í¬ê¸°)
+    Rectangle ( _dc ,
+        ( int ) ( vRenderPos.x - vScale.x / 2.f - 3 ) ,
+        ( int ) ( vRenderPos.y - vScale.y / 2.f - 3 ) ,
+        ( int ) ( vRenderPos.x + vScale.x / 2.f + 3 ) ,
+        ( int ) ( vRenderPos.y + vScale.y / 2.f + 3 ) );
 
-    SelectObject(_dc, hOldPen);
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hPen);
+    SelectObject ( _dc , hOldPen );
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hPen );
 }
 
-void CEditorRenderer::RenderGridPreview(HDC _dc, Vec2 vRenderPos)
+void CEditorRenderer::RenderGridPreview ( HDC _dc , Vec2 vRenderPos )
 {
-    COLORREF gridColor = GetModeColor();
-    float fGridSize = CGrid::GetInst()->GetGridSize();
+    COLORREF gridColor = GetModeColor ( );
+    float fGridSize = CGrid::GetInst ( )->GetGridSize ( );
 
-    // ±×¸®µå ¼¿ °æ°è Ç¥½Ã
-    DrawDottedRectangle(_dc, vRenderPos, Vec2(fGridSize, fGridSize), gridColor);
+    // ê·¸ë¦¬ë“œ ì…€ ë¯¸ë¦¬ í‘œì‹œ
+    DrawDottedRectangle ( _dc , vRenderPos , Vec2 ( fGridSize , fGridSize ) , gridColor );
 }
 
-void CEditorRenderer::RenderGameOverLine(HDC _dc)
+void CEditorRenderer::RenderGameOverLine ( HDC _dc )
 {
-    // ÇöÀç ¸Ê Å©±â °¡Á®¿À±â
-    Vec2 vMapSize = m_pEditorCore->GetMapSize();
-    const float TILE_SIZE = 64.f;  // ±âº» Å¸ÀÏ Å©±â
-    const float DEATH_LINE_Y = vMapSize.y + (TILE_SIZE * 1.5f);  // ¸Ê ÇÏ´Ü¿¡¼­ 1.5Å¸ÀÏ ¾Æ·¡
+    // ë§µì˜ í¬ê¸° ê°€ì ¸ì˜¤ê¸°
+    Vec2 vMapSize = m_pEditorCore->GetMapSize ( );
+    const float TILE_SIZE = 64.f;  // ê¸°ë³¸ íƒ€ì¼ í¬ê¸°
+    const float DEATH_LINE_Y = vMapSize.y + ( TILE_SIZE * 1.5f );  // ë§µ í•˜ë‹¨ì—ì„œ 1.5íƒ€ì¼ ì•„ëž˜
 
-    // È­¸é ÀüÃ¼ ³Êºñ¿¡ °ÉÃÄ ³«»ç¼± ±×¸®±â
-    Vec2 vResolution = CCore::GetInst()->GetResolution();
-    Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
+    // í™”ë©´ ì „ì²´ ë„ˆë¹„ì— ê²Œìž„ì˜¤ë²„ì„  ê·¸ë¦¬ê¸°
+    Vec2 vResolution = CCore::GetInst ( )->GetResolution ( );
+    Vec2 vCameraPos = CCamera::GetInst ( )->GetLookAt ( );
 
-    // È­¸é ÁÂ¿ì ³¡Á¡ °è»ê
+    // í™”ë©´ ì¢Œìš° ê²½ê³„ êµ¬í•˜ê¸°
     float fScreenLeft = vCameraPos.x - vResolution.x / 2.f;
     float fScreenRight = vCameraPos.x + vResolution.x / 2.f;
 
-    // ¿ùµå ÁÂÇ¥¸¦ È­¸é ÁÂÇ¥·Î º¯È¯
-    Vec2 vLeftPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenLeft, DEATH_LINE_Y));
-    Vec2 vRightPoint = CCamera::GetInst()->GetRenderPos(Vec2(fScreenRight, DEATH_LINE_Y));
+    // ì›”ë“œ ì¢Œí‘œë¥¼ í™”ë©´ ì¢Œí‘œë¡œ ë³€í™˜
+    Vec2 vLeftPoint = CCamera::GetInst ( )->GetRenderPos ( Vec2 ( fScreenLeft , DEATH_LINE_Y ) );
+    Vec2 vRightPoint = CCamera::GetInst ( )->GetRenderPos ( Vec2 ( fScreenRight , DEATH_LINE_Y ) );
 
-    // ³«»ç¼±ÀÌ È­¸é¿¡ º¸ÀÌ´ÂÁö Ã¼Å©
-    if (DEATH_LINE_Y >= vCameraPos.y - vResolution.y / 2.f &&
-        DEATH_LINE_Y <= vCameraPos.y + vResolution.y / 2.f)
+    // ê²Œìž„ì˜¤ë²„ì„ ì´ í™”ë©´ì— ë³´ì´ëŠ”ì§€ ì²´í¬
+    if ( DEATH_LINE_Y >= vCameraPos.y - vResolution.y / 2.f &&
+        DEATH_LINE_Y <= vCameraPos.y + vResolution.y / 2.f )
     {
-        // »¡°£ ½Ç¼±À¸·Î ³«»ç¼± ±×¸®±â
-        HPEN hWarningPen = CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
-        HPEN hOldPen = (HPEN)SelectObject(_dc, hWarningPen);
+        // ë¹¨ê°„ êµµì€ì„ ìœ¼ë¡œ ê²Œìž„ì˜¤ë²„ì„  ê·¸ë¦¬ê¸°
+        HPEN hWarningPen = CreatePen ( PS_SOLID , 3 , RGB ( 255 , 0 , 0 ) );
+        HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hWarningPen );
 
-        MoveToEx(_dc, (int)vLeftPoint.x, (int)vLeftPoint.y, nullptr);
-        LineTo(_dc, (int)vRightPoint.x, (int)vRightPoint.y);
+        MoveToEx ( _dc , ( int ) vLeftPoint.x , ( int ) vLeftPoint.y , nullptr );
+        LineTo ( _dc , ( int ) vRightPoint.x , ( int ) vRightPoint.y );
 
-        // "DEATH LINE" ÅØ½ºÆ® Ç¥½Ã
-        SetTextColor(_dc, RGB(255, 0, 0));
-        SetBkMode(_dc, TRANSPARENT);
+        // "DEATH LINE" í…ìŠ¤íŠ¸ í‘œì‹œ
+        SetTextColor ( _dc , RGB ( 255 , 0 , 0 ) );
+        SetBkMode ( _dc , TRANSPARENT );
 
-        HFONT hFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
-            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-            DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
-        HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+        HFONT hFont = CreateFont ( 16 , 0 , 0 , 0 , FW_BOLD , FALSE , FALSE , FALSE ,
+            DEFAULT_CHARSET , OUT_DEFAULT_PRECIS , CLIP_DEFAULT_PRECIS ,
+            DEFAULT_QUALITY , DEFAULT_PITCH | FF_SWISS , L"Arial" );
+        HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
 
-        wchar_t szWarning[] = L"GAMEOVER LINE (1.5 tiles below map)";
-        TextOut(_dc, (int)vLeftPoint.x + 10, (int)vLeftPoint.y - 25, szWarning, (int)wcslen(szWarning));
+        wchar_t szWarning[ ] = L"GAMEOVER LINE (1.5 tiles below map)";
+        TextOut ( _dc , ( int ) vLeftPoint.x + 10 , ( int ) vLeftPoint.y - 25 , szWarning , ( int ) wcslen ( szWarning ) );
 
-        SelectObject(_dc, hOldFont);
-        SelectObject(_dc, hOldPen);
-        DeleteObject(hFont);
-        DeleteObject(hWarningPen);
+        SelectObject ( _dc , hOldFont );
+        SelectObject ( _dc , hOldPen );
+        DeleteObject ( hFont );
+        DeleteObject ( hWarningPen );
     }
 }
 
-void CEditorRenderer::RenderLeftBoundaryLine(HDC _dc)
+void CEditorRenderer::RenderLeftBoundaryLine ( HDC _dc )
 {
     const float LEFT_BOUNDARY_X = 0.f;
 
-    // È­¸é ÀüÃ¼ ³ôÀÌ¿¡ °ÉÃÄ °æ°è¼± ±×¸®±â
-    Vec2 vResolution = CCore::GetInst()->GetResolution();
-    Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
+    // í™”ë©´ ì „ì²´ ë†’ì´ì— ì™¼ìª½ ê²½ê³„ì„  ê·¸ë¦¬ê¸°
+    Vec2 vResolution = CCore::GetInst ( )->GetResolution ( );
+    Vec2 vCameraPos = CCamera::GetInst ( )->GetLookAt ( );
 
-    // È­¸é »óÇÏ ³¡Á¡ °è»ê
+    // í™”ë©´ ìƒí•˜ ê²½ê³„ êµ¬í•˜ê¸°
     float fScreenTop = vCameraPos.y - vResolution.y / 2.f;
     float fScreenBottom = vCameraPos.y + vResolution.y / 2.f;
 
-    // ¿ùµå ÁÂÇ¥¸¦ È­¸é ÁÂÇ¥·Î º¯È¯
-    Vec2 vTopPoint = CCamera::GetInst()->GetRenderPos(Vec2(LEFT_BOUNDARY_X, fScreenTop));
-    Vec2 vBottomPoint = CCamera::GetInst()->GetRenderPos(Vec2(LEFT_BOUNDARY_X, fScreenBottom));
+    // ì›”ë“œ ì¢Œí‘œë¥¼ í™”ë©´ ì¢Œí‘œë¡œ ë³€í™˜
+    Vec2 vTopPoint = CCamera::GetInst ( )->GetRenderPos ( Vec2 ( LEFT_BOUNDARY_X , fScreenTop ) );
+    Vec2 vBottomPoint = CCamera::GetInst ( )->GetRenderPos ( Vec2 ( LEFT_BOUNDARY_X , fScreenBottom ) );
 
-    // °æ°è¼±ÀÌ È­¸é¿¡ º¸ÀÌ´ÂÁö Ã¼Å©
-    if (LEFT_BOUNDARY_X >= vCameraPos.x - vResolution.x / 2.f &&
-        LEFT_BOUNDARY_X <= vCameraPos.x + vResolution.x / 2.f)
+    // ê²½ê³„ì„ ì´ í™”ë©´ì— ë³´ì´ëŠ”ì§€ ì²´í¬
+    if ( LEFT_BOUNDARY_X >= vCameraPos.x - vResolution.x / 2.f &&
+        LEFT_BOUNDARY_X <= vCameraPos.x + vResolution.x / 2.f )
     {
-        // »¡°£ Á¡¼±À¸·Î °æ°è¼± ±×¸®±â
-        HPEN hBoundaryPen = CreatePen(PS_DOT, 2, RGB(255, 100, 100));
-        HPEN hOldPen = (HPEN)SelectObject(_dc, hBoundaryPen);
+        // ë¹¨ê°„ ì ì„ ìœ¼ë¡œ ê²½ê³„ì„  ê·¸ë¦¬ê¸°
+        HPEN hBoundaryPen = CreatePen ( PS_DOT , 2 , RGB ( 255 , 100 , 100 ) );
+        HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hBoundaryPen );
 
-        MoveToEx(_dc, (int)vTopPoint.x, (int)vTopPoint.y, nullptr);
-        LineTo(_dc, (int)vBottomPoint.x, (int)vBottomPoint.y);
+        MoveToEx ( _dc , ( int ) vTopPoint.x , ( int ) vTopPoint.y , nullptr );
+        LineTo ( _dc , ( int ) vBottomPoint.x , ( int ) vBottomPoint.y );
 
-        // "LEFT BOUNDARY" ÅØ½ºÆ® Ç¥½Ã (¼¼·Î·Î)
-        SetTextColor(_dc, RGB(255, 100, 100));
-        SetBkMode(_dc, TRANSPARENT);
+        // "LEFT BOUNDARY" í…ìŠ¤íŠ¸ í‘œì‹œ (ì„¸ë¡œë¡œ)
+        SetTextColor ( _dc , RGB ( 255 , 100 , 100 ) );
+        SetBkMode ( _dc , TRANSPARENT );
 
-        HFONT hFont = CreateFont(14, 0, 900, 0, FW_BOLD, FALSE, FALSE, FALSE,  // 900 = 90µµ È¸Àü
-            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-            DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
-        HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+        HFONT hFont = CreateFont ( 14 , 0 , 900 , 0 , FW_BOLD , FALSE , FALSE , FALSE ,  // 900 = 90ë„ íšŒì „
+            DEFAULT_CHARSET , OUT_DEFAULT_PRECIS , CLIP_DEFAULT_PRECIS ,
+            DEFAULT_QUALITY , DEFAULT_PITCH | FF_SWISS , L"Arial" );
+        HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
 
-        wchar_t szBoundary[] = L"LEFT BOUNDARY (X: 0)";
-        TextOut(_dc, (int)vTopPoint.x + 5, (int)vTopPoint.y + 50, szBoundary, (int)wcslen(szBoundary));
+        wchar_t szBoundary[ ] = L"LEFT BOUNDARY (X: 0)";
+        TextOut ( _dc , ( int ) vTopPoint.x + 5 , ( int ) vTopPoint.y + 50 , szBoundary , ( int ) wcslen ( szBoundary ) );
 
-        SelectObject(_dc, hOldFont);
-        SelectObject(_dc, hOldPen);
-        DeleteObject(hFont);
-        DeleteObject(hBoundaryPen);
+        SelectObject ( _dc , hOldFont );
+        SelectObject ( _dc , hOldPen );
+        DeleteObject ( hFont );
+        DeleteObject ( hBoundaryPen );
     }
 }
 
-COLORREF CEditorRenderer::GetModeColor()
+COLORREF CEditorRenderer::GetModeColor ( )
 {
-    switch (m_pEditorCore->GetCurrentMode())
+    switch ( m_pEditorCore->GetCurrentMode ( ) )
     {
-    case EDITOR_MODE::PLACE_MONSTER:    return RGB(255, 100, 100); // »¡°£»ö
-    case EDITOR_MODE::PLACE_ITEM:       return RGB(255, 255, 100); // ³ë¶õ»ö
-    case EDITOR_MODE::PLACE_TILE:       return RGB(100, 100, 255); // ÆÄ¶õ»ö
-    case EDITOR_MODE::PLACE_SPECIAL:    return RGB(255, 100, 255); // ÀÚÁÖ»ö
-    case EDITOR_MODE::PLACE_STAGE:      return RGB(100, 255, 255); // ½Ã¾Æ´Ï»ö
-    case EDITOR_MODE::SELECT:           return RGB(100, 200, 255); // ÇÏ´Ã»ö
-    case EDITOR_MODE::ERASE:            return RGB(255, 100, 100); // »¡°£»ö
-    case EDITOR_MODE::BACKGROUND:       return RGB(100, 255, 100); // ³ì»ö
-    case EDITOR_MODE::PLAYER_SPAWN:     return RGB(0, 255, 0);     // ÃÊ·Ï»ö
-    default:                            return RGB(255, 255, 255); // Èò»ö
+    case EDITOR_MODE::PLACE_MONSTER:    return RGB ( 255 , 100 , 100 ); // ë¹¨ê°„ìƒ‰
+    case EDITOR_MODE::PLACE_ITEM:       return RGB ( 255 , 255 , 100 ); // ë…¸ëž€ìƒ‰
+    case EDITOR_MODE::PLACE_TILE:       return RGB ( 100 , 100 , 255 ); // íŒŒëž€ìƒ‰
+    case EDITOR_MODE::PLACE_SPECIAL:    return RGB ( 255 , 100 , 255 ); // ìžì£¼ìƒ‰
+    case EDITOR_MODE::PLACE_STAGE:      return RGB ( 100 , 255 , 255 ); // ì²­ë¡ìƒ‰
+    case EDITOR_MODE::SELECT:           return RGB ( 100 , 200 , 255 ); // í•˜ëŠ˜ìƒ‰
+    case EDITOR_MODE::ERASE:            return RGB ( 255 , 100 , 100 ); // ë¹¨ê°„ìƒ‰
+    case EDITOR_MODE::BACKGROUND:       return RGB ( 100 , 255 , 100 ); // ë…¹ìƒ‰
+    case EDITOR_MODE::PLAYER_SPAWN:     return RGB ( 0 , 255 , 0 );     // ì´ˆë¡ìƒ‰
+    default:                            return RGB ( 255 , 255 , 255 ); // í°ìƒ‰
     }
 }
 
-COLORREF CEditorRenderer::GetPreviewColor()
+COLORREF CEditorRenderer::GetPreviewColor ( )
 {
-    switch (m_pEditorCore->GetCurrentMode())
+    switch ( m_pEditorCore->GetCurrentMode ( ) )
     {
-    case EDITOR_MODE::PLACE_MONSTER:    return RGB(255, 150, 150); // ¿¬ÇÑ »¡°£»ö
-    case EDITOR_MODE::PLACE_ITEM:       return RGB(255, 255, 150); // ¿¬ÇÑ ³ë¶õ»ö
-    case EDITOR_MODE::PLACE_TILE:       return RGB(150, 150, 255); // ¿¬ÇÑ ÆÄ¶õ»ö
-    case EDITOR_MODE::PLACE_SPECIAL:    return RGB(255, 150, 255); // ¿¬ÇÑ ÀÚÁÖ»ö
-    case EDITOR_MODE::PLACE_STAGE:      return RGB(150, 255, 255); // ¿¬ÇÑ ½Ã¾Æ´Ï»ö (»õ·Î Ãß°¡)
-    default:                            return RGB(200, 200, 200); // È¸»ö
+    case EDITOR_MODE::PLACE_MONSTER:    return RGB ( 255 , 150 , 150 ); // ì—°í•œ ë¹¨ê°„ìƒ‰
+    case EDITOR_MODE::PLACE_ITEM:       return RGB ( 255 , 255 , 150 ); // ì—°í•œ ë…¸ëž€ìƒ‰
+    case EDITOR_MODE::PLACE_TILE:       return RGB ( 150 , 150 , 255 ); // ì—°í•œ íŒŒëž€ìƒ‰
+    case EDITOR_MODE::PLACE_SPECIAL:    return RGB ( 255 , 150 , 255 ); // ì—°í•œ ìžì£¼ìƒ‰
+    case EDITOR_MODE::PLACE_STAGE:      return RGB ( 150 , 255 , 255 ); // ì—°í•œ ì²­ë¡ìƒ‰
+    default:                            return RGB ( 200 , 200 , 200 ); // íšŒìƒ‰
     }
 }
 
-void CEditorRenderer::DrawCross(HDC _dc, Vec2 vPos, int size, COLORREF color, int thickness)
+void CEditorRenderer::DrawCross ( HDC _dc , Vec2 vPos , int size , COLORREF color , int thickness )
 {
-    HPEN hPen = CreatePen(PS_SOLID, thickness, color);
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
+    HPEN hPen = CreatePen ( PS_SOLID , thickness , color );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
 
-    // °¡·Î¼±
-    MoveToEx(_dc, (int)vPos.x - size, (int)vPos.y, nullptr);
-    LineTo(_dc, (int)vPos.x + size, (int)vPos.y);
+    // ê°€ë¡œì„ 
+    MoveToEx ( _dc , ( int ) vPos.x - size , ( int ) vPos.y , nullptr );
+    LineTo ( _dc , ( int ) vPos.x + size , ( int ) vPos.y );
 
-    // ¼¼·Î¼±
-    MoveToEx(_dc, (int)vPos.x, (int)vPos.y - size, nullptr);
-    LineTo(_dc, (int)vPos.x, (int)vPos.y + size);
+    // ì„¸ë¡œì„ 
+    MoveToEx ( _dc , ( int ) vPos.x , ( int ) vPos.y - size , nullptr );
+    LineTo ( _dc , ( int ) vPos.x , ( int ) vPos.y + size );
 
-    SelectObject(_dc, hOldPen);
-    DeleteObject(hPen);
+    SelectObject ( _dc , hOldPen );
+    DeleteObject ( hPen );
 }
 
-void CEditorRenderer::DrawX(HDC _dc, Vec2 vPos, int size, COLORREF color, int thickness)
+void CEditorRenderer::DrawX ( HDC _dc , Vec2 vPos , int size , COLORREF color , int thickness )
 {
-    HPEN hPen = CreatePen(PS_SOLID, thickness, color);
-    HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
+    HPEN hPen = CreatePen ( PS_SOLID , thickness , color );
+    HPEN hOldPen = ( HPEN ) SelectObject ( _dc , hPen );
 
-    // ´ë°¢¼± 1
-    MoveToEx(_dc, (int)vPos.x - size, (int)vPos.y - size, nullptr);
-    LineTo(_dc, (int)vPos.x + size, (int)vPos.y + size);
+    // ëŒ€ê°ì„  1
+    MoveToEx ( _dc , ( int ) vPos.x - size , ( int ) vPos.y - size , nullptr );
+    LineTo ( _dc , ( int ) vPos.x + size , ( int ) vPos.y + size );
 
-    // ´ë°¢¼± 2
-    MoveToEx(_dc, (int)vPos.x + size, (int)vPos.y - size, nullptr);
-    LineTo(_dc, (int)vPos.x - size, (int)vPos.y + size);
+    // ëŒ€ê°ì„  2
+    MoveToEx ( _dc , ( int ) vPos.x + size , ( int ) vPos.y - size , nullptr );
+    LineTo ( _dc , ( int ) vPos.x - size , ( int ) vPos.y + size );
 
-    SelectObject(_dc, hOldPen);
-    DeleteObject(hPen);
+    SelectObject ( _dc , hOldPen );
+    DeleteObject ( hPen );
 }
 
 void CEditorRenderer::DrawDottedRectangle(HDC _dc, Vec2 vPos, Vec2 vSize, COLORREF color)
@@ -432,36 +444,89 @@ void CEditorRenderer::DrawDottedRectangle(HDC _dc, Vec2 vPos, Vec2 vSize, COLORR
     DeleteObject(hPen);
 }
 
-void CEditorRenderer::DrawTextWithBackground(HDC _dc, Vec2 vPos, const wchar_t* text, COLORREF textColor, COLORREF bgColor)
+void CEditorRenderer::DrawTextWithBackground ( HDC _dc , Vec2 vPos , const wchar_t* text , COLORREF textColor , COLORREF bgColor )
 {
-    // ÅØ½ºÆ® Å©±â ÃøÁ¤
+    // í…ìŠ¤íŠ¸ í¬ê¸° ê³„ì‚°
     SIZE textSize;
-    GetTextExtentPoint32(_dc, text, (int)wcslen(text), &textSize);
+    GetTextExtentPoint32 ( _dc , text , ( int ) wcslen ( text ) , &textSize );
 
-    // ¹è°æ »ç°¢Çü ±×¸®±â
-    HBRUSH hBgBrush = CreateSolidBrush(bgColor);
-    HBRUSH hOldBrush = (HBRUSH)SelectObject(_dc, hBgBrush);
+    // ë°°ê²½ ì‚¬ê°í˜• ê·¸ë¦¬ê¸°
+    HBRUSH hBgBrush = CreateSolidBrush ( bgColor );
+    HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hBgBrush );
 
-    Rectangle(_dc,
-        (int)vPos.x - 2,
-        (int)vPos.y - 2,
-        (int)vPos.x + textSize.cx + 2,
-        (int)vPos.y + textSize.cy + 2);
+    Rectangle ( _dc ,
+        ( int ) vPos.x - 2 ,
+        ( int ) vPos.y - 2 ,
+        ( int ) vPos.x + textSize.cx + 2 ,
+        ( int ) vPos.y + textSize.cy + 2 );
 
-    SelectObject(_dc, hOldBrush);
-    DeleteObject(hBgBrush);
+    SelectObject ( _dc , hOldBrush );
+    DeleteObject ( hBgBrush );
 
-    // ÅØ½ºÆ® ±×¸®±â
-    SetTextColor(_dc, textColor);
-    SetBkMode(_dc, TRANSPARENT);
+    // í…ìŠ¤íŠ¸ ê·¸ë¦¬ê¸°
+    SetTextColor ( _dc , textColor );
+    SetBkMode ( _dc , TRANSPARENT );
 
-    HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
-    HFONT hOldFont = (HFONT)SelectObject(_dc, hFont);
+    HFONT hFont = CreateFont ( 12 , 0 , 0 , 0 , FW_NORMAL , FALSE , FALSE , FALSE ,
+        DEFAULT_CHARSET , OUT_DEFAULT_PRECIS , CLIP_DEFAULT_PRECIS ,
+        DEFAULT_QUALITY , DEFAULT_PITCH | FF_DONTCARE , L"Arial" );
+    HFONT hOldFont = ( HFONT ) SelectObject ( _dc , hFont );
 
-    TextOut(_dc, (int)vPos.x, (int)vPos.y, text, (int)wcslen(text));
+    TextOut ( _dc , ( int ) vPos.x , ( int ) vPos.y , text , ( int ) wcslen ( text ) );
 
-    SelectObject(_dc, hOldFont);
-    DeleteObject(hFont);
+    SelectObject ( _dc , hOldFont );
+    DeleteObject ( hFont );
+}
+
+void CEditorRenderer::RenderMonsterDirectionArrow(HDC _dc, CMonster* _pMonster)
+{
+    Vec2 vMonsterPos = CCamera::GetInst()->GetRenderPos(_pMonster->GetPos());
+    int direction = _pMonster->GetDirection();
+    
+    // í™”ì‚´í‘œ ì„¤ì •
+    int arrowSize = 20;
+    int arrowOffset = 40; // ëª¬ìŠ¤í„°ë¡œë¶€í„° ì–¼ë§ˆë‚˜ ë–¨ì–´ëœ¨ë¦´ì§€
+    
+    HPEN hArrowPen = CreatePen(PS_SOLID, 3, RGB(255, 100, 100));
+    HPEN hOldPen = (HPEN)SelectObject(_dc, hArrowPen);
+    
+    if (direction < 0) // ì™¼ìª½ ë°©í–¥
+    {
+        // ì™¼ìª½ í™”ì‚´í‘œ ê·¸ë¦¬ê¸°
+        int arrowX = (int)vMonsterPos.x - arrowOffset;
+        int arrowY = (int)vMonsterPos.y;
+        
+        // í™”ì‚´í‘œ ë³¸ì²´ (ê°€ë¡œì„ )
+        MoveToEx(_dc, arrowX - arrowSize, arrowY, nullptr);
+        LineTo(_dc, arrowX, arrowY);
+        
+        // í™”ì‚´í‘œ ë¨¸ë¦¬ (ìœ„ìª½)
+        MoveToEx(_dc, arrowX, arrowY, nullptr);
+        LineTo(_dc, arrowX + arrowSize/3, arrowY - arrowSize/2);
+        
+        // í™”ì‚´í‘œ ë¨¸ë¦¬ (ì•„ëž˜ìª½)
+        MoveToEx(_dc, arrowX, arrowY, nullptr);
+        LineTo(_dc, arrowX + arrowSize/3, arrowY + arrowSize/2);
+    }
+    else if (direction > 0) // ì˜¤ë¥¸ìª½ ë°©í–¥
+    {
+        // ì˜¤ë¥¸ìª½ í™”ì‚´í‘œ ê·¸ë¦¬ê¸°
+        int arrowX = (int)vMonsterPos.x + arrowOffset;
+        int arrowY = (int)vMonsterPos.y;
+        
+        // í™”ì‚´í‘œ ë³¸ì²´ (ê°€ë¡œì„ )
+        MoveToEx(_dc, arrowX - arrowSize, arrowY, nullptr);
+        LineTo(_dc, arrowX, arrowY);
+        
+        // í™”ì‚´í‘œ ë¨¸ë¦¬ (ìœ„ìª½)
+        MoveToEx(_dc, arrowX, arrowY, nullptr);
+        LineTo(_dc, arrowX - arrowSize/3, arrowY - arrowSize/2);
+        
+        // í™”ì‚´í‘œ ë¨¸ë¦¬ (ì•„ëž˜ìª½)
+        MoveToEx(_dc, arrowX, arrowY, nullptr);
+        LineTo(_dc, arrowX - arrowSize/3, arrowY + arrowSize/2);
+    }
+    
+    SelectObject(_dc, hOldPen);
+    DeleteObject(hArrowPen);
 }

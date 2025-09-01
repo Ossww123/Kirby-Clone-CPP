@@ -27,10 +27,10 @@ void CEditorDoorManager::AddDoor(CDoor* pDoor, const wstring& strSceneName)
     if (!pDoor)
         return;
 
-    // ¾Àº° ¹® ¸ñ·Ï¿¡ Ãß°¡
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ï¿ï¿½ ï¿½ß°ï¿½
     m_mapSceneDoors[strSceneName].push_back(pDoor);
 
-    // ±âº» ¹® ID ¼³Á¤ (¾ø´Â °æ¿ì)
+    // ï¿½âº» ï¿½ï¿½ ID ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½)
     if (pDoor->GetDoorID().empty())
     {
         wstring strDoorID = strSceneName + L"_door_" + std::to_wstring(m_mapSceneDoors[strSceneName].size());
@@ -46,7 +46,7 @@ void CEditorDoorManager::RemoveDoor(CDoor* pDoor, const wstring& strSceneName)
     auto& doorList = m_mapSceneDoors[strSceneName];
     doorList.erase(std::remove(doorList.begin(), doorList.end(), pDoor), doorList.end());
 
-    // ¼±ÅÃµÈ ¹®ÀÌ¾ú´Ù¸é ¼±ÅÃ ÇØÁ¦
+    // ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½ï¿½Ì¾ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (m_pSelectedDoor == pDoor)
     {
         m_pSelectedDoor = nullptr;
@@ -88,7 +88,7 @@ vector<wstring> CEditorDoorManager::GetConnectionErrors(const wstring& strSceneN
 
     for (CDoor* pDoor : it->second)
     {
-        // ¹® ID Áßº¹ °Ë»ç
+        // ï¿½ï¿½ ID ï¿½ßºï¿½ ï¿½Ë»ï¿½
         wstring strDoorID = pDoor->GetDoorID();
         int count = 0;
         for (CDoor* pOtherDoor : it->second)
@@ -99,10 +99,10 @@ vector<wstring> CEditorDoorManager::GetConnectionErrors(const wstring& strSceneN
 
         if (count > 1)
         {
-            errors.push_back(L"Áßº¹µÈ ¹® ID: " + strDoorID);
+            errors.push_back(L"ï¿½ßºï¿½ï¿½ï¿½ ï¿½ï¿½ ID: " + strDoorID);
         }
 
-        // Å¸°Ù ¾À °ËÁõ
+        // Å¸ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         SCENE_TYPE eTargetScene = pDoor->GetTargetScene();
         wstring strTargetSceneName;
 
@@ -113,18 +113,18 @@ vector<wstring> CEditorDoorManager::GetConnectionErrors(const wstring& strSceneN
         case SCENE_TYPE::STAGE02: strTargetSceneName = L"STAGE02"; break;
         case SCENE_TYPE::TOOL:    strTargetSceneName = L"TOOL"; break;
         default:
-            errors.push_back(L"Àß¸øµÈ Å¸°Ù ¾À: " + strDoorID);
+            errors.push_back(L"ï¿½ß¸ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½: " + strDoorID);
             continue;
         }
 
-        // Å¸°Ù ¹® ID °ËÁõ (ºó °ªÀÌ ¾Æ´Ñ °æ¿ì)
+        // Å¸ï¿½ï¿½ ï¿½ï¿½ ID ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Æ´ï¿½ ï¿½ï¿½ï¿½)
         wstring strTargetDoorID = pDoor->GetTargetDoorID();
         if (!strTargetDoorID.empty())
         {
             CDoor* pTargetDoor = FindDoorByID(strTargetSceneName, strTargetDoorID);
             if (!pTargetDoor)
             {
-                errors.push_back(L"Å¸°Ù ¹®À» Ã£À» ¼ö ¾øÀ½: " + strDoorID + L" -> " + strTargetDoorID);
+                errors.push_back(L"Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: " + strDoorID + L" -> " + strTargetDoorID);
             }
         }
     }
@@ -162,19 +162,19 @@ void CEditorDoorManager::UpdateDoorList(HWND hListCtrl, const wstring& strSceneN
     if (!hListCtrl)
         return;
 
-    // ¸®½ºÆ® ÄÁÆ®·Ñ ÃÊ±âÈ­
+    // ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ê±ï¿½È­
     ListView_DeleteAllItems(hListCtrl);
 
     auto it = m_mapSceneDoors.find(strSceneName);
     if (it == m_mapSceneDoors.end())
         return;
 
-    // ¹® ¸ñ·Ï Ãß°¡
+    // ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
     for (int i = 0; i < (int)it->second.size(); ++i)
     {
         CDoor* pDoor = it->second[i];
 
-        // ¹® ID
+        // ï¿½ï¿½ ID
         LVITEM item = { 0 };
         item.mask = LVIF_TEXT | LVIF_PARAM;
         item.iItem = i;
@@ -183,7 +183,7 @@ void CEditorDoorManager::UpdateDoorList(HWND hListCtrl, const wstring& strSceneN
         item.lParam = (LPARAM)pDoor;
         ListView_InsertItem(hListCtrl, &item);
 
-        // Å¸°Ù ¾À
+        // Å¸ï¿½ï¿½ ï¿½ï¿½
         wstring strTargetScene;
         switch (pDoor->GetTargetScene())
         {
@@ -195,24 +195,24 @@ void CEditorDoorManager::UpdateDoorList(HWND hListCtrl, const wstring& strSceneN
         }
         ListView_SetItemText(hListCtrl, i, 1, (LPWSTR)strTargetScene.c_str());
 
-        // Å¸°Ù À§Ä¡
+        // Å¸ï¿½ï¿½ ï¿½ï¿½Ä¡
         Vec2 vTargetPos = pDoor->GetTargetPosition();
         wstring strTargetPos = L"(" + std::to_wstring((int)vTargetPos.x) + L", " + std::to_wstring((int)vTargetPos.y) + L")";
         ListView_SetItemText(hListCtrl, i, 2, (LPWSTR)strTargetPos.c_str());
 
-        // Å¸°Ù ¹® ID
+        // Å¸ï¿½ï¿½ ï¿½ï¿½ ID
         ListView_SetItemText(hListCtrl, i, 3, (LPWSTR)pDoor->GetTargetDoorID().c_str());
 
-        // Àá±Ý »óÅÂ
-        wstring strLocked = pDoor->IsLocked() ? L"Àá±è" : L"¿­¸²";
+        // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        wstring strLocked = pDoor->IsLocked() ? L"ï¿½ï¿½ï¿½" : L"ï¿½ï¿½ï¿½ï¿½";
         ListView_SetItemText(hListCtrl, i, 4, (LPWSTR)strLocked.c_str());
     }
 }
 
 void CEditorDoorManager::RenderDoorConnections(HDC _dc)
 {
-    // ¹® ¿¬°á °ü°è¸¦ ½Ã°¢ÀûÀ¸·Î Ç¥½Ã
-    // ÇöÀç ¾ÀÀÇ ¹®µé°ú ¿¬°á¼± ±×¸®±â
+    // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½è¸¦ ï¿½Ã°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½á¼± ï¿½×¸ï¿½ï¿½ï¿½
 
     for (auto& scenePair : m_mapSceneDoors)
     {
@@ -220,7 +220,7 @@ void CEditorDoorManager::RenderDoorConnections(HDC _dc)
         {
             Vec2 vDoorPos = CCamera::GetInst()->GetRenderPos(pDoor->GetPos());
 
-            // ¹® À§¿¡ ID Ç¥½Ã
+            // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ID Ç¥ï¿½ï¿½
             SetTextColor(_dc, RGB(255, 255, 0));
             SetBkMode(_dc, TRANSPARENT);
 
@@ -230,9 +230,9 @@ void CEditorDoorManager::RenderDoorConnections(HDC _dc)
             textRect.right = (int)(vDoorPos.x + 50);
             textRect.bottom = (int)(vDoorPos.y - pDoor->GetScale().y / 2);
 
-            DrawText(_dc, pDoor->GetDoorID().c_str(), -1, &textRect, DT_CENTER | DT_VCENTER);
+            DrawTextW(_dc, pDoor->GetDoorID().c_str(), -1, &textRect, DT_CENTER | DT_VCENTER);
 
-            // ¿¬°á¼± ±×¸®±â (°°Àº ¾À ³»ÀÇ ¹®µé¸¸)
+            // ï¿½ï¿½ï¿½á¼± ï¿½×¸ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½é¸¸)
             wstring strTargetDoorID = pDoor->GetTargetDoorID();
             if (!strTargetDoorID.empty())
             {
@@ -260,13 +260,13 @@ void CEditorDoorManager::AutoConnectDoors(const wstring& strScene1, const wstrin
     vector<CDoor*> doors1 = GetDoorsInScene(strScene1);
     vector<CDoor*> doors2 = GetDoorsInScene(strScene2);
 
-    // °¢ ¾À¿¡ ¹®ÀÌ ÇÏ³ª¾¿¸¸ ÀÖ´Â °æ¿ì ÀÚµ¿ ¿¬°á
+    // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½
     if (doors1.size() == 1 && doors2.size() == 1)
     {
         CDoor* pDoor1 = doors1[0];
         CDoor* pDoor2 = doors2[0];
 
-        // Scene1ÀÇ ¹®ÀÌ Scene2·Î ÀÌµ¿ÇÏµµ·Ï ¼³Á¤
+        // Scene1ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Scene2ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         SCENE_TYPE eTargetScene2 = SCENE_TYPE::STAGE01;
         if (strScene2 == L"STAGE01") eTargetScene2 = SCENE_TYPE::STAGE01;
         else if (strScene2 == L"STAGE02") eTargetScene2 = SCENE_TYPE::STAGE02;
@@ -276,7 +276,7 @@ void CEditorDoorManager::AutoConnectDoors(const wstring& strScene1, const wstrin
         pDoor1->SetTargetPosition(pDoor2->GetPos());
         pDoor1->SetTargetDoorID(pDoor2->GetDoorID());
 
-        // Scene2ÀÇ ¹®ÀÌ Scene1·Î ÀÌµ¿ÇÏµµ·Ï ¼³Á¤
+        // Scene2ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Scene1ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         SCENE_TYPE eTargetScene1 = SCENE_TYPE::STAGE01;
         if (strScene1 == L"STAGE01") eTargetScene1 = SCENE_TYPE::STAGE01;
         else if (strScene1 == L"STAGE02") eTargetScene1 = SCENE_TYPE::STAGE02;
@@ -290,14 +290,14 @@ void CEditorDoorManager::AutoConnectDoors(const wstring& strScene1, const wstrin
 
 void CEditorDoorManager::SuggestDoorConnections(const wstring& strSceneName)
 {
-    // ¿¬°áµÇÁö ¾ÊÀº ¹®µéÀ» Ã£¾Æ¼­ ÀÚµ¿ ¿¬°á Á¦¾È
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½Æ¼ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     vector<CDoor*> doors = GetDoorsInScene(strSceneName);
 
     for (CDoor* pDoor : doors)
     {
         if (pDoor->GetTargetDoorID().empty())
         {
-            // ´Ù¸¥ ¾ÀÀÇ ¹®µé°ú ÀÚµ¿ ¸ÅÄª ½Ãµµ
+            // ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½Äª ï¿½Ãµï¿½
             for (auto& scenePair : m_mapSceneDoors)
             {
                 if (scenePair.first == strSceneName)
@@ -307,8 +307,8 @@ void CEditorDoorManager::SuggestDoorConnections(const wstring& strSceneName)
                 {
                     if (pOtherDoor->GetTargetDoorID().empty())
                     {
-                        // ¼­·Î ¿¬°á Á¦¾È
-                        // ½ÇÁ¦ ±¸Çö¿¡¼­´Â UI¸¦ ÅëÇØ »ç¿ëÀÚ¿¡°Ô È®ÀÎ¹Þ¾Æ¾ß ÇÔ
+                        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+                        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ È®ï¿½Î¹Þ¾Æ¾ï¿½ ï¿½ï¿½
                         break;
                     }
                 }

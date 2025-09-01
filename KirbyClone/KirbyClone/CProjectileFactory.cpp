@@ -72,6 +72,33 @@ CProjectile* CProjectileFactory::CreateElectricField(Vec2 _vPos, Vec2 _vDirectio
     return Create(PROJECTILE_TYPE::KIRBY_ELECTRIC_FIELD, _vPos, _vDirection, _eOwner);
 }
 
+// === 특수 투사체 생성 함수들 ===
+CProjectile* CProjectileFactory::CreateRotatingBeam(Vec2 _vCenter, float _fRadius, float _fStartAngle, float _fEndAngle, float _fDuration, CObject* _pOwner)
+{
+    // 시작 위치 계산
+    Vec2 startPos = _vCenter + Vec2(
+        cos(_fStartAngle) * _fRadius,
+        sin(_fStartAngle) * _fRadius
+    );
+    
+    // 방향 벡터는 임시로 각도 차이로 설정 (실제론 회전 로직에서 처리)
+    Vec2 direction = Vec2(cos(_fStartAngle), sin(_fStartAngle));
+    
+    // 기본 빔 투사체 생성 (소유자는 플레이어)
+    CProjectile* pBeam = Create(PROJECTILE_TYPE::KIRBY_BEAM, startPos, direction, GROUP_TYPE::PLAYER);
+    
+    if (pBeam)
+    {
+        // 회전 빔을 위한 특수 데이터 설정
+        pBeam->SetRotationData(_vCenter, _fRadius, _fStartAngle, _fEndAngle, _fDuration);
+        
+        // 지속시간을 회전 시간으로 설정
+        pBeam->SetLifeTime(_fDuration);
+    }
+    
+    return pBeam;
+}
+
 // === 몬스터 투사체 생성 함수들 ===
 CProjectile* CProjectileFactory::CreateBossAirPuff(Vec2 _vPos, Vec2 _vDirection, GROUP_TYPE _eOwner)
 {
@@ -138,7 +165,7 @@ float CProjectileFactory::GetDefaultSpeed(PROJECTILE_TYPE _eType)
     
     // === 몬스터 투사체들 ===
     case PROJECTILE_TYPE::BOSS_AIR_PUFF:        return 300.f;
-    case PROJECTILE_TYPE::MONSTER_FIREBALL:     return 250.f;
+    case PROJECTILE_TYPE::MONSTER_FIREBALL:     return 350.f;
     case PROJECTILE_TYPE::MONSTER_ELECTRIC:     return 400.f;
     case PROJECTILE_TYPE::MONSTER_BEAM:         return 600.f;
     
@@ -157,12 +184,12 @@ float CProjectileFactory::GetDefaultDamage(PROJECTILE_TYPE _eType)
     case PROJECTILE_TYPE::KIRBY_STAR_ENHANCED:  return 4.f;
     case PROJECTILE_TYPE::KIRBY_FIRE:           return 3.f;
     case PROJECTILE_TYPE::KIRBY_BEAM:           return 2.f;
-    case PROJECTILE_TYPE::KIRBY_ELECTRIC_FIELD: return 2.5f;
+    case PROJECTILE_TYPE::KIRBY_ELECTRIC_FIELD: return 2.f;
     
     // === 몬스터 투사체들 ===
-    case PROJECTILE_TYPE::BOSS_AIR_PUFF:        return 2.f;
-    case PROJECTILE_TYPE::MONSTER_FIREBALL:     return 2.f;
-    case PROJECTILE_TYPE::MONSTER_ELECTRIC:     return 1.5f;
+    case PROJECTILE_TYPE::BOSS_AIR_PUFF:        return 1.f;
+    case PROJECTILE_TYPE::MONSTER_FIREBALL:     return 1.f;
+    case PROJECTILE_TYPE::MONSTER_ELECTRIC:     return 1.f;
     case PROJECTILE_TYPE::MONSTER_BEAM:         return 1.f;
     
     default:                                    return 1.f;
@@ -178,13 +205,13 @@ float CProjectileFactory::GetDefaultLifeTime(PROJECTILE_TYPE _eType)
     case PROJECTILE_TYPE::KIRBY_SLIDE_KICK:     return 0.8f;  // 슬라이드 지속시간과 동일
     case PROJECTILE_TYPE::KIRBY_STAR:           return 3.f;
     case PROJECTILE_TYPE::KIRBY_STAR_ENHANCED:  return 4.f;
-    case PROJECTILE_TYPE::KIRBY_FIRE:           return 2.5f;
+    case PROJECTILE_TYPE::KIRBY_FIRE:           return 0.3f;
     case PROJECTILE_TYPE::KIRBY_BEAM:           return 1.5f;
-    case PROJECTILE_TYPE::KIRBY_ELECTRIC_FIELD: return 3.f;
+    case PROJECTILE_TYPE::KIRBY_ELECTRIC_FIELD: return 0.1f;
     
     // === 몬스터 투사체들 ===
     case PROJECTILE_TYPE::BOSS_AIR_PUFF:        return 4.f;
-    case PROJECTILE_TYPE::MONSTER_FIREBALL:     return 3.f;
+    case PROJECTILE_TYPE::MONSTER_FIREBALL:     return 0.3f;
     case PROJECTILE_TYPE::MONSTER_ELECTRIC:     return 2.f;
     case PROJECTILE_TYPE::MONSTER_BEAM:         return 1.5f;
     

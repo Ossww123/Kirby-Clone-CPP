@@ -18,6 +18,12 @@
 #include "CBackground.h"
 #include "CBackgroundMgr.h"
 #include "CStageMgr.h"
+#include "CPlayerDataMgr.h"
+#include "CStageImage.h"
+#include "CMonsterSpawnMgr.h"
+#include "CUIMgr.h"
+#include "CFadeEffect.h"
+#include "CSoundMgr.h"
 
 CScene_Stage01::CScene_Stage01()
     : m_strLevelFile(L"STAGE01")
@@ -28,66 +34,97 @@ CScene_Stage01::CScene_Stage01()
 
 CScene_Stage01::~CScene_Stage01()
 {
-    // ¹è°æÀº CBackgroundMgr¿¡¼­ °ü¸®ÇÏ¹Ç·Î ¿©±â¼­ »èÁ¦ÇÏÁö ¾ÊÀ½
+    // ë°°ê²½ì€ CBackgroundMgrì—ì„œ ê´€ë¦¬í•˜ë¯€ë¡œ ì—¬ê¸°ì„œ ì‚­ì œí•˜ì§€ ì•ŠìŒ
     m_pCurrentBackground = nullptr;
 }
 
-// === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+// === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
 
 void CScene_Stage01::Enter()
 {
-    // ±âº» ÇÃ·¹ÀÌ¾î »ı¼º (·¹º§ ·Îµå¿¡¼­ À§Ä¡°¡ µ¤¾î½áÁú ¼ö ÀÖÀ½)
-    CObject* pPlayer = new CPlayer;
-    pPlayer->SetPos(Vec2(320.f, 320.f)); // »õ·Î¿î ¸Ê Å©±â¿¡ ¸Â´Â ±âº» À§Ä¡
+    // ê¸°ë³¸ í”Œë ˆì´ì–´ ìƒì„± (ë ˆë²¨ ë¡œë“œì—ì„œ ìœ„ì¹˜ê°€ ë®ì–´ì¨ì§ˆ ìˆ˜ ìˆìŒ)
+    CPlayer* pPlayer = new CPlayer;
+    pPlayer->SetPos(Vec2(320.f, 320.f)); // ìƒˆë¡œìš´ ë§µ í¬ê¸°ì— ë§ëŠ” ê¸°ë³¸ ìœ„ì¹˜
     pPlayer->SetScale(Vec2(100.f, 100.f));
     AddObject(pPlayer, GROUP_TYPE::PLAYER);
 
-    // Ä«¸Ş¶ó°¡ ÇÃ·¹ÀÌ¾î¸¦ µû¶ó°¡µµ·Ï ¼³Á¤
-    CCamera::GetInst()->SetTarget(pPlayer);
+    // ì €ì¥ëœ í”Œë ˆì´ì–´ ìƒíƒœê°€ ìˆìœ¼ë©´ ë³µì›
+    pPlayer->LoadFromSavedData();
 
-    // ¹è°æ ½Ã½ºÅÛ ÃÊ±âÈ­
+    // ì¹´ë©”ë¼ê°€ í”Œë ˆì´ì–´ë¥¼ ë”°ë¼ê°€ë„ë¡ ì„¤ì •
+    CCamera::GetInst()->SetTarget(pPlayer);
+    // ì¹´ë©”ë¼ë¥¼ ì¦‰ì‹œ í”Œë ˆì´ì–´ ìœ„ì¹˜ë¡œ ì´ë™ (ë¶€ë“œëŸ¬ìš´ ì´ë™ ì—†ì´)
+    CCamera::GetInst()->SetLookAtImmediate(pPlayer->GetPos());
+
+    // ëª¬ìŠ¤í„° ìŠ¤í° ë§¤ë‹ˆì € ì´ˆê¸°í™”
+    CMonsterSpawnMgr::GetInst()->Initialize();
+    CMonsterSpawnMgr::GetInst()->SetPlayer(pPlayer);
+
+    // ë°°ê²½ ì‹œìŠ¤í…œ ì´ˆê¸°í™”
     InitializeBackgroundSystem();
 
-    // ½ºÅ×ÀÌÁö ÃÊ±âÈ­
+    // ìŠ¤í…Œì´ì§€ ì´ˆê¸°í™”
     InitializeStage();
 
-    // ·¹º§ ÆÄÀÏ ·Îµå ½Ãµµ
+    // ë ˆë²¨ íŒŒì¼ ë¡œë“œ ì‹œë„
     LoadStageLevel(m_strLevelFile);
 
-    // À©µµ¿ì Å¸ÀÌÆ² º¯°æ
+    // ìœˆë„ìš° íƒ€ì´í‹€ ë³€ê²½
     SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Kirby Clone - STAGE 01");
+    
+    // ìŠ¤í…Œì´ì§€1 BGM ë¡œë“œ ë° ì¬ìƒ
+    CSoundMgr::GetInst()->LoadSound(L"vegetable_valley", L"sound/vegetable_valley.mp3", SOUND_TYPE::BGM);
+    CSoundMgr::GetInst()->PlayBGM(L"vegetable_valley", true);
+    
+    // í°ìƒ‰ í˜ì´ë“œ ì¸ íš¨ê³¼ ì‹œì‘
+    CFadeEffect::GetInst()->StartFadeIn(FADE_COLOR::WHITE, 1.0f);
 }
 
 void CScene_Stage01::Exit()
 {
-    // Ä«¸Ş¶ó Å¸°Ù ÇØÁ¦
+    // BGM ì •ì§€
+    CSoundMgr::GetInst()->StopBGM();
+    
+    // ëª¬ìŠ¤í„° ìŠ¤í° ë§¤ë‹ˆì € ì •ë¦¬
+    CMonsterSpawnMgr::GetInst()->Clear();
+    
+    // ì¹´ë©”ë¼ íƒ€ê²Ÿ í•´ì œ
     CCamera::GetInst()->SetTarget(nullptr);
 
-    // ¸ğµç °´Ã¼ »èÁ¦
+    // ëª¨ë“  ê°ì²´ ì‚­ì œ
     DeleteAllObject();
 }
 
 void CScene_Stage01::Update()
 {
-    // ¹è°æ ¾÷µ¥ÀÌÆ®
+    // ë°°ê²½ ì—…ë°ì´íŠ¸
     if (m_pCurrentBackground)
     {
         m_pCurrentBackground->Update();
     }
 
-    // ºÎ¸ğ Å¬·¡½ºÀÇ Update È£Ãâ (¸ğµç °´Ã¼ ¾÷µ¥ÀÌÆ®)
+    // ëª¬ìŠ¤í„° ìŠ¤í° ë§¤ë‹ˆì € ì—…ë°ì´íŠ¸
+    CMonsterSpawnMgr::GetInst()->Update();
+
+    // UI ë§¤ë‹ˆì € ì—…ë°ì´íŠ¸ (ë³´ìŠ¤ HPë°” ì• ë‹ˆë©”ì´ì…˜ ë“±)
+    CUIMgr::GetInst()->Update();
+    
+    // í˜ì´ë“œ íš¨ê³¼ ì—…ë°ì´íŠ¸
+    CFadeEffect::GetInst()->Update();
+
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ Update í˜¸ì¶œ (ëª¨ë“  ê°ì²´ ì—…ë°ì´íŠ¸)
     CScene::Update();
 
-    // ½ºÅ×ÀÌÁöº° Æ¯¼ö ·ÎÁ÷ (ÇÊ¿ä½Ã Ãß°¡)
+    // ìŠ¤í…Œì´ì§€ë³„ íŠ¹ìˆ˜ ë¡œì§ (í•„ìš”ì‹œ ì¶”ê°€)
 
-    // ESCÅ°·Î Tool SceneÀ¸·Î º¹±Í (µğ¹ö±ë¿ë)
+    // ESCí‚¤ë¡œ Tool Sceneìœ¼ë¡œ ë³µê·€ (ë””ë²„ê¹…ìš©)
     if (KEY_TAP(KEY::ESC))
     {
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::TOOL);
         CEventMgr::GetInst()->AddEvent(event);
     }
 
-    // EnterÅ°·Î START ¾ÀÀ¸·Î º¹±Í
+    // Enterí‚¤ë¡œ START ì”¬ìœ¼ë¡œ ë³µê·€
     if (KEY_TAP(KEY::ENTER))
     {
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::START);
@@ -97,7 +134,7 @@ void CScene_Stage01::Update()
 
 void CScene_Stage01::Render(HDC _dc)
 {
-    // ¹è°æ ¸ÕÀú ·»´õ¸µ
+    // ë°°ê²½ ë¨¼ì € ë Œë”ë§
     if (m_pCurrentBackground)
     {
         m_pCurrentBackground->Render(_dc);
@@ -105,11 +142,17 @@ void CScene_Stage01::Render(HDC _dc)
 
     CStageMgr::GetInst()->Render(_dc);
 
-    // ºÎ¸ğ Å¬·¡½ºÀÇ Render È£Ãâ (¸ğµç °´Ã¼ ·»´õ¸µ)
+    // ë¶€ëª¨ í´ë˜ìŠ¤ì˜ Render í˜¸ì¶œ (ëª¨ë“  ê°ì²´ ë Œë”ë§)
     CScene::Render(_dc);
+
+    // UI ë Œë”ë§ (í”Œë ˆì´ì–´ ì²´ë ¥, ë³´ìŠ¤ HPë°” ë“±)
+    CUIMgr::GetInst()->RenderGameUI(_dc);
+    
+    // í˜ì´ë“œ íš¨ê³¼ ë Œë”ë§ (í•­ìƒ ë§ˆì§€ë§‰)
+    CFadeEffect::GetInst()->Render(_dc);
 }
 
-// === ·¹º§ ·Îµå °ü·Ã ÇÔ¼öµé ===
+// === ë ˆë²¨ ë¡œë“œ ê´€ë ¨ í•¨ìˆ˜ë“¤ ===
 
 void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
 {
@@ -121,7 +164,7 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
 
     if (!pFile)
     {
-        // ·¹º§ ÆÄÀÏÀÌ ¾øÀ¸¸é ±âº» ·¹º§ »ı¼º
+        // ë ˆë²¨ íŒŒì¼ì´ ì—†ìœ¼ë©´ ê¸°ë³¸ ë ˆë²¨ ìƒì„±
         SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level file not found! Using default level.");
         CreateDefaultLevel();
         return;
@@ -129,7 +172,7 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
 
     try
     {
-        // ¹öÀü È®ÀÎ
+        // ë²„ì „ í™•ì¸
         int version;
         fread(&version, sizeof(int), 1, pFile);
 
@@ -141,53 +184,54 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
             return;
         }
 
-        // ·¹º§ ÀÌ¸§ ·Îµå
+        // ë ˆë²¨ ì´ë¦„ ë¡œë“œ
         size_t nameLen;
         fread(&nameLen, sizeof(size_t), 1, pFile);
-        if (nameLen > 0 && nameLen < 1000) // ¾ÈÀü¼º °Ë»ç
+        if (nameLen > 0 && nameLen < 1000) // ì•ˆì „ì„± ê²€ì‚¬
         {
             wstring levelName;
             levelName.resize(nameLen);
             fread(&levelName[0], sizeof(wchar_t), nameLen, pFile);
         }
 
-        // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡
+        // í”Œë ˆì´ì–´ ìŠ¤í° ìœ„ì¹˜
         Vec2 vPlayerSpawn;
         fread(&vPlayerSpawn, sizeof(Vec2), 1, pFile);
 
-        // ¹è°æ Å¸ÀÔ
+        // ë°°ê²½ íƒ€ì…
         int backgroundType;
         fread(&backgroundType, sizeof(int), 1, pFile);
 
-        // °æ°è Á¤º¸ (°ÔÀÓ¿¡¼­´Â »ç¿ëÇÏÁö ¾ÊÁö¸¸ ÀĞ¾î¾ß ÇÔ)
+        // ê²½ê³„ ì •ë³´ (ê²Œì„ì—ì„œëŠ” ì‚¬ìš©í•˜ì§€ ì•Šì§€ë§Œ ì½ì–´ì•¼ í•¨)
         Vec2 vLevelBoundsMin, vLevelBoundsMax;
         float fGameOverY;
         fread(&vLevelBoundsMin, sizeof(Vec2), 1, pFile);
         fread(&vLevelBoundsMax, sizeof(Vec2), 1, pFile);
         fread(&fGameOverY, sizeof(float), 1, pFile);
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Á¤º¸
+        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì •ë³´
         int stageImageType;
         fread(&stageImageType, sizeof(int), 1, pFile);
 
         size_t stagePathLen;
         fread(&stagePathLen, sizeof(size_t), 1, pFile);
-        if (stagePathLen > 0 && stagePathLen < 1000) // ¾ÈÀü¼º °Ë»ç
+        if (stagePathLen > 0 && stagePathLen < 1000) // ì•ˆì „ì„± ê²€ì‚¬
         {
             wstring stageImagePath;
             stageImagePath.resize(stagePathLen);
             fread(&stageImagePath[0], sizeof(wchar_t), stagePathLen, pFile);
         }
 
-        // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö À§Ä¡ (°ÔÀÓ¿¡¼­´Â »ç¿ëÇÏÁö ¾ÊÁö¸¸ ÀĞ¾î¾ß ÇÔ)
+        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ìœ„ì¹˜ (ê²Œì„ì—ì„œëŠ” ì‚¬ìš©í•˜ì§€ ì•Šì§€ë§Œ ì½ì–´ì•¼ í•¨)
         Vec2 vStageImagePos;
         fread(&vStageImagePos, sizeof(Vec2), 1, pFile);
 
-        // °´Ã¼ °³¼ö
+        // ê°ì²´ ê°œìˆ˜
         size_t objCount;
         fread(&objCount, sizeof(size_t), 1, pFile);
 
-        // °¢ °´Ã¼ »ı¼º
+        // ê° ê°ì²´ ìƒì„±
+        size_t createdObjectCount = 0;
         for (size_t i = 0; i < objCount; ++i)
         {
             tLevelObjectData objData;
@@ -197,17 +241,38 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
             if (pObj)
             {
                 AddObject(pObj, objData.eGroupType);
+                createdObjectCount++;
             }
+            // ëª¬ìŠ¤í„°ëŠ” ìŠ¤í° ë§¤ë‹ˆì €ì— ë“±ë¡ë˜ë¯€ë¡œ ì‹¤ì œ ìƒì„±ëœ ê°ì²´ ìˆ˜ëŠ” ë‹¤ë¦„
         }
 
         fclose(pFile);
 
-        // ·ÎµåµÈ Á¤º¸ Àû¿ë
+        // ë¡œë“œëœ ì •ë³´ ì ìš©
         ApplyLoadedLevelData(vPlayerSpawn, (BACKGROUND_TYPE)backgroundType, (STAGE_IMAGE_TYPE)stageImageType);
+        
+        // ì¹´ë©”ë¼ì— ìŠ¤í…Œì´ì§€ ê²½ê³„ ì„¤ì •
+        CCamera::GetInst()->SetStageBounds(vLevelBoundsMin, vLevelBoundsMax);
 
-        // ¼º°ø ¸Ş½ÃÁö
+        // ë°°ê²½ì— ìŠ¤í…Œì´ì§€ í¬ê¸° ì„¤ì •
+        if (m_pCurrentBackground)
+        {
+            Vec2 vMapSize = vLevelBoundsMax - vLevelBoundsMin;
+            m_pCurrentBackground->SetStageSize(vMapSize);
+        }
+
+        // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ë¥¼ ë§µ í¬ê¸°ì— ë§ê²Œ ì¬ë°°ì¹˜
+        CStageImage* pStageImage = CStageMgr::GetInst()->GetCurrentStageImage();
+        if (pStageImage)
+        {
+            Vec2 vMapSize = vLevelBoundsMax - vLevelBoundsMin;
+            pStageImage->SetImageToBottomLeft(vMapSize);
+        }
+
+        // ì„±ê³µ ë©”ì‹œì§€
         wchar_t szMsg[256];
-        swprintf_s(szMsg, L"STAGE01 Loaded successfully (%d objects)", (int)objCount);
+        swprintf_s(szMsg, L"STAGE01 Loaded successfully (%d objects, %d monster spawns)", 
+                   (int)createdObjectCount, (int)CMonsterSpawnMgr::GetInst()->GetSpawnDataCount());
         SetWindowText(CCore::GetInst()->GetMainHwnd(), szMsg);
     }
     catch (...)
@@ -227,7 +292,29 @@ CObject* CScene_Stage01::CreateObjectFromData(const tLevelObjectData& _objData)
     case GROUP_TYPE::MONSTER:
     {
         OBJECT_TYPE monsterType = (OBJECT_TYPE)_objData.iSubType;
-        pObj = CObjectFactory::CreateObject(monsterType, _objData.vPos);
+        
+        // ë³´ìŠ¤ ëª¬ìŠ¤í„°ëŠ” ì§ì ‘ ìƒì„± (í•­ìƒ í™œì„±í™” ìƒíƒœ ìœ ì§€)
+        if (monsterType == OBJECT_TYPE::MONSTER_WHISPY_WOODS)
+        {
+            pObj = CObjectFactory::CreateObject(monsterType, _objData.vPos);
+            if (pObj)
+            {
+                CMonster* pMonster = dynamic_cast<CMonster*>(pObj);
+                if (pMonster)
+                {
+                    // ê²Œì„ ëª¨ë“œë¡œ ì„¤ì •
+                    pMonster->SetEditorMode(false);
+                    pMonster->SetDirection((int)_objData.fDirection);
+                    pMonster->ChangeState(MONSTER_STATE::IDLE);
+                }
+            }
+        }
+        else
+        {
+            // ì¼ë°˜ ëª¬ìŠ¤í„°ëŠ” ìŠ¤í° ë§¤ë‹ˆì €ë¡œ ê´€ë¦¬
+            CMonsterSpawnMgr::GetInst()->AddSpawnData(_objData.vPos, monsterType, _objData.fDirection);
+            pObj = nullptr; // ì”¬ì— ì§ì ‘ ì¶”ê°€ë˜ì§€ ì•Šë„ë¡
+        }
     }
     break;
 
@@ -236,22 +323,32 @@ CObject* CScene_Stage01::CreateObjectFromData(const tLevelObjectData& _objData)
         OBJECT_TYPE tileType = (OBJECT_TYPE)_objData.iSubType;
         pObj = CObjectFactory::CreateObject(tileType, _objData.vPos);
 
-        // Å¸ÀÏ ½Ã°¢ Å¸ÀÔ ¹× Ãæµ¹Ã¼ Å¸ÀÔ º¹¿ø
+        // íƒ€ì¼ ì‹œê° íƒ€ì… ë° ì¶©ëŒì²´ íƒ€ì… ë³µì›
         if (pObj)
         {
             CTile* pTile = dynamic_cast<CTile*>(pObj);
             if (pTile)
             {
-                // ½Ã°¢Àû Å¸ÀÔ º¹¿ø
+                // íƒ€ì¼ íƒ€ì…ì„ ë¨¼ì € ì„¤ì • (ì¤‘ìš”!)
+                pTile->SetTileType((OBJECT_TYPE)_objData.iSubType);
+                pTile->SetType((OBJECT_TYPE)_objData.iSubType);  // CObjectì˜ ê¸°ë³¸ íƒ€ì…ë„ ì„¤ì •
+                
+                // ì‹œê°ì  íƒ€ì… ë³µì›
                 if (_objData.iTileVisualType >= 0)
                 {
                     pTile->SetVisualType((TILE_VISUAL_TYPE)_objData.iTileVisualType);
                 }
 
-                // Ãæµ¹ Å¸ÀÔ º¹¿ø
+                // ì¶©ëŒ íƒ€ì… ë³µì›
                 if (_objData.iCollisionType >= 0)
                 {
                     pTile->SetCollisionType((COLLISION_TYPE)_objData.iCollisionType);
+                }
+                
+                // íŠ¸ë¦¬ê±° íƒ€ì¼ì¸ ê²½ìš° ì¹´ë©”ë¼ ì¢Œí‘œ ë³µì›
+                if (pTile->GetTileType() == OBJECT_TYPE::TILE_TRIGGER)
+                {
+                    pTile->SetBossLockPosition(_objData.vBossLockPos);
                 }
             }
         }
@@ -287,36 +384,53 @@ CObject* CScene_Stage01::CreateObjectFromData(const tLevelObjectData& _objData)
 
 void CScene_Stage01::CreateDefaultLevel()
 {
-    // ±âº» ·¹º§ »ı¼º (ºó ·¹º§)
-    // ÇÃ·¹ÀÌ¾î´Â ÀÌ¹Ì Enter()¿¡¼­ »ı¼ºµÇ¾úÀ¸¹Ç·Î À§Ä¡¸¸ Á¶Á¤
+    // ê¸°ë³¸ ë ˆë²¨ ìƒì„± (ë¹ˆ ë ˆë²¨)
+    // í”Œë ˆì´ì–´ëŠ” ì´ë¯¸ Enter()ì—ì„œ ìƒì„±ë˜ì—ˆìœ¼ë¯€ë¡œ ìœ„ì¹˜ë§Œ ì¡°ì •
 
-    // ÇÃ·¹ÀÌ¾î À§Ä¡¸¦ ±âº»°ªÀ¸·Î ¼³Á¤
+    // í”Œë ˆì´ì–´ ìœ„ì¹˜ë¥¼ ê¸°ë³¸ê°’ìœ¼ë¡œ ì„¤ì •
     const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);
     if (!vecPlayer.empty() && vecPlayer[0])
     {
-        vecPlayer[0]->SetPos(Vec2(320.f, 320.f)); // »õ·Î¿î ¸Ê Å©±â¿¡ ¸Â´Â ±âº» À§Ä¡
+        vecPlayer[0]->SetPos(Vec2(320.f, 320.f)); // ìƒˆë¡œìš´ ë§µ í¬ê¸°ì— ë§ëŠ” ê¸°ë³¸ ìœ„ì¹˜
     }
 
-    // ±âº» ¹è°æ ¼³Á¤ (ÀÌ¹Ì InitializeBackgroundSystem¿¡¼­ ¼³Á¤µÊ)
-    // ±âº» ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ¼³Á¤
+    // ê¸°ë³¸ ë°°ê²½ ì„¤ì • (ì´ë¯¸ InitializeBackgroundSystemì—ì„œ ì„¤ì •ë¨)
+    // ê¸°ë³¸ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì„¤ì •
     CStageMgr::GetInst()->SetCurrentStageImage(STAGE_IMAGE_TYPE::STAGE_01);
+    
+    // ê¸°ë³¸ ìŠ¤í…Œì´ì§€ ê²½ê³„ ì„¤ì • (ë ˆë²¨ ë°ì´í„°ê°€ ì—†ì„ ë•Œë§Œ ì‚¬ìš©)
+    Vec2 vDefaultMapSize = Vec2(4096.f, 640.f);
+    CCamera::GetInst()->SetStageBounds(Vec2(0.f, 0.f), vDefaultMapSize);
+
+    // ë°°ê²½ì— ê¸°ë³¸ ìŠ¤í…Œì´ì§€ í¬ê¸° ì„¤ì •
+    if (m_pCurrentBackground)
+    {
+        m_pCurrentBackground->SetStageSize(vDefaultMapSize);
+    }
+
+    // ê¸°ë³¸ ë ˆë²¨ì—ì„œë„ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ë¥¼ ë§µ í¬ê¸°ì— ë§ê²Œ ë°°ì¹˜
+    CStageImage* pStageImage = CStageMgr::GetInst()->GetCurrentStageImage();
+    if (pStageImage)
+    {
+        pStageImage->SetImageToBottomLeft(vDefaultMapSize);
+    }
 }
 
-// === ½ºÅ×ÀÌÁöº° ÃÊ±â ¼³Á¤ ===
+// === ìŠ¤í…Œì´ì§€ë³„ ì´ˆê¸° ì„¤ì • ===
 
 void CScene_Stage01::InitializeStage()
 {
-    // ½ºÅ×ÀÌÁöº° ÃÊ±â ¼³Á¤
-    // ¿¹: ¹è°æÀ½¾Ç, È¯°æ ¼³Á¤, Æ¯¼ö ÀÌº¥Æ® µî
+    // ìŠ¤í…Œì´ì§€ë³„ ì´ˆê¸° ì„¤ì •
+    // ì˜ˆ: ë°°ê²½ìŒì•…, í™˜ê²½ ì„¤ì •, íŠ¹ìˆ˜ ì´ë²¤íŠ¸ ë“±
 
-    // ÇöÀç´Â ±âº» ¼³Á¤¸¸
+    // í˜„ì¬ëŠ” ê¸°ë³¸ ì„¤ì •ë§Œ
 }
 
-// === ¹è°æ ½Ã½ºÅÛ °ü·Ã ÇÔ¼öµé ===
+// === ë°°ê²½ ì‹œìŠ¤í…œ ê´€ë ¨ í•¨ìˆ˜ë“¤ ===
 
 void CScene_Stage01::InitializeBackgroundSystem()
 {
-    // ±âº» ¹è°æ ¼³Á¤ (Stage01Àº Background1 »ç¿ë)
+    // ê¸°ë³¸ ë°°ê²½ ì„¤ì • (Stage01ì€ Background1 ì‚¬ìš©)
     m_eCurrentBgType = BACKGROUND_TYPE::BACKGROUND1;
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
 }
@@ -327,20 +441,20 @@ void CScene_Stage01::ChangeBackground(BACKGROUND_TYPE _eBgType)
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(_eBgType);
 }
 
-// === ·ÎµåµÈ ·¹º§ µ¥ÀÌÅÍ Àû¿ë ===
+// === ë¡œë“œëœ ë ˆë²¨ ë°ì´í„° ì ìš© ===
 
 void CScene_Stage01::ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _eBgType, STAGE_IMAGE_TYPE _eStageType)
 {
-    // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡ Àû¿ë
+    // í”Œë ˆì´ì–´ ìŠ¤í° ìœ„ì¹˜ ì ìš©
     const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);
     if (!vecPlayer.empty() && vecPlayer[0])
     {
         vecPlayer[0]->SetPos(_vPlayerSpawn);
     }
 
-    // ¹è°æ Àû¿ë
+    // ë°°ê²½ ì ìš©
     ChangeBackground(_eBgType);
 
-    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Àû¿ë
+    // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì ìš©
     CStageMgr::GetInst()->SetCurrentStageImage(_eStageType);
 }

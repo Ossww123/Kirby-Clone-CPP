@@ -5,30 +5,30 @@
 #include "CRigidBody.h"
 #include "CSceneMgr.h"
 #include "CScene.h"
-// #include "CPlayer.h"  // TODO: ÇÃ·¹ÀÌ¾î Å¬·¡½º ÂüÁ¶ ÇÊ¿ä
+#include "CPlayer.h"
 
 CCopyMonster::CCopyMonster()
     : CBasicMonster()
     , m_bAttacking(false)
     , m_fAttackCooldown(0.f)
-    , m_fMaxAttackCooldown(3.f)         // ±âº» 3ÃÊ ÄğÅ¸ÀÓ
-    , m_fAttackRange(150.f)             // ±âº» 150ÇÈ¼¿ ¹üÀ§
-    , m_fAttackReadyTime(1.f)           // 1ÃÊ ÁØºñ ½Ã°£
-    , m_fAttackDuration(1.f)            // 1ÃÊ °ø°İ Áö¼Ó
+    , m_fMaxAttackCooldown(3.f)         // ê¸°ë³¸ 3ì´ˆ ì¿¨íƒ€ì„
+    , m_fAttackRange(150.f)             // ê¸°ë³¸ 150í”½ì…€ ë²”ìœ„
+    , m_fAttackReadyTime(1.f)           // 1ì´ˆ ì¤€ë¹„ ì‹œê°„
+    , m_fAttackDuration(1.f)            // 1ì´ˆ ê³µê²© ì§€ì†
     , m_vPlayerPos(Vec2(0.f, 0.f))
     , m_bPlayerDetected(false)
 {
-    // Ä«ÇÇ ´É·Â ¸ó½ºÅÍ´Â °ø°İ °¡´ÉÇÏ¹Ç·Î Æ¯º°ÇÑ ¼³Á¤ ºÒÇÊ¿ä
+    // ì¹´í”¼ ëŠ¥ë ¥ ëª¬ìŠ¤í„°ëŠ” ê³µê²© ê°€ëŠ¥í•˜ë¯€ë¡œ íŠ¹ë³„í•œ ì„¤ì • ë¶ˆí•„ìš”
 }
 
 CCopyMonster::~CCopyMonster()
 {
-    // »óÀ§ Å¬·¡½º¿¡¼­ Á¤¸® Ã³¸®
+    // ìƒìœ„ í´ë˜ìŠ¤ì—ì„œ ì •ë¦¬ ì²˜ë¦¬
 }
 
 bool CCopyMonster::CanAttack() const
 {
-    return m_fAttackCooldown <= 0.f && !m_bBeingInhaled && IsPlayerInRange();
+    return m_fAttackCooldown <= 0.f && !m_bBeingInhaled;
 }
 
 void CCopyMonster::StartAttack()
@@ -43,22 +43,22 @@ void CCopyMonster::StartAttack()
 void CCopyMonster::EndAttack()
 {
     m_bAttacking = false;
-    m_fAttackCooldown = m_fMaxAttackCooldown;  // ÄğÅ¸ÀÓ ½ÃÀÛ
+    m_fAttackCooldown = m_fMaxAttackCooldown;  // ì¿¨íƒ€ì„ ì‹œì‘
     ChangeState(MONSTER_STATE::WALK);
 }
 
 void CCopyMonster::OnCopyAbilityGiven()
 {
-    // Ä«ÇÇ ´É·Â Á¦°ø ½Ã ±âº» Ã³¸®
-    // ÀÚ½Ä Å¬·¡½º¿¡¼­ overrideÇÏ¿© Ãß°¡ Ã³¸® °¡´É
+    // ì¹´í”¼ ëŠ¥ë ¥ ì œê³µ ì‹œ ê¸°ë³¸ ì²˜ë¦¬
+    // ìì‹ í´ë˜ìŠ¤ì—ì„œ overrideí•˜ì—¬ ì¶”ê°€ ì²˜ë¦¬ ê°€ëŠ¥
 
-    // TODO: Ä¿ºñ¿¡°Ô ´É·Â ºÎ¿©
+    // TODO: ì»¤ë¹„ì—ê²Œ ëŠ¥ë ¥ ë¶€ì—¬
     COPY_ABILITY ability = GetCopyAbility();
 
-    // TODO: ÀÌÆåÆ® »ı¼º
-    // TODO: »ç¿îµå Àç»ı
+    // TODO: ì´í™íŠ¸ ìƒì„±
+    // TODO: ì‚¬ìš´ë“œ ì¬ìƒ
 
-    // ¸ó½ºÅÍ Á¦°Å
+    // ëª¬ìŠ¤í„° ì œê±°
     SetDead();
 }
 
@@ -74,16 +74,23 @@ void CCopyMonster::UpdateAttackCooldown()
 
 void CCopyMonster::CheckAttackCondition()
 {
-    // ÇÃ·¹ÀÌ¾î À§Ä¡ ¾÷µ¥ÀÌÆ® ¹× °ø°İ Á¶°Ç Ã¼Å©
-    // TODO: ½ÇÁ¦ ÇÃ·¹ÀÌ¾î À§Ä¡ °¡Á®¿À±â
-    // CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-    // CPlayer* pPlayer = pCurScene->FindPlayer();
-    // if (pPlayer) {
-    //     m_vPlayerPos = pPlayer->GetPos();
-    //     m_bPlayerDetected = IsPlayerInRange();
-    // }
+    // í”Œë ˆì´ì–´ ìœ„ì¹˜ ì—…ë°ì´íŠ¸ ë° ê³µê²© ì¡°ê±´ ì²´í¬
+    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
+    if (pCurScene)
+    {
+        const vector<CObject*>& vecPlayer = pCurScene->GetGroupObject(GROUP_TYPE::PLAYER);
+        if (!vecPlayer.empty() && vecPlayer[0])
+        {
+            CPlayer* pPlayer = dynamic_cast<CPlayer*>(vecPlayer[0]);
+            if (pPlayer)
+            {
+                m_vPlayerPos = pPlayer->GetPos();
+                m_bPlayerDetected = IsPlayerInRange();
+            }
+        }
+    }
 
-    // °ø°İ °¡´ÉÇÏ¸é °ø°İ ½ÃÀÛ
+    // ê³µê²© ê°€ëŠ¥í•˜ë©´ ê³µê²© ì‹œì‘
     if (CanAttack() && m_bPlayerDetected)
     {
         StartAttack();
@@ -92,13 +99,13 @@ void CCopyMonster::CheckAttackCondition()
 
 void CCopyMonster::UpdateWalk()
 {
-    // °ø°İ ÄğÅ¸ÀÓ ¾÷µ¥ÀÌÆ®
+    // ê³µê²© ì¿¨íƒ€ì„ ì—…ë°ì´íŠ¸
     UpdateAttackCooldown();
 
-    // °ø°İ Á¶°Ç Ã¼Å©
+    // ê³µê²© ì¡°ê±´ ì²´í¬
     CheckAttackCondition();
 
-    // °ø°İ ÁßÀÌ ¾Æ´Ï¸é ÀÏ¹İ °È±â
+    // ê³µê²© ì¤‘ì´ ì•„ë‹ˆë©´ ì¼ë°˜ ê±·ê¸°
     if (!m_bAttacking)
     {
         CBasicMonster::UpdateWalk();
@@ -107,17 +114,17 @@ void CCopyMonster::UpdateWalk()
 
 void CCopyMonster::UpdateAttackReady()
 {
-    // °ø°İ ÁØºñ »óÅÂ Ã³¸®
+    // ê³µê²© ì¤€ë¹„ ìƒíƒœ ì²˜ë¦¬
     if (m_fStateTimer >= m_fAttackReadyTime)
     {
         ChangeState(MONSTER_STATE::ATTACK);
     }
     else
     {
-        // °ø°İ ÁØºñ Áß¿¡´Â ÇÃ·¹ÀÌ¾î Á¶ÁØ
+        // ê³µê²© ì¤€ë¹„ ì¤‘ì—ëŠ” í”Œë ˆì´ì–´ ì¡°ì¤€
         AimAtPlayer();
 
-        // ÀÌµ¿ Á¤Áö
+        // ì´ë™ ì •ì§€
         if (nullptr != GetRigidBody())
         {
             GetRigidBody()->SetVelocityX(0.f);
@@ -127,13 +134,13 @@ void CCopyMonster::UpdateAttackReady()
 
 void CCopyMonster::UpdateAttack()
 {
-    // °ø°İ ½ÇÇà
+    // ê³µê²© ì‹¤í–‰
     if (m_fStateTimer < m_fAttackDuration)
     {
-        // ÀÚ½Ä Å¬·¡½ºÀÇ Attack() ÇÔ¼ö È£Ãâ
+        // ìì‹ í´ë˜ìŠ¤ì˜ Attack() í•¨ìˆ˜ í˜¸ì¶œ
         Attack();
 
-        // °ø°İ Áß¿¡´Â ÀÌµ¿ Á¤Áö
+        // ê³µê²© ì¤‘ì—ëŠ” ì´ë™ ì •ì§€
         if (nullptr != GetRigidBody())
         {
             GetRigidBody()->SetVelocityX(0.f);
@@ -141,7 +148,7 @@ void CCopyMonster::UpdateAttack()
     }
     else
     {
-        // °ø°İ Á¾·á
+        // ê³µê²© ì¢…ë£Œ
         EndAttack();
     }
 }
@@ -165,7 +172,7 @@ Vec2 CCopyMonster::GetPlayerDirection() const
 
 void CCopyMonster::AimAtPlayer()
 {
-    // ÇÃ·¹ÀÌ¾î ¹æÇâÀ¸·Î ¸ö µ¹¸®±â
+    // í”Œë ˆì´ì–´ ë°©í–¥ìœ¼ë¡œ ëª¸ ëŒë¦¬ê¸°
     Vec2 vPlayerDir = GetPlayerDirection();
     if (vPlayerDir.x > 0.f && m_iDir < 0)
     {
@@ -179,6 +186,6 @@ void CCopyMonster::AimAtPlayer()
 
 void CCopyMonster::ProcessAttackLogic()
 {
-    // °ø°İ ·ÎÁ÷ Ã³¸® - ÀÚ½Ä Å¬·¡½º¿¡¼­ Attack() ±¸Çö
-    // ÀÌ ÇÔ¼ö´Â ÇÊ¿ä½Ã ÀÚ½Ä¿¡¼­ override
+    // ê³µê²© ë¡œì§ ì²˜ë¦¬ - ìì‹ í´ë˜ìŠ¤ì—ì„œ Attack() êµ¬í˜„
+    // ì´ í•¨ìˆ˜ëŠ” í•„ìš”ì‹œ ìì‹ì—ì„œ override
 }

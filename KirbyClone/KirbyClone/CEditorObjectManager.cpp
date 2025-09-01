@@ -10,6 +10,8 @@
 #include "CTile.h"
 #include "CTileMgr.h"
 #include "CCore.h"
+#include "CMonster.h"
+#include "CRigidBody.h"
 
 CEditorObjectManager::CEditorObjectManager()
     : m_pEditorCore(nullptr)
@@ -30,7 +32,7 @@ CEditorObjectManager::CEditorObjectManager()
 
 CEditorObjectManager::~CEditorObjectManager()
 {
-    // ¹è°æÀº CBackgroundMgr¿¡¼­ °ü¸®ÇÏ¹Ç·Î ¿©±â¼­ »èÁ¦ÇÏÁö ¾ÊÀ½
+    // ë°°ê²½ì€ CBackgroundMgrì—ì„œ ê´€ë¦¬ë˜ë¯€ë¡œ ì—¬ê¸°ì„œ ì‚­ì œí•˜ì§€ ì•ŠìŒ
     m_pCurrentBackground = nullptr;
 }
 
@@ -38,17 +40,17 @@ void CEditorObjectManager::Initialize(CEditorCore* _pCore)
 {
     m_pEditorCore = _pCore;
 
-    // ±âº» ¼³Á¤
+    // ê¸°ë³¸ ì„¤ì •
     m_eCurrentObjectType = OBJECT_TYPE::MONSTER_WADDLE_DEE;
-    ChangeObjectCategory(L"Monster"); // ±âº» Ä«Å×°í¸® ¼³Á¤
+    ChangeObjectCategory(L"Monster"); // ê¸°ë³¸ ì¹´í…Œê³ ë¦¬ ì„¤ì •
 
-    // ¹è°æ ½Ã½ºÅÛ ÃÊ±âÈ­
+    // ë°°ê²½ ì‹œìŠ¤í…œ ì´ˆê¸°í™”
     InitializeBackgroundSystem();
 
-    // Å¸ÀÏ ½Ã°¢ ½Ã½ºÅÛ ÃÊ±âÈ­
+    // íƒ€ì¼ ë¹„ì£¼ì–¼ ì‹œìŠ¤í…œ ì´ˆê¸°í™”
     InitializeTileVisualSystem();
 
-    // ÇÃ·¹ÀÌ¾î ½ºÆù ÃÊ±âÈ­
+    // í”Œë ˆì´ì–´ ìŠ¤í° ì´ˆê¸°í™”
     m_vPlayerSpawnPos = Vec2(640.f, 400.f);
     m_bShowPlayerSpawn = true;
     m_bPlayerSpawnMode = false;
@@ -56,7 +58,7 @@ void CEditorObjectManager::Initialize(CEditorCore* _pCore)
 
 void CEditorObjectManager::Update()
 {
-    // ¹è°æ ¾÷µ¥ÀÌÆ®
+    // ë°°ê²½ ì—…ë°ì´íŠ¸
     if (m_pCurrentBackground)
     {
         m_pCurrentBackground->Update();
@@ -65,7 +67,7 @@ void CEditorObjectManager::Update()
 
 void CEditorObjectManager::PlaceObject(Vec2 _vPos)
 {
-    // ÆÑÅä¸®¸¦ »ç¿ëÇØ¼­ ¿ÀºêÁ§Æ® »ı¼º
+    // íŒ©í† ë¦¬ë¥¼ í†µí•´ì„œ ì˜¤ë¸Œì íŠ¸ ìƒì„±
     CObject* pObject = CObjectFactory::CreateObject(m_eCurrentObjectType, _vPos);
 
     if (!pObject)
@@ -73,7 +75,24 @@ void CEditorObjectManager::PlaceObject(Vec2 _vPos)
         return;
     }
 
-    // Å¸ÀÏÀÎ °æ¿ì ½Ã°¢Àû Å¸ÀÔ Àû¿ë
+    // ëª¬ìŠ¤í„°ì¸ ê²½ìš° ì—ë””í„° ëª¨ë“œ ì„¤ì •
+    if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_MONSTER)
+    {
+        CMonster* pMonster = dynamic_cast<CMonster*>(pObject);
+        if (pMonster)
+        {
+            pMonster->SetEditorMode(true);
+            pMonster->ChangeState(MONSTER_STATE::EDITOR_IDLE);
+            
+            // ì¤‘ë ¥ ë¹„í™œì„±í™”
+            if (pMonster->GetRigidBody())
+            {
+                pMonster->GetRigidBody()->SetUseGravity(false);
+            }
+        }
+    }
+
+    // íƒ€ì¼ì¸ ê²½ìš° ë¹„ì£¼ì–¼ íƒ€ì¼ ì„¤ì •
     if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_TILE)
     {
         CTile* pTile = dynamic_cast<CTile*>(pObject);
@@ -81,19 +100,19 @@ void CEditorObjectManager::PlaceObject(Vec2 _vPos)
         {
             pTile->SetVisualType(m_eCurrentTileVisual);
 
-            // Å¸ÀÏ ¸Å´ÏÀú¸¦ ÅëÇØ ÀûÀıÇÑ ÅØ½ºÃ³¿Í ¼Ó¼º ¼³Á¤
+            // íƒ€ì¼ ë§¤ë‹ˆì €ì—ì„œ íƒ€ì¼ ë¹„ì£¼ì–¼ ì†ì„± ì„¤ì •
             CTileMgr::GetInst()->SetupTileProperties(pTile, m_eCurrentTileVisual);
         }
     }
 
-    // ÀûÀıÇÑ ±×·ì¿¡ Ãß°¡
+    // ì ì ˆí•œ ê·¸ë£¹ì— ì¶”ê°€
     GROUP_TYPE eGroup = CObjectFactory::GetObjectGroup(m_eCurrentObjectType);
     m_pEditorCore->GetWorkingScene()->AddObject(pObject, eGroup);
 }
 
 void CEditorObjectManager::DeleteObjectAtPos(Vec2 _vPos)
 {
-    // Å¬¸¯ÇÑ À§Ä¡¿¡¼­ ¿ÀºêÁ§Æ® Ã£±â
+    // í´ë¦­í•œ ìœ„ì¹˜ì—ì„œ ì˜¤ë¸Œì íŠ¸ ì°¾ê¸°
     CObject* pTargetObj = FindObjectAtPos(_vPos);
 
     if (!pTargetObj)
@@ -101,13 +120,13 @@ void CEditorObjectManager::DeleteObjectAtPos(Vec2 _vPos)
         return;
     }
 
-    // ¼±ÅÃµÈ ¿ÀºêÁ§Æ®°¡ »èÁ¦ ´ë»óÀÌ¶ó¸é ¼±ÅÃ ÇØÁ¦
+    // ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ì™€ ê°™ì€ ê°ì²´ë¼ë©´ ì„ íƒ í•´ì œ
     if (m_pEditorCore->GetSelectedObject() == pTargetObj)
     {
         m_pEditorCore->DeselectObject();
     }
 
-    // º¤ÅÍ¿¡¼­ Á÷Á¢ Á¦°Å
+    // ì”¬ì—ì„œ í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ ì‚­ì œ
     CScene* pScene = m_pEditorCore->GetWorkingScene();
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
@@ -116,8 +135,8 @@ void CEditorObjectManager::DeleteObjectAtPos(Vec2 _vPos)
         auto iter = find(vecObj.begin(), vecObj.end(), pTargetObj);
         if (iter != vecObj.end())
         {
-            delete pTargetObj;  // ¸Ş¸ğ¸® ÇØÁ¦
-            vecObj.erase(iter); // º¤ÅÍ¿¡¼­ Á¦°Å
+            delete pTargetObj;
+            vecObj.erase(iter);
             return;
         }
     }
@@ -125,12 +144,12 @@ void CEditorObjectManager::DeleteObjectAtPos(Vec2 _vPos)
 
 CObject* CEditorObjectManager::FindObjectAtPos(Vec2 _vPos)
 {
-    // ¸ğµç ±×·ì¿¡¼­ ¿ÀºêÁ§Æ® °Ë»ö (ÇÃ·¹ÀÌ¾î Á¦¿Ü)
+    // ëª¨ë“  ê·¸ë£¹ì—ì„œ ì˜¤ë¸Œì íŠ¸ ê²€ì‚¬ (í”Œë ˆì´ì–´ ì œì™¸)
     CScene* pScene = m_pEditorCore->GetWorkingScene();
 
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
     {
-        if (i == (UINT)GROUP_TYPE::PLAYER) continue; // ÇÃ·¹ÀÌ¾î´Â Á¦¿Ü
+        if (i == (UINT)GROUP_TYPE::PLAYER) continue; // í”Œë ˆì´ì–´ëŠ” ì œì™¸
 
         const vector<CObject*>& vecObj = pScene->GetGroupObject((GROUP_TYPE)i);
 
@@ -139,7 +158,7 @@ CObject* CEditorObjectManager::FindObjectAtPos(Vec2 _vPos)
             Vec2 vObjPos = vecObj[j]->GetPos();
             Vec2 vObjScale = vecObj[j]->GetScale();
 
-            // AABB °Ë»ç (»ç°¢Çü Ãæµ¹ °Ë»ç)
+            // AABB ê²€ì‚¬ (ì‚¬ê°í˜• ì¶©ëŒ ê²€ì‚¬)
             if (_vPos.x >= vObjPos.x - vObjScale.x / 2.f &&
                 _vPos.x <= vObjPos.x + vObjScale.x / 2.f &&
                 _vPos.y >= vObjPos.y - vObjScale.y / 2.f &&
@@ -161,6 +180,19 @@ void CEditorObjectManager::ChangeObjectCategory(const wstring& _strCategory)
     {
         m_iCurrentSubType = 0;
         m_eCurrentObjectType = m_vecCurrentCategory[0];
+        
+        // íƒ€ì¼ ì¹´í…Œê³ ë¦¬ë¡œ ë³€ê²½ë  ë•Œ ë¹„ì£¼ì–¼ íƒ€ì…ë„ ì´ˆê¸°í™”
+        if (_strCategory == L"Tile" || _strCategory == L"Collision")
+        {
+            if (m_eCurrentObjectType == OBJECT_TYPE::TILE_TRIGGER)
+            {
+                m_eCurrentTileVisual = TILE_VISUAL_TYPE::BOSS_TRIGGER;
+            }
+            else if (m_eCurrentObjectType == OBJECT_TYPE::TILE_GROUND)
+            {
+                m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
+            }
+        }
     }
 }
 
@@ -170,6 +202,19 @@ void CEditorObjectManager::NextObjectInCategory()
 
     m_iCurrentSubType = (m_iCurrentSubType + 1) % m_vecCurrentCategory.size();
     m_eCurrentObjectType = m_vecCurrentCategory[m_iCurrentSubType];
+    
+    // íƒ€ì¼ ëª¨ë“œì—ì„œ ë¹„ì£¼ì–¼ íƒ€ì… ì—…ë°ì´íŠ¸
+    if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_TILE)
+    {
+        if (m_eCurrentObjectType == OBJECT_TYPE::TILE_TRIGGER)
+        {
+            m_eCurrentTileVisual = TILE_VISUAL_TYPE::BOSS_TRIGGER;
+        }
+        else if (m_eCurrentObjectType == OBJECT_TYPE::TILE_GROUND)
+        {
+            m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
+        }
+    }
 }
 
 void CEditorObjectManager::PrevObjectInCategory()
@@ -178,6 +223,19 @@ void CEditorObjectManager::PrevObjectInCategory()
 
     m_iCurrentSubType = (m_iCurrentSubType - 1 + m_vecCurrentCategory.size()) % m_vecCurrentCategory.size();
     m_eCurrentObjectType = m_vecCurrentCategory[m_iCurrentSubType];
+    
+    // íƒ€ì¼ ëª¨ë“œì—ì„œ ë¹„ì£¼ì–¼ íƒ€ì… ì—…ë°ì´íŠ¸
+    if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_TILE)
+    {
+        if (m_eCurrentObjectType == OBJECT_TYPE::TILE_TRIGGER)
+        {
+            m_eCurrentTileVisual = TILE_VISUAL_TYPE::BOSS_TRIGGER;
+        }
+        else if (m_eCurrentObjectType == OBJECT_TYPE::TILE_GROUND)
+        {
+            m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
+        }
+    }
 }
 
 const wchar_t* CEditorObjectManager::GetCurrentObjectName() const
@@ -191,17 +249,30 @@ void CEditorObjectManager::SetCurrentSubType(int index)
     {
         m_iCurrentSubType = index;
         m_eCurrentObjectType = m_vecCurrentCategory[index];
+        
+        // íƒ€ì¼ ëª¨ë“œì—ì„œ ì˜¤ë¸Œì íŠ¸ íƒ€ì…ì— ë”°ë¼ ë¹„ì£¼ì–¼ íƒ€ì…ë„ ì—…ë°ì´íŠ¸
+        if (m_pEditorCore->GetCurrentMode() == EDITOR_MODE::PLACE_TILE)
+        {
+            if (m_eCurrentObjectType == OBJECT_TYPE::TILE_TRIGGER)
+            {
+                m_eCurrentTileVisual = TILE_VISUAL_TYPE::BOSS_TRIGGER;
+            }
+            else if (m_eCurrentObjectType == OBJECT_TYPE::TILE_GROUND)
+            {
+                m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
+            }
+        }
     }
 }
 
 void CEditorObjectManager::InitializeBackgroundSystem()
 {
-    // »ç¿ë °¡´ÉÇÑ ¹è°æ Å¸ÀÔµé ÃÊ±âÈ­
+    // ì‚¬ìš© ê°€ëŠ¥í•œ ëª¨ë“  ë°°ê²½ íƒ€ì…ë“¤ ì´ˆê¸°í™”
     m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::BACKGROUND1);
     m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::BACKGROUND2);
     m_vecBackgroundTypes.push_back(BACKGROUND_TYPE::BACKGROUND3);
 
-    // ±âº» ¹è°æ ¼³Á¤
+    // ê¸°ë³¸ ë°°ê²½ ì„¤ì •
     m_eCurrentBgType = BACKGROUND_TYPE::BACKGROUND1;
     m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
 }
@@ -216,7 +287,7 @@ void CEditorObjectManager::NextBackground()
 {
     if (m_vecBackgroundTypes.empty()) return;
 
-    // ÇöÀç ¹è°æÀÇ ÀÎµ¦½º Ã£±â
+    // í˜„ì¬ ë°°ê²½ì˜ ì¸ë±ìŠ¤ ì°¾ê¸°
     int currentIndex = 0;
     for (size_t i = 0; i < m_vecBackgroundTypes.size(); ++i)
     {
@@ -227,7 +298,7 @@ void CEditorObjectManager::NextBackground()
         }
     }
 
-    // ´ÙÀ½ ¹è°æÀ¸·Î º¯°æ
+    // ë‹¤ìŒ ë°°ê²½ìœ¼ë¡œ ë³€ê²½
     int nextIndex = (currentIndex + 1) % m_vecBackgroundTypes.size();
     ChangeBackground(m_vecBackgroundTypes[nextIndex]);
 }
@@ -236,7 +307,7 @@ void CEditorObjectManager::PrevBackground()
 {
     if (m_vecBackgroundTypes.empty()) return;
 
-    // ÇöÀç ¹è°æÀÇ ÀÎµ¦½º Ã£±â
+    // í˜„ì¬ ë°°ê²½ì˜ ì¸ë±ìŠ¤ ì°¾ê¸°
     int currentIndex = 0;
     for (size_t i = 0; i < m_vecBackgroundTypes.size(); ++i)
     {
@@ -247,7 +318,7 @@ void CEditorObjectManager::PrevBackground()
         }
     }
 
-    // ÀÌÀü ¹è°æÀ¸·Î º¯°æ
+    // ì´ì „ ë°°ê²½ìœ¼ë¡œ ë³€ê²½
     int prevIndex = (currentIndex - 1 + m_vecBackgroundTypes.size()) % m_vecBackgroundTypes.size();
     ChangeBackground(m_vecBackgroundTypes[prevIndex]);
 }
@@ -259,9 +330,10 @@ const wchar_t* CEditorObjectManager::GetBackgroundName(BACKGROUND_TYPE _eType) c
 
 void CEditorObjectManager::InitializeTileVisualSystem()
 {
-    // »ç¿ë °¡´ÉÇÑ Å¸ÀÏ ½Ã°¢ Å¸ÀÔµé ÃÊ±âÈ­
-    /*m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK);
-    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::GRASS_PLATFORM);
+    // ì‚¬ìš© ê°€ëŠ¥í•œ ëª¨ë“  íƒ€ì¼ ë¹„ì£¼ì–¼ íƒ€ì…ë“¤ ì´ˆê¸°í™”
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::TRANSPARENT_BLOCK);
+    m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::BOSS_TRIGGER);
+    /*m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::GRASS_PLATFORM);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::DIRT_BLOCK);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::STONE_BLOCK);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::GRASS_BLOCK);
@@ -271,7 +343,7 @@ void CEditorObjectManager::InitializeTileVisualSystem()
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::SPIKE);
     m_vecTileVisualTypes.push_back(TILE_VISUAL_TYPE::WATER);*/
 
-    // ±âº» Å¸ÀÏ ½Ã°¢ Å¸ÀÔ ¼³Á¤
+    // ê¸°ë³¸ íƒ€ì¼ ë¹„ì£¼ì–¼ íƒ€ì… ì„¤ì •
     m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
     m_iTileVisualIndex = 0;
 }
@@ -297,6 +369,7 @@ const wchar_t* CEditorObjectManager::GetTileVisualName(TILE_VISUAL_TYPE _eType) 
     switch (_eType)
     {
     case TILE_VISUAL_TYPE::TRANSPARENT_BLOCK: return L"Transparent Block";
+    case TILE_VISUAL_TYPE::BOSS_TRIGGER:      return L"Boss Trigger";
     /*case TILE_VISUAL_TYPE::GRASS_PLATFORM:   return L"Grass Platform";
     case TILE_VISUAL_TYPE::DIRT_BLOCK:       return L"Dirt Block";
     case TILE_VISUAL_TYPE::STONE_BLOCK:      return L"Stone Block";
@@ -314,36 +387,36 @@ const wchar_t* CEditorObjectManager::GetTileVisualName(TILE_VISUAL_TYPE _eType) 
     }
 }
 
-void CEditorObjectManager::ClearAllObjects()
+void CEditorObjectManager::ClearAllObjects ( )
 {
-    // SceneÀÇ DeleteAllObject ÇÔ¼ö »ç¿ë
-    CScene_Tool* pToolScene = dynamic_cast<CScene_Tool*>(m_pEditorCore->GetWorkingScene());
-    if (pToolScene)
+    // Sceneì˜ DeleteAllObject í•¨ìˆ˜ í˜¸ì¶œ
+    CScene_Tool* pToolScene = dynamic_cast< CScene_Tool* >( m_pEditorCore->GetWorkingScene ( ) );
+    if ( pToolScene )
     {
-        pToolScene->ClearAllObjects();  // public ÇÔ¼ö È£Ãâ
+        pToolScene->ClearAllObjects ( );  // public í•¨ìˆ˜ í˜¸ì¶œ
 
-        // ¼±ÅÃµÈ ¿ÀºêÁ§Æ®µµ ÇØÁ¦
-        m_pEditorCore->DeselectObject();
+        // ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ë„ í•´ì œ
+        m_pEditorCore->DeselectObject ( );
     }
 }
 
-void CEditorObjectManager::ResetToDefault()
+void CEditorObjectManager::ResetToDefault ( )
 {
-    // ¿ÀºêÁ§Æ® ¸ğµÎ »èÁ¦
-    ClearAllObjects();
+    // ì˜¤ë¸Œì íŠ¸ ëª¨ë‘ ì‚­ì œ
+    ClearAllObjects ( );
 
-    // ±âº» ¼³Á¤À¸·Î ¸®¼Â
+    // ê¸°ë³¸ ì„¤ì •ìœ¼ë¡œ ë³µì›
     m_eCurrentObjectType = OBJECT_TYPE::MONSTER_WADDLE_DEE;
-    ChangeObjectCategory(L"Monster");
+    ChangeObjectCategory ( L"Monster" );
 
-    // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡ ¸®¼Â
-    m_vPlayerSpawnPos = Vec2(640.f, 400.f);
+    // í”Œë ˆì´ì–´ ìŠ¤í° ìœ„ì¹˜ ë³µì›
+    m_vPlayerSpawnPos = Vec2 ( 640.f , 400.f );
     m_bShowPlayerSpawn = true;
 
-    // ±âº» ¹è°æÀ¸·Î º¯°æ
-    ChangeBackground(BACKGROUND_TYPE::BACKGROUND1);
+    // ê¸°ë³¸ ë°°ê²½ìœ¼ë¡œ ë³µì›
+    ChangeBackground ( BACKGROUND_TYPE::BACKGROUND1 );
 
-    // ±âº» Å¸ÀÏ ºñÁÖ¾ó·Î ¼³Á¤
+    // ê¸°ë³¸ íƒ€ì¼ ì†ì„±ìœ¼ë¡œ ë³µì›
     m_eCurrentTileVisual = TILE_VISUAL_TYPE::TRANSPARENT_BLOCK;
     m_iTileVisualIndex = 0;
 }
