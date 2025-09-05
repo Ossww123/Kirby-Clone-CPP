@@ -46,9 +46,13 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	m_hWnd = _hWnd;
 	m_ptResolution = _ptResolution;
 
+	DWORD style = ( DWORD ) GetWindowLongPtr ( m_hWnd , GWL_STYLE );
+	DWORD exstyle = ( DWORD ) GetWindowLongPtr ( m_hWnd , GWL_EXSTYLE );
+	BOOL  hasMenu = ( GetMenu ( m_hWnd ) != nullptr );   // 메뉴 존재 여부 동기화
+
 	// 윈도우 크기 조정
 	RECT rt = { 0, 0, ( long ) m_ptResolution.x, ( long ) m_ptResolution.y };
-	AdjustWindowRect ( &rt , WS_OVERLAPPEDWINDOW , true );
+	AdjustWindowRectEx ( &rt , style , hasMenu , exstyle );
 	SetWindowPos ( m_hWnd , nullptr , 100 , 100 , rt.right - rt.left , rt.bottom - rt.top , 0 );
 
 	// 더블 버퍼링 초기화

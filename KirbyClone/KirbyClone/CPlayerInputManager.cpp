@@ -3,98 +3,98 @@
 #include "CKeyMgr.h"
 #include "CTimeMgr.h"
 
-CPlayerInputManager::CPlayerInputManager()
-    : m_currentFrameInput(0)
-    , m_bWasJumpPressed(false)
-    , m_bWasActionPressed(false)
-    , m_fJumpHoldTime(0.0f)
-    , m_fMaxJumpHoldTime(0.3f)
-    , m_bLeftCurrentlyPressed(false)
-    , m_bRightCurrentlyPressed(false)
-    , m_bJumpCurrentlyPressed(false)
-    , m_bActionCurrentlyPressed(false)
-    , m_bLeftDecelerating(false)
-    , m_bRightDecelerating(false)
-    , m_iLastMoveDirection(0)
+CPlayerInputManager::CPlayerInputManager ( )
+    : m_currentFrameInput ( 0 )
+    , m_bWasJumpPressed ( false )
+    , m_bWasActionPressed ( false )
+    , m_fJumpHoldTime ( 0.0f )
+    , m_fMaxJumpHoldTime ( 0.3f )
+    , m_bLeftCurrentlyPressed ( false )
+    , m_bRightCurrentlyPressed ( false )
+    , m_bJumpCurrentlyPressed ( false )
+    , m_bActionCurrentlyPressed ( false )
+    , m_bLeftDecelerating ( false )
+    , m_bRightDecelerating ( false )
+    , m_iLastMoveDirection ( 0 )
 {
 }
 
-CPlayerInputManager::~CPlayerInputManager()
+CPlayerInputManager::~CPlayerInputManager ( )
 {
 }
 
-void CPlayerInputManager::Update()
+void CPlayerInputManager::Update ( )
 {
-    // ÀÌÀü ÇÁ·¹ÀÓ ÀÔ·Â ÀúÀå
+    // ì´ì „ í”„ë ˆì„ ì…ë ¥ ì €ì¥
     m_bWasJumpPressed = m_bJumpCurrentlyPressed;
     m_bWasActionPressed = m_bActionCurrentlyPressed;
 
-    // ÇöÀç ÇÁ·¹ÀÓ ÀÔ·Â ÃÊ±âÈ­
+    // í˜„ì¬ í”„ë ˆì„ ì…ë ¥ ì´ˆê¸°í™”
     m_currentFrameInput = 0;
 
-    // Å°º¸µå ÀÔ·Â ¼öÁı
-    CollectKeyboardInput();
+    // í‚¤ë³´ë“œ ì…ë ¥ ìˆ˜ì§‘
+    CollectKeyboardInput ( );
 
-    // ´õºíÅÇ Ã³¸®
-    ProcessDoubleTap();
+    // ë”ë¸”íƒ­ ì²˜ë¦¬
+    ProcessDoubleTap ( );
 
-    // ÀÔ·Â ÇÃ·¡±× ¾÷µ¥ÀÌÆ®
-    UpdateInputFlags();
+    // ì…ë ¥ í”Œë˜ê·¸ ì—…ë°ì´íŠ¸
+    UpdateInputFlags ( );
 }
 
-CPlayerInputManager::InputFlags CPlayerInputManager::GetCurrentFrameInput() const
+CPlayerInputManager::InputFlags CPlayerInputManager::GetCurrentFrameInput ( ) const
 {
     return m_currentFrameInput;
 }
 
-bool CPlayerInputManager::HasInput(InputFlags flags) const
+bool CPlayerInputManager::HasInput ( InputFlags flags ) const
 {
-    return (m_currentFrameInput & (uint32_t)flags) != 0;
+    return ( m_currentFrameInput & ( uint32_t ) flags ) != 0;
 }
 
-bool CPlayerInputManager::HasAllInputs(InputFlags flags) const
+bool CPlayerInputManager::HasAllInputs ( InputFlags flags ) const
 {
-    return (m_currentFrameInput & (uint32_t)flags) == (uint32_t)flags;
+    return ( m_currentFrameInput & ( uint32_t ) flags ) == ( uint32_t ) flags;
 }
 
-bool CPlayerInputManager::HasAnyInput(InputFlags flags) const
+bool CPlayerInputManager::HasAnyInput ( InputFlags flags ) const
 {
-    return (m_currentFrameInput & (uint32_t)flags) != 0;
+    return ( m_currentFrameInput & ( uint32_t ) flags ) != 0;
 }
 
-int CPlayerInputManager::GetHorizontalInput() const
+int CPlayerInputManager::GetHorizontalInput ( ) const
 {
-    // ºñÆ® °ªµé È®ÀÎ
-    uint32_t leftFlag = (uint32_t)INPUT_TYPE::MOVE_LEFT;
-    uint32_t rightFlag = (uint32_t)INPUT_TYPE::MOVE_RIGHT;
+    // ë¹„íŠ¸ ë§ˆìŠ¤í¬ í™•ì¸
+    uint32_t leftFlag = ( uint32_t ) INPUT_TYPE::MOVE_LEFT;
+    uint32_t rightFlag = ( uint32_t ) INPUT_TYPE::MOVE_RIGHT;
 
-    // HasInput °á°ú È®ÀÎ
-    bool left = HasInput(leftFlag);
-    bool right = HasInput(rightFlag);
+    // HasInput í•¨ìˆ˜ í™•ì¸
+    bool left = HasInput ( leftFlag );
+    bool right = HasInput ( rightFlag );
 
-    if (left && !right) return -1;
-    if (right && !left) return 1;
+    if ( left && !right ) return -1;
+    if ( right && !left ) return 1;
     return 0;
 }
 
-int CPlayerInputManager::GetVerticalInput() const
+int CPlayerInputManager::GetVerticalInput ( ) const
 {
-    bool up = HasInput((uint32_t)INPUT_TYPE::MOVE_UP);
-    bool down = HasInput((uint32_t)INPUT_TYPE::MOVE_DOWN);
+    bool up = HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_UP );
+    bool down = HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_DOWN );
 
-    if (up && !down) return 1;
-    if (down && !up) return -1;
+    if ( up && !down ) return 1;
+    if ( down && !up ) return -1;
     return 0;
 }
 
-// === ÀÔ·Â ¼öÁı ÇÔ¼öµé ===
+// === ì…ë ¥ ì²˜ë¦¬ í•¨ìˆ˜ë“¤ ===
 
-void CPlayerInputManager::CollectKeyboardInput()
+void CPlayerInputManager::CollectKeyboardInput ( )
 {
-    // === ¹æÇâ Å° ÀÔ·Â ===
-    if (KEY_HOLD(KEY::LEFT))
+    // === ì´ë™ í‚¤ ì…ë ¥ ===
+    if ( KEY_HOLD ( KEY::LEFT ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::MOVE_LEFT;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::MOVE_LEFT;
         m_bLeftCurrentlyPressed = true;
     }
     else
@@ -102,9 +102,9 @@ void CPlayerInputManager::CollectKeyboardInput()
         m_bLeftCurrentlyPressed = false;
     }
 
-    if (KEY_HOLD(KEY::RIGHT))
+    if ( KEY_HOLD ( KEY::RIGHT ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::MOVE_RIGHT;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::MOVE_RIGHT;
         m_bRightCurrentlyPressed = true;
     }
     else
@@ -112,34 +112,34 @@ void CPlayerInputManager::CollectKeyboardInput()
         m_bRightCurrentlyPressed = false;
     }
 
-    if (KEY_HOLD(KEY::UP))
+    if ( KEY_HOLD ( KEY::UP ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::MOVE_UP;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::MOVE_UP;
     }
 
-    if (KEY_HOLD(KEY::DOWN))
+    if ( KEY_HOLD ( KEY::DOWN ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::MOVE_DOWN;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::MOVE_DOWN;
     }
 
-    // === ¾×¼Ç Å° ÀÔ·Â ===
+    // === ì•¡ì…˜ í‚¤ ì…ë ¥ ===
 
-    // ZÅ° (Á¡ÇÁ - TAP, HOLD, AWAY ±¸ºĞ)
-    if (KEY_TAP(KEY::Z))
+    // Zí‚¤ (ì í”„ - TAP, HOLD, AWAY êµ¬ë¶„)
+    if ( KEY_TAP ( KEY::Z ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::JUMP;
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::JUMP_TAP;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::JUMP;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::JUMP_TAP;
     }
 
-    if (KEY_HOLD(KEY::Z))
+    if ( KEY_HOLD ( KEY::Z ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::JUMP;
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::JUMP_HOLD;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::JUMP;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::JUMP_HOLD;
         m_bJumpCurrentlyPressed = true;
 
-        // Á¡ÇÁ È¦µå ½Ã°£ ´©Àû
-        m_fJumpHoldTime += CTimeMgr::GetInst()->GetfDT();
-        if (m_fJumpHoldTime > m_fMaxJumpHoldTime)
+        // ì í”„ í™€ë“œ ì‹œê°„ ëˆ„ì 
+        m_fJumpHoldTime += CTimeMgr::GetInst ( )->GetfDT ( );
+        if ( m_fJumpHoldTime > m_fMaxJumpHoldTime )
         {
             m_fJumpHoldTime = m_fMaxJumpHoldTime;
         }
@@ -147,25 +147,25 @@ void CPlayerInputManager::CollectKeyboardInput()
     else
     {
         m_bJumpCurrentlyPressed = false;
-        m_fJumpHoldTime = 0.0f; // Å°¸¦ ¶¼¸é ¸®¼Â
+        m_fJumpHoldTime = 0.0f; // í‚¤ë¥¼ ë–¼ë©´ ë¦¬ì…‹
     }
 
-    if (KEY_AWAY(KEY::Z))
+    if ( KEY_AWAY ( KEY::Z ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::JUMP_AWAY;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::JUMP_AWAY;
     }
 
-    // XÅ° (¾×¼Ç - TAP, HOLD, AWAY ±¸ºĞ)
-    if (KEY_TAP(KEY::X))
+    // Xí‚¤ (ì•¡ì…˜ - TAP, HOLD, AWAY êµ¬ë¶„)
+    if ( KEY_TAP ( KEY::X ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::ACTION;
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::ACTION_TAP;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::ACTION;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::ACTION_TAP;
     }
 
-    if (KEY_HOLD(KEY::X))
+    if ( KEY_HOLD ( KEY::X ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::ACTION;
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::ACTION_HOLD;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::ACTION;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::ACTION_HOLD;
         m_bActionCurrentlyPressed = true;
     }
     else
@@ -173,92 +173,100 @@ void CPlayerInputManager::CollectKeyboardInput()
         m_bActionCurrentlyPressed = false;
     }
 
-    if (KEY_AWAY(KEY::X))
+    if ( KEY_AWAY ( KEY::X ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::ACTION_AWAY;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::ACTION_AWAY;
     }
 
-    // BACKSPACEÅ° (´É·Â ¹ö¸®±â)
-    if (KEY_TAP(KEY::BACK))
+    // BACKSPACEí‚¤ (ëŠ¥ë ¥ ë²„ë¦¬ê¸°)
+    if ( KEY_TAP ( KEY::BACK ) )
     {
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::DROP_ABILITY;
-        m_currentFrameInput |= (uint32_t)INPUT_TYPE::DROP_ABILITY_TAP;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::DROP_ABILITY;
+        m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::DROP_ABILITY_TAP;
     }
 }
 
-void CPlayerInputManager::ProcessDoubleTap()
+void CPlayerInputManager::ProcessDoubleTap ( )
 {
-    // Movement ½ºÅ¸ÀÏ ´õºíÅÇ °¨Áö
-    CheckMovementStyleDoubleTap();
+    // Movement ë”ë¸”íƒ­ ê°ì§€ê¸° ì‹¤í–‰
+    CheckMovementStyleDoubleTap ( );
 }
 
-void CPlayerInputManager::CheckMovementStyleDoubleTap()
+void CPlayerInputManager::CheckMovementStyleDoubleTap ( )
 {
-    bool leftPressed = HasInput((uint32_t)INPUT_TYPE::MOVE_LEFT);
-    bool rightPressed = HasInput((uint32_t)INPUT_TYPE::MOVE_RIGHT);
+    bool leftPressed = HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_LEFT );
+    bool rightPressed = HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_RIGHT );
 
     int currentDirection = 0;
-    if (leftPressed && !rightPressed) currentDirection = -1;
-    else if (rightPressed && !leftPressed) currentDirection = 1;
+    if ( leftPressed && !rightPressed ) currentDirection = -1;
+    else if ( rightPressed && !leftPressed ) currentDirection = 1;
 
-    // ¿ŞÂÊ ´õºíÅÇ Ã¼Å©
-    if (currentDirection == -1)
+    // ì™¼ìª½ ë”ë¸”íƒ­ ì²´í¬
+    if ( currentDirection == -1 )
     {
-        // °¨¼Ó ÁßÀÌ°í, °°Àº ¹æÇâ(¿ŞÂÊ) ÀÔ·ÂÀÌ¸é ´õºíÅÇ
-        if (m_bLeftDecelerating && m_iLastMoveDirection == -1)
+        // í˜„ì¬ ê°ì†ì¤‘ì´ê³ , ë§ˆì§€ë§‰ ì´ë™(ì™¼ìª½) ì…ë ¥ì´ë©´ ë”ë¸”íƒ­
+        if ( m_bLeftDecelerating && m_iLastMoveDirection == -1 )
         {
-            m_currentFrameInput |= (uint32_t)INPUT_TYPE::DOUBLE_TAP_LEFT;
+            m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::DOUBLE_TAP_LEFT;
             m_bLeftDecelerating = false;
         }
-        m_bRightDecelerating = false; // ´Ù¸¥ ¹æÇâ °¨¼Ó Ãë¼Ò
+        m_bRightDecelerating = false; // ë‹¤ë¥¸ ë°©í–¥ ìƒíƒœ í•´ì œ
     }
-    // ¿À¸¥ÂÊ ´õºíÅÇ Ã¼Å©
-    else if (currentDirection == 1)
+    // ì˜¤ë¥¸ìª½ ë”ë¸”íƒ­ ì²´í¬
+    else if ( currentDirection == 1 )
     {
-        // °¨¼Ó ÁßÀÌ°í, °°Àº ¹æÇâ(¿À¸¥ÂÊ) ÀÔ·ÂÀÌ¸é ´õºíÅÇ
-        if (m_bRightDecelerating && m_iLastMoveDirection == 1)
+        // í˜„ì¬ ê°ì†ì¤‘ì´ê³ , ë§ˆì§€ë§‰ ì´ë™(ì˜¤ë¥¸ìª½) ì…ë ¥ì´ë©´ ë”ë¸”íƒ­
+        if ( m_bRightDecelerating && m_iLastMoveDirection == 1 )
         {
-            m_currentFrameInput |= (uint32_t)INPUT_TYPE::DOUBLE_TAP_RIGHT;
+            m_currentFrameInput |= ( uint32_t ) INPUT_TYPE::DOUBLE_TAP_RIGHT;
             m_bRightDecelerating = false;
         }
-        m_bLeftDecelerating = false; // ´Ù¸¥ ¹æÇâ °¨¼Ó Ãë¼Ò
+        m_bLeftDecelerating = false; // ë‹¤ë¥¸ ë°©í–¥ ìƒíƒœ í•´ì œ
     }
-    // ÀÔ·ÂÀÌ ¾øÀ¸¸é °¨¼Ó ½ÃÀÛ
-    else if (currentDirection == 0)
+    // ì…ë ¥ì´ ì—†ìœ¼ë©´ ê°ì† ì‹œì‘
+    else if ( currentDirection == 0 )
     {
-        if (m_iLastMoveDirection == -1 && !m_bLeftDecelerating)
+        if ( m_iLastMoveDirection == -1 && !m_bLeftDecelerating )
         {
             m_bLeftDecelerating = true;
         }
-        else if (m_iLastMoveDirection == 1 && !m_bRightDecelerating)
+        else if ( m_iLastMoveDirection == 1 && !m_bRightDecelerating )
         {
             m_bRightDecelerating = true;
         }
     }
 
-    // ¹æÇâ ¾÷µ¥ÀÌÆ®
-    if (currentDirection != 0)
+    // ë°©í–¥ ì—…ë°ì´íŠ¸
+    if ( currentDirection != 0 )
     {
         m_iLastMoveDirection = currentDirection;
     }
 }
 
-void CPlayerInputManager::UpdateInputFlags()
+void CPlayerInputManager::ResetDoubleTapState ( )
 {
-    // Á¶ÇÕ ÀÔ·Âµé ¼³Á¤
-    if (HasInput((uint32_t)INPUT_TYPE::MOVE_LEFT) || HasInput((uint32_t)INPUT_TYPE::MOVE_RIGHT))
+    // ë”ë¸”íƒ­ ê°ì† ìƒíƒœ ë¦¬ì…‹
+    m_bLeftDecelerating = false;
+    m_bRightDecelerating = false;
+    m_iLastMoveDirection = 0;
+}
+
+void CPlayerInputManager::UpdateInputFlags ( )
+{
+    // ë³µí•© ì…ë ¥ ì²˜ë¦¬
+    if ( HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_LEFT ) || HasInput ( ( uint32_t ) INPUT_TYPE::MOVE_RIGHT ) )
     {
         //m_currentFrameInput |= (uint32_t)INPUT_TYPE::MOVE_HORIZONTAL;
     }
 
-    if (HasAnyInput((uint32_t)INPUT_TYPE::ANY_MOVEMENT))
+    if ( HasAnyInput ( ( uint32_t ) INPUT_TYPE::ANY_MOVEMENT ) )
     {
-        // ANY_MOVEMENT´Â ÀÌ¹Ì °³º° ÀÔ·ÂµéÀÇ Á¶ÇÕÀÌ¹Ç·Î º°µµ Ã³¸® ºÒÇÊ¿ä
+        // ANY_MOVEMENTëŠ” ì´ë¯¸ ê°œë³„ ì…ë ¥ë“¤ë¡œ êµ¬ì„±ë˜ì–´ìˆìœ¼ë¯€ë¡œ ë³„ë„ ì²˜ë¦¬ ë¶ˆí•„ìš”
     }
 }
 
-float CPlayerInputManager::GetJumpHoldRatio() const
+float CPlayerInputManager::GetJumpHoldRatio ( ) const
 {
-    if (m_fMaxJumpHoldTime <= 0.0f) return 0.0f;
+    if ( m_fMaxJumpHoldTime <= 0.0f ) return 0.0f;
     return m_fJumpHoldTime / m_fMaxJumpHoldTime;
 }

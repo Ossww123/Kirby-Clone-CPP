@@ -23,6 +23,7 @@ CAbilityStar::CAbilityStar()
     , m_bOnGround(false)
     , m_fBlinkTimer(0.f)
     , m_bVisible(true)
+    , m_bBeingInhaled(false)
 {
     // 기본 크기 설정 (능력별 크기)
     SetScale(Vec2(32.f, 32.f));
@@ -94,8 +95,11 @@ void CAbilityStar::Update()
         return;
     }
     
-    // 물리 시뮬레이션
-    UpdatePhysics();
+    // 빨아들여지고 있지 않을 때만 물리 시뮬레이션
+    if (!m_bBeingInhaled)
+    {
+        UpdatePhysics();
+    }
     
     // === 디버깅: 위치와 속도 출력 ===
     static float debugTimer = 0.f;

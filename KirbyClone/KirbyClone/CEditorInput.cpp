@@ -452,12 +452,12 @@ void CEditorInput::HandleDoorPropertyInput(CDoor* _pDoor)
     if (KEY_TAP(KEY::ALPHA_1))
     {
         _pDoor->SetTargetScene(SCENE_TYPE::STAGE_01);
-        ShowDoorPropertyChanged(_pDoor, L"목표 씬을 '스테이지 1'로 변경");
+        ShowDoorPropertyChanged(_pDoor, L"change target scene as stage1");
     }
     else if (KEY_TAP(KEY::ALPHA_2))
     {
         _pDoor->SetTargetScene(SCENE_TYPE::STAGE_02);
-        ShowDoorPropertyChanged(_pDoor, L"목표 씬을 '스테이지 2'로 변경");
+        ShowDoorPropertyChanged(_pDoor, L"change target scene as stage2");
     }
 
     // 목표 위치 설정 (Q/W/A/S 키)
@@ -492,7 +492,7 @@ void CEditorInput::HandleDoorPropertyInput(CDoor* _pDoor)
         _pDoor->SetTargetPosition(currentPos);
 
         wchar_t szMessage[128];
-        swprintf_s(szMessage, L"목표 위치를 (%.0f, %.0f)로 변경", currentPos.x, currentPos.y);
+        swprintf_s(szMessage, L"change target position as (%.0f, %.0f)", currentPos.x, currentPos.y);
         ShowDoorPropertyChanged(_pDoor, szMessage);
     }
 
@@ -500,7 +500,7 @@ void CEditorInput::HandleDoorPropertyInput(CDoor* _pDoor)
     if (KEY_TAP(KEY::R))
     {
         _pDoor->SetTargetPosition(Vec2(256.f, 384.f)); // 기본 위치
-        ShowDoorPropertyChanged(_pDoor, L"목표 위치를 기본값으로 리셋");
+        ShowDoorPropertyChanged(_pDoor, L"reset target position as default");
     }
 }
 

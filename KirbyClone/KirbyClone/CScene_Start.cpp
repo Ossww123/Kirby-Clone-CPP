@@ -142,11 +142,13 @@ void CScene_Start::Enter()
     CSoundMgr::GetInst()->LoadSound(L"kirby_inhale", L"sound/kirby_inhale.wav", SOUND_TYPE::SFX);
     CSoundMgr::GetInst()->LoadSound(L"kirby_swallow", L"sound/kirby_swallow.wav", SOUND_TYPE::SFX);
     CSoundMgr::GetInst()->LoadSound(L"exhale_air_puff", L"sound/exhale_air_puff.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst ( )->LoadSound ( L"kirby_exhale_star" , L"sound/kirby_exhale_star.wav" , SOUND_TYPE::SFX );
     CSoundMgr::GetInst()->LoadSound(L"enter_door", L"sound/enter_door.wav", SOUND_TYPE::SFX);
     CSoundMgr::GetInst()->LoadSound(L"enemy_death", L"sound/enemy_death.wav", SOUND_TYPE::SFX);
     CSoundMgr::GetInst()->LoadSound(L"copy", L"sound/kirby_copy.wav", SOUND_TYPE::SFX);
-    CSoundMgr::GetInst()->LoadSound(L"damage", L"sound/damage.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst()->LoadSound(L"kirby_damage", L"sound/kirby_damage.wav", SOUND_TYPE::SFX);
     CSoundMgr::GetInst()->LoadSound(L"gameover", L"sound/gameover.wav", SOUND_TYPE::SFX);
+    CSoundMgr::GetInst ( )->LoadSound ( L"boss_clear" , L"sound/boss_clear.wav" , SOUND_TYPE::SFX );
     
     // 몬스터 공격 효과음들 로드
     CSoundMgr::GetInst()->LoadSound(L"sparky", L"sound/sparky.wav", SOUND_TYPE::SFX);

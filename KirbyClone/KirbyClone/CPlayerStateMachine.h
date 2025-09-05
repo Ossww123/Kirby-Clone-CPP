@@ -74,6 +74,7 @@ private:
     void ExecuteCrouchState ( );
     void ExecuteSlideState ( );
     void ExecuteInhaleState ( );
+    void ExecuteInhaleKeepState ( );
     void ExecuteInhaleSuccessState ( );
     void ExecuteExhaleState ( );
     void ExecuteSwallowState ( );
@@ -88,12 +89,16 @@ private:
     void ExecuteDoorEnterState ( );
     void ExecuteVictoryDanceState ( );
 
-    // === 상태 진입 시 처리 ===
+    // === 상태 진입/종료 시 처리 ===
     void OnStateEnter ( PLAYER_STATE _eState );
+    void OnStateExit ( PLAYER_STATE _eState );
+    void OnEnterIdleState ( );
     void OnEnterJumpState ( );
+    void OnEnterWalkState ( );
     void OnEnterRunState ( );
     void OnEnterSlideState ( );
     void OnEnterInhaleState ( );
+    void OnEnterInhaleKeepState ( );
     void OnEnterInhaleSuccessState ( );
     void OnEnterExhaleState ( );
     void OnEnterSwallowState ( );

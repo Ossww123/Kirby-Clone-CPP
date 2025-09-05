@@ -39,6 +39,7 @@ public:
 public:
     // === 보스 특성 (final로 하위 클래스에서 변경 불가) ===
     bool CanBeInhaled() const override final { return false; }
+    bool IsBeingInhaled() const override final { return false; }
     bool HasAttack() const override { return true; }
     virtual bool IsBoss() const override final { return true; }  // 보스 여부 확인
 
@@ -126,4 +127,5 @@ private:
     BOSS_DEFEAT_PHASE   m_eDefeatPhase;                     // 격파 단계
     float               m_fDefeat1Timer;                    // DEFEAT1 애니메이션 타이머
     float               m_fVictoryWaitTimer;                // 승리 대기 타이머
+    bool                m_bBossClearSoundPlayed;            // 보스 클리어 사운드 재생 플래그
 };

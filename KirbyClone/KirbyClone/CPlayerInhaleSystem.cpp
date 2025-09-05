@@ -134,7 +134,7 @@ void CPlayerInhaleSystem::StopInhale()
         m_bInhaleSoundPlaying = false;
     }
     
-    // 빨아들이는 중인 몬스터들의 상태 해제
+    // 빨아들이는 중인 대상들의 상태 해제
     for (auto& targetInfo : m_vecInhaleTargets)
     {
         CMonster* pMonster = dynamic_cast<CMonster*>(targetInfo.pTarget);
@@ -145,6 +145,13 @@ void CPlayerInhaleSystem::StopInhale()
             {
                 pBasic->SetInhaled(false);
             }
+        }
+        
+        // CAbilityStar 상태 해제
+        CAbilityStar* pAbilityStar = dynamic_cast<CAbilityStar*>(targetInfo.pTarget);
+        if (pAbilityStar)
+        {
+            pAbilityStar->SetBeingInhaled(false);
         }
     }
     
@@ -257,6 +264,9 @@ void CPlayerInhaleSystem::UpdateInhaleTargets()
                     if (!bAlreadyExists)
                     {
                         m_vecInhaleTargets.emplace_back(pObj, vItemPos);
+                        
+                        // CAbilityStar에게 빨아들이기 상태 설정
+                        pAbilityStar->SetBeingInhaled(true);
                     }
                 }
             }
@@ -486,7 +496,7 @@ void CPlayerInhaleSystem::ApplyInhaleForce(CObject* _pTarget)
         return;
     }
 
-    const float fMaxInhaleTime = 0.3f;
+    const float fMaxInhaleTime = 0.35f;
     float fCurrentTime = pTargetInfo->fInhaleTimer;
 
     if (fCurrentTime >= fMaxInhaleTime)
@@ -534,11 +544,22 @@ void CPlayerInhaleSystem::ApplyInhaleForce(CObject* _pTarget)
     
     Vec2 vVelocity = vDirection * fCurrentSpeed;
 
-    // RigidBody에 속도 적용
+    // RigidBody에 속도 적용 (몬스터용)
     CRigidBody* pTargetRigidBody = _pTarget->GetRigidBody();
     if (pTargetRigidBody)
     {
         pTargetRigidBody->SetVelocity(vVelocity);
+    }
+    else
+    {
+        // RigidBody가 없는 경우 (CAbilityStar 등) 직접 위치 이동
+        CAbilityStar* pAbilityStar = dynamic_cast<CAbilityStar*>(_pTarget);
+        if (pAbilityStar)
+        {
+            Vec2 vCurrentPos = _pTarget->GetPos();
+            Vec2 vNewPos = vCurrentPos + (vVelocity * CTimeMgr::GetInst()->GetfDT());
+            _pTarget->SetPos(vNewPos);
+        }
     }
 }
 

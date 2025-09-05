@@ -30,6 +30,10 @@ public:
     }
     bool IsOnGround() const { return m_bOnGround; }
 
+    // === 빨아들이기 관련 ===
+    void SetBeingInhaled(bool _bInhaled) { m_bBeingInhaled = _bInhaled; }
+    bool IsBeingInhaled() const { return m_bBeingInhaled; }
+
 private:
     // === 물리 시뮬레이션 ===
     void UpdatePhysics();
@@ -59,4 +63,7 @@ private:
     // === 시각적 효과 ===
     float m_fBlinkTimer;            // 깜빡임 타이머 (사라지기 전)
     bool m_bVisible;                // 깜빡임 상태
+    
+    // === 빨아들이기 관련 ===
+    bool m_bBeingInhaled;           // 빨아들여지고 있는지
 };

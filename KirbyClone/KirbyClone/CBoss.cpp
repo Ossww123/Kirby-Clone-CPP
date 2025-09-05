@@ -30,6 +30,7 @@ CBoss::CBoss()
     , m_eDefeatPhase(BOSS_DEFEAT_PHASE::NONE)
     , m_fDefeat1Timer(0.f)
     , m_fVictoryWaitTimer(0.f)
+    , m_bBossClearSoundPlayed(false)
 {
     // 보스는 특별한 초기 설정
     m_fSpeed = 0.f;  // 기본적으로 이동하지 않음
@@ -338,7 +339,14 @@ void CBoss::UpdateDefeatSequence()
     case BOSS_DEFEAT_PHASE::DEFEAT1_ANIM:
         // DEFEAT1 상태로 변경 (애니메이션 재생)
         ChangeState(MONSTER_STATE::DEFEAT1);
-        
+
+        // 사운드는 한 번만 재생
+        if (!m_bBossClearSoundPlayed)
+        {
+            CSoundMgr::GetInst()->PlaySFX(L"boss_clear");
+            m_bBossClearSoundPlayed = true;
+        }
+
         // DEFEAT1 애니메이션 실행 중 (2초 동안)
         m_fDefeat1Timer += CTimeMgr::GetInst()->GetfDT();
         

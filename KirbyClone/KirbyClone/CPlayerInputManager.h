@@ -81,6 +81,9 @@ public:
     int GetHorizontalInput ( ) const;    // -1(왼쪽), 0(없음), 1(오른쪽)
     int GetVerticalInput ( ) const;      // -1(아래), 0(없음), 1(위)
 
+    // === 더블탭 상태 리셋 ===
+    void ResetDoubleTapState ( );        // 더블탭 감속 상태 리셋
+
 private:
     // === 입력 수집 함수들 ===
     void CollectKeyboardInput ( );

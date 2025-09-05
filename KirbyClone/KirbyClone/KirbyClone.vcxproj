@@ -244,7 +244,12 @@
     <ClCompile Include="CDoor.cpp" />
     <ClCompile Include="CEditorCameraController.cpp" />
     <ClCompile Include="CEditorCore.cpp" />
-    <ClCompile Include="CEditorFileManager.cpp" />
+    <ClCompile Include="CEditorFileManager.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessSuppressLineNumbers>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessSuppressLineNumbers>
+    </ClCompile>
     <ClCompile Include="CEditorInput.cpp" />
     <ClCompile Include="CEditorObjectManager.cpp" />
     <ClCompile Include="CEditorRenderer.cpp" />

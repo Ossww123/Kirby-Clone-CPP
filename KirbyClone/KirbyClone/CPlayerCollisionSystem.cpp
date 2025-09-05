@@ -371,6 +371,12 @@ void CPlayerCollisionSystem::HandleMonsterCollisionEnter(CMonster* _pMonster)
 {
     if (!_pMonster) return;
 
+    // 몬스터가 빨아들여지고 있는 상태라면 데미지 무시
+    if (_pMonster->IsBeingInhaled())
+    {
+        return;
+    }
+
     // 흡입 중인지 확인
     if (m_pOwner->IsInhaling())
     {
@@ -436,16 +442,26 @@ void CPlayerCollisionSystem::HandleProjectileCollisionEnter(CProjectile* _pProje
 {
     if (!_pProjectile || !m_pOwner) return;
 
-    // 몬스터 투사체와의 충돌 시 플레이어가 데미지를 받음
-    float fDamage = _pProjectile->GetDamage();
+    // 투사체 위치와 플레이어 위치를 기반으로 넉백 방향 계산
+    Vec2 vProjectilePos = _pProjectile->GetPos();
+    Vec2 vPlayerPos = m_pOwner->GetPos();
+    Vec2 vKnockbackDir = vPlayerPos - vProjectilePos;
+    vKnockbackDir.Normalize();
     
-    // 투사체 방향에 따른 넉백 방향 계산 (왼쪽 또는 오른쪽)
-    Vec2 knockbackDir = Vec2(_pProjectile->GetDirection().x * 200.f, 0.f);
-    
-    // 플레이어 데미지 처리 (넉백 포함)
-    m_pOwner->TakeDamage((int)fDamage, knockbackDir);
-    
-    // 투사체 삭제
+    // 넉백 강도 조정 (몬스터와의 충돌과 유사하게)
+    vKnockbackDir = vKnockbackDir * 200.f;
+
+    // === 1. 플레이어에게 피격 요청 (즉시) ===
+    m_pOwner->RequestDamage(vKnockbackDir);
+
+    // === 2. 실제 데미지 처리는 이벤트로 등록 ===
+    tEvent playerDamageEvent;
+    playerDamageEvent.eType = EVENT_TYPE::PLAYER_DAMAGE;
+    playerDamageEvent.wParam = (DWORD_PTR)m_pOwner;
+    playerDamageEvent.lParam = (DWORD_PTR)new Vec2(vKnockbackDir);
+    CEventMgr::GetInst()->AddEvent(playerDamageEvent);
+
+    // === 3. 투사체 삭제 ===
     _pProjectile->SetDead();
 }
 

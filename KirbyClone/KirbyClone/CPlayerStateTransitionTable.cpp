@@ -212,6 +212,7 @@ const char* CPlayerStateTransitionTable::PlayerStateToString(PLAYER_STATE state)
     case PLAYER_STATE::HOVER:             return "HOVER";
     case PLAYER_STATE::HOVER_EXHALE:      return "HOVER_EXHALE";
     case PLAYER_STATE::INHALE:            return "INHALE";
+    case PLAYER_STATE::INHALE_KEEP:       return "INHALE_KEEP";
     case PLAYER_STATE::INHALE_SUCCESS:    return "INHALE_SUCCESS";
     case PLAYER_STATE::EXHALE:            return "EXHALE";
     case PLAYER_STATE::SWALLOW:           return "SWALLOW";

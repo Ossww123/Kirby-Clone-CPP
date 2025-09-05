@@ -243,22 +243,22 @@ void CTile::RenderSpecialIndicators ( HDC _dc , Vec2 vRenderPos , Vec2 vScale )
     switch ( m_eCollisionType )
     {
     case COLLISION_TYPE::SPIKE:
-        wcscpy_s ( szIndicator , L"가시" );        // 가시 표시
+        wcscpy_s ( szIndicator , L"spike" );        // 가시 표시
         break;
     case COLLISION_TYPE::WATER:
         wcscpy_s ( szIndicator , L"~~~" );         // 물결 표시
         break;
     case COLLISION_TYPE::LAVA:
-        wcscpy_s ( szIndicator , L"용암" );       // 불 표시 (유니코드 문제로)
+        wcscpy_s ( szIndicator , L"lava" );       // 불 표시 (유니코드 문제로)
         break;
     case COLLISION_TYPE::ONE_WAY_PLATFORM:
         wcscpy_s ( szIndicator , L"UP" );        // 위쪽 화살표
         break;
     case COLLISION_TYPE::MOVING_PLATFORM:
-        wcscpy_s ( szIndicator , L"좌우" );        // 좌우 화살표
+        wcscpy_s ( szIndicator , L"L R" );        // 좌우 화살표
         break;
     case COLLISION_TYPE::BREAKABLE_BLOCK:
-        wcscpy_s ( szIndicator , L"파괴" );       // 깨짐 표시 (유니코드 문제로)
+        wcscpy_s ( szIndicator , L"destroy" );       // 깨짐 표시 (유니코드 문제로)
         break;
     }
 
@@ -386,12 +386,12 @@ void CTile::RenderTriggerTile ( HDC _dc )
     SetBkMode ( _dc , TRANSPARENT );
     SetTextColor ( _dc , RGB ( 255 , 100 , 0 ) );
 
-    wchar_t szText[ ] = L"BOSS";
-    TextOut ( _dc ,
-        ( int ) ( vRenderPos.x - 16 ) ,
-        ( int ) ( vRenderPos.y - 8 ) ,
-        szText ,
-        ( int ) wcslen ( szText ) );
+    //wchar_t szText[ ] = L"BOSS";
+    //TextOut ( _dc ,
+    //    ( int ) ( vRenderPos.x - 16 ) ,
+    //    ( int ) ( vRenderPos.y - 8 ) ,
+    //    szText ,
+    //    ( int ) wcslen ( szText ) );
 }
 
 void CTile::SetVisualType ( TILE_VISUAL_TYPE _eType )

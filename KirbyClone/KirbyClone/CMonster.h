@@ -36,6 +36,7 @@ public:
     // === 가상 인터페이스 (자식 클래스에서 구현) ===
     virtual void Move() = 0;                    // 이동 패턴 (순수 가상)
     virtual bool CanBeInhaled() const = 0;      // 빨아들임 가능 여부 (순수 가상)
+    virtual bool IsBeingInhaled() const = 0;    // 빨아들여지고 있는 상태 여부 (순수 가상)
     virtual bool HasAttack() const { return false; }   // 공격 가능 여부
     virtual bool IsBoss() const { return false; }      // 보스 여부 (기본: false)
 

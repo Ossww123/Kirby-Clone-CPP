@@ -170,6 +170,9 @@ void CPlayerStateMachine::ChangeStateInternal ( PLAYER_STATE _eState )
         return;
     }
 
+    // 이전 상태 종료 처리
+    OnStateExit ( m_eCurState );
+
     // 실제 상태 변경
     m_ePrevState = m_eCurState;
     m_eCurState = _eState;
@@ -226,6 +229,9 @@ void CPlayerStateMachine::ExecuteCurrentState ( )
         break;
     case PLAYER_STATE::INHALE:
         ExecuteInhaleState ( );
+        break;
+    case PLAYER_STATE::INHALE_KEEP:
+        ExecuteInhaleKeepState ( );
         break;
     case PLAYER_STATE::INHALE_SUCCESS:
         ExecuteInhaleSuccessState ( );
@@ -315,37 +321,23 @@ void CPlayerStateMachine::ExecuteInhaleState ( )
     // 빨아들이기 상태 타이머 업데이트
     m_fInhaleTimer += CTimeMgr::GetInst ( )->GetfDT ( );
 
-    // X키가 눌려있지 않고, 빨아들려지고 있는 몬스터가 없으면 종료
-    if ( m_pInputManager && !m_pInputManager->IsActionHold ( ) )
-    {
-        // 빨아들이기 시스템에서 현재 빨아들이고 있는 대상이 있는지 확인
-        bool hasInhaleTargets = false;
-        if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
-        {
-            hasInhaleTargets = !m_pOwner->GetInhaleSystem ( )->GetInhaleTargets ( ).empty ( );
-        }
+    // 상태 전환은 전환 테이블에서 처리하도록 변경
+    // 여기서는 타이머 관리만 담당
+}
 
-        // 빨아들이고 있는 대상이 없으면 종료
-        if ( !hasInhaleTargets )
-        {
-            // 땅에 있으면 IDLE, 공중이면 FALL1로
-            if ( m_pOwner && m_pOwner->GetRigidBody ( ) && m_pOwner->GetRigidBody ( )->IsGround ( ) )
-            {
-                ChangeStateInternal ( PLAYER_STATE::IDLE );
-            }
-            else
-            {
-                ChangeStateInternal ( PLAYER_STATE::FALL1 );
-            }
-            return;
-        }
-    }
-
-    // 빨아들이기 상태 시간 초과시 종료
-    if ( m_fInhaleTimer >= m_fInhaleDuration )
+void CPlayerStateMachine::ExecuteInhaleKeepState ( )
+{
+    // INHALE_KEEP 상태에서는 지속적으로 빨아들이기 진행
+    // 상태 전환은 전환 테이블에서 처리
+    // 여기서는 빨아들이기 시스템이 계속 작동하도록 보장만 함
+    
+    if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
     {
-        // 빨아들이기 실패 후 기본 상태로 복귀
-        ChangeStateInternal ( PLAYER_STATE::IDLE );
+        // 빨아들이기 시스템이 중단되었다면 다시 시작
+        if ( !m_pOwner->GetInhaleSystem ( )->IsInhaling ( ) )
+        {
+            m_pOwner->GetInhaleSystem ( )->StartInhale ( );
+        }
     }
 }
 
@@ -367,6 +359,8 @@ void CPlayerStateMachine::ExecuteExhaleState ( )
     {
         if ( m_pOwner->GetInhaleSystem())
         {
+            CSoundMgr::GetInst ( )->PlaySFX ( L"kirby_exhale_star" );
+
             m_pOwner->GetInhaleSystem()->SpitOut(); // 내뱉기 실행
         }
     }
@@ -479,7 +473,9 @@ void CPlayerStateMachine::ExecuteAttackState ( )
     }
     
     // 공격 상태 완료 시 능력 획득 연출 플래그 리셋
-    if (m_fAttackTimer >= m_fAttackDuration)
+    float fCompletionDuration = m_fAttackDuration;
+    
+    if (m_fAttackTimer >= fCompletionDuration)
     {
         m_bAbilityAcquisitionAttack = false;
     }
@@ -522,12 +518,13 @@ void CPlayerStateMachine::ExecuteFireAttack ( )
         bShouldAttack = true; // 연출 중 1초간 가상 홀드
     }
     
+    // 사운드 관련 static 변수들 (함수 스코프 전체에서 공유)
+    static bool bFireSoundStarted = false;
+    static float fireSoundTimer = 0.0f;
+    
     if ( bShouldAttack )
     {
         // 파이어 공격 시작 시 사운드 재생
-        static bool bFireSoundStarted = false;
-        static float fireSoundTimer = 0.0f;
-        
         if (!bFireSoundStarted)
         {
             CSoundMgr::GetInst()->PlaySFX(L"kirby_fire");
@@ -537,7 +534,7 @@ void CPlayerStateMachine::ExecuteFireAttack ( )
         
         // 사운드 재생 시간 추적 (대략 1초마다 재시작)
         fireSoundTimer += CTimeMgr::GetInst()->GetfDT();
-        if (fireSoundTimer >= 1.0f)
+        if (fireSoundTimer >= 0.2f)
         {
             CSoundMgr::GetInst()->PlaySFX(L"kirby_fire");
             fireSoundTimer = 0.0f;
@@ -606,9 +603,10 @@ void CPlayerStateMachine::ExecuteFireAttack ( )
     }
     else
     {
-        // 파이어 공격이 끝나면 사운드 플래그 리셋
-        static bool bFireSoundStarted = false;
-        bFireSoundStarted = false;
+        // 파이어 공격이 끝나면 사운드 중단
+            CSoundMgr::GetInst()->StopSFX(L"kirby_fire");
+            bFireSoundStarted = false;
+        
     }
 }
 
@@ -692,19 +690,20 @@ void CPlayerStateMachine::ExecuteSparkAttack ( )
         return;
     
     // X키가 홀드되어 있는 동안 전기장 유지
-    // 연출 중일 때는 1초간 가상 홀드
+    // 연출 중일 때는 1초간 가상 홀드 (파이어와 동일)
     bool bShouldAttack = m_pInputManager->HasInput ( ( uint32_t ) CPlayerInputManager::INPUT_TYPE::ACTION_HOLD );
     if ( m_bAbilityAcquisitionAttack && m_fAttackTimer <= 1.0f )
     {
         bShouldAttack = true; // 연출 중 1초간 가상 홀드
     }
     
+    // 사운드 관련 static 변수들 (함수 스코프 전체에서 공유)
+    static bool bSparkSoundStarted = false;
+    static float sparkSoundTimer = 0.0f;
+    
     if ( bShouldAttack )
     {
         // 스파크 공격 시작 시 사운드 재생
-        static bool bSparkSoundStarted = false;
-        static float sparkSoundTimer = 0.0f;
-        
         if (!bSparkSoundStarted)
         {
             CSoundMgr::GetInst()->PlaySFX(L"kirby_spark");
@@ -714,7 +713,7 @@ void CPlayerStateMachine::ExecuteSparkAttack ( )
         
         // 사운드 재생 시간 추적 (대략 1초마다 재시작)
         sparkSoundTimer += CTimeMgr::GetInst()->GetfDT();
-        if (sparkSoundTimer >= 1.0f)
+        if (sparkSoundTimer >= 0.1f)
         {
             CSoundMgr::GetInst()->PlaySFX(L"kirby_spark");
             sparkSoundTimer = 0.0f;
@@ -756,9 +755,10 @@ void CPlayerStateMachine::ExecuteSparkAttack ( )
             m_pElectricField = nullptr;
         }
         
-        // 스파크 공격이 끝나면 사운드 플래그 리셋
-        static bool bSparkSoundStarted = false;
-        bSparkSoundStarted = false;
+
+            CSoundMgr::GetInst ( )->StopSFX ( L"kirby_spark" );
+            bSparkSoundStarted = false;
+        
     }
 }
 
@@ -974,29 +974,38 @@ void CPlayerStateMachine::ExecuteSlideKickRecoilState ( )
     pRigidBody->SetVelocity ( currentVelocity );
 }
 
-void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
+void CPlayerStateMachine::OnStateExit ( PLAYER_STATE _eState )
 {
-    // 이전 상태가 INHALE이었다면 빨아들이기 시스템 중지
-    if ( m_ePrevState == PLAYER_STATE::INHALE && _eState != PLAYER_STATE::INHALE )
+    switch ( _eState )
     {
+    case PLAYER_STATE::INHALE:
+    case PLAYER_STATE::INHALE_KEEP:
+        // INHALE 또는 INHALE_KEEP 상태 종료 시 빨아들이기 시스템 중지
         if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
         {
             m_pOwner->GetInhaleSystem ( )->StopInhale ( );
         }
-    }
-
-    // 이전 상태가 EXHALE이었다면 빨아들이기 카운트 초기화
-    if ( m_ePrevState == PLAYER_STATE::EXHALE && _eState != PLAYER_STATE::EXHALE )
-    {
+        break;
+    case PLAYER_STATE::EXHALE:
+        // EXHALE 상태 종료 시 빨아들이기 카운트 초기화
         m_eInhaleCount = INHALE_COUNT::NONE;
         m_eCopyAbility = COPY_ABILITY::NONE;
-        // 타이머는 다음 EXHALE 진입 시 초기화되므로 여기서 리셋하지 않음
+        break;
     }
+}
 
+void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
+{
     switch ( _eState )
     {
+    case PLAYER_STATE::IDLE:
+        OnEnterIdleState ( );
+        break;
     case PLAYER_STATE::JUMP:
         OnEnterJumpState ( );
+        break;
+    case PLAYER_STATE::WALK:
+        OnEnterWalkState ( );
         break;
     case PLAYER_STATE::SLIDE:
         OnEnterSlideState ( );
@@ -1006,6 +1015,9 @@ void CPlayerStateMachine::OnStateEnter ( PLAYER_STATE _eState )
         break;
     case PLAYER_STATE::INHALE:
         OnEnterInhaleState ( );
+        break;
+    case PLAYER_STATE::INHALE_KEEP:
+        OnEnterInhaleKeepState ( );
         break;
     case PLAYER_STATE::INHALE_SUCCESS:
         OnEnterInhaleSuccessState ( );
@@ -1069,6 +1081,33 @@ void CPlayerStateMachine::OnEnterJumpState ( )
     CSoundMgr::GetInst()->PlaySFX(L"kirby_jump");
 }
 
+void CPlayerStateMachine::OnEnterIdleState ( )
+{
+    CSoundMgr::GetInst ( )->StopSFX ( L"kirby_spark" );
+    CSoundMgr::GetInst ( )->StopSFX ( L"kirby_fire" );
+
+    // IDLE 상태 진입 시 RUN 모드 해제 (확실하게)
+    if ( m_pOwner && m_pOwner->GetMovement ( ) )
+    {
+        m_pOwner->GetMovement ( )->SetRunMode ( false );
+    }
+    
+    // 더블탭 상태도 리셋 (RUN 후 IDLE로 올 때 더블탭 감속 플래그 제거)
+    if ( m_pInputManager )
+    {
+        m_pInputManager->ResetDoubleTapState ( );
+    }
+}
+
+void CPlayerStateMachine::OnEnterWalkState ( )
+{
+    // WALK 상태 진입 시 RUN 모드 해제
+    if ( m_pOwner && m_pOwner->GetMovement ( ) )
+    {
+        m_pOwner->GetMovement ( )->SetRunMode ( false );
+    }
+}
+
 void CPlayerStateMachine::OnEnterRunState ( )
 {
     // RUN 효과음
@@ -1116,6 +1155,22 @@ void CPlayerStateMachine::OnEnterInhaleState ( )
     if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
     {
         m_pOwner->GetInhaleSystem ( )->StartInhale ( );
+    }
+}
+
+void CPlayerStateMachine::OnEnterInhaleKeepState ( )
+{
+    // INHALE_KEEP 상태 진입 시에는 별도의 초기화가 필요 없음
+    // 이미 INHALE에서 빨아들이기 시스템이 시작되었으므로 지속만 하면 됨
+    
+    // 하지만 빨아들이기 시스템이 계속 작동하도록 보장
+    if ( m_pOwner && m_pOwner->GetInhaleSystem ( ) )
+    {
+        // 빨아들이기 시스템이 중단되었다면 다시 시작
+        if ( !m_pOwner->GetInhaleSystem ( )->IsInhaling ( ) )
+        {
+            m_pOwner->GetInhaleSystem ( )->StartInhale ( );
+        }
     }
 }
 
@@ -1224,7 +1279,7 @@ void CPlayerStateMachine::OnEnterAttackState ( )
         break;
     case COPY_ABILITY::SPARK:
         // 스파크 공격 초기화
-        m_fAttackDuration = 0.8f; // 스파크 공격 시간
+        m_fAttackDuration = 0.5f; // 파이어와 같은 공격 시간
         break;
     default:
         m_fAttackDuration = 0.5f; // 기본 공격 시간
@@ -1680,10 +1735,10 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
             250  // INHALE보다 높은 우선순위
         );
         
-        // 카피 능력이 없을 때: X키 홀드로 INHALE 실행
+        // 카피 능력이 없을 때: X키 TAP/HOLD로 INHALE 실행
         m_pTransitionTable->AddTransition (
             state ,
-            ( uint32_t ) INPUT::ACTION_HOLD ,
+            ( uint32_t ) INPUT::ACTION_TAP | ( uint32_t ) INPUT::ACTION_HOLD ,
             PLAYER_STATE::INHALE ,
             [ ] ( CPlayer* p ) -> bool {
                 if ( !p || !p->GetStateMachine ( ) )
@@ -1698,6 +1753,18 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
         );
     }
 
+    // INHALE -> INHALE_KEEP (X키를 홀드하고 일정 시간 후)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE ,
+        ( uint32_t ) INPUT::ACTION_HOLD ,
+        PLAYER_STATE::INHALE_KEEP ,
+        [ this ] ( CPlayer* p ) {
+            // 0.1초 이상 홀드하면 INHALE_KEEP으로 전환
+            return m_fInhaleTimer >= 0.1f;
+        } ,
+        350  // 가장 높은 우선순위
+    );
+
     // INHALE -> INHALE_SUCCESS
     m_pTransitionTable->AddTransition (
         PLAYER_STATE::INHALE ,
@@ -1710,6 +1777,41 @@ void CPlayerStateMachine::AddInhaleTransitions ( )
             return pSM && pSM->GetInhaleCount ( ) != INHALE_COUNT::NONE;
         } ,
         300
+    );
+
+    // INHALE_KEEP -> INHALE_SUCCESS
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE_KEEP ,
+        0 ,
+        PLAYER_STATE::INHALE_SUCCESS ,
+        [ ] ( CPlayer* p ) {
+            // 빨아들이기 시스템에서 성공 상태 체크
+            CPlayerStateMachine* pSM = p->GetStateMachine ( );
+            return pSM && pSM->GetInhaleCount ( ) != INHALE_COUNT::NONE;
+        } ,
+        300
+    );
+
+    // INHALE_KEEP -> IDLE (X키를 떼면)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE_KEEP ,
+        ( uint32_t ) INPUT::ACTION_AWAY ,
+        PLAYER_STATE::IDLE ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && p->GetRigidBody ( )->IsGround ( );
+        } ,
+        250
+    );
+
+    // INHALE_KEEP -> FALL1 (공중에서 X키를 떼면)
+    m_pTransitionTable->AddTransition (
+        PLAYER_STATE::INHALE_KEEP ,
+        ( uint32_t ) INPUT::ACTION_AWAY ,
+        PLAYER_STATE::FALL1 ,
+        [ ] ( CPlayer* p ) {
+            return p->GetRigidBody ( ) && !p->GetRigidBody ( )->IsGround ( );
+        } ,
+        250
     );
 
     // INHALE -> 원래 상태로 복귀 (X키 떼면, 단 빨아들여지는 몬스터가 없을 때만)
@@ -2774,6 +2876,9 @@ void CPlayerStateMachine::SetAnimationForState ( PLAYER_STATE _eState )
         pAnimator->Play ( L"DAMAGE" , false );
         break;
     case PLAYER_STATE::INHALE:
+        pAnimator->Play ( L"INHALE" , true );
+        break;
+    case PLAYER_STATE::INHALE_KEEP:
         pAnimator->Play ( L"INHALE" , true );
         break;
     case PLAYER_STATE::INHALE_SUCCESS:

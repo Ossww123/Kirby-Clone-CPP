@@ -662,7 +662,7 @@ bool CEditorFileManager::ShowSaveDialog(wstring& _strFileName)
     ofn.lpstrInitialDir = GetLevelDirectory().c_str();
     ofn.lpstrFilter = L"Kirby Level Files (*.lvl)\0*.lvl\0All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
-    ofn.lpstrTitle = L"레벨 파일 저장";
+    ofn.lpstrTitle = L"level file save";
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = L"lvl";
 
@@ -699,7 +699,7 @@ bool CEditorFileManager::ShowOpenDialog(wstring& _strFileName)
     ofn.lpstrInitialDir = GetLevelDirectory().c_str();
     ofn.lpstrFilter = L"Kirby Level Files (*.lvl)\0*.lvl\0All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
-    ofn.lpstrTitle = L"레벨 파일 저장";
+    ofn.lpstrTitle = L"level file saved";
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
     if (GetOpenFileName(&ofn))

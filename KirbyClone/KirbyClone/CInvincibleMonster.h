@@ -10,6 +10,7 @@ public:
 public:
     // === 무적 관련 (final로 하위 클래스에서 변경 불가) ===
     bool CanBeInhaled() const override final { return false; }
+    bool IsBeingInhaled() const override final { return false; }
 
 public:
     // === 충돌 콜백 오버라이드 ===

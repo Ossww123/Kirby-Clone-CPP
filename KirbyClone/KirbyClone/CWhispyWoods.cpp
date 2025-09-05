@@ -11,7 +11,7 @@
 
 CWhispyWoods::CWhispyWoods()
     : m_fAttackTimer(0.f)
-    , m_fAttackInterval(3.f)
+    , m_fAttackInterval(6.f)
     , m_iLastAttackPattern(0)
     , m_iConsecutiveCount(0)
     , m_fAppleDropTimer(0.f)
@@ -267,8 +267,8 @@ int CWhispyWoods::SelectWhispyAttackPattern()
 
 void CWhispyWoods::AttackPattern1_AppleDrop()
 {
-    // ATTACK 상태로 변경하여 애니메이션 재생
-    ChangeState(MONSTER_STATE::ATTACK);
+    // 사과 떨어뜨리기 패턴에서는 IDLE 상태 유지
+    ChangeState(MONSTER_STATE::IDLE);
     
     // 사과 떨어뜨리기 패턴 시작
     m_bAppleDropInProgress = true;

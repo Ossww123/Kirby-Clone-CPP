@@ -9,6 +9,7 @@
 #include "CSceneMgr.h"
 #include "CPlayerStateMachine.h"
 #include "CEventMgr.h"
+#include "CSoundMgr.h"
 
 CPlayerHealthSystem::CPlayerHealthSystem(CPlayer* _pOwner)
     : m_pOwner(_pOwner)
@@ -85,6 +86,8 @@ void CPlayerHealthSystem::TakeDamage(int _iDamage, Vec2 _vKnockbackDir)
 
     // 체력 감소
     m_iCurrentHP -= _iDamage;
+
+    CSoundMgr::GetInst ( )->PlaySFX ( L"kirby_damage" );
 
     // 체력이 0 이하가 되면 게임오버
     if (m_iCurrentHP <= 0)

@@ -19,14 +19,13 @@ using std::make_pair;
 #include <algorithm>
 #include <cwctype> 
 
-#include "define.h"
-#include "enum.h"
-#include "struct.h"
-
 #include <functional>
-#include <algorithm>
 
 #include <cmath>
 
 #include <commdlg.h>
 #include <mmsystem.h>
+
+#include "define.h"
+#include "enum.h"
+#include "struct.h"

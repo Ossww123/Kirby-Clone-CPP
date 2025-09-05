@@ -58,6 +58,7 @@ private:
 
     // === 아이콘 렌더링 ===
     void RenderObjectIcon ( HDC _dc , OBJECT_TYPE objType , int x , int y , int size );
+    void RenderMonsterSprite ( HDC _dc , OBJECT_TYPE objType , int x , int y , int size );
     void RenderCollisionIcon ( HDC _dc , COLLISION_TYPE collisionType , int centerX , int centerY );
 
     // === 특수 팔레트 렌더링 ===

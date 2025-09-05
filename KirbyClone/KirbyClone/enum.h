@@ -155,6 +155,7 @@ enum class PLAYER_STATE
 
     // === 빨아들이기 관련 상태들 ===
     INHALE ,         // 빨아들이는 중
+    INHALE_KEEP ,    // 빨아들이기 지속 (X키 홀드)
     INHALE_SUCCESS , // 빨아들이기 성공 (INHALE과 MOUTHFUL_IDLE 사이)
     EXHALE ,         // 뱉기
     SWALLOW ,        // 삼키기

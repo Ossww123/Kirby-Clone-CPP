@@ -1,4 +1,4 @@
-﻿// 포트폴리오용 데모 프로젝트
+// 포트폴리오용 데모 프로젝트
 // Kirby assets used for educational purposes only
 // © HAL Laboratory / Nintendo
 
@@ -105,7 +105,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_KIRBYCLONE));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_KIRBYCLONE);
+    //wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_KIRBYCLONE);
+    wcex.lpszMenuName = nullptr;
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 

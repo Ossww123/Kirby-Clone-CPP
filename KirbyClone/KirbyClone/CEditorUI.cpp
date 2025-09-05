@@ -16,6 +16,7 @@
 #include "CDoor.h"
 #include "CMonster.h"
 #include "CTile.h"
+#include "CResMgr.h"
 
 CEditorUI::CEditorUI ( )
     : m_pEditorCore ( nullptr )
@@ -602,8 +603,11 @@ void CEditorUI::RenderPaletteItem ( HDC _dc , int index , OBJECT_TYPE objType , 
     SelectObject ( _dc , hHollowBrush );
     Rectangle ( _dc , x , y , x + m_iItemSize , y + m_iItemSize );
 
-    // 오브젝트 아이콘 렌더링
-    RenderObjectIcon ( _dc , objType , x + 5 , y + 5 , m_iItemSize - 10 );
+    // 오브젝트 아이콘 렌더링 (크게 만들고 중앙 정렬하되 하단 텍스트 공간 확보)
+    int iconSize = m_iItemSize - 8; // 아이콘 크기를 크게 (4배 정도)
+    int iconX = x + ( m_iItemSize - iconSize ) / 2 + 20; // 가로 중앙 정렬 + 16
+    int iconY = y + ( m_iItemSize - iconSize - 18 ) / 2 + 24; // 세로 중앙 정렬 + 16 (텍스트 공간 18px 확보)
+    RenderObjectIcon ( _dc , objType , iconX , iconY , iconSize );
 
     // 오브젝트 이름 표시 (하단에)
     SetBkMode ( _dc , TRANSPARENT );
@@ -703,10 +707,6 @@ void CEditorUI::RenderPaletteItem ( HDC _dc , int index , OBJECT_TYPE objType , 
 
 void CEditorUI::RenderObjectIcon ( HDC _dc , OBJECT_TYPE objType , int x , int y , int size )
 {
-    // 오브젝트 타입에 따른 아이콘 색상 결정
-    HBRUSH hIconBrush = nullptr;
-    COLORREF iconColor = RGB ( 200 , 200 , 200 ); // 기본색
-
     // 타일/충돌체 타입인지 확인
     bool bIsTileType = ( objType >= OBJECT_TYPE::TILE_GROUND && objType <= OBJECT_TYPE::TILE_TRIGGER );
 
@@ -714,10 +714,10 @@ void CEditorUI::RenderObjectIcon ( HDC _dc , OBJECT_TYPE objType , int x , int y
     {
         // 타일/충돌체 타입은 색상 박스로 표시
         COLLISION_TYPE collisionType = CObjectFactory::ConvertObjectTypeToCollisionType ( objType );
-        iconColor = CObjectFactory::GetCollisionTypeColor ( collisionType );
+        COLORREF iconColor = CObjectFactory::GetCollisionTypeColor ( collisionType );
 
         // 충돌체 박스 스타일로 렌더링
-        hIconBrush = CreateSolidBrush ( iconColor );
+        HBRUSH hIconBrush = CreateSolidBrush ( iconColor );
         HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hIconBrush );
 
         // 사각형으로 그리기 (타일과 같은 모양)
@@ -746,23 +746,18 @@ void CEditorUI::RenderObjectIcon ( HDC _dc , OBJECT_TYPE objType , int x , int y
         DeleteObject ( hIconBrush );
         DeleteObject ( hBorderPen );
     }
+    else if ( objType >= OBJECT_TYPE::MONSTER_WADDLE_DEE && objType <= OBJECT_TYPE::MONSTER_WHISPY_WOODS )
+    {
+        // 몬스터 타입은 실제 스프라이트로 표시
+        RenderMonsterSprite ( _dc , objType , x , y , size );
+    }
     else
     {
         // 다른 오브젝트는 색상 원형으로 표시
+        COLORREF iconColor = RGB ( 200 , 200 , 200 ); // 기본색
+        
         switch ( objType )
         {
-        case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-            iconColor = RGB ( 255 , 180 , 100 ); // 주황색
-            break;
-        case OBJECT_TYPE::MONSTER_GORDOS:
-            iconColor = RGB ( 128 , 128 , 128 ); // 회색 (가시)
-            break;
-        case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-            iconColor = RGB ( 100 , 255 , 255 ); // 하늘색
-            break;
-        case OBJECT_TYPE::MONSTER_HOT_HEAD:
-            iconColor = RGB ( 255 , 100 , 100 ); // 빨간색
-            break;
         case OBJECT_TYPE::ITEM_STAR:
             iconColor = RGB ( 255 , 255 , 100 ); // 노란색
             break;
@@ -789,12 +784,124 @@ void CEditorUI::RenderObjectIcon ( HDC _dc , OBJECT_TYPE objType , int x , int y
             break;
         }
 
-        hIconBrush = CreateSolidBrush ( iconColor );
+        HBRUSH hIconBrush = CreateSolidBrush ( iconColor );
         HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hIconBrush );
 
         // 원형으로 오브젝트 아이콘 표시
         Ellipse ( _dc , x + 8 , y + 8 , x + size - 8 , y + size - 8 );
 
+        SelectObject ( _dc , hOldBrush );
+        DeleteObject ( hIconBrush );
+    }
+}
+
+void CEditorUI::RenderMonsterSprite ( HDC _dc , OBJECT_TYPE objType , int x , int y , int size )
+{
+    CTexture* pTexture = nullptr;
+    int srcX = 0, srcY = 0, srcWidth = 24, srcHeight = 24;  // 기본 크기
+    
+    switch ( objType )
+    {
+    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
+        pTexture = CResMgr::GetInst ( )->FindTexture ( L"EnemyTex" );
+        if ( !pTexture )
+            pTexture = CResMgr::GetInst ( )->LoadTexture ( L"EnemyTex" , L"texture\\enemy\\enemies.bmp" );
+        srcX = 8; srcY = 8; srcWidth = 32; srcHeight = 32;
+        break;
+        
+    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
+        pTexture = CResMgr::GetInst ( )->FindTexture ( L"EnemyTex" );
+        if ( !pTexture )
+            pTexture = CResMgr::GetInst ( )->LoadTexture ( L"EnemyTex" , L"texture\\enemy\\enemies.bmp" );
+        srcX = 8; srcY = 40; srcWidth = 32; srcHeight = 32;
+        break;
+        
+    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
+        pTexture = CResMgr::GetInst ( )->FindTexture ( L"EnemyTex" );
+        if ( !pTexture )
+            pTexture = CResMgr::GetInst ( )->LoadTexture ( L"EnemyTex" , L"texture\\enemy\\enemies.bmp" );
+        srcX = 8; srcY = 72; srcWidth = 32; srcHeight = 32;
+        break;
+        
+    case OBJECT_TYPE::MONSTER_GORDOS:
+        pTexture = CResMgr::GetInst ( )->FindTexture ( L"EnemyTex" );
+        if ( !pTexture )
+            pTexture = CResMgr::GetInst ( )->LoadTexture ( L"EnemyTex" , L"texture\\enemy\\enemies.bmp" );
+        srcX = 8; srcY = 104; srcWidth = 32; srcHeight = 32;
+        break;
+        
+    case OBJECT_TYPE::MONSTER_HOT_HEAD:
+        pTexture = CResMgr::GetInst ( )->FindTexture ( L"EnemyTex" );
+        if ( !pTexture )
+            pTexture = CResMgr::GetInst ( )->LoadTexture ( L"EnemyTex" , L"texture\\enemy\\enemies.bmp" );
+        srcX = 8; srcY = 136; srcWidth = 32; srcHeight = 32;
+        break;
+        
+    case OBJECT_TYPE::MONSTER_SPARKY:
+        pTexture = CResMgr::GetInst ( )->FindTexture ( L"EnemyTex" );
+        if ( !pTexture )
+            pTexture = CResMgr::GetInst ( )->LoadTexture ( L"EnemyTex" , L"texture\\enemy\\enemies.bmp" );
+        srcX = 8; srcY = 168; srcWidth = 32; srcHeight = 32;
+        break;
+        
+    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
+        pTexture = CResMgr::GetInst ( )->FindTexture ( L"WhispyTex" );
+        if ( !pTexture )
+            pTexture = CResMgr::GetInst ( )->LoadTexture ( L"WhispyTex" , L"texture\\boss\\whispy_woods.bmp" );
+        srcX = 272; srcY = 24; srcWidth = 120; srcHeight = 120;  // 위스피 우드는 크기가 다름
+        break;
+        
+    default:
+        // 기본 몬스터 텍스처나 색상으로 fallback
+        HBRUSH hIconBrush = CreateSolidBrush ( RGB ( 255 , 100 , 100 ) );
+        HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hIconBrush );
+        Ellipse ( _dc , x + 8 , y + 8 , x + size - 8 , y + size - 8 );
+        SelectObject ( _dc , hOldBrush );
+        DeleteObject ( hIconBrush );
+        return;
+    }
+    
+    if ( pTexture )
+    {
+        // 팔레트 크기에 맞게 스케일링 
+        int renderSize = size - 8; // 패딩을 줄여서 크게 표시
+        int renderX = x + ( size - renderSize ) / 2; // 중앙 정렬
+        int renderY = y + ( size - renderSize ) / 2; // 중앙 정렬
+        
+        // 위스피 우드는 특별히 처리 (세로로 긴 스프라이트)
+        if ( objType == OBJECT_TYPE::MONSTER_WHISPY_WOODS )
+        {
+            // 세로로 긴 스프라이트를 정사각형에 맞게 조정하되 중앙 정렬 유지
+            float aspectRatio = ( float ) srcHeight / ( float ) srcWidth;
+            if ( aspectRatio > 1.0f )
+            {
+                // 세로가 더 길 때 - 너비를 조정하고 가로 중앙 정렬
+                int adjustedWidth = ( int ) ( renderSize / aspectRatio );
+                renderX = x + ( size - adjustedWidth ) / 2;
+                renderSize = adjustedWidth; // 실제 렌더링 너비로 업데이트
+            }
+            else
+            {
+                // 가로가 더 길 때 - 높이를 조정하고 세로 중앙 정렬
+                int adjustedHeight = ( int ) ( renderSize * aspectRatio );
+                renderY = y + ( size - adjustedHeight ) / 2;
+            }
+        }
+        
+        // CTexture의 스프라이트 렌더링 함수 사용
+        pTexture->RenderSpriteWithColorKey ( _dc , 
+                                           Vec2 ( ( float ) renderX , ( float ) renderY ) ,
+                                           Vec2 ( ( float ) srcX , ( float ) srcY ) ,
+                                           Vec2 ( ( float ) srcWidth , ( float ) srcHeight ) ,
+                                           Vec2 ( ( float ) renderSize , ( float ) renderSize ) ,
+                                           RGB ( 255 , 0 , 255 ) ); // 마젠타 컬러키
+    }
+    else
+    {
+        // 텍스처 로딩 실패 시 기본 색상으로 표시
+        HBRUSH hIconBrush = CreateSolidBrush ( RGB ( 255 , 100 , 100 ) );
+        HBRUSH hOldBrush = ( HBRUSH ) SelectObject ( _dc , hIconBrush );
+        Ellipse ( _dc , x + 8 , y + 8 , x + size - 8 , y + size - 8 );
         SelectObject ( _dc , hOldBrush );
         DeleteObject ( hIconBrush );
     }
