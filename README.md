@@ -82,7 +82,6 @@
 ---
 
 ## 영상
-## 🎥 시연 영상
 [![WinAPI 커비 모작](https://img.youtube.com/vi/btlQ9i5u8xc/0.jpg)](https://youtu.be/btlQ9i5u8xc)
 
 ---
