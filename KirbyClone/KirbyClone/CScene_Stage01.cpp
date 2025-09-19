@@ -117,12 +117,12 @@ void CScene_Stage01::Update()
 
     // 스테이지별 특수 로직 (필요시 추가)
 
-    // ESC키로 Tool Scene으로 복귀 (디버깅용)
-    if (KEY_TAP(KEY::ESC))
-    {
-        tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::TOOL);
-        CEventMgr::GetInst()->AddEvent(event);
-    }
+    //// ESC키로 Tool Scene으로 복귀 (디버깅용)
+    //if (KEY_TAP(KEY::ESC))
+    //{
+    //    tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::TOOL);
+    //    CEventMgr::GetInst()->AddEvent(event);
+    //}
 
     // Enter키로 START 씬으로 복귀
     if (KEY_TAP(KEY::ENTER))

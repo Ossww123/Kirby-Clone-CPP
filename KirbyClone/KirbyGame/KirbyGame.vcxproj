@@ -153,14 +153,6 @@
     <ClInclude Include="..\KirbyClone\CCore.h" />
     <ClInclude Include="..\KirbyClone\CDeathEffect.h" />
     <ClInclude Include="..\KirbyClone\CDoor.h" />
-    <ClInclude Include="..\KirbyClone\CEditorCameraController.h" />
-    <ClInclude Include="..\KirbyClone\CEditorCore.h" />
-    <ClInclude Include="..\KirbyClone\CEditorFileManager.h" />
-    <ClInclude Include="..\KirbyClone\CEditorInput.h" />
-    <ClInclude Include="..\KirbyClone\CEditorObjectManager.h" />
-    <ClInclude Include="..\KirbyClone\CEditorRenderer.h" />
-    <ClInclude Include="..\KirbyClone\CEditorToolbar.h" />
-    <ClInclude Include="..\KirbyClone\CEditorUI.h" />
     <ClInclude Include="..\KirbyClone\CEventMgr.h" />
     <ClInclude Include="..\KirbyClone\CFadeEffect.h" />
     <ClInclude Include="..\KirbyClone\CGordo.h" />
@@ -193,7 +185,6 @@
     <ClInclude Include="..\KirbyClone\CScene_Stage01.h" />
     <ClInclude Include="..\KirbyClone\CScene_Stage02.h" />
     <ClInclude Include="..\KirbyClone\CScene_Start.h" />
-    <ClInclude Include="..\KirbyClone\CScene_Tool.h" />
     <ClInclude Include="..\KirbyClone\CSound.h" />
     <ClInclude Include="..\KirbyClone\CSoundMgr.h" />
     <ClInclude Include="..\KirbyClone\CSparky.h" />
@@ -236,23 +227,6 @@
     <ClCompile Include="..\KirbyClone\CCore.cpp" />
     <ClCompile Include="..\KirbyClone\CDeathEffect.cpp" />
     <ClCompile Include="..\KirbyClone\CDoor.cpp" />
-    <ClCompile Include="..\KirbyClone\CEditorCameraController.cpp" />
-    <ClCompile Include="..\KirbyClone\CEditorCore.cpp" />
-    <ClCompile Include="..\KirbyClone\CEditorFileManager.cpp">
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
-      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessSuppressLineNumbers>
-      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessSuppressLineNumbers>
-      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessSuppressLineNumbers>
-      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessSuppressLineNumbers>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorInput.cpp" />
-    <ClCompile Include="..\KirbyClone\CEditorObjectManager.cpp" />
-    <ClCompile Include="..\KirbyClone\CEditorRenderer.cpp" />
-    <ClCompile Include="..\KirbyClone\CEditorToolbar.cpp" />
-    <ClCompile Include="..\KirbyClone\CEditorUI.cpp" />
     <ClCompile Include="..\KirbyClone\CEventMgr.cpp" />
     <ClCompile Include="..\KirbyClone\CFadeEffect.cpp" />
     <ClCompile Include="..\KirbyClone\CGordo.cpp" />
@@ -285,7 +259,6 @@
     <ClCompile Include="..\KirbyClone\CScene_Stage01.cpp" />
     <ClCompile Include="..\KirbyClone\CScene_Stage02.cpp" />
     <ClCompile Include="..\KirbyClone\CScene_Start.cpp" />
-    <ClCompile Include="..\KirbyClone\CScene_Tool.cpp" />
     <ClCompile Include="..\KirbyClone\CSound.cpp" />
     <ClCompile Include="..\KirbyClone\CSoundMgr.cpp" />
     <ClCompile Include="..\KirbyClone\CSparky.cpp" />

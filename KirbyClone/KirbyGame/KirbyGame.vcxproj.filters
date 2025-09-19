@@ -167,9 +167,6 @@
     <Filter Include="Engine\05. Scene\Scene_Start">
       <UniqueIdentifier>{958eeace-0160-463e-bc1f-6a387cc30f96}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\05. Scene\Scene_Tool">
-      <UniqueIdentifier>{fea02bda-2812-4b6a-9dca-4ae8149bdc8f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\05. Scene\Scene_Stage">
       <UniqueIdentifier>{6089f6b5-5391-4ace-be9d-320ff8d10fa7}</UniqueIdentifier>
     </Filter>
@@ -217,9 +214,6 @@
     </Filter>
     <Filter Include="Engine\10. Module">
       <UniqueIdentifier>{74a85f7d-4da8-4f18-b5bd-09c1b48fefbc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\09. Editor">
-      <UniqueIdentifier>{1a6c9a45-3b08-403c-8842-bd913e3f4e54}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -394,9 +388,6 @@
     <ClInclude Include="..\KirbyClone\CScene_Start.h">
       <Filter>Engine\05. Scene\Scene_Start</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyClone\CScene_Tool.h">
-      <Filter>Engine\05. Scene\Scene_Tool</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyClone\CScene_Stage01.h">
       <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
     </ClInclude>
@@ -440,30 +431,6 @@
       <Filter>Engine\10. Module</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyClone\pch.h" />
-    <ClInclude Include="..\KirbyClone\CEditorCameraController.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyClone\CEditorCore.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyClone\CEditorFileManager.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyClone\CEditorInput.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyClone\CEditorObjectManager.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyClone\CEditorRenderer.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyClone\CEditorToolbar.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyClone\CEditorUI.h">
-      <Filter>Engine\09. Editor</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyGame.rc">
@@ -630,9 +597,6 @@
     <ClCompile Include="..\KirbyClone\CScene_Start.cpp">
       <Filter>Engine\05. Scene\Scene_Start</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyClone\CScene_Tool.cpp">
-      <Filter>Engine\05. Scene\Scene_Tool</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyClone\CScene_Stage01.cpp">
       <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
     </ClCompile>
@@ -674,30 +638,6 @@
     </ClCompile>
     <ClCompile Include="..\KirbyClone\CFadeEffect.cpp">
       <Filter>Engine\10. Module</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorCameraController.cpp">
-      <Filter>Engine\09. Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorCore.cpp">
-      <Filter>Engine\09. Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorFileManager.cpp">
-      <Filter>Engine\09. Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorInput.cpp">
-      <Filter>Engine\09. Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorObjectManager.cpp">
-      <Filter>Engine\09. Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorRenderer.cpp">
-      <Filter>Engine\09. Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorToolbar.cpp">
-      <Filter>Engine\09. Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyClone\CEditorUI.cpp">
-      <Filter>Engine\09. Editor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
