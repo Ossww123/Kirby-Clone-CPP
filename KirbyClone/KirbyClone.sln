@@ -5,6 +5,12 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KirbyClone", "KirbyClone\KirbyClone.vcxproj", "{0F9F4624-7E26-4236-8D32-D13A54AD0597}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KirbyEditor", "KirbyEditor\KirbyEditor.vcxproj", "{EED48540-547F-4832-800E-A421070486BB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KirbyEngine", "KirbyEngine\KirbyEngine.vcxproj", "{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KirbyGame", "KirbyGame\KirbyGame.vcxproj", "{EEA27300-1437-42F5-A974-984BA9CF7584}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +27,30 @@ Global
 		{0F9F4624-7E26-4236-8D32-D13A54AD0597}.Release|x64.Build.0 = Release|x64
 		{0F9F4624-7E26-4236-8D32-D13A54AD0597}.Release|x86.ActiveCfg = Release|Win32
 		{0F9F4624-7E26-4236-8D32-D13A54AD0597}.Release|x86.Build.0 = Release|Win32
+		{EED48540-547F-4832-800E-A421070486BB}.Debug|x64.ActiveCfg = Debug|x64
+		{EED48540-547F-4832-800E-A421070486BB}.Debug|x64.Build.0 = Debug|x64
+		{EED48540-547F-4832-800E-A421070486BB}.Debug|x86.ActiveCfg = Debug|Win32
+		{EED48540-547F-4832-800E-A421070486BB}.Debug|x86.Build.0 = Debug|Win32
+		{EED48540-547F-4832-800E-A421070486BB}.Release|x64.ActiveCfg = Release|x64
+		{EED48540-547F-4832-800E-A421070486BB}.Release|x64.Build.0 = Release|x64
+		{EED48540-547F-4832-800E-A421070486BB}.Release|x86.ActiveCfg = Release|Win32
+		{EED48540-547F-4832-800E-A421070486BB}.Release|x86.Build.0 = Release|Win32
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Debug|x64.ActiveCfg = Debug|x64
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Debug|x64.Build.0 = Debug|x64
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Debug|x86.ActiveCfg = Debug|Win32
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Debug|x86.Build.0 = Debug|Win32
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Release|x64.ActiveCfg = Release|x64
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Release|x64.Build.0 = Release|x64
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Release|x86.ActiveCfg = Release|Win32
+		{DF4CDAE5-7EBB-4021-969B-0F149B363A3E}.Release|x86.Build.0 = Release|Win32
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Debug|x64.ActiveCfg = Debug|x64
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Debug|x64.Build.0 = Debug|x64
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Debug|x86.ActiveCfg = Debug|Win32
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Debug|x86.Build.0 = Debug|Win32
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Release|x64.ActiveCfg = Release|x64
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Release|x64.Build.0 = Release|x64
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Release|x86.ActiveCfg = Release|Win32
+		{EEA27300-1437-42F5-A974-984BA9CF7584}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

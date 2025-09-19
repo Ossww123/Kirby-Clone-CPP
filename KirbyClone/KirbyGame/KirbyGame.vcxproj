@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{eea27300-1437-42f5-a974-984ba9cf7584}</ProjectGuid>
+    <RootNamespace>KirbyGame</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\KirbyClone\CAbilityStar.h" />
+    <ClInclude Include="..\KirbyClone\CAirParticle.h" />
+    <ClInclude Include="..\KirbyClone\CAnimation.h" />
+    <ClInclude Include="..\KirbyClone\CAnimationDataMgr.h" />
+    <ClInclude Include="..\KirbyClone\CAnimator.h" />
+    <ClInclude Include="..\KirbyClone\CApple.h" />
+    <ClInclude Include="..\KirbyClone\CBackground.h" />
+    <ClInclude Include="..\KirbyClone\CBackgroundMgr.h" />
+    <ClInclude Include="..\KirbyClone\CBasicMonster.h" />
+    <ClInclude Include="..\KirbyClone\CBoss.h" />
+    <ClInclude Include="..\KirbyClone\CBrontoBurt.h" />
+    <ClInclude Include="..\KirbyClone\CCamera.h" />
+    <ClInclude Include="..\KirbyClone\CCollider.h" />
+    <ClInclude Include="..\KirbyClone\CCollisionMgr.h" />
+    <ClInclude Include="..\KirbyClone\CCopyMonster.h" />
+    <ClInclude Include="..\KirbyClone\CCore.h" />
+    <ClInclude Include="..\KirbyClone\CDeathEffect.h" />
+    <ClInclude Include="..\KirbyClone\CDoor.h" />
+    <ClInclude Include="..\KirbyClone\CEditorCameraController.h" />
+    <ClInclude Include="..\KirbyClone\CEditorCore.h" />
+    <ClInclude Include="..\KirbyClone\CEditorFileManager.h" />
+    <ClInclude Include="..\KirbyClone\CEditorInput.h" />
+    <ClInclude Include="..\KirbyClone\CEditorObjectManager.h" />
+    <ClInclude Include="..\KirbyClone\CEditorRenderer.h" />
+    <ClInclude Include="..\KirbyClone\CEditorToolbar.h" />
+    <ClInclude Include="..\KirbyClone\CEditorUI.h" />
+    <ClInclude Include="..\KirbyClone\CEventMgr.h" />
+    <ClInclude Include="..\KirbyClone\CFadeEffect.h" />
+    <ClInclude Include="..\KirbyClone\CGordo.h" />
+    <ClInclude Include="..\KirbyClone\CGrid.h" />
+    <ClInclude Include="..\KirbyClone\CHotHead.h" />
+    <ClInclude Include="..\KirbyClone\CInvincibleMonster.h" />
+    <ClInclude Include="..\KirbyClone\CItem.h" />
+    <ClInclude Include="..\KirbyClone\CKeyMgr.h" />
+    <ClInclude Include="..\KirbyClone\CMonster.h" />
+    <ClInclude Include="..\KirbyClone\CMonsterSpawnMgr.h" />
+    <ClInclude Include="..\KirbyClone\CObject.h" />
+    <ClInclude Include="..\KirbyClone\CObjectFactory.h" />
+    <ClInclude Include="..\KirbyClone\CPathMgr.h" />
+    <ClInclude Include="..\KirbyClone\CPlayer.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerCollisionSystem.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerDataMgr.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerHealthSystem.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerInhaleSystem.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerInputManager.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerMovement.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerStateMachine.h" />
+    <ClInclude Include="..\KirbyClone\CPlayerStateTransitionTable.h" />
+    <ClInclude Include="..\KirbyClone\CProjectile.h" />
+    <ClInclude Include="..\KirbyClone\CProjectileFactory.h" />
+    <ClInclude Include="..\KirbyClone\CRes.h" />
+    <ClInclude Include="..\KirbyClone\CResMgr.h" />
+    <ClInclude Include="..\KirbyClone\CRigidBody.h" />
+    <ClInclude Include="..\KirbyClone\CScene.h" />
+    <ClInclude Include="..\KirbyClone\CSceneMgr.h" />
+    <ClInclude Include="..\KirbyClone\CScene_Stage01.h" />
+    <ClInclude Include="..\KirbyClone\CScene_Stage02.h" />
+    <ClInclude Include="..\KirbyClone\CScene_Start.h" />
+    <ClInclude Include="..\KirbyClone\CScene_Tool.h" />
+    <ClInclude Include="..\KirbyClone\CSound.h" />
+    <ClInclude Include="..\KirbyClone\CSoundMgr.h" />
+    <ClInclude Include="..\KirbyClone\CSparky.h" />
+    <ClInclude Include="..\KirbyClone\CSpecialObject.h" />
+    <ClInclude Include="..\KirbyClone\CStageImage.h" />
+    <ClInclude Include="..\KirbyClone\CStageMgr.h" />
+    <ClInclude Include="..\KirbyClone\CTexture.h" />
+    <ClInclude Include="..\KirbyClone\CTile.h" />
+    <ClInclude Include="..\KirbyClone\CTileMgr.h" />
+    <ClInclude Include="..\KirbyClone\CTimeMgr.h" />
+    <ClInclude Include="..\KirbyClone\CUIMgr.h" />
+    <ClInclude Include="..\KirbyClone\CWaddleDee.h" />
+    <ClInclude Include="..\KirbyClone\CWaddleDoo.h" />
+    <ClInclude Include="..\KirbyClone\CWhispyWoods.h" />
+    <ClInclude Include="..\KirbyClone\define.h" />
+    <ClInclude Include="..\KirbyClone\enum.h" />
+    <ClInclude Include="..\KirbyClone\pch.h" />
+    <ClInclude Include="..\KirbyClone\struct.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="KirbyGame.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\KirbyClone\CAbilityStar.cpp" />
+    <ClCompile Include="..\KirbyClone\CAirParticle.cpp" />
+    <ClCompile Include="..\KirbyClone\CAnimation.cpp" />
+    <ClCompile Include="..\KirbyClone\CAnimationDataMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CAnimator.cpp" />
+    <ClCompile Include="..\KirbyClone\CApple.cpp" />
+    <ClCompile Include="..\KirbyClone\CBackground.cpp" />
+    <ClCompile Include="..\KirbyClone\CBackgroundMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CBasicMonster.cpp" />
+    <ClCompile Include="..\KirbyClone\CBoss.cpp" />
+    <ClCompile Include="..\KirbyClone\CBrontoBurt.cpp" />
+    <ClCompile Include="..\KirbyClone\CCamera.cpp" />
+    <ClCompile Include="..\KirbyClone\CCollider.cpp" />
+    <ClCompile Include="..\KirbyClone\CCollisionMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CCopyMonster.cpp" />
+    <ClCompile Include="..\KirbyClone\CCore.cpp" />
+    <ClCompile Include="..\KirbyClone\CDeathEffect.cpp" />
+    <ClCompile Include="..\KirbyClone\CDoor.cpp" />
+    <ClCompile Include="..\KirbyClone\CEditorCameraController.cpp" />
+    <ClCompile Include="..\KirbyClone\CEditorCore.cpp" />
+    <ClCompile Include="..\KirbyClone\CEditorFileManager.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessToFile>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessToFile>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessSuppressLineNumbers>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessSuppressLineNumbers>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessSuppressLineNumbers>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessSuppressLineNumbers>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorInput.cpp" />
+    <ClCompile Include="..\KirbyClone\CEditorObjectManager.cpp" />
+    <ClCompile Include="..\KirbyClone\CEditorRenderer.cpp" />
+    <ClCompile Include="..\KirbyClone\CEditorToolbar.cpp" />
+    <ClCompile Include="..\KirbyClone\CEditorUI.cpp" />
+    <ClCompile Include="..\KirbyClone\CEventMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CFadeEffect.cpp" />
+    <ClCompile Include="..\KirbyClone\CGordo.cpp" />
+    <ClCompile Include="..\KirbyClone\CGrid.cpp" />
+    <ClCompile Include="..\KirbyClone\CHotHead.cpp" />
+    <ClCompile Include="..\KirbyClone\CInvincibleMonster.cpp" />
+    <ClCompile Include="..\KirbyClone\CItem.cpp" />
+    <ClCompile Include="..\KirbyClone\CKeyMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CMonster.cpp" />
+    <ClCompile Include="..\KirbyClone\CMonsterSpawnMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CObject.cpp" />
+    <ClCompile Include="..\KirbyClone\CObjectFactory.cpp" />
+    <ClCompile Include="..\KirbyClone\CPathMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayer.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerCollisionSystem.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerDataMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerHealthSystem.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerInhaleSystem.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerInputManager.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerMovement.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerStateMachine.cpp" />
+    <ClCompile Include="..\KirbyClone\CPlayerStateTransitionTable.cpp" />
+    <ClCompile Include="..\KirbyClone\CProjectile.cpp" />
+    <ClCompile Include="..\KirbyClone\CProjectileFactory.cpp" />
+    <ClCompile Include="..\KirbyClone\CRes.cpp" />
+    <ClCompile Include="..\KirbyClone\CResMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CRigidBody.cpp" />
+    <ClCompile Include="..\KirbyClone\CScene.cpp" />
+    <ClCompile Include="..\KirbyClone\CSceneMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CScene_Stage01.cpp" />
+    <ClCompile Include="..\KirbyClone\CScene_Stage02.cpp" />
+    <ClCompile Include="..\KirbyClone\CScene_Start.cpp" />
+    <ClCompile Include="..\KirbyClone\CScene_Tool.cpp" />
+    <ClCompile Include="..\KirbyClone\CSound.cpp" />
+    <ClCompile Include="..\KirbyClone\CSoundMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CSparky.cpp" />
+    <ClCompile Include="..\KirbyClone\CSpecialObject.cpp" />
+    <ClCompile Include="..\KirbyClone\CStageImage.cpp" />
+    <ClCompile Include="..\KirbyClone\CStageMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CTexture.cpp" />
+    <ClCompile Include="..\KirbyClone\CTile.cpp" />
+    <ClCompile Include="..\KirbyClone\CTileMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CTimeMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CUIMgr.cpp" />
+    <ClCompile Include="..\KirbyClone\CWaddleDee.cpp" />
+    <ClCompile Include="..\KirbyClone\CWaddleDoo.cpp" />
+    <ClCompile Include="..\KirbyClone\CWhispyWoods.cpp" />
+    <ClCompile Include="KirbyGame.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KirbyGame.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="KirbyGame.ico" />
+    <Image Include="small.ico" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

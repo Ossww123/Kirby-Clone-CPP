@@ -1,0 +1,703 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Default">
+      <UniqueIdentifier>{aaf7af69-6537-4e61-8a3c-5aba36b4aa43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Default\리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{bdfd8cc5-8199-4022-96cf-4e1742cb9cc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\02. Core">
+      <UniqueIdentifier>{bfa2e384-f542-431e-84d4-d75a5b812551}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\01. Header">
+      <UniqueIdentifier>{c9e25b4a-3843-4d7c-951e-a1cc541f9407}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object">
+      <UniqueIdentifier>{d74811f6-8381-44f2-b4bd-40e8ae7876a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player">
+      <UniqueIdentifier>{80765662-10c6-41c0-a681-b8c7203eef53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerStateMachine">
+      <UniqueIdentifier>{1361a613-2af2-4ecb-a4c7-8a13a71e1c06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerInhaleSystem">
+      <UniqueIdentifier>{daed4c8d-9388-449f-a8a6-08402e016498}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerMovement">
+      <UniqueIdentifier>{a557977a-c37a-4beb-9ed9-ebe76644acb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerHealthSystem">
+      <UniqueIdentifier>{4cadd185-abb4-4e8c-9057-ba38939f3e04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerCollisionSystem">
+      <UniqueIdentifier>{9df2720d-8be6-4dda-b253-766bc2d29882}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerInputManager">
+      <UniqueIdentifier>{11e11c7e-6f8d-453b-b11d-6c15b8484aab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Player\PlayerStateTransitionTable">
+      <UniqueIdentifier>{8555260d-9dee-4957-9fc4-d3fd01951093}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster">
+      <UniqueIdentifier>{941e1fe6-5efa-4f97-af5e-d5ff0d782514}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\Boss">
+      <UniqueIdentifier>{1f371f4c-cffa-4bc7-990b-a37c3514ab7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\Boss\WhispyWoods">
+      <UniqueIdentifier>{20b27f78-675a-4bef-9934-5e811f897bb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster">
+      <UniqueIdentifier>{00d286f2-f97a-4534-a68c-863c8915f372}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster">
+      <UniqueIdentifier>{54b38dd7-d24f-4798-ba5d-f36c2aee8ee5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo">
+      <UniqueIdentifier>{6b7aa13d-d2d8-4d40-8788-2dbef252b367}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead">
+      <UniqueIdentifier>{9795650d-74b7-4177-843d-0a25703787eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky">
+      <UniqueIdentifier>{68b959a3-501c-4c7c-88d9-e1dde2aee8c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\WaddleDee">
+      <UniqueIdentifier>{1c9cd92c-5ef6-4b1f-a27e-956b93d4cdd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\BrontoBurt">
+      <UniqueIdentifier>{1a4848c9-81fe-4f75-be8b-ec11e0a19154}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\Apple">
+      <UniqueIdentifier>{118b0a41-4d16-4b9d-beaf-d27263051609}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\InvincibleMonster">
+      <UniqueIdentifier>{340f07fb-b532-4e47-8c7e-218bd838f006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\InvincibleMonster\Gordo">
+      <UniqueIdentifier>{085f4df6-c865-4b38-9044-7d63b3193dc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Item">
+      <UniqueIdentifier>{d544412b-1ffc-491c-bcae-5ef05ed0bc8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Tile">
+      <UniqueIdentifier>{cb7c1184-b4a1-494c-afbb-b2cbea6b0a29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\SpecialObject">
+      <UniqueIdentifier>{9e5af8f3-3a55-441e-8d4d-117fe28e9d06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\SpecialObject\Door">
+      <UniqueIdentifier>{34d0c97e-32eb-455c-bccf-f04963d4a126}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Projectile">
+      <UniqueIdentifier>{75cded34-09fd-4f19-9235-fe970ca2e19a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\AbilityStar">
+      <UniqueIdentifier>{8043719c-daf9-476a-8212-f436dc38ff9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\AirParticle">
+      <UniqueIdentifier>{cc46a246-7e30-49db-a552-7af659d4bafb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\DeathEffect">
+      <UniqueIdentifier>{3a01c1ed-959c-48e1-ab3c-2a5610e63107}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager">
+      <UniqueIdentifier>{a10daaa7-43e8-4631-90c4-88e79c8c41bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\KeyMgr">
+      <UniqueIdentifier>{ab02e1fe-731f-4986-86f1-e9655eef0e95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\TimeMgr">
+      <UniqueIdentifier>{e6554427-c3bc-4193-8cc3-ab3af9fe75e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\SceneMgr">
+      <UniqueIdentifier>{f013442e-dd18-449f-a24e-ccb415276b69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\CollisionMgr">
+      <UniqueIdentifier>{ffada9f6-1fbc-4572-8a2c-ca01e4c2542c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr">
+      <UniqueIdentifier>{b6662217-2ca4-4585-883e-d67f3d84d000}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\Camera">
+      <UniqueIdentifier>{f0e95270-3e93-4473-9c21-b0e94adb70c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\ResMgr">
+      <UniqueIdentifier>{835949a5-4de2-404c-8d37-c43b692e15b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\PathMgr">
+      <UniqueIdentifier>{4227ecc2-b3b3-4115-a9ee-92a24e1f5c86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\Grid">
+      <UniqueIdentifier>{c44c4294-feca-42bf-82bf-926a20e64e36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\BackgroundMgr">
+      <UniqueIdentifier>{6ceefb21-02ac-483c-85b4-1df5be06aeab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\TileMgr">
+      <UniqueIdentifier>{ec3a351e-6930-4684-9675-4a3d4b5ed14f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\StageMgr">
+      <UniqueIdentifier>{3cc50d68-9225-47ce-be04-094de5f496f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\AnimationDataMgr">
+      <UniqueIdentifier>{0e9a3292-22d3-452f-9d8e-611f2cd875e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\SoundMgr">
+      <UniqueIdentifier>{77d7de34-2531-4354-b964-81dcc698b717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\PlayerDataMgr">
+      <UniqueIdentifier>{79c37517-76db-42c2-9f37-a33b68b70f9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\MonsterSpawnMgr">
+      <UniqueIdentifier>{9ff413a8-ce3f-4f70-adb2-4ae4d8c9c2a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\UIMgr">
+      <UniqueIdentifier>{ec1713b8-653d-44d3-a495-80ae166f614e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene">
+      <UniqueIdentifier>{5d314e5c-e425-41a5-a2ad-1bf8942f7489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Start">
+      <UniqueIdentifier>{958eeace-0160-463e-bc1f-6a387cc30f96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Tool">
+      <UniqueIdentifier>{fea02bda-2812-4b6a-9dca-4ae8149bdc8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Stage">
+      <UniqueIdentifier>{6089f6b5-5391-4ace-be9d-320ff8d10fa7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Stage\Stage01">
+      <UniqueIdentifier>{308a8ccc-0531-4602-9424-b0d1be088a03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\Scene_Stage\Stage02">
+      <UniqueIdentifier>{947b9847-b1b4-4b4e-a40b-c634c6d6f82e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource">
+      <UniqueIdentifier>{80b73b89-a976-4430-a557-f25e5bb2e4f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource\Texture">
+      <UniqueIdentifier>{abab6160-08e0-42eb-9857-216a246b8f57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource\Background">
+      <UniqueIdentifier>{38c000b4-0135-4f97-a564-05b8fda0ce55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource\StageImage">
+      <UniqueIdentifier>{ac8c351a-d5a0-41ab-a9b0-08b864a094fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource\Sound">
+      <UniqueIdentifier>{2c97ba06-2fbe-4e28-b2bd-de5620b91b93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Component">
+      <UniqueIdentifier>{bfae2114-8d37-442c-840c-6da74731c773}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Component\Collider">
+      <UniqueIdentifier>{f957bb43-1659-496b-9c2c-c256e7b7d28e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Component\Animator">
+      <UniqueIdentifier>{d6a8ebd1-d6bf-4b85-8b74-c96a6f37f4ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Component\Animator\Animation">
+      <UniqueIdentifier>{c89f4f13-c237-4d10-9f6d-5235f681b3c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\07. Component\RigidBody">
+      <UniqueIdentifier>{5dfa8d8b-0953-48b1-8a73-c5089876578d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\08. Factory">
+      <UniqueIdentifier>{514687a9-b43f-444c-a045-8081df888234}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\08. Factory\CProjectileFactory">
+      <UniqueIdentifier>{04e873c1-7c9c-44d7-bde9-9df630cffc47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\10. Module">
+      <UniqueIdentifier>{74a85f7d-4da8-4f18-b5bd-09c1b48fefbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\09. Editor">
+      <UniqueIdentifier>{1a6c9a45-3b08-403c-8842-bd913e3f4e54}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="KirbyGame.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Default</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CCore.h">
+      <Filter>Engine\02. Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\define.h">
+      <Filter>Engine\01. Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\enum.h">
+      <Filter>Engine\01. Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\struct.h">
+      <Filter>Engine\01. Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CObject.h">
+      <Filter>Engine\04. Object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayer.h">
+      <Filter>Engine\04. Object\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerStateMachine.h">
+      <Filter>Engine\04. Object\Player\PlayerStateMachine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerInhaleSystem.h">
+      <Filter>Engine\04. Object\Player\PlayerInhaleSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerMovement.h">
+      <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerHealthSystem.h">
+      <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerCollisionSystem.h">
+      <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerInputManager.h">
+      <Filter>Engine\04. Object\Player\PlayerInputManager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerStateTransitionTable.h">
+      <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CMonster.h">
+      <Filter>Engine\04. Object\Monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CBoss.h">
+      <Filter>Engine\04. Object\Monster\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CWhispyWoods.h">
+      <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CBasicMonster.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CCopyMonster.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CWaddleDoo.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CHotHead.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CSparky.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CWaddleDee.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CBrontoBurt.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\BrontoBurt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CApple.h">
+      <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CInvincibleMonster.h">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CGordo.h">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster\Gordo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CItem.h">
+      <Filter>Engine\04. Object\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CTile.h">
+      <Filter>Engine\04. Object\Tile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CSpecialObject.h">
+      <Filter>Engine\04. Object\SpecialObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CDoor.h">
+      <Filter>Engine\04. Object\SpecialObject\Door</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CProjectile.h">
+      <Filter>Engine\04. Object\Projectile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CAbilityStar.h">
+      <Filter>Engine\04. Object\AbilityStar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CAirParticle.h">
+      <Filter>Engine\04. Object\AirParticle</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CDeathEffect.h">
+      <Filter>Engine\04. Object\DeathEffect</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CKeyMgr.h">
+      <Filter>Engine\03. Manager\KeyMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CTimeMgr.h">
+      <Filter>Engine\03. Manager\TimeMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CSceneMgr.h">
+      <Filter>Engine\03. Manager\SceneMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CCollisionMgr.h">
+      <Filter>Engine\03. Manager\CollisionMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEventMgr.h">
+      <Filter>Engine\03. Manager\EventMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CCamera.h">
+      <Filter>Engine\03. Manager\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CResMgr.h">
+      <Filter>Engine\03. Manager\ResMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPathMgr.h">
+      <Filter>Engine\03. Manager\PathMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CGrid.h">
+      <Filter>Engine\03. Manager\Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CBackgroundMgr.h">
+      <Filter>Engine\03. Manager\BackgroundMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CTileMgr.h">
+      <Filter>Engine\03. Manager\TileMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CStageMgr.h">
+      <Filter>Engine\03. Manager\StageMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CAnimationDataMgr.h">
+      <Filter>Engine\03. Manager\AnimationDataMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CSoundMgr.h">
+      <Filter>Engine\03. Manager\SoundMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CPlayerDataMgr.h">
+      <Filter>Engine\03. Manager\PlayerDataMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CMonsterSpawnMgr.h">
+      <Filter>Engine\03. Manager\MonsterSpawnMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CUIMgr.h">
+      <Filter>Engine\03. Manager\UIMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CScene.h">
+      <Filter>Engine\05. Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CScene_Start.h">
+      <Filter>Engine\05. Scene\Scene_Start</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CScene_Tool.h">
+      <Filter>Engine\05. Scene\Scene_Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CScene_Stage01.h">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CScene_Stage02.h">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CRes.h">
+      <Filter>Engine\06. Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CTexture.h">
+      <Filter>Engine\06. Resource\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CBackground.h">
+      <Filter>Engine\06. Resource\Background</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CStageImage.h">
+      <Filter>Engine\06. Resource\StageImage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CSound.h">
+      <Filter>Engine\06. Resource\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CCollider.h">
+      <Filter>Engine\07. Component\Collider</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CAnimator.h">
+      <Filter>Engine\07. Component\Animator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CAnimation.h">
+      <Filter>Engine\07. Component\Animator\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CRigidBody.h">
+      <Filter>Engine\07. Component\RigidBody</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CObjectFactory.h">
+      <Filter>Engine\08. Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CProjectileFactory.h">
+      <Filter>Engine\08. Factory\CProjectileFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CFadeEffect.h">
+      <Filter>Engine\10. Module</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\pch.h" />
+    <ClInclude Include="..\KirbyClone\CEditorCameraController.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEditorCore.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEditorFileManager.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEditorInput.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEditorObjectManager.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEditorRenderer.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEditorToolbar.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KirbyClone\CEditorUI.h">
+      <Filter>Engine\09. Editor</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KirbyGame.rc">
+      <Filter>Default\리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Default\리소스 파일</Filter>
+    </Image>
+    <Image Include="KirbyGame.ico">
+      <Filter>Default\리소스 파일</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="KirbyGame.cpp" />
+    <ClCompile Include="..\KirbyClone\CCore.cpp">
+      <Filter>Engine\02. Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CObject.cpp">
+      <Filter>Engine\04. Object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayer.cpp">
+      <Filter>Engine\04. Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerStateMachine.cpp">
+      <Filter>Engine\04. Object\Player\PlayerStateMachine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerInhaleSystem.cpp">
+      <Filter>Engine\04. Object\Player\PlayerInhaleSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerMovement.cpp">
+      <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerHealthSystem.cpp">
+      <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerCollisionSystem.cpp">
+      <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerInputManager.cpp">
+      <Filter>Engine\04. Object\Player\PlayerInputManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerStateTransitionTable.cpp">
+      <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CMonster.cpp">
+      <Filter>Engine\04. Object\Monster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CBoss.cpp">
+      <Filter>Engine\04. Object\Monster\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CWhispyWoods.cpp">
+      <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CBasicMonster.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CCopyMonster.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CWaddleDoo.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CHotHead.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CSparky.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CWaddleDee.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CBrontoBurt.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\BrontoBurt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CApple.cpp">
+      <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CInvincibleMonster.cpp">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CGordo.cpp">
+      <Filter>Engine\04. Object\Monster\InvincibleMonster\Gordo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CItem.cpp">
+      <Filter>Engine\04. Object\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CTile.cpp">
+      <Filter>Engine\04. Object\Tile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CSpecialObject.cpp">
+      <Filter>Engine\04. Object\SpecialObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CDoor.cpp">
+      <Filter>Engine\04. Object\SpecialObject\Door</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CProjectile.cpp">
+      <Filter>Engine\04. Object\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CAbilityStar.cpp">
+      <Filter>Engine\04. Object\AbilityStar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CAirParticle.cpp">
+      <Filter>Engine\04. Object\AirParticle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CDeathEffect.cpp">
+      <Filter>Engine\04. Object\DeathEffect</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CKeyMgr.cpp">
+      <Filter>Engine\03. Manager\KeyMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CTimeMgr.cpp">
+      <Filter>Engine\03. Manager\TimeMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CSceneMgr.cpp">
+      <Filter>Engine\03. Manager\SceneMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CCollisionMgr.cpp">
+      <Filter>Engine\03. Manager\CollisionMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEventMgr.cpp">
+      <Filter>Engine\03. Manager\EventMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CCamera.cpp">
+      <Filter>Engine\03. Manager\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CResMgr.cpp">
+      <Filter>Engine\03. Manager\ResMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPathMgr.cpp">
+      <Filter>Engine\03. Manager\PathMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CGrid.cpp">
+      <Filter>Engine\03. Manager\Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CBackgroundMgr.cpp">
+      <Filter>Engine\03. Manager\BackgroundMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CTileMgr.cpp">
+      <Filter>Engine\03. Manager\TileMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CStageMgr.cpp">
+      <Filter>Engine\03. Manager\StageMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CAnimationDataMgr.cpp">
+      <Filter>Engine\03. Manager\AnimationDataMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CSoundMgr.cpp">
+      <Filter>Engine\03. Manager\SoundMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CPlayerDataMgr.cpp">
+      <Filter>Engine\03. Manager\PlayerDataMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CMonsterSpawnMgr.cpp">
+      <Filter>Engine\03. Manager\MonsterSpawnMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CUIMgr.cpp">
+      <Filter>Engine\03. Manager\UIMgr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CScene.cpp">
+      <Filter>Engine\05. Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CScene_Start.cpp">
+      <Filter>Engine\05. Scene\Scene_Start</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CScene_Tool.cpp">
+      <Filter>Engine\05. Scene\Scene_Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CScene_Stage01.cpp">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CScene_Stage02.cpp">
+      <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CRes.cpp">
+      <Filter>Engine\06. Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CTexture.cpp">
+      <Filter>Engine\06. Resource\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CBackground.cpp">
+      <Filter>Engine\06. Resource\Background</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CStageImage.cpp">
+      <Filter>Engine\06. Resource\StageImage</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CSound.cpp">
+      <Filter>Engine\06. Resource\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CCollider.cpp">
+      <Filter>Engine\07. Component\Collider</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CAnimator.cpp">
+      <Filter>Engine\07. Component\Animator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CAnimation.cpp">
+      <Filter>Engine\07. Component\Animator\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CRigidBody.cpp">
+      <Filter>Engine\07. Component\RigidBody</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CObjectFactory.cpp">
+      <Filter>Engine\08. Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CProjectileFactory.cpp">
+      <Filter>Engine\08. Factory\CProjectileFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CFadeEffect.cpp">
+      <Filter>Engine\10. Module</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorCameraController.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorCore.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorFileManager.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorInput.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorObjectManager.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorRenderer.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorToolbar.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KirbyClone\CEditorUI.cpp">
+      <Filter>Engine\09. Editor</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
