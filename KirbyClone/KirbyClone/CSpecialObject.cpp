@@ -1,4 +1,4 @@
-#include "pch.h"
+Ôªø#include "gamePCH.h"
 #include "CSpecialObject.h"
 #include "CTimeMgr.h"
 #include "CCamera.h"
@@ -9,7 +9,7 @@ CSpecialObject::CSpecialObject()
     , m_bIsInteractable(true)
     , m_fInteractionRange(80.f)
 {
-    // ±‚∫ª ø¿∫Í¡ß∆Æ ≈∏¿‘ º≥¡§
+    // Í∏∞Î≥∏ Ïò§Î∏åÏ†ùÌä∏ ÌÉÄÏûÖ ÏÑ§Ï†ï
     SetType(OBJECT_TYPE::OBJECT_DOOR);
 }
 

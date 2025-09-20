@@ -1,6 +1,5 @@
 #pragma once
 #include "CObject.h"
-#include "enum.h"
 
 class CTexture;
 

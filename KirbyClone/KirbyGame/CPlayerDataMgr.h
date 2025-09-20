@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "gamePCH.h"
 
 // 플레이어 상태 보존용 구조체
 struct tPlayerData

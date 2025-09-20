@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 class CEditorCore;
 class CScene;
@@ -7,61 +7,61 @@ class CObject;
 class CEditorFileManager
 {
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     CEditorFileManager();
     ~CEditorFileManager();
 
     void Initialize(CEditorCore* _pCore, CScene* _pScene);
 
 public:
-    // === ÆÄÀÏ ÀúÀå/·Îµå ÀÎÅÍÆäÀÌ½º ===
+    // === íŒŒì¼ ì €ì¥/ë¡œë“œ ì¸í„°í˜ì´ìŠ¤ ===
     void SaveAsDialog();
     void OpenDialog();
     void QuickSave();
     void QuickLoad();
 
-    // === ·¹º§ ÆÄÀÏ Ã³¸® ===
+    // === ë ˆë²¨ íŒŒì¼ ì²˜ë¦¬ ===
     void SaveLevel(const wstring& _strFileName);
     void LoadLevel(const wstring& _strFileName);
 
 private:
-    // === ·¹º§ µ¥ÀÌÅÍ »ı¼º/Ã³¸® ===
+    // === ë ˆë²¨ ë°ì´í„° ìƒì„±/ì²˜ë¦¬ ===
     tLevelData CreateLevelData(const wstring& _strLevelName);
     void CollectSceneObjects(tLevelData& _levelData);
     void ApplyLoadedLevelData(const tLevelData& _levelData);
 
-    // === ¿ÀºêÁ§Æ® º¯È¯ ===
+    // === ì˜¤ë¸Œì íŠ¸ ë³€í™˜ ===
     CObject* CreateObjectFromData(const tLevelObjectData& _objData);
     tLevelObjectData CreateObjectData(CObject* _pObj, GROUP_TYPE _eGroupType);
 
-    // === ¾À °ü¸® ===
+    // === ì”¬ ê´€ë¦¬ ===
     void ClearScene();
     void CreateDefaultLevel();
     void ApplyLevelBounds(const tLevelData& _levelData);
 
 private:
-    // === ÆÄÀÏ °æ·Î À¯Æ¿¸®Æ¼ ===
+    // === íŒŒì¼ ê²½ë¡œ ìœ í‹¸ë¦¬í‹° ===
     wstring GetLevelDirectory() const;
     wstring GetFullLevelPath(const wstring& _strFileName) const;
     bool EnsureLevelDirectoryExists();
 
-    // === ÆÄÀÏ ´ëÈ­»óÀÚ ÇïÆÛ ===
+    // === íŒŒì¼ ëŒ€í™”ìƒì í—¬í¼ ===
     bool ShowSaveDialog(wstring& _strFileName);
     bool ShowOpenDialog(wstring& _strFileName);
 
-    // === ÆÄÀÏ °ËÁõ ===
+    // === íŒŒì¼ ê²€ì¦ ===
     bool ValidateLevelFile(const wstring& _strFilePath);
     bool IsValidVersion(int _iVersion) const;
 
-    // === ¸Ş½ÃÁö ½Ã½ºÅÛ ===
+    // === ë©”ì‹œì§€ ì‹œìŠ¤í…œ ===
     void ShowErrorMessage(const wstring& _strMessage);
     void ShowSuccessMessage(const wstring& _strMessage, int _iObjectCount = -1);
 
 private:
-    // === ¿¡µğÅÍ ½Ã½ºÅÛ ÂüÁ¶ ===
+    // === ì—ë””í„° ì‹œìŠ¤í…œ ì°¸ì¡° ===
     CEditorCore* m_pEditorCore;
     CScene* m_pScene;
 
-    // === ºü¸¥ ÀúÀå/·Îµå ¼³Á¤ ===
+    // === ë¹ ë¥¸ ì €ì¥/ë¡œë“œ ì„¤ì • ===
     wstring             m_strQuickSaveFile;
 };

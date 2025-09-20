@@ -1,8 +1,8 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CTexture.h"
 #include "CCore.h"
 
-#pragma comment(lib, "msimg32.lib")  // AlphaBlend ÇÔ¼ö¸¦ À§ÇØ ÇÊ¿ä
+#pragma comment(lib, "msimg32.lib")  // AlphaBlend í•¨ìˆ˜ë¥¼ ìœ„í•´ í•„ìš”
 
 CTexture::CTexture()
     : m_dc(0)
@@ -22,48 +22,48 @@ CTexture::~CTexture()
 
 HRESULT CTexture::Load(const wstring& _strFilePath)
 {
-    // ±âÁ¸ È£È¯¼ºÀ» À§ÇÑ ÇÔ¼ö - 24ºñÆ® BMP ·Îµå
+    // ê¸°ì¡´ í˜¸í™˜ì„±ì„ ìœ„í•œ í•¨ìˆ˜ - 24ë¹„íŠ¸ BMP ë¡œë“œ
     return Load24BitBMP(_strFilePath);
 }
 
 HRESULT CTexture::LoadWithAlpha(const wstring& _strFilePath)
 {
-    // ÆÄÀÏ È®ÀåÀÚ¿¡ µû¶ó ÀûÀıÇÑ ·Îµå ¹æ½Ä ¼±ÅÃ
+    // íŒŒì¼ í™•ì¥ìì— ë”°ë¼ ì ì ˆí•œ ë¡œë“œ ë°©ì‹ ì„ íƒ
     wstring ext = _strFilePath.substr(_strFilePath.find_last_of(L"."));
     std::transform(ext.begin(), ext.end(), ext.begin(), ::towlower);
 
     if (ext == L".bmp")
     {
-        // BMP ÆÄÀÏÀÇ °æ¿ì ´Ü°èÀûÀ¸·Î ·Îµù ½Ãµµ
+        // BMP íŒŒì¼ì˜ ê²½ìš° ë‹¨ê³„ì ìœ¼ë¡œ ë¡œë”© ì‹œë„
 
-        // 1´Ü°è: 32ºñÆ® ¹æ½ÄÀ¸·Î ½Ãµµ
+        // 1ë‹¨ê³„: 32ë¹„íŠ¸ ë°©ì‹ìœ¼ë¡œ ì‹œë„
         HRESULT hr32 = Load32BitBMP(_strFilePath);
         if (SUCCEEDED(hr32))
         {
             return S_OK;
         }
 
-        // 2´Ü°è: 32ºñÆ® ½ÇÆĞ½Ã 24ºñÆ® ¹æ½ÄÀ¸·Î ½Ãµµ
+        // 2ë‹¨ê³„: 32ë¹„íŠ¸ ì‹¤íŒ¨ì‹œ 24ë¹„íŠ¸ ë°©ì‹ìœ¼ë¡œ ì‹œë„
         HRESULT hr24 = Load24BitBMP(_strFilePath);
         if (SUCCEEDED(hr24))
         {
             return S_OK;
         }
 
-        // 3´Ü°è: µÑ ´Ù ½ÇÆĞ½Ã ¿¡·¯
+        // 3ë‹¨ê³„: ë‘˜ ë‹¤ ì‹¤íŒ¨ì‹œ ì—ëŸ¬
         wchar_t szError[512];
-        swprintf_s(szError, L"BMP ÆÄÀÏ ·Îµù ¿ÏÀü ½ÇÆĞ\n°æ·Î: %s\n\n32ºñÆ® ½Ãµµ: ½ÇÆĞ\n24ºñÆ® ½Ãµµ: ½ÇÆĞ\n\nÆÄÀÏÀÌ À¯È¿ÇÑ BMPÀÎÁö È®ÀÎÇØÁÖ¼¼¿ä.", _strFilePath.c_str());
-        MessageBox(nullptr, szError, L"BMP ·Îµù ½ÇÆĞ", MB_OK | MB_ICONERROR);
+        swprintf_s(szError, L"BMP íŒŒì¼ ë¡œë”© ì™„ì „ ì‹¤íŒ¨\nê²½ë¡œ: %s\n\n32ë¹„íŠ¸ ì‹œë„: ì‹¤íŒ¨\n24ë¹„íŠ¸ ì‹œë„: ì‹¤íŒ¨\n\níŒŒì¼ì´ ìœ íš¨í•œ BMPì¸ì§€ í™•ì¸í•´ì£¼ì„¸ìš”.", _strFilePath.c_str());
+        MessageBox(nullptr, szError, L"BMP ë¡œë”© ì‹¤íŒ¨", MB_OK | MB_ICONERROR);
         return E_FAIL;
     }
 
-    // ´Ù¸¥ Çü½ÄÀº 24ºñÆ®·Î ½Ãµµ
+    // ë‹¤ë¥¸ í˜•ì‹ì€ 24ë¹„íŠ¸ë¡œ ì‹œë„
     return Load24BitBMP(_strFilePath);
 }
 
 HRESULT CTexture::Load24BitBMP(const wstring& _strFilePath)
 {
-    // ±âÁ¸ ·Îµå ¹æ½Ä (24ºñÆ® BMP)
+    // ê¸°ì¡´ ë¡œë“œ ë°©ì‹ (24ë¹„íŠ¸ BMP)
     m_bHasAlpha = false;
 
     m_hBit = (HBITMAP)LoadImage(nullptr, _strFilePath.c_str(), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
@@ -71,19 +71,19 @@ HRESULT CTexture::Load24BitBMP(const wstring& _strFilePath)
     if (nullptr == m_hBit)
     {
         wchar_t szBuffer[256] = {};
-        swprintf_s(szBuffer, L"ºñÆ®¸Ê ·Îµå ½ÇÆĞ\n°æ·Î: %s", _strFilePath.c_str());
-        MessageBox(nullptr, szBuffer, L"ÅØ½ºÃ³ ·Îµå ½ÇÆĞ", MB_OK);
+        swprintf_s(szBuffer, L"ë¹„íŠ¸ë§µ ë¡œë“œ ì‹¤íŒ¨\nê²½ë¡œ: %s", _strFilePath.c_str());
+        MessageBox(nullptr, szBuffer, L"í…ìŠ¤ì²˜ ë¡œë“œ ì‹¤íŒ¨", MB_OK);
         return E_FAIL;
     }
 
-    // ·ÎµåµÈ ºñÆ®¸Ê°ú È£È¯µÇ´Â DC »ı¼º
+    // ë¡œë“œëœ ë¹„íŠ¸ë§µê³¼ í˜¸í™˜ë˜ëŠ” DC ìƒì„±
     m_dc = CreateCompatibleDC(CCore::GetInst()->GetMainDC());
 
-    // ºñÆ®¸Ê°ú DC ¿¬°á
+    // ë¹„íŠ¸ë§µê³¼ DC ì—°ê²°
     HBITMAP hPrevBit = (HBITMAP)SelectObject(m_dc, m_hBit);
     DeleteObject(hPrevBit);
 
-    // ºñÆ®¸Ê Á¤º¸ ¾ò±â
+    // ë¹„íŠ¸ë§µ ì •ë³´ ì–»ê¸°
     GetObject(m_hBit, sizeof(BITMAP), &m_tInfo);
 
     return S_OK;
@@ -91,65 +91,65 @@ HRESULT CTexture::Load24BitBMP(const wstring& _strFilePath)
 
 HRESULT CTexture::Load32BitBMP(const wstring& _strFilePath)
 {
-    // ÆÄÀÏ Á¸Àç ¿©ºÎ ¸ÕÀú È®ÀÎ
+    // íŒŒì¼ ì¡´ì¬ ì—¬ë¶€ ë¨¼ì € í™•ì¸
     WIN32_FIND_DATA findFileData;
     HANDLE hFind = FindFirstFile(_strFilePath.c_str(), &findFileData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
         wchar_t szBuffer[512] = {};
-        swprintf_s(szBuffer, L"32ºñÆ® BMP ·Îµù ½ÇÆĞ - ÆÄÀÏÀ» Ã£À» ¼ö ¾øÀ½\n°æ·Î: %s", _strFilePath.c_str());
-        MessageBox(nullptr, szBuffer, L"ÆÄÀÏ ¾øÀ½", MB_OK);
+        swprintf_s(szBuffer, L"32ë¹„íŠ¸ BMP ë¡œë”© ì‹¤íŒ¨ - íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŒ\nê²½ë¡œ: %s", _strFilePath.c_str());
+        MessageBox(nullptr, szBuffer, L"íŒŒì¼ ì—†ìŒ", MB_OK);
         return E_FAIL;
     }
     FindClose(hFind);
 
-    // LoadImage·Î ºñÆ®¸Ê ·Îµå ½Ãµµ
+    // LoadImageë¡œ ë¹„íŠ¸ë§µ ë¡œë“œ ì‹œë„
     m_hBit = (HBITMAP)LoadImage(nullptr, _strFilePath.c_str(), IMAGE_BITMAP, 0, 0,
         LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 
     if (nullptr == m_hBit)
     {
-        // LoadImage ½ÇÆĞ ¿øÀÎ È®ÀÎ
+        // LoadImage ì‹¤íŒ¨ ì›ì¸ í™•ì¸
         DWORD dwError = GetLastError();
         wchar_t szBuffer[512] = {};
-        swprintf_s(szBuffer, L"32ºñÆ® BMP LoadImage ½ÇÆĞ\n°æ·Î: %s\n¿À·ù ÄÚµå: %d\n\n°¡´ÉÇÑ ¿øÀÎ:\n- ÆÄÀÏÀÌ ½ÇÁ¦·Î 32ºñÆ®°¡ ¾Æ´Ô\n- ÆÄÀÏÀÌ ¼Õ»óµÊ\n- ºñÇ¥ÁØ BMP Çü½Ä",
+        swprintf_s(szBuffer, L"32ë¹„íŠ¸ BMP LoadImage ì‹¤íŒ¨\nê²½ë¡œ: %s\nì˜¤ë¥˜ ì½”ë“œ: %d\n\nê°€ëŠ¥í•œ ì›ì¸:\n- íŒŒì¼ì´ ì‹¤ì œë¡œ 32ë¹„íŠ¸ê°€ ì•„ë‹˜\n- íŒŒì¼ì´ ì†ìƒë¨\n- ë¹„í‘œì¤€ BMP í˜•ì‹",
             _strFilePath.c_str(), dwError);
-        MessageBox(nullptr, szBuffer, L"LoadImage ½ÇÆĞ", MB_OK);
+        MessageBox(nullptr, szBuffer, L"LoadImage ì‹¤íŒ¨", MB_OK);
         return E_FAIL;
     }
 
-    // ºñÆ®¸Ê Á¤º¸ ¾ò±â
+    // ë¹„íŠ¸ë§µ ì •ë³´ ì–»ê¸°
     GetObject(m_hBit, sizeof(BITMAP), &m_tInfo);
 
-    // ½ÇÁ¦ ºñÆ® ¼ö È®ÀÎ ¹× µğ¹ö±ë Á¤º¸ Ãâ·Â
+    // ì‹¤ì œ ë¹„íŠ¸ ìˆ˜ í™•ì¸ ë° ë””ë²„ê¹… ì •ë³´ ì¶œë ¥
     wchar_t szDebugInfo[512];
-    swprintf_s(szDebugInfo, L"BMP ÆÄÀÏ ·Îµå ¼º°ø!\n\nÆÄÀÏ: %s\nÅ©±â: %d x %d\nºñÆ® ¼ö: %d\nÆò¸é ¼ö: %d\n¹ÙÀÌÆ®/¶óÀÎ: %d",
+    swprintf_s(szDebugInfo, L"BMP íŒŒì¼ ë¡œë“œ ì„±ê³µ!\n\níŒŒì¼: %s\ní¬ê¸°: %d x %d\në¹„íŠ¸ ìˆ˜: %d\ní‰ë©´ ìˆ˜: %d\në°”ì´íŠ¸/ë¼ì¸: %d",
         _strFilePath.c_str(),
         m_tInfo.bmWidth, m_tInfo.bmHeight,
         m_tInfo.bmBitsPixel, m_tInfo.bmPlanes, m_tInfo.bmWidthBytes);
 
-    // µğ¹ö±ë Á¤º¸ Ç¥½Ã (ÀÓ½Ã)
-    MessageBox(nullptr, szDebugInfo, L"BMP ·Îµù µğ¹ö±×", MB_OK);
+    // ë””ë²„ê¹… ì •ë³´ í‘œì‹œ (ì„ì‹œ)
+    MessageBox(nullptr, szDebugInfo, L"BMP ë¡œë”© ë””ë²„ê·¸", MB_OK);
 
-    // 32ºñÆ®ÀÎÁö È®ÀÎ
+    // 32ë¹„íŠ¸ì¸ì§€ í™•ì¸
     if (m_tInfo.bmBitsPixel == 32)
     {
         m_bHasAlpha = true;
 
-        // DC »ı¼º
+        // DC ìƒì„±
         m_dc = CreateCompatibleDC(CCore::GetInst()->GetMainDC());
         HBITMAP hPrevBit = (HBITMAP)SelectObject(m_dc, m_hBit);
         DeleteObject(hPrevBit);
 
-        // ¾ËÆÄ Ã¤³Î ÀüÃ³¸®
+        // ì•ŒíŒŒ ì±„ë„ ì „ì²˜ë¦¬
         PreprocessAlpha();
     }
     else
     {
-        // 32ºñÆ®°¡ ¾Æ´Ï¸é 24ºñÆ® ¹æ½ÄÀ¸·Î Æú¹é
+        // 32ë¹„íŠ¸ê°€ ì•„ë‹ˆë©´ 24ë¹„íŠ¸ ë°©ì‹ìœ¼ë¡œ í´ë°±
         wchar_t szBuffer[256];
-        swprintf_s(szBuffer, L"ÆÄÀÏÀÌ 32ºñÆ®°¡ ¾Æ´Õ´Ï´Ù (½ÇÁ¦: %dºñÆ®)\n24ºñÆ® ¹æ½ÄÀ¸·Î Ã³¸®ÇÕ´Ï´Ù.", m_tInfo.bmBitsPixel);
-        MessageBox(nullptr, szBuffer, L"ºñÆ® ¼ö ºÒÀÏÄ¡", MB_OK);
+        swprintf_s(szBuffer, L"íŒŒì¼ì´ 32ë¹„íŠ¸ê°€ ì•„ë‹™ë‹ˆë‹¤ (ì‹¤ì œ: %dë¹„íŠ¸)\n24ë¹„íŠ¸ ë°©ì‹ìœ¼ë¡œ ì²˜ë¦¬í•©ë‹ˆë‹¤.", m_tInfo.bmBitsPixel);
+        MessageBox(nullptr, szBuffer, L"ë¹„íŠ¸ ìˆ˜ ë¶ˆì¼ì¹˜", MB_OK);
 
         m_bHasAlpha = false;
         m_dc = CreateCompatibleDC(CCore::GetInst()->GetMainDC());
@@ -164,17 +164,17 @@ void CTexture::PreprocessAlpha()
 {
     if (!m_bHasAlpha) return;
 
-    // 32ºñÆ® ºñÆ®¸ÊÀÇ ¾ËÆÄ Ã¤³Î ÀüÃ³¸®
-    // WindowsÀÇ AlphaBlend´Â Premultiplied Alpha¸¦ »ç¿ëÇÏ¹Ç·Î ÇÊ¿ä½Ã ÀüÃ³¸®
+    // 32ë¹„íŠ¸ ë¹„íŠ¸ë§µì˜ ì•ŒíŒŒ ì±„ë„ ì „ì²˜ë¦¬
+    // Windowsì˜ AlphaBlendëŠ” Premultiplied Alphaë¥¼ ì‚¬ìš©í•˜ë¯€ë¡œ í•„ìš”ì‹œ ì „ì²˜ë¦¬
 
-    // ÇÈ¼¿ µ¥ÀÌÅÍ Á¢±ÙÀ» À§ÇÑ DIBSECTION »ı¼º
+    // í”½ì…€ ë°ì´í„° ì ‘ê·¼ì„ ìœ„í•œ DIBSECTION ìƒì„±
     DIBSECTION dibSection;
     if (GetObject(m_hBit, sizeof(DIBSECTION), &dibSection) == sizeof(DIBSECTION))
     {
         m_pPixelData = (BYTE*)dibSection.dsBm.bmBits;
 
-        // ÇÊ¿äÇÑ °æ¿ì ¾ËÆÄ ÀüÃ³¸® ·ÎÁ÷ Ãß°¡
-        // ¿¹: RGB °ª¿¡ ¾ËÆÄ¸¦ ¹Ì¸® °öÇÏ±â (Premultiplied Alpha)
+        // í•„ìš”í•œ ê²½ìš° ì•ŒíŒŒ ì „ì²˜ë¦¬ ë¡œì§ ì¶”ê°€
+        // ì˜ˆ: RGB ê°’ì— ì•ŒíŒŒë¥¼ ë¯¸ë¦¬ ê³±í•˜ê¸° (Premultiplied Alpha)
         /*
         int pixelCount = m_tInfo.bmWidth * m_tInfo.bmHeight;
         DWORD* pixels = (DWORD*)m_pPixelData;
@@ -199,23 +199,23 @@ void CTexture::RenderWithAlpha(HDC _dc, Vec2 _vPos, Vec2 _vScale, float _fAlpha)
 {
     if (!m_bHasAlpha)
     {
-        // ¾ËÆÄ Ã¤³ÎÀÌ ¾øÀ¸¸é ±âÁ¸ ¹æ½ÄÀ¸·Î Æú¹é
+        // ì•ŒíŒŒ ì±„ë„ì´ ì—†ìœ¼ë©´ ê¸°ì¡´ ë°©ì‹ìœ¼ë¡œ í´ë°±
         RenderWithColorKey(_dc, _vPos, _vScale);
         return;
     }
 
-    // ¾ËÆÄ ºí·»µù ¼³Á¤
+    // ì•ŒíŒŒ ë¸”ë Œë”© ì„¤ì •
     BLENDFUNCTION blend = {};
     blend.BlendOp = AC_SRC_OVER;
     blend.BlendFlags = 0;
     blend.SourceConstantAlpha = (BYTE)(_fAlpha * 255);
-    blend.AlphaFormat = AC_SRC_ALPHA;  // ¼Ò½º¿¡ ¾ËÆÄ Ã¤³Î ÀÖÀ½
+    blend.AlphaFormat = AC_SRC_ALPHA;  // ì†ŒìŠ¤ì— ì•ŒíŒŒ ì±„ë„ ìˆìŒ
 
-    // ·»´õ¸µ À§Ä¡ °è»ê
+    // ë Œë”ë§ ìœ„ì¹˜ ê³„ì‚°
     int destX = (int)(_vPos.x - _vScale.x / 2.f);
     int destY = (int)(_vPos.y - _vScale.y / 2.f);
 
-    // ¾ËÆÄ ºí·»µùÀ¸·Î ·»´õ¸µ
+    // ì•ŒíŒŒ ë¸”ë Œë”©ìœ¼ë¡œ ë Œë”ë§
     AlphaBlend(_dc,
         destX, destY,
         (int)_vScale.x, (int)_vScale.y,
@@ -249,7 +249,7 @@ void CTexture::RenderWithAlpha(HDC _dc, int x, int y, int width, int height, flo
 
 void CTexture::RenderWithColorKey(HDC _dc, Vec2 _vPos, Vec2 _vScale, COLORREF _keyColor)
 {
-    // ±âÁ¸ ¸¶Á¨Å¸ Å° »ö»ó ¹æ½Ä
+    // ê¸°ì¡´ ë§ˆì  íƒ€ í‚¤ ìƒ‰ìƒ ë°©ì‹
     TransparentBlt(_dc,
         (int)(_vPos.x - _vScale.x / 2.f),
         (int)(_vPos.y - _vScale.y / 2.f),
@@ -317,7 +317,7 @@ void CTexture::RenderSpriteWithColorKey(HDC _dc, Vec2 _vPos, Vec2 _vSrcLT, Vec2 
 
 void CTexture::CleanupPixelData()
 {
-    // DIBSECTION¿¡¼­ °¡Á®¿Â ÇÈ¼¿ µ¥ÀÌÅÍ´Â µû·Î ÇØÁ¦ÇÒ ÇÊ¿ä ¾øÀ½
-    // (ºñÆ®¸Ê°ú ÇÔ²² ÀÚµ¿ ÇØÁ¦µÊ)
+    // DIBSECTIONì—ì„œ ê°€ì ¸ì˜¨ í”½ì…€ ë°ì´í„°ëŠ” ë”°ë¡œ í•´ì œí•  í•„ìš” ì—†ìŒ
+    // (ë¹„íŠ¸ë§µê³¼ í•¨ê»˜ ìë™ í•´ì œë¨)
     m_pPixelData = nullptr;
 }

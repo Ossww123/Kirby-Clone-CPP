@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CEditorCameraController.h"
 #include "CEditorCore.h"
 #include "CEditorObjectManager.h"
@@ -11,7 +11,7 @@
 #include "CObject.h"
 
 // ============================================
-// »ý¸íÁÖ±â ÇÔ¼ö
+// ìƒëª…ì£¼ê¸° í•¨ìˆ˜
 // ============================================
 
 CEditorCameraController::CEditorCameraController()
@@ -31,23 +31,23 @@ CEditorCameraController::~CEditorCameraController()
 }
 
 // ============================================
-// ÇÙ½É »ý¸íÁÖ±â ÇÔ¼ö
+// í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜
 // ============================================
 
 void CEditorCameraController::Initialize(CEditorCore* _pCore)
 {
-    // ¿¡µðÅÍ ÄÚ¾î ÂüÁ¶ ¼³Á¤
+    // ì—ë””í„° ì½”ì–´ ì°¸ì¡° ì„¤ì •
     m_pEditorCore = _pCore;
 
-    // Ä«¸Þ¶ó ¹üÀ§ Á¦ÇÑ ¼³Á¤ (½ºÅ×ÀÌÁö ÀÌ¹ÌÁö 4¹è ½ºÄÉÀÏ ±âÁØ)
+    // ì¹´ë©”ë¼ ë²”ìœ„ ì œí•œ ì„¤ì • (ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ 4ë°° ìŠ¤ì¼€ì¼ ê¸°ì¤€)
     m_vCameraBoundsMin = Vec2(0.f, 0.f);
     m_vCameraBoundsMax = Vec2(4096.f, 640.f);
 
-    // ÃÊ±â Ä«¸Þ¶ó À§Ä¡ ¼³Á¤ (È­¸é ÇÏ´Ü ÁÂÃø)
+    // ì´ˆê¸° ì¹´ë©”ë¼ ìœ„ì¹˜ ì„¤ì • (í™”ë©´ í•˜ë‹¨ ì¢Œì¸¡)
     Vec2 vInitialPos = Vec2(0.f, 640.f);
     CCamera::GetInst()->SetLookAt(vInitialPos);
 
-    // »óÅÂ ÃÊ±âÈ­
+    // ìƒíƒœ ì´ˆê¸°í™”
     m_vLastCameraPos = vInitialPos;
     m_bCameraMoving = false;
 }
@@ -59,29 +59,29 @@ void CEditorCameraController::Update()
 }
 
 // ============================================
-// Ä«¸Þ¶ó ¿òÁ÷ÀÓ ³»ºÎ Ã³¸®
+// ì¹´ë©”ë¼ ì›€ì§ìž„ ë‚´ë¶€ ì²˜ë¦¬
 // ============================================
 
 void CEditorCameraController::UpdateCameraMovement()
 {
-    // Å°º¸µå ÀÔ·Â Ã³¸®
+    // í‚¤ë³´ë“œ ìž…ë ¥ ì²˜ë¦¬
     Vec2 vMoveDir = Vec2(0.f, 0.f);
     bool bInputDetected = false;
     ProcessKeyboardInput(vMoveDir, bInputDetected);
 
-    // ÀÔ·ÂÀÌ ÀÖÀ» ¶§¸¸ Ä«¸Þ¶ó ÀÌµ¿
+    // ìž…ë ¥ì´ ìžˆì„ ë•Œë§Œ ì¹´ë©”ë¼ ì´ë™
     if (bInputDetected)
     {
-        // ÀÌµ¿ °Å¸® °è»ê
+        // ì´ë™ ê±°ë¦¬ ê³„ì‚°
         float fCurrentSpeed = GetCurrentSpeed();
         float fDeltaTime = CTimeMgr::GetInst()->GetfDT();
         Vec2 vMovement = vMoveDir * fCurrentSpeed * fDeltaTime;
 
-        // Ä«¸Þ¶ó À§Ä¡ ¾÷µ¥ÀÌÆ®
+        // ì¹´ë©”ë¼ ìœ„ì¹˜ ì—…ë°ì´íŠ¸
         Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
         vCameraPos += vMovement;
 
-        // ¹üÀ§ Á¦ÇÑ Àû¿ë ÈÄ ¼³Á¤
+        // ë²”ìœ„ ì œí•œ ì ìš© í›„ ì„¤ì •
         ApplyCameraBounds(vCameraPos);
         CCamera::GetInst()->SetLookAt(vCameraPos);
 
@@ -95,7 +95,7 @@ void CEditorCameraController::UpdateCameraMovement()
 
 void CEditorCameraController::UpdateCameraState()
 {
-    // Ä«¸Þ¶ó ÀÌµ¿ »óÅÂ ¾÷µ¥ÀÌÆ®
+    // ì¹´ë©”ë¼ ì´ë™ ìƒíƒœ ì—…ë°ì´íŠ¸
     Vec2 vCurrentPos = CCamera::GetInst()->GetLookAt();
     Vec2 vPosDiff = vCurrentPos - m_vLastCameraPos;
 
@@ -109,7 +109,7 @@ void CEditorCameraController::UpdateCameraState()
 
 void CEditorCameraController::ProcessKeyboardInput(Vec2& _vMoveDir, bool& _bInputDetected)
 {
-    // È­»ìÇ¥ Å°·Î Ä«¸Þ¶ó ÀÌµ¿
+    // í™”ì‚´í‘œ í‚¤ë¡œ ì¹´ë©”ë¼ ì´ë™
     if (KEY_HOLD(KEY::UP))
     {
         _vMoveDir.y -= 1.f;
@@ -131,7 +131,7 @@ void CEditorCameraController::ProcessKeyboardInput(Vec2& _vMoveDir, bool& _bInpu
         _bInputDetected = true;
     }
 
-    // ´ë°¢¼± ÀÌµ¿ ½Ã ¼Óµµ Á¤±ÔÈ­
+    // ëŒ€ê°ì„  ì´ë™ ì‹œ ì†ë„ ì •ê·œí™”
     if (_vMoveDir.x != 0.f && _vMoveDir.y != 0.f)
     {
         _vMoveDir.Normalize();
@@ -139,22 +139,22 @@ void CEditorCameraController::ProcessKeyboardInput(Vec2& _vMoveDir, bool& _bInpu
 }
 
 // ============================================
-// ¼Óµµ °è»ê ³»ºÎ ÇÔ¼ö
+// ì†ë„ ê³„ì‚° ë‚´ë¶€ í•¨ìˆ˜
 // ============================================
 
 float CEditorCameraController::GetCurrentSpeed()
 {
-    // Shift Å°: ºü¸¥ ÀÌµ¿
+    // Shift í‚¤: ë¹ ë¥¸ ì´ë™
     if (KEY_HOLD(KEY::SHIFT))
     {
         return m_fFastSpeed;
     }
-    // Ctrl Å°: ´À¸° ÀÌµ¿ (Á¤¹Ð Á¶ÀÛ)
+    // Ctrl í‚¤: ëŠë¦° ì´ë™ (ì •ë°€ ì¡°ìž‘)
     else if (KEY_HOLD(KEY::CTRL))
     {
         return m_fSlowSpeed;
     }
-    // ±âº» ¼Óµµ
+    // ê¸°ë³¸ ì†ë„
     else
     {
         return m_fCameraSpeed;
@@ -162,21 +162,21 @@ float CEditorCameraController::GetCurrentSpeed()
 }
 
 // ============================================
-// Ä«¸Þ¶ó À§Ä¡ Á¦¾î
+// ì¹´ë©”ë¼ ìœ„ì¹˜ ì œì–´
 // ============================================
 
 void CEditorCameraController::SetCameraPosition(Vec2 _vPos)
 {
-    // ¹üÀ§ Á¦ÇÑ Àû¿ë
+    // ë²”ìœ„ ì œí•œ ì ìš©
     ApplyCameraBounds(_vPos);
 
-    // Ä«¸Þ¶ó À§Ä¡ ¼³Á¤
+    // ì¹´ë©”ë¼ ìœ„ì¹˜ ì„¤ì •
     CCamera::GetInst()->SetLookAt(_vPos);
 }
 
 void CEditorCameraController::MoveCameraBy(Vec2 _vOffset)
 {
-    // ÇöÀç À§Ä¡¿¡¼­ ¿ÀÇÁ¼Â¸¸Å­ ÀÌµ¿
+    // í˜„ìž¬ ìœ„ì¹˜ì—ì„œ ì˜¤í”„ì…‹ë§Œí¼ ì´ë™
     Vec2 vCurrentPos = CCamera::GetInst()->GetLookAt();
     SetCameraPosition(vCurrentPos + _vOffset);
 }
@@ -190,7 +190,7 @@ void CEditorCameraController::ResetCameraPosition()
 {
     if (m_pEditorCore && m_pEditorCore->GetWorkingScene())
     {
-        // Ä«¸Þ¶ó¸¦ UI»ó (0,0)À¸·Î ÀÌµ¿ = ½ÇÁ¦ (0, height)
+        // ì¹´ë©”ë¼ë¥¼ UIìƒ (0,0)ìœ¼ë¡œ ì´ë™ = ì‹¤ì œ (0, height)
         Vec2 vMapSize = m_pEditorCore->GetMapSize();
         Vec2 vUIZeroPos = Vec2(0.f, vMapSize.y);
         CCamera::GetInst()->SetLookAt(vUIZeroPos);
@@ -199,41 +199,41 @@ void CEditorCameraController::ResetCameraPosition()
 
 void CEditorCameraController::ResetCameraToOrigin()
 {
-    // È­¸é Áß¾ÓÀ¸·Î Ä«¸Þ¶ó ¸®¼Â
+    // í™”ë©´ ì¤‘ì•™ìœ¼ë¡œ ì¹´ë©”ë¼ ë¦¬ì…‹
     Vec2 vResolution = CCore::GetInst()->GetResolution();
     Vec2 vCenter = Vec2(vResolution.x / 2.f, vResolution.y / 2.f);
     SetCameraPosition(vCenter);
 }
 
 // ============================================
-// Ä«¸Þ¶ó ¹üÀ§ Á¦ÇÑ
+// ì¹´ë©”ë¼ ë²”ìœ„ ì œí•œ
 // ============================================
 
 void CEditorCameraController::SetCameraBounds(Vec2 _vMin, Vec2 _vMax)
 {
-    // ¹üÀ§ ¼³Á¤
+    // ë²”ìœ„ ì„¤ì •
     m_vCameraBoundsMin = _vMin;
     m_vCameraBoundsMax = _vMax;
 
-    // ÇöÀç Ä«¸Þ¶ó À§Ä¡°¡ ¹üÀ§¸¦ ¹þ¾î³µ´Ù¸é Á¶Á¤
+    // í˜„ìž¬ ì¹´ë©”ë¼ ìœ„ì¹˜ê°€ ë²”ìœ„ë¥¼ ë²—ì–´ë‚¬ë‹¤ë©´ ì¡°ì •
     Vec2 vCurrentPos = GetCameraPosition();
     ApplyCameraBounds(vCurrentPos);
     CCamera::GetInst()->SetLookAt(vCurrentPos);
 }
 
 // ============================================
-// ¹üÀ§ Á¦ÇÑ ³»ºÎ Ã³¸®
+// ë²”ìœ„ ì œí•œ ë‚´ë¶€ ì²˜ë¦¬
 // ============================================
 
 void CEditorCameraController::ApplyCameraBounds(Vec2& _vCameraPos)
 {
-    // XÃà ¹üÀ§ Á¦ÇÑ
+    // Xì¶• ë²”ìœ„ ì œí•œ
     if (_vCameraPos.x < m_vCameraBoundsMin.x)
         _vCameraPos.x = m_vCameraBoundsMin.x;
     if (_vCameraPos.x > m_vCameraBoundsMax.x)
         _vCameraPos.x = m_vCameraBoundsMax.x;
 
-    // YÃà ¹üÀ§ Á¦ÇÑ
+    // Yì¶• ë²”ìœ„ ì œí•œ
     if (_vCameraPos.y < m_vCameraBoundsMin.y)
         _vCameraPos.y = m_vCameraBoundsMin.y;
     if (_vCameraPos.y > m_vCameraBoundsMax.y)
@@ -241,7 +241,7 @@ void CEditorCameraController::ApplyCameraBounds(Vec2& _vCameraPos)
 }
 
 // ============================================
-// Getter ÇÔ¼öµé
+// Getter í•¨ìˆ˜ë“¤
 // ============================================
 
 Vec2 CEditorCameraController::GetCameraPosition() const

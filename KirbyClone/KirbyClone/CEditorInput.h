@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 class CEditorCore;
 class CDoor;
@@ -6,36 +6,36 @@ class CDoor;
 class CEditorInput
 {
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     CEditorInput();
     ~CEditorInput();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     void Initialize(CEditorCore* _pCore);
     void Update();
 
 private:
-    // === ÀÔ·Â Ã³¸® ¼¼ºĞÈ­ ===
-    void UpdateGeneralInput();      // ÀÏ¹İ ÀÔ·Â (UI Åä±Û µî)
-    void UpdateFileInput();         // ÆÄÀÏ °ü·Ã ÀÔ·Â
-    void UpdateGridInput();         // ±×¸®µå °ü·Ã ÀÔ·Â
-    void UpdateModeInput();         // ¸ğµå ÀüÈ¯ ÀÔ·Â
-    void UpdateSelectedObjectInput(); // ¼±ÅÃµÈ ¿ÀºêÁ§Æ® ÆíÁı
-    void UpdateMouseInput();        // ¸¶¿ì½º ÀÔ·Â
-    void UpdateObjectSelection();   // ¿ÀºêÁ§Æ® ¼±ÅÃ ÀÔ·Â
+    // === ì…ë ¥ ì²˜ë¦¬ ì„¸ë¶„í™” ===
+    void UpdateGeneralInput();      // ì¼ë°˜ ì…ë ¥ (UI í† ê¸€ ë“±)
+    void UpdateFileInput();         // íŒŒì¼ ê´€ë ¨ ì…ë ¥
+    void UpdateGridInput();         // ê·¸ë¦¬ë“œ ê´€ë ¨ ì…ë ¥
+    void UpdateModeInput();         // ëª¨ë“œ ì „í™˜ ì…ë ¥
+    void UpdateSelectedObjectInput(); // ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ í¸ì§‘
+    void UpdateMouseInput();        // ë§ˆìš°ìŠ¤ ì…ë ¥
+    void UpdateObjectSelection();   // ì˜¤ë¸Œì íŠ¸ ì„ íƒ ì…ë ¥
 
 public:
-    // === ¸¶¿ì½º Ã³¸® ===
+    // === ë§ˆìš°ìŠ¤ ì²˜ë¦¬ ===
     void HandleMouseClick();
     void UpdateMousePosition();
 
 private:
-    // === ¸¶¿ì½º Ã³¸® ³»ºÎ ÇÔ¼ö ===
-    // (HandleMouseClick¿¡¼­ »ç¿ëÇÏ´Â ³»ºÎ ·ÎÁ÷µé)
+    // === ë§ˆìš°ìŠ¤ ì²˜ë¦¬ ë‚´ë¶€ í•¨ìˆ˜ ===
+    // (HandleMouseClickì—ì„œ ì‚¬ìš©í•˜ëŠ” ë‚´ë¶€ ë¡œì§ë“¤)
 
 public:
-    // === ¸ğµåº° ÀÔ·Â Ã³¸® ===
+    // === ëª¨ë“œë³„ ì…ë ¥ ì²˜ë¦¬ ===
     void HandleModeSpecificInput();
     void HandleBackgroundModeInput();
     void HandleTileModeInput();
@@ -46,7 +46,7 @@ private:
     void ShowDoorPropertyChanged(CDoor* _pDoor, const wchar_t* _message);
 
 private:
-    // === ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Ã³¸® ===
+    // === ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì²˜ë¦¬ ===
     void HandleStageImageClick();
     void ResetStageImageToBottomLeft();
     void PrevStageImage();
@@ -54,8 +54,8 @@ private:
     void LoadCustomStageImage();
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
 
-    // === ¿¡µğÅÍ ÄÚ¾î ÂüÁ¶ ===
-    CEditorCore* m_pEditorCore;     // ¿¡µğÅÍ ÄÚ¾î ÂüÁ¶
+    // === ì—ë””í„° ì½”ì–´ ì°¸ì¡° ===
+    CEditorCore* m_pEditorCore;     // ì—ë””í„° ì½”ì–´ ì°¸ì¡°
 };

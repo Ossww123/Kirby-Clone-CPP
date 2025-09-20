@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "gamePCH.h"
 #include "CCamera.h"
 
 #include "CObject.h"

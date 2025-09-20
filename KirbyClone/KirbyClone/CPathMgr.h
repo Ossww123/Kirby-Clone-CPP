@@ -1,12 +1,12 @@
-#pragma once
+ï»¿#pragma once
 
 class CPathMgr
 {
     SINGLE(CPathMgr);
 
 private:
-    wstring m_strContentPath;   // Content Æú´õ °æ·Î
-    wstring m_strRelativePath;  // »ó´ë °æ·Î
+    wstring m_strContentPath;   // Content í´ë” ê²½ë¡œ
+    wstring m_strRelativePath;  // ìƒëŒ€ ê²½ë¡œ
 
 public:
     void init();

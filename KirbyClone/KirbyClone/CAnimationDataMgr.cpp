@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CAnimationDataMgr.h"
 #include "CAnimator.h"
 #include "CAnimation.h"
@@ -16,23 +16,23 @@ CAnimationDataMgr::~CAnimationDataMgr()
 {
 }
 
-// === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+// === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
 void CAnimationDataMgr::init()
 {
-    // ¾Ö´Ï¸ŞÀÌ¼Ç µğ·ºÅä¸® °æ·Î ¼³Á¤
+    // ì• ë‹ˆë©”ì´ì…˜ ë””ë ‰í† ë¦¬ ê²½ë¡œ ì„¤ì •
     wstring strContentPath = CPathMgr::GetInst()->GetContentPath();
     m_strAnimationDir = strContentPath + L"animation\\";
 
-    // µğ·ºÅä¸®°¡ ¾øÀ¸¸é »ı¼º
+    // ë””ë ‰í† ë¦¬ê°€ ì—†ìœ¼ë©´ ìƒì„±
     CreateDirectory(m_strAnimationDir.c_str(), nullptr);
 }
 
-// === ÆÄÀÏ ÀÔÃâ·Â ===
+// === íŒŒì¼ ì…ì¶œë ¥ ===
 tAnimationFileData CAnimationDataMgr::LoadAnimationFile(const wstring& _strFilePath)
 {
     tAnimationFileData result;
 
-    // Ä³½Ã È®ÀÎ
+    // ìºì‹œ í™•ì¸
     if (m_bUseCaching)
     {
         auto iter = m_mapCachedData.find(_strFilePath);
@@ -42,24 +42,24 @@ tAnimationFileData CAnimationDataMgr::LoadAnimationFile(const wstring& _strFileP
         }
     }
 
-    // ÆÄÀÏ ÀĞ±â
+    // íŒŒì¼ ì½ê¸°
     wstring strJsonContent = ReadTextFile(_strFilePath);
     if (strJsonContent.empty())
     {
         return result;
     }
 
-    // JSON ÆÄ½Ì
+    // JSON íŒŒì‹±
     result = ParseJsonToAnimationData(strJsonContent);
 
-    // À¯È¿¼º °Ë»ç
+    // ìœ íš¨ì„± ê²€ì‚¬
     if (!ValidateAnimationData(result))
     {
-        result = tAnimationFileData(); // ºó µ¥ÀÌÅÍ ¹İÈ¯
+        result = tAnimationFileData(); // ë¹ˆ ë°ì´í„° ë°˜í™˜
         return result;
     }
 
-    // Ä³½Ã ÀúÀå
+    // ìºì‹œ ì €ì¥
     if (m_bUseCaching)
     {
         m_mapCachedData[_strFilePath] = result;
@@ -70,23 +70,23 @@ tAnimationFileData CAnimationDataMgr::LoadAnimationFile(const wstring& _strFileP
 
 bool CAnimationDataMgr::SaveAnimationFile(const wstring& _strFilePath, const tAnimationFileData& _data)
 {
-    // À¯È¿¼º °Ë»ç
+    // ìœ íš¨ì„± ê²€ì‚¬
     if (!ValidateAnimationData(_data))
     {
         return false;
     }
 
-    // JSON Á÷·ÄÈ­
+    // JSON ì§ë ¬í™”
     wstring strJsonContent = SerializeAnimationDataToJson(_data);
     if (strJsonContent.empty())
     {
         return false;
     }
 
-    // ÆÄÀÏ ¾²±â
+    // íŒŒì¼ ì“°ê¸°
     bool bSuccess = WriteTextFile(_strFilePath, strJsonContent);
 
-    // Ä³½Ã ¾÷µ¥ÀÌÆ®
+    // ìºì‹œ ì—…ë°ì´íŠ¸
     if (bSuccess && m_bUseCaching)
     {
         m_mapCachedData[_strFilePath] = _data;
@@ -95,29 +95,29 @@ bool CAnimationDataMgr::SaveAnimationFile(const wstring& _strFilePath, const tAn
     return bSuccess;
 }
 
-// === °ÔÀÓ ·±Å¸ÀÓ Áö¿ø ===
+// === ê²Œì„ ëŸ°íƒ€ì„ ì§€ì› ===
 void CAnimationDataMgr::LoadAnimationsIntoAnimator(CAnimator* _pAnimator, const wstring& _strFilePath)
 {
     if (!_pAnimator)
         return;
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ÆÄÀÏ ·Îµå
+    // ì• ë‹ˆë©”ì´ì…˜ íŒŒì¼ ë¡œë“œ
     tAnimationFileData fileData = LoadAnimationFile(_strFilePath);
     if (fileData.mapAnimations.empty())
         return;
 
-    // ÅØ½ºÃ³ ·Îµå
+    // í…ìŠ¤ì²˜ ë¡œë“œ
     CTexture* pTexture = CResMgr::GetInst()->LoadTexture(fileData.strTexturePath, fileData.strTexturePath);
     if (!pTexture)
         return;
 
-    // °¢ ¾Ö´Ï¸ŞÀÌ¼ÇÀ» CAnimator¿¡ Ãß°¡
+    // ê° ì• ë‹ˆë©”ì´ì…˜ì„ CAnimatorì— ì¶”ê°€
     for (auto& pair : fileData.mapAnimations)
     {
         const wstring& strAnimName = pair.first;
         const tAnimationData& animData = pair.second;
 
-        // CAnimation °´Ã¼ »ı¼º
+        // CAnimation ê°ì²´ ìƒì„±
         CAnimation* pAnim = CreateTemporaryAnimation(animData, pTexture);
         if (pAnim)
         {
@@ -126,19 +126,19 @@ void CAnimationDataMgr::LoadAnimationsIntoAnimator(CAnimator* _pAnimator, const 
     }
 }
 
-// === ¿¡µğÅÍ Áö¿ø ±â´Éµé ===
+// === ì—ë””í„° ì§€ì› ê¸°ëŠ¥ë“¤ ===
 CAnimation* CAnimationDataMgr::CreateTemporaryAnimation(const tAnimationData& _data, CTexture* _pTexture)
 {
     if (!_pTexture || _data.vecFrames.empty())
         return nullptr;
 
-    // CAnimation °´Ã¼ »ı¼º
+    // CAnimation ê°ì²´ ìƒì„±
     CAnimation* pAnim = new CAnimation;
     pAnim->SetName(_data.strName);
     pAnim->SetTexture(_pTexture);
     pAnim->SetLoop(_data.bLoop);
 
-    // ÇÁ·¹ÀÓ µ¥ÀÌÅÍ Ãß°¡
+    // í”„ë ˆì„ ë°ì´í„° ì¶”ê°€
     for (const auto& frameData : _data.vecFrames)
     {
         pAnim->AddFrame(frameData.vLT, frameData.vSlice, frameData.fDuration);
@@ -151,21 +151,21 @@ vector<wstring> CAnimationDataMgr::GetAllAnimationFiles(const wstring& _strDirec
 {
     vector<wstring> result;
 
-    // °Ë»öÇÒ µğ·ºÅä¸® °æ·Î ±¸¼º
+    // ê²€ìƒ‰í•  ë””ë ‰í† ë¦¬ ê²½ë¡œ êµ¬ì„±
     wstring searchPath = _strDirectory;
     if (searchPath.empty())
     {
         searchPath = m_strAnimationDir;
     }
 
-    // ¿ÍÀÏµåÄ«µå ÆĞÅÏ Ãß°¡
+    // ì™€ì¼ë“œì¹´ë“œ íŒ¨í„´ ì¶”ê°€
     if (searchPath.back() != L'\\')
     {
         searchPath += L"\\";
     }
     searchPath += L"*.json";
 
-    // Windows API·Î ÆÄÀÏ °Ë»ö
+    // Windows APIë¡œ íŒŒì¼ ê²€ìƒ‰
     WIN32_FIND_DATA findData;
     HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
 
@@ -173,12 +173,12 @@ vector<wstring> CAnimationDataMgr::GetAllAnimationFiles(const wstring& _strDirec
     {
         do
         {
-            // µğ·ºÅä¸®°¡ ¾Æ´Ñ ÆÄÀÏ¸¸ Ãß°¡
+            // ë””ë ‰í† ë¦¬ê°€ ì•„ë‹Œ íŒŒì¼ë§Œ ì¶”ê°€
             if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             {
                 wstring fileName = findData.cFileName;
 
-                // ÀüÃ¼ °æ·Î ±¸¼º
+                // ì „ì²´ ê²½ë¡œ êµ¬ì„±
                 wstring fullPath = _strDirectory;
                 if (fullPath.empty())
                 {
@@ -202,12 +202,12 @@ vector<wstring> CAnimationDataMgr::GetAllAnimationFiles(const wstring& _strDirec
 
 bool CAnimationDataMgr::IsValidAnimationFile(const wstring& _strFilePath)
 {
-    // ÆÄÀÏ Á¸Àç È®ÀÎ
+    // íŒŒì¼ ì¡´ì¬ í™•ì¸
     DWORD dwAttrib = GetFileAttributes(_strFilePath.c_str());
     if (dwAttrib == INVALID_FILE_ATTRIBUTES)
         return false;
 
-    // È®ÀåÀÚ È®ÀÎ
+    // í™•ì¥ì í™•ì¸
     size_t dotPos = _strFilePath.find_last_of(L'.');
     if (dotPos == wstring::npos)
         return false;
@@ -216,7 +216,7 @@ bool CAnimationDataMgr::IsValidAnimationFile(const wstring& _strFilePath)
     return (extension == L".json" || extension == L".anim");
 }
 
-// === À¯Æ¿¸®Æ¼ ÇÔ¼öµé ===
+// === ìœ í‹¸ë¦¬í‹° í•¨ìˆ˜ë“¤ ===
 tAnimationData CAnimationDataMgr::ConvertFromCAnimation(CAnimation* _pAnim)
 {
     tAnimationData result;
@@ -226,36 +226,36 @@ tAnimationData CAnimationDataMgr::ConvertFromCAnimation(CAnimation* _pAnim)
 
     result.strName = _pAnim->GetName();
 
-    // ÇÁ·¹ÀÓ µ¥ÀÌÅÍ º¯È¯
+    // í”„ë ˆì„ ë°ì´í„° ë³€í™˜
     int frameCount = _pAnim->GetMaxFrame();
     for (int i = 0; i < frameCount; ++i)
     {
         tAnimFrame& frame = _pAnim->GetFrame(i);
-        result.vecFrames.push_back(frame);  // Á÷Á¢ Ãß°¡ °¡´É
+        result.vecFrames.push_back(frame);  // ì§ì ‘ ì¶”ê°€ ê°€ëŠ¥
     }
 
     return result;
 }
 
-// Å×½ºÆ®¿ë ÇÔ¼öµé
+// í…ŒìŠ¤íŠ¸ìš© í•¨ìˆ˜ë“¤
 bool CAnimationDataMgr::CreateSampleAnimationFile(const wstring& _strFileName)
 {
-    // »ùÇÃ ¾Ö´Ï¸ŞÀÌ¼Ç ÆÄÀÏ µ¥ÀÌÅÍ »ı¼º
+    // ìƒ˜í”Œ ì• ë‹ˆë©”ì´ì…˜ íŒŒì¼ ë°ì´í„° ìƒì„±
     tAnimationFileData sampleData;
-    sampleData.strTexturePath = L"texture\\kirby\\kirby.bmp";  // ¿Ã¹Ù¸¥ °æ·Î·Î ¼öÁ¤
+    sampleData.strTexturePath = L"texture\\kirby\\kirby.bmp";  // ì˜¬ë°”ë¥¸ ê²½ë¡œë¡œ ìˆ˜ì •
     sampleData.vSpriteSize = Vec2(32.f, 32.f);
     sampleData.iBorder = 1;
 
-    // IDLE ¾Ö´Ï¸ŞÀÌ¼Ç »ı¼º
+    // IDLE ì• ë‹ˆë©”ì´ì…˜ ìƒì„±
     tAnimationData idleAnim;
     idleAnim.strName = L"IDLE";
     idleAnim.bLoop = true;
 
-    // IDLE ÇÁ·¹ÀÓµé
-    tAnimFrame frame1(Vec2(1.f, 1.f), Vec2(32.f, 32.f), 2.0f);      // 2ÃÊ ´ë±â
-    tAnimFrame frame2(Vec2(33.f, 1.f), Vec2(32.f, 32.f), 0.1f);     // ±ôºıÀÓ
-    tAnimFrame frame3(Vec2(1.f, 1.f), Vec2(32.f, 32.f), 1.0f);      // 1ÃÊ ´ë±â
-    tAnimFrame frame4(Vec2(33.f, 1.f), Vec2(32.f, 32.f), 0.1f);     // ±ôºıÀÓ
+    // IDLE í”„ë ˆì„ë“¤
+    tAnimFrame frame1(Vec2(1.f, 1.f), Vec2(32.f, 32.f), 2.0f);      // 2ì´ˆ ëŒ€ê¸°
+    tAnimFrame frame2(Vec2(33.f, 1.f), Vec2(32.f, 32.f), 0.1f);     // ê¹œë¹¡ì„
+    tAnimFrame frame3(Vec2(1.f, 1.f), Vec2(32.f, 32.f), 1.0f);      // 1ì´ˆ ëŒ€ê¸°
+    tAnimFrame frame4(Vec2(33.f, 1.f), Vec2(32.f, 32.f), 0.1f);     // ê¹œë¹¡ì„
 
     idleAnim.vecFrames.push_back(frame1);
     idleAnim.vecFrames.push_back(frame2);
@@ -264,7 +264,7 @@ bool CAnimationDataMgr::CreateSampleAnimationFile(const wstring& _strFileName)
 
     sampleData.mapAnimations[L"IDLE"] = idleAnim;
 
-    // ÆÄÀÏ ÀúÀå
+    // íŒŒì¼ ì €ì¥
     wstring fullPath = GetFullPath(_strFileName);
     return SaveAnimationFile(fullPath, sampleData);
 }
@@ -273,14 +273,14 @@ bool CAnimationDataMgr::TestLoadAnimationFile(const wstring& _strFileName)
 {
     MessageBox(nullptr, (L"Testing load of: " + _strFileName).c_str(), L"Debug", MB_OK);
 
-    // ÆÄÀÏ ·Îµå Å×½ºÆ®
+    // íŒŒì¼ ë¡œë“œ í…ŒìŠ¤íŠ¸
     tAnimationFileData loadedData = LoadAnimationFile(_strFileName);
 
-    // ·Îµå °á°ú È®ÀÎ
+    // ë¡œë“œ ê²°ê³¼ í™•ì¸
     bool bSuccess = true;
     wstring errorMsg = L"";
 
-    // ±âº» Á¤º¸ È®ÀÎ
+    // ê¸°ë³¸ ì •ë³´ í™•ì¸
     if (loadedData.strTexturePath.empty())
     {
         bSuccess = false;
@@ -293,7 +293,7 @@ bool CAnimationDataMgr::TestLoadAnimationFile(const wstring& _strFileName)
         errorMsg += L"No animations found\n";
     }
 
-    // °á°ú Ãâ·Â (µğ¹ö±×¿ë)
+    // ê²°ê³¼ ì¶œë ¥ (ë””ë²„ê·¸ìš©)
     if (bSuccess)
     {
         wstring msg = L"Animation file loaded successfully!\n";
@@ -318,41 +318,41 @@ bool CAnimationDataMgr::TestLoadAnimationFile(const wstring& _strFileName)
 
 bool CAnimationDataMgr::TestDirectLoad()
 {
-    // Á÷Á¢ ·Îµå Å×½ºÆ®
+    // ì§ì ‘ ë¡œë“œ í…ŒìŠ¤íŠ¸
     wstring testPath = m_strAnimationDir + L"test_direct.json";
 
-    // Å×½ºÆ® ÆÄÀÏÀÌ Á¸ÀçÇÏ´ÂÁö È®ÀÎ
+    // í…ŒìŠ¤íŠ¸ íŒŒì¼ì´ ì¡´ì¬í•˜ëŠ”ì§€ í™•ì¸
     DWORD dwAttrib = GetFileAttributes(testPath.c_str());
     if (dwAttrib == INVALID_FILE_ATTRIBUTES)
     {
         return false;
     }
 
-    // ·Îµå ½Ãµµ
+    // ë¡œë“œ ì‹œë„
     tAnimationFileData data = LoadAnimationFile(testPath);
     return !data.mapAnimations.empty();
 }
 
-// === JSON ÆÄ½Ì °ü·Ã ³»ºÎ ±¸Çö ===
+// === JSON íŒŒì‹± ê´€ë ¨ ë‚´ë¶€ êµ¬í˜„ ===
 tAnimationFileData CAnimationDataMgr::ParseJsonToAnimationData(const wstring& _strJsonContent)
 {
     tAnimationFileData result;
 
-    // ÅØ½ºÃ³ °æ·Î ÆÄ½Ì (Å° ÀÌ¸§ ¼öÁ¤)
+    // í…ìŠ¤ì²˜ ê²½ë¡œ íŒŒì‹± (í‚¤ ì´ë¦„ ìˆ˜ì •)
     size_t texturePos = _strJsonContent.find(L"\"texturePath\"");
     if (texturePos != wstring::npos)
     {
         result.strTexturePath = ExtractStringFromJson(_strJsonContent, texturePos);
     }
 
-    // ½ºÇÁ¶óÀÌÆ® Å©±â ÆÄ½Ì (Å° ÀÌ¸§ ¼öÁ¤)
+    // ìŠ¤í”„ë¼ì´íŠ¸ í¬ê¸° íŒŒì‹± (í‚¤ ì´ë¦„ ìˆ˜ì •)
     size_t spriteSizePos = _strJsonContent.find(L"\"spriteSize\"");
     if (spriteSizePos != wstring::npos)
     {
         result.vSpriteSize = ExtractVec2FromJson(_strJsonContent, spriteSizePos);
     }
 
-    // º¸´õ °ª ÆÄ½Ì
+    // ë³´ë” ê°’ íŒŒì‹±
     size_t borderPos = _strJsonContent.find(L"\"border\"");
     if (borderPos != wstring::npos)
     {
@@ -360,7 +360,7 @@ tAnimationFileData CAnimationDataMgr::ParseJsonToAnimationData(const wstring& _s
         result.iBorder = _wtoi(borderStr.c_str());
     }
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ¼½¼Ç ÆÄ½Ì
+    // ì• ë‹ˆë©”ì´ì…˜ ì„¹ì…˜ íŒŒì‹±
     size_t animationsPos = _strJsonContent.find(L"\"animations\"");
     if (animationsPos != wstring::npos)
     {
@@ -374,19 +374,19 @@ wstring CAnimationDataMgr::SerializeAnimationDataToJson(const tAnimationFileData
 {
     wstring result = L"{\n";
 
-    // ÅØ½ºÃ³ °æ·Î (Å° ÀÌ¸§ ¼öÁ¤)
+    // í…ìŠ¤ì²˜ ê²½ë¡œ (í‚¤ ì´ë¦„ ìˆ˜ì •)
     result += L"  \"texturePath\": \"" + _data.strTexturePath + L"\",\n";
 
-    // ½ºÇÁ¶óÀÌÆ® Å©±â (Å° ÀÌ¸§ ¼öÁ¤)
+    // ìŠ¤í”„ë¼ì´íŠ¸ í¬ê¸° (í‚¤ ì´ë¦„ ìˆ˜ì •)
     result += L"  \"spriteSize\": {\n";
     result += L"    \"x\": " + to_wstring(_data.vSpriteSize.x) + L",\n";
     result += L"    \"y\": " + to_wstring(_data.vSpriteSize.y) + L"\n";
     result += L"  },\n";
 
-    // º¸´õ
+    // ë³´ë”
     result += L"  \"border\": " + to_wstring(_data.iBorder) + L",\n";
 
-    // ¾Ö´Ï¸ŞÀÌ¼Çµé
+    // ì• ë‹ˆë©”ì´ì…˜ë“¤
     result += L"  \"animations\": {\n";
 
     size_t animCount = 0;
@@ -424,7 +424,7 @@ wstring CAnimationDataMgr::SerializeAnimationDataToJson(const tAnimationFileData
     return result;
 }
 
-// JSON ÆÄ½Ì µµ¿ì¹Ì ÇÔ¼öµé
+// JSON íŒŒì‹± ë„ìš°ë¯¸ í•¨ìˆ˜ë“¤
 wstring CAnimationDataMgr::ExtractNumberFromJson(const wstring& _content, size_t _startPos)
 {
     size_t colonPos = _content.find(L':', _startPos);
@@ -461,17 +461,17 @@ Vec2 CAnimationDataMgr::ExtractVec2FromJson(const wstring& _content, size_t _sta
 {
     Vec2 result;
 
-    // Áß°ıÈ£ ¹üÀ§ Ã£±â { ... }
+    // ì¤‘ê´„í˜¸ ë²”ìœ„ ì°¾ê¸° { ... }
     size_t braceStart = _content.find(L'{', _startPos);
     if (braceStart == wstring::npos) return result;
 
     size_t braceEnd = _content.find(L'}', braceStart);
     if (braceEnd == wstring::npos) return result;
 
-    // Áß°ıÈ£ ¾ÈÀÇ ³»¿ë¸¸ ÃßÃâ
+    // ì¤‘ê´„í˜¸ ì•ˆì˜ ë‚´ìš©ë§Œ ì¶”ì¶œ
     wstring vec2Content = _content.substr(braceStart, braceEnd - braceStart + 1);
 
-    // x °ª ÃßÃâ (Áß°ıÈ£ ¹üÀ§ ³»¿¡¼­¸¸)
+    // x ê°’ ì¶”ì¶œ (ì¤‘ê´„í˜¸ ë²”ìœ„ ë‚´ì—ì„œë§Œ)
     size_t xPos = vec2Content.find(L"\"x\"");
     if (xPos != wstring::npos)
     {
@@ -479,7 +479,7 @@ Vec2 CAnimationDataMgr::ExtractVec2FromJson(const wstring& _content, size_t _sta
         result.x = (float)_wtof(xStr.c_str());
     }
 
-    // y °ª ÃßÃâ (Áß°ıÈ£ ¹üÀ§ ³»¿¡¼­¸¸)
+    // y ê°’ ì¶”ì¶œ (ì¤‘ê´„í˜¸ ë²”ìœ„ ë‚´ì—ì„œë§Œ)
     size_t yPos = vec2Content.find(L"\"y\"");
     if (yPos != wstring::npos)
     {
@@ -498,7 +498,7 @@ void CAnimationDataMgr::ParseAnimationsSection(const wstring& _content, size_t _
     size_t braceEnd = braceStart + 1;
     int braceCount = 1;
 
-    // ÁßÃ¸µÈ Áß°ıÈ£ Ã³¸®
+    // ì¤‘ì²©ëœ ì¤‘ê´„í˜¸ ì²˜ë¦¬
     while (braceEnd < _content.length() && braceCount > 0)
     {
         if (_content[braceEnd] == L'{') braceCount++;
@@ -508,7 +508,7 @@ void CAnimationDataMgr::ParseAnimationsSection(const wstring& _content, size_t _
 
     wstring animSection = _content.substr(braceStart + 1, braceEnd - braceStart - 2);
 
-    // °¢ ¾Ö´Ï¸ŞÀÌ¼Ç ÆÄ½Ì
+    // ê° ì• ë‹ˆë©”ì´ì…˜ íŒŒì‹±
     size_t searchPos = 0;
     int foundAnimations = 0;
 
@@ -528,7 +528,7 @@ void CAnimationDataMgr::ParseAnimationsSection(const wstring& _content, size_t _
         size_t animDataStart = animSection.find(L'{', colonPos);
         if (animDataStart == wstring::npos) break;
 
-        // ¾Ö´Ï¸ŞÀÌ¼Ç µ¥ÀÌÅÍ ºí·ÏÀÇ ³¡ Ã£±â
+        // ì• ë‹ˆë©”ì´ì…˜ ë°ì´í„° ë¸”ë¡ì˜ ë ì°¾ê¸°
         size_t animDataEnd = animDataStart + 1;
         int innerBraceCount = 1;
         while (animDataEnd < animSection.length() && innerBraceCount > 0)
@@ -540,7 +540,7 @@ void CAnimationDataMgr::ParseAnimationsSection(const wstring& _content, size_t _
 
         if (innerBraceCount == 0)
         {
-            // ´ÜÀÏ ¾Ö´Ï¸ŞÀÌ¼Ç ÆÄ½Ì
+            // ë‹¨ì¼ ì• ë‹ˆë©”ì´ì…˜ íŒŒì‹±
             tAnimationData animData = ParseSingleAnimation(animSection, animDataStart, animDataEnd);
             animData.strName = animName;
             _result.mapAnimations[animName] = animData;
@@ -557,7 +557,7 @@ tAnimationData CAnimationDataMgr::ParseSingleAnimation(const wstring& _content, 
 
     wstring animContent = _content.substr(_startPos, _endPos - _startPos);
 
-    // loop ÆÄ½Ì
+    // loop íŒŒì‹±
     size_t loopPos = animContent.find(L"\"loop\"");
     if (loopPos != wstring::npos)
     {
@@ -574,7 +574,7 @@ tAnimationData CAnimationDataMgr::ParseSingleAnimation(const wstring& _content, 
         }
     }
 
-    // frames ¹è¿­ ÆÄ½Ì
+    // frames ë°°ì—´ íŒŒì‹±
     size_t framesPos = animContent.find(L"\"frames\"");
     if (framesPos != wstring::npos)
     {
@@ -585,14 +585,14 @@ tAnimationData CAnimationDataMgr::ParseSingleAnimation(const wstring& _content, 
         {
             wstring framesContent = animContent.substr(arrayStart + 1, arrayEnd - arrayStart - 1);
 
-            // ÁßÃ¸µÈ Áß°ıÈ£ Ã³¸®·Î ÇÁ·¹ÀÓ ÆÄ½Ì
+            // ì¤‘ì²©ëœ ì¤‘ê´„í˜¸ ì²˜ë¦¬ë¡œ í”„ë ˆì„ íŒŒì‹±
             size_t searchPos = 0;
             while (searchPos < framesContent.length())
             {
                 size_t frameStart = framesContent.find(L'{', searchPos);
                 if (frameStart == wstring::npos) break;
 
-                // ÁßÃ¸µÈ Áß°ıÈ£ ³¡ Ã£±â
+                // ì¤‘ì²©ëœ ì¤‘ê´„í˜¸ ë ì°¾ê¸°
                 size_t frameEnd = frameStart + 1;
                 int braceCount = 1;
                 while (frameEnd < framesContent.length() && braceCount > 0)
@@ -622,21 +622,21 @@ tAnimFrame CAnimationDataMgr::ParseSingleFrame(const wstring& _content, size_t _
 
     wstring frameContent = _content.substr(_startPos, _endPos - _startPos);
 
-    // vLT ÆÄ½Ì
+    // vLT íŒŒì‹±
     size_t vltPos = frameContent.find(L"\"vLT\"");
     if (vltPos != wstring::npos)
     {
         result.vLT = ExtractVec2FromJson(frameContent, vltPos);
     }
 
-    // vSlice ÆÄ½Ì
+    // vSlice íŒŒì‹±
     size_t vslicePos = frameContent.find(L"\"vSlice\"");
     if (vslicePos != wstring::npos)
     {
         result.vSlice = ExtractVec2FromJson(frameContent, vslicePos);
     }
 
-    // fDuration ÆÄ½Ì
+    // fDuration íŒŒì‹±
     size_t durationPos = frameContent.find(L"\"fDuration\"");
     if (durationPos != wstring::npos)
     {
@@ -647,7 +647,7 @@ tAnimFrame CAnimationDataMgr::ParseSingleFrame(const wstring& _content, size_t _
     return result;
 }
 
-// === ÆÄÀÏ Ã³¸® ³»ºÎ ±¸Çö ===
+// === íŒŒì¼ ì²˜ë¦¬ ë‚´ë¶€ êµ¬í˜„ ===
 wstring CAnimationDataMgr::ReadTextFile(const wstring& _strFilePath)
 {
     wstring strFullPath = GetFullPath(_strFilePath);
@@ -663,7 +663,7 @@ wstring CAnimationDataMgr::ReadTextFile(const wstring& _strFilePath)
         return L"";
     }
 
-    // UTF-8 µ¥ÀÌÅÍ ÀĞ±â
+    // UTF-8 ë°ì´í„° ì½ê¸°
     vector<char> buffer(dwFileSize + 1);
     DWORD dwBytesRead = 0;
     bool bReadResult = ReadFile(hFile, buffer.data(), dwFileSize, &dwBytesRead, nullptr);
@@ -674,7 +674,7 @@ wstring CAnimationDataMgr::ReadTextFile(const wstring& _strFilePath)
 
     buffer[dwBytesRead] = '\0';
 
-    // UTF-8À» Wide StringÀ¸·Î º¯È¯
+    // UTF-8ì„ Wide Stringìœ¼ë¡œ ë³€í™˜
     int wideSize = MultiByteToWideChar(CP_UTF8, 0, buffer.data(), dwBytesRead, nullptr, 0);
     if (wideSize == 0)
         return L"";
@@ -689,7 +689,7 @@ bool CAnimationDataMgr::WriteTextFile(const wstring& _strFilePath, const wstring
 {
     wstring strFullPath = GetFullPath(_strFilePath);
 
-    // Wide StringÀ» UTF-8·Î º¯È¯
+    // Wide Stringì„ UTF-8ë¡œ ë³€í™˜
     int utf8Size = WideCharToMultiByte(CP_UTF8, 0, _strContent.c_str(), -1, nullptr, 0, nullptr, nullptr);
     if (utf8Size == 0)
         return false;
@@ -704,7 +704,7 @@ bool CAnimationDataMgr::WriteTextFile(const wstring& _strFilePath, const wstring
         return false;
 
     DWORD dwBytesWritten = 0;
-    bool bWriteResult = WriteFile(hFile, utf8Buffer.data(), utf8Size - 1, &dwBytesWritten, nullptr); // -1·Î null terminator Á¦¿Ü
+    bool bWriteResult = WriteFile(hFile, utf8Buffer.data(), utf8Size - 1, &dwBytesWritten, nullptr); // -1ë¡œ null terminator ì œì™¸
     CloseHandle(hFile);
 
     bool bSuccess = bWriteResult && (dwBytesWritten == utf8Size - 1);
@@ -714,8 +714,8 @@ bool CAnimationDataMgr::WriteTextFile(const wstring& _strFilePath, const wstring
 
 wstring CAnimationDataMgr::GetFullPath(const wstring& _strRelativePath)
 {
-    // »ó´ë °æ·Î¸é ¾Ö´Ï¸ŞÀÌ¼Ç µğ·ºÅä¸®¿Í ÇÕÄ¡±â
-    if (_strRelativePath.find(L':') == wstring::npos) // Àı´ë °æ·Î°¡ ¾Æ´Ï¸é
+    // ìƒëŒ€ ê²½ë¡œë©´ ì• ë‹ˆë©”ì´ì…˜ ë””ë ‰í† ë¦¬ì™€ í•©ì¹˜ê¸°
+    if (_strRelativePath.find(L':') == wstring::npos) // ì ˆëŒ€ ê²½ë¡œê°€ ì•„ë‹ˆë©´
     {
         return m_strAnimationDir + _strRelativePath;
     }
@@ -723,33 +723,33 @@ wstring CAnimationDataMgr::GetFullPath(const wstring& _strRelativePath)
     return _strRelativePath;
 }
 
-// === À¯È¿¼º °Ë»ç ===
+// === ìœ íš¨ì„± ê²€ì‚¬ ===
 bool CAnimationDataMgr::ValidateAnimationData(const tAnimationFileData& _data)
 {
-    // ÅØ½ºÃ³ °æ·Î È®ÀÎ
+    // í…ìŠ¤ì²˜ ê²½ë¡œ í™•ì¸
     if (_data.strTexturePath.empty())
     {
         return false;
     }
 
-    // ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ÇÏ³ª¶óµµ ÀÖ´ÂÁö È®ÀÎ
+    // ì• ë‹ˆë©”ì´ì…˜ì´ í•˜ë‚˜ë¼ë„ ìˆëŠ”ì§€ í™•ì¸
     if (_data.mapAnimations.empty())
     {
         return false;
     }
 
-    // °¢ ¾Ö´Ï¸ŞÀÌ¼Ç À¯È¿¼º °Ë»ç
+    // ê° ì• ë‹ˆë©”ì´ì…˜ ìœ íš¨ì„± ê²€ì‚¬
     for (const auto& pair : _data.mapAnimations)
     {
         const tAnimationData& animData = pair.second;
 
-        // ÇÁ·¹ÀÓÀÌ ÀÖ´ÂÁö È®ÀÎ
+        // í”„ë ˆì„ì´ ìˆëŠ”ì§€ í™•ì¸
         if (animData.vecFrames.empty())
         {
             return false;
         }
 
-        // °¢ ÇÁ·¹ÀÓ À¯È¿¼º °Ë»ç
+        // ê° í”„ë ˆì„ ìœ íš¨ì„± ê²€ì‚¬
         for (size_t i = 0; i < animData.vecFrames.size(); ++i)
         {
             if (!ValidateFrameData(animData.vecFrames[i]))
@@ -764,13 +764,13 @@ bool CAnimationDataMgr::ValidateAnimationData(const tAnimationFileData& _data)
 
 bool CAnimationDataMgr::ValidateFrameData(const tAnimFrame& _frameData)
 {
-    // Å©±â°¡ 0º¸´Ù Å«Áö È®ÀÎ
+    // í¬ê¸°ê°€ 0ë³´ë‹¤ í°ì§€ í™•ì¸
     if (_frameData.vSlice.x <= 0 || _frameData.vSlice.y <= 0)
     {
         return false;
     }
 
-    // Áö¼Ó½Ã°£ÀÌ ¾ç¼öÀÎÁö È®ÀÎ
+    // ì§€ì†ì‹œê°„ì´ ì–‘ìˆ˜ì¸ì§€ í™•ì¸
     if (_frameData.fDuration <= 0.f)
     {
         return false;

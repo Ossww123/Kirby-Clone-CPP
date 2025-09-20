@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CPathMgr.h"
 #include "CCore.h"
 
@@ -14,30 +14,30 @@ CPathMgr::~CPathMgr()
 
 void CPathMgr::init()
 {
-    // ½ÇÇà ÆÄÀÏ °æ·Î¸¦ ¾ò¾î¿Â´Ù
+    // ì‹¤í–‰ íŒŒì¼ ê²½ë¡œë¥¼ ì–»ì–´ì˜¨ë‹¤
     wchar_t szBuffer[255] = {};
     GetCurrentDirectory(255, szBuffer);
 
-    // ½ÇÇà ÆÄÀÏÀÌ ÀÖ´Â °æ·Î¿¡¼­ »óÀ§·Î ÀÌµ¿ÇÏ¿© Content Æú´õ¸¦ Ã£´Â´Ù
+    // ì‹¤í–‰ íŒŒì¼ì´ ìˆëŠ” ê²½ë¡œì—ì„œ ìƒìœ„ë¡œ ì´ë™í•˜ì—¬ Content í´ë”ë¥¼ ì°¾ëŠ”ë‹¤
     m_strContentPath = szBuffer;
 
-    // bin Æú´õ¿¡¼­ »óÀ§·Î ÀÌµ¿
+    // bin í´ë”ì—ì„œ ìƒìœ„ë¡œ ì´ë™
     size_t iFind = m_strContentPath.rfind(L"\\bin");
     if (iFind != wstring::npos)
     {
         m_strContentPath = m_strContentPath.substr(0, iFind);
     }
 
-    // Content Æú´õ °æ·Î Ãß°¡
+    // Content í´ë” ê²½ë¡œ ì¶”ê°€
     m_strContentPath += L"\\bin\\content\\";
 
-    // »ó´ë °æ·Î ÀúÀå (Àı´ë °æ·Î¿¡¼­ Content °æ·Î¸¦ »« ³ª¸ÓÁö)
+    // ìƒëŒ€ ê²½ë¡œ ì €ì¥ (ì ˆëŒ€ ê²½ë¡œì—ì„œ Content ê²½ë¡œë¥¼ ëº€ ë‚˜ë¨¸ì§€)
     m_strRelativePath = m_strContentPath;
 }
 
 wstring CPathMgr::GetRelativePath(const wstring& _strFilePath)
 {
-    // ÆÄÀÏÀÇ Àı´ë °æ·Î¿¡¼­ Content °æ·Î ºÎºĞÀ» Á¦°ÅÇÏ¿© »ó´ë °æ·Î¸¸ ¹İÈ¯
+    // íŒŒì¼ì˜ ì ˆëŒ€ ê²½ë¡œì—ì„œ Content ê²½ë¡œ ë¶€ë¶„ì„ ì œê±°í•˜ì—¬ ìƒëŒ€ ê²½ë¡œë§Œ ë°˜í™˜
     size_t iFind = _strFilePath.find(m_strContentPath);
     if (iFind != wstring::npos)
     {

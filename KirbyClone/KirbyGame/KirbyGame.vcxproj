@@ -77,7 +77,10 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>gamePCH.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ShowIncludes>false</ShowIncludes>
+      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -93,7 +96,10 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>gamePCH.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ShowIncludes>false</ShowIncludes>
+      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -109,7 +115,10 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>gamePCH.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ShowIncludes>false</ShowIncludes>
+      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,7 +134,10 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>gamePCH.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ShowIncludes>false</ShowIncludes>
+      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -135,144 +147,141 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\KirbyClone\CAbilityStar.h" />
-    <ClInclude Include="..\KirbyClone\CAirParticle.h" />
-    <ClInclude Include="..\KirbyClone\CAnimation.h" />
-    <ClInclude Include="..\KirbyClone\CAnimationDataMgr.h" />
-    <ClInclude Include="..\KirbyClone\CAnimator.h" />
-    <ClInclude Include="..\KirbyClone\CApple.h" />
-    <ClInclude Include="..\KirbyClone\CBackground.h" />
-    <ClInclude Include="..\KirbyClone\CBackgroundMgr.h" />
-    <ClInclude Include="..\KirbyClone\CBasicMonster.h" />
-    <ClInclude Include="..\KirbyClone\CBoss.h" />
-    <ClInclude Include="..\KirbyClone\CBrontoBurt.h" />
-    <ClInclude Include="..\KirbyClone\CCamera.h" />
-    <ClInclude Include="..\KirbyClone\CCollider.h" />
-    <ClInclude Include="..\KirbyClone\CCollisionMgr.h" />
-    <ClInclude Include="..\KirbyClone\CCopyMonster.h" />
-    <ClInclude Include="..\KirbyClone\CCore.h" />
-    <ClInclude Include="..\KirbyClone\CDeathEffect.h" />
-    <ClInclude Include="..\KirbyClone\CDoor.h" />
-    <ClInclude Include="..\KirbyClone\CEventMgr.h" />
-    <ClInclude Include="..\KirbyClone\CFadeEffect.h" />
-    <ClInclude Include="..\KirbyClone\CGordo.h" />
-    <ClInclude Include="..\KirbyClone\CGrid.h" />
-    <ClInclude Include="..\KirbyClone\CHotHead.h" />
-    <ClInclude Include="..\KirbyClone\CInvincibleMonster.h" />
-    <ClInclude Include="..\KirbyClone\CItem.h" />
-    <ClInclude Include="..\KirbyClone\CKeyMgr.h" />
-    <ClInclude Include="..\KirbyClone\CMonster.h" />
-    <ClInclude Include="..\KirbyClone\CMonsterSpawnMgr.h" />
-    <ClInclude Include="..\KirbyClone\CObject.h" />
-    <ClInclude Include="..\KirbyClone\CObjectFactory.h" />
-    <ClInclude Include="..\KirbyClone\CPathMgr.h" />
-    <ClInclude Include="..\KirbyClone\CPlayer.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerCollisionSystem.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerDataMgr.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerHealthSystem.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerInhaleSystem.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerInputManager.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerMovement.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerStateMachine.h" />
-    <ClInclude Include="..\KirbyClone\CPlayerStateTransitionTable.h" />
-    <ClInclude Include="..\KirbyClone\CProjectile.h" />
-    <ClInclude Include="..\KirbyClone\CProjectileFactory.h" />
-    <ClInclude Include="..\KirbyClone\CRes.h" />
-    <ClInclude Include="..\KirbyClone\CResMgr.h" />
-    <ClInclude Include="..\KirbyClone\CRigidBody.h" />
-    <ClInclude Include="..\KirbyClone\CScene.h" />
-    <ClInclude Include="..\KirbyClone\CSceneMgr.h" />
-    <ClInclude Include="..\KirbyClone\CScene_Stage01.h" />
-    <ClInclude Include="..\KirbyClone\CScene_Stage02.h" />
-    <ClInclude Include="..\KirbyClone\CScene_Start.h" />
-    <ClInclude Include="..\KirbyClone\CSound.h" />
-    <ClInclude Include="..\KirbyClone\CSoundMgr.h" />
-    <ClInclude Include="..\KirbyClone\CSparky.h" />
-    <ClInclude Include="..\KirbyClone\CSpecialObject.h" />
-    <ClInclude Include="..\KirbyClone\CStageImage.h" />
-    <ClInclude Include="..\KirbyClone\CStageMgr.h" />
-    <ClInclude Include="..\KirbyClone\CTexture.h" />
-    <ClInclude Include="..\KirbyClone\CTile.h" />
-    <ClInclude Include="..\KirbyClone\CTileMgr.h" />
-    <ClInclude Include="..\KirbyClone\CTimeMgr.h" />
-    <ClInclude Include="..\KirbyClone\CUIMgr.h" />
-    <ClInclude Include="..\KirbyClone\CWaddleDee.h" />
-    <ClInclude Include="..\KirbyClone\CWaddleDoo.h" />
-    <ClInclude Include="..\KirbyClone\CWhispyWoods.h" />
-    <ClInclude Include="..\KirbyClone\define.h" />
-    <ClInclude Include="..\KirbyClone\enum.h" />
-    <ClInclude Include="..\KirbyClone\pch.h" />
-    <ClInclude Include="..\KirbyClone\struct.h" />
+    <ClInclude Include="..\KirbyGame\CAbilityStar.h" />
+    <ClInclude Include="..\KirbyGame\CAirParticle.h" />
+    <ClInclude Include="..\KirbyGame\CAnimation.h" />
+    <ClInclude Include="..\KirbyGame\CAnimationDataMgr.h" />
+    <ClInclude Include="..\KirbyGame\CAnimator.h" />
+    <ClInclude Include="..\KirbyGame\CApple.h" />
+    <ClInclude Include="..\KirbyGame\CBackground.h" />
+    <ClInclude Include="..\KirbyGame\CBackgroundMgr.h" />
+    <ClInclude Include="..\KirbyGame\CBasicMonster.h" />
+    <ClInclude Include="..\KirbyGame\CBoss.h" />
+    <ClInclude Include="..\KirbyGame\CBrontoBurt.h" />
+    <ClInclude Include="..\KirbyGame\CCamera.h" />
+    <ClInclude Include="..\KirbyGame\CCollider.h" />
+    <ClInclude Include="..\KirbyGame\CCollisionMgr.h" />
+    <ClInclude Include="..\KirbyGame\CCopyMonster.h" />
+    <ClInclude Include="..\KirbyGame\CCore.h" />
+    <ClInclude Include="..\KirbyGame\CDeathEffect.h" />
+    <ClInclude Include="..\KirbyGame\CDoor.h" />
+    <ClInclude Include="..\KirbyGame\CEventMgr.h" />
+    <ClInclude Include="..\KirbyGame\CFadeEffect.h" />
+    <ClInclude Include="..\KirbyGame\CGordo.h" />
+    <ClInclude Include="..\KirbyGame\CGrid.h" />
+    <ClInclude Include="..\KirbyGame\CHotHead.h" />
+    <ClInclude Include="..\KirbyGame\CInvincibleMonster.h" />
+    <ClInclude Include="..\KirbyGame\CItem.h" />
+    <ClInclude Include="..\KirbyGame\CKeyMgr.h" />
+    <ClInclude Include="..\KirbyGame\CMonster.h" />
+    <ClInclude Include="..\KirbyGame\CMonsterSpawnMgr.h" />
+    <ClInclude Include="..\KirbyGame\CObject.h" />
+    <ClInclude Include="..\KirbyGame\CObjectFactory.h" />
+    <ClInclude Include="..\KirbyGame\CPathMgr.h" />
+    <ClInclude Include="..\KirbyGame\CPlayer.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerCollisionSystem.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerDataMgr.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerHealthSystem.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerInhaleSystem.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerInputManager.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerMovement.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerStateMachine.h" />
+    <ClInclude Include="..\KirbyGame\CPlayerStateTransitionTable.h" />
+    <ClInclude Include="..\KirbyGame\CProjectile.h" />
+    <ClInclude Include="..\KirbyGame\CProjectileFactory.h" />
+    <ClInclude Include="..\KirbyGame\CRes.h" />
+    <ClInclude Include="..\KirbyGame\CResMgr.h" />
+    <ClInclude Include="..\KirbyGame\CRigidBody.h" />
+    <ClInclude Include="..\KirbyGame\CScene.h" />
+    <ClInclude Include="..\KirbyGame\CSceneMgr.h" />
+    <ClInclude Include="..\KirbyGame\CScene_Stage01.h" />
+    <ClInclude Include="..\KirbyGame\CScene_Stage02.h" />
+    <ClInclude Include="..\KirbyGame\CScene_Start.h" />
+    <ClInclude Include="..\KirbyGame\CSound.h" />
+    <ClInclude Include="..\KirbyGame\CSoundMgr.h" />
+    <ClInclude Include="..\KirbyGame\CSparky.h" />
+    <ClInclude Include="..\KirbyGame\CSpecialObject.h" />
+    <ClInclude Include="..\KirbyGame\CStageImage.h" />
+    <ClInclude Include="..\KirbyGame\CStageMgr.h" />
+    <ClInclude Include="..\KirbyGame\CTexture.h" />
+    <ClInclude Include="..\KirbyGame\CTile.h" />
+    <ClInclude Include="..\KirbyGame\CTileMgr.h" />
+    <ClInclude Include="..\KirbyGame\CTimeMgr.h" />
+    <ClInclude Include="..\KirbyGame\CUIMgr.h" />
+    <ClInclude Include="..\KirbyGame\CWaddleDee.h" />
+    <ClInclude Include="..\KirbyGame\CWaddleDoo.h" />
+    <ClInclude Include="..\KirbyGame\CWhispyWoods.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="gamePCH.h" />
     <ClInclude Include="KirbyGame.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\KirbyClone\CAbilityStar.cpp" />
-    <ClCompile Include="..\KirbyClone\CAirParticle.cpp" />
-    <ClCompile Include="..\KirbyClone\CAnimation.cpp" />
-    <ClCompile Include="..\KirbyClone\CAnimationDataMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CAnimator.cpp" />
-    <ClCompile Include="..\KirbyClone\CApple.cpp" />
-    <ClCompile Include="..\KirbyClone\CBackground.cpp" />
-    <ClCompile Include="..\KirbyClone\CBackgroundMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CBasicMonster.cpp" />
-    <ClCompile Include="..\KirbyClone\CBoss.cpp" />
-    <ClCompile Include="..\KirbyClone\CBrontoBurt.cpp" />
-    <ClCompile Include="..\KirbyClone\CCamera.cpp" />
-    <ClCompile Include="..\KirbyClone\CCollider.cpp" />
-    <ClCompile Include="..\KirbyClone\CCollisionMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CCopyMonster.cpp" />
-    <ClCompile Include="..\KirbyClone\CCore.cpp" />
-    <ClCompile Include="..\KirbyClone\CDeathEffect.cpp" />
-    <ClCompile Include="..\KirbyClone\CDoor.cpp" />
-    <ClCompile Include="..\KirbyClone\CEventMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CFadeEffect.cpp" />
-    <ClCompile Include="..\KirbyClone\CGordo.cpp" />
-    <ClCompile Include="..\KirbyClone\CGrid.cpp" />
-    <ClCompile Include="..\KirbyClone\CHotHead.cpp" />
-    <ClCompile Include="..\KirbyClone\CInvincibleMonster.cpp" />
-    <ClCompile Include="..\KirbyClone\CItem.cpp" />
-    <ClCompile Include="..\KirbyClone\CKeyMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CMonster.cpp" />
-    <ClCompile Include="..\KirbyClone\CMonsterSpawnMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CObject.cpp" />
-    <ClCompile Include="..\KirbyClone\CObjectFactory.cpp" />
-    <ClCompile Include="..\KirbyClone\CPathMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayer.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerCollisionSystem.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerDataMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerHealthSystem.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerInhaleSystem.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerInputManager.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerMovement.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerStateMachine.cpp" />
-    <ClCompile Include="..\KirbyClone\CPlayerStateTransitionTable.cpp" />
-    <ClCompile Include="..\KirbyClone\CProjectile.cpp" />
-    <ClCompile Include="..\KirbyClone\CProjectileFactory.cpp" />
-    <ClCompile Include="..\KirbyClone\CRes.cpp" />
-    <ClCompile Include="..\KirbyClone\CResMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CRigidBody.cpp" />
-    <ClCompile Include="..\KirbyClone\CScene.cpp" />
-    <ClCompile Include="..\KirbyClone\CSceneMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CScene_Stage01.cpp" />
-    <ClCompile Include="..\KirbyClone\CScene_Stage02.cpp" />
-    <ClCompile Include="..\KirbyClone\CScene_Start.cpp" />
-    <ClCompile Include="..\KirbyClone\CSound.cpp" />
-    <ClCompile Include="..\KirbyClone\CSoundMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CSparky.cpp" />
-    <ClCompile Include="..\KirbyClone\CSpecialObject.cpp" />
-    <ClCompile Include="..\KirbyClone\CStageImage.cpp" />
-    <ClCompile Include="..\KirbyClone\CStageMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CTexture.cpp" />
-    <ClCompile Include="..\KirbyClone\CTile.cpp" />
-    <ClCompile Include="..\KirbyClone\CTileMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CTimeMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CUIMgr.cpp" />
-    <ClCompile Include="..\KirbyClone\CWaddleDee.cpp" />
-    <ClCompile Include="..\KirbyClone\CWaddleDoo.cpp" />
-    <ClCompile Include="..\KirbyClone\CWhispyWoods.cpp" />
+    <ClCompile Include="..\KirbyGame\CAbilityStar.cpp" />
+    <ClCompile Include="..\KirbyGame\CAirParticle.cpp" />
+    <ClCompile Include="..\KirbyGame\CAnimation.cpp" />
+    <ClCompile Include="..\KirbyGame\CAnimationDataMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CAnimator.cpp" />
+    <ClCompile Include="..\KirbyGame\CApple.cpp" />
+    <ClCompile Include="..\KirbyGame\CBackground.cpp" />
+    <ClCompile Include="..\KirbyGame\CBackgroundMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CBasicMonster.cpp" />
+    <ClCompile Include="..\KirbyGame\CBoss.cpp" />
+    <ClCompile Include="..\KirbyGame\CBrontoBurt.cpp" />
+    <ClCompile Include="..\KirbyGame\CCamera.cpp" />
+    <ClCompile Include="..\KirbyGame\CCollider.cpp" />
+    <ClCompile Include="..\KirbyGame\CCollisionMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CCopyMonster.cpp" />
+    <ClCompile Include="..\KirbyGame\CCore.cpp" />
+    <ClCompile Include="..\KirbyGame\CDeathEffect.cpp" />
+    <ClCompile Include="..\KirbyGame\CDoor.cpp" />
+    <ClCompile Include="..\KirbyGame\CEventMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CFadeEffect.cpp" />
+    <ClCompile Include="..\KirbyGame\CGordo.cpp" />
+    <ClCompile Include="..\KirbyGame\CGrid.cpp" />
+    <ClCompile Include="..\KirbyGame\CHotHead.cpp" />
+    <ClCompile Include="..\KirbyGame\CInvincibleMonster.cpp" />
+    <ClCompile Include="..\KirbyGame\CItem.cpp" />
+    <ClCompile Include="..\KirbyGame\CKeyMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CMonster.cpp" />
+    <ClCompile Include="..\KirbyGame\CMonsterSpawnMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CObject.cpp" />
+    <ClCompile Include="..\KirbyGame\CObjectFactory.cpp" />
+    <ClCompile Include="..\KirbyGame\CPathMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayer.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerCollisionSystem.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerDataMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerHealthSystem.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerInhaleSystem.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerInputManager.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerMovement.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerStateMachine.cpp" />
+    <ClCompile Include="..\KirbyGame\CPlayerStateTransitionTable.cpp" />
+    <ClCompile Include="..\KirbyGame\CProjectile.cpp" />
+    <ClCompile Include="..\KirbyGame\CProjectileFactory.cpp" />
+    <ClCompile Include="..\KirbyGame\CRes.cpp" />
+    <ClCompile Include="..\KirbyGame\CResMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CRigidBody.cpp" />
+    <ClCompile Include="..\KirbyGame\CScene.cpp" />
+    <ClCompile Include="..\KirbyGame\CSceneMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CScene_Stage01.cpp" />
+    <ClCompile Include="..\KirbyGame\CScene_Stage02.cpp" />
+    <ClCompile Include="..\KirbyGame\CScene_Start.cpp" />
+    <ClCompile Include="..\KirbyGame\CSound.cpp" />
+    <ClCompile Include="..\KirbyGame\CSoundMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CSparky.cpp" />
+    <ClCompile Include="..\KirbyGame\CSpecialObject.cpp" />
+    <ClCompile Include="..\KirbyGame\CStageImage.cpp" />
+    <ClCompile Include="..\KirbyGame\CStageMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CTexture.cpp" />
+    <ClCompile Include="..\KirbyGame\CTile.cpp" />
+    <ClCompile Include="..\KirbyGame\CTileMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CTimeMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CUIMgr.cpp" />
+    <ClCompile Include="..\KirbyGame\CWaddleDee.cpp" />
+    <ClCompile Include="..\KirbyGame\CWaddleDoo.cpp" />
+    <ClCompile Include="..\KirbyGame\CWhispyWoods.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -281,6 +290,11 @@
   <ItemGroup>
     <Image Include="KirbyGame.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KirbyEngine\KirbyEngine.vcxproj">
+      <Project>{df4cdae5-7ebb-4021-969b-0f149b363a3e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

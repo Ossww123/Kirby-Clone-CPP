@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 class CScene;
 
@@ -6,29 +6,29 @@ class CSceneMgr
 {
     SINGLE(CSceneMgr);
 
-    // EventMgr¿¡¼­ ChangeScene ÇÔ¼ö Á¢±Ù Çã¿ë
+    // EventMgrì—ì„œ ChangeScene í•¨ìˆ˜ ì ‘ê·¼ í—ˆìš©
     friend class CEventMgr;
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
     void init();
     void update();
     void render(HDC _dc);
 
 private:
-    // === ¾À ÀüÈ¯ ³»ºÎ ±¸Çö ===
-    void ChangeScene(SCENE_TYPE _eNext);        // ½ÇÁ¦ ¾À ÀüÈ¯ ·ÎÁ÷
-    void ApplySceneResolution(SCENE_TYPE _eSceneType);  // ¾Àº° ÇØ»óµµ ¼³Á¤
-    void HandleGlobalSceneTransition();         // Àü¿ª Å° ÀÔ·Â Ã³¸®
+    // === ì”¬ ì „í™˜ ë‚´ë¶€ êµ¬í˜„ ===
+    void ChangeScene(SCENE_TYPE _eNext);        // ì‹¤ì œ ì”¬ ì „í™˜ ë¡œì§
+    void ApplySceneResolution(SCENE_TYPE _eSceneType);  // ì”¬ë³„ í•´ìƒë„ ì„¤ì •
+    void HandleGlobalSceneTransition();         // ì „ì—­ í‚¤ ì…ë ¥ ì²˜ë¦¬
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     CScene* GetCurScene() const  { return m_pCurScene; }
     SCENE_TYPE GetCurSceneType() const { return m_eCurSceneType; }
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    CScene* m_arrScene[(UINT)SCENE_TYPE::END];  // ¸ğµç ¾À ¹è¿­
-    CScene* m_pCurScene;                        // ÇöÀç È°¼ºÈ­µÈ ¾À
-    SCENE_TYPE m_eCurSceneType;                 // ÇöÀç ¾À Å¸ÀÔ
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
+    CScene* m_arrScene[(UINT)SCENE_TYPE::END];  // ëª¨ë“  ì”¬ ë°°ì—´
+    CScene* m_pCurScene;                        // í˜„ì¬ í™œì„±í™”ëœ ì”¬
+    SCENE_TYPE m_eCurSceneType;                 // í˜„ì¬ ì”¬ íƒ€ì…
 };

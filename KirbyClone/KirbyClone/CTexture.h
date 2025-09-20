@@ -1,35 +1,35 @@
-#pragma once
+ï»¿#pragma once
 #include "CRes.h"
 
 class CTexture : public CRes
 {
 private:
-    HDC     m_dc;           // ÅØ½ºÃ³ DC
-    HBITMAP m_hBit;         // ºñÆ®¸Ê ÇÚµé
-    BITMAP  m_tInfo;        // ºñÆ®¸Ê Á¤º¸
+    HDC     m_dc;           // í…ìŠ¤ì²˜ DC
+    HBITMAP m_hBit;         // ë¹„íŠ¸ë§µ í•¸ë“¤
+    BITMAP  m_tInfo;        // ë¹„íŠ¸ë§µ ì •ë³´
 
-    // ¾ËÆÄ Ã¤³Î Áö¿ø °ü·Ã
-    bool    m_bHasAlpha;    // ¾ËÆÄ Ã¤³Î º¸À¯ ¿©ºÎ
-    BYTE* m_pPixelData;   // 32ºñÆ® ÇÈ¼¿ µ¥ÀÌÅÍ (¾ËÆÄ Ã¤³Î Æ÷ÇÔ)
+    // ì•ŒíŒŒ ì±„ë„ ì§€ì› ê´€ë ¨
+    bool    m_bHasAlpha;    // ì•ŒíŒŒ ì±„ë„ ë³´ìœ  ì—¬ë¶€
+    BYTE* m_pPixelData;   // 32ë¹„íŠ¸ í”½ì…€ ë°ì´í„° (ì•ŒíŒŒ ì±„ë„ í¬í•¨)
 
 public:
-    // ±âÁ¸ ·Îµå ÇÔ¼ö (24ºñÆ® BMP, ¸¶Á¨Å¸ È£È¯¿ë)
+    // ê¸°ì¡´ ë¡œë“œ í•¨ìˆ˜ (24ë¹„íŠ¸ BMP, ë§ˆì  íƒ€ í˜¸í™˜ìš©)
     HRESULT Load(const wstring& _strFilePath);
 
-    // »õ·Î¿î ¾ËÆÄ Ã¤³Î Áö¿ø ·Îµå ÇÔ¼ö
+    // ìƒˆë¡œìš´ ì•ŒíŒŒ ì±„ë„ ì§€ì› ë¡œë“œ í•¨ìˆ˜
     HRESULT LoadWithAlpha(const wstring& _strFilePath);
 
-    // ·»´õ¸µ ÇÔ¼öµé
+    // ë Œë”ë§ í•¨ìˆ˜ë“¤
     void RenderWithAlpha(HDC _dc, Vec2 _vPos, Vec2 _vScale, float _fAlpha = 1.0f);
     void RenderWithAlpha(HDC _dc, int x, int y, int width, int height, float _fAlpha = 1.0f);
     void RenderWithColorKey(HDC _dc, Vec2 _vPos, Vec2 _vScale, COLORREF _keyColor = RGB(255, 0, 255));
     void RenderWithColorKey(HDC _dc, int x, int y, int width, int height, COLORREF _keyColor = RGB(255, 0, 255));
 
-    // ½ºÇÁ¶óÀÌÆ® ·»´õ¸µ (¾Ö´Ï¸ŞÀÌ¼Ç¿ë)
+    // ìŠ¤í”„ë¼ì´íŠ¸ ë Œë”ë§ (ì• ë‹ˆë©”ì´ì…˜ìš©)
     void RenderSpriteWithAlpha(HDC _dc, Vec2 _vPos, Vec2 _vSrcLT, Vec2 _vSrcSize, Vec2 _vDestSize, float _fAlpha = 1.0f);
     void RenderSpriteWithColorKey(HDC _dc, Vec2 _vPos, Vec2 _vSrcLT, Vec2 _vSrcSize, Vec2 _vDestSize, COLORREF _keyColor = RGB(255, 0, 255));
 
-    // Á¤º¸ ÇÔ¼öµé
+    // ì •ë³´ í•¨ìˆ˜ë“¤
     UINT GetWidth() { return m_tInfo.bmWidth; }
     UINT GetHeight() { return m_tInfo.bmHeight; }
     HDC GetDC() { return m_dc; }
@@ -37,11 +37,11 @@ public:
     int GetBitsPerPixel() { return m_tInfo.bmBitsPixel; }
 
 private:
-    // ³»ºÎ ÇïÆÛ ÇÔ¼öµé
-    HRESULT Load24BitBMP(const wstring& _strFilePath);    // 24ºñÆ® BMP ·Îµå
-    HRESULT Load32BitBMP(const wstring& _strFilePath);    // 32ºñÆ® BMP ·Îµå
-    void PreprocessAlpha();                               // ¾ËÆÄ Ã¤³Î ÀüÃ³¸®
-    void CleanupPixelData();                             // ÇÈ¼¿ µ¥ÀÌÅÍ Á¤¸®
+    // ë‚´ë¶€ í—¬í¼ í•¨ìˆ˜ë“¤
+    HRESULT Load24BitBMP(const wstring& _strFilePath);    // 24ë¹„íŠ¸ BMP ë¡œë“œ
+    HRESULT Load32BitBMP(const wstring& _strFilePath);    // 32ë¹„íŠ¸ BMP ë¡œë“œ
+    void PreprocessAlpha();                               // ì•ŒíŒŒ ì±„ë„ ì „ì²˜ë¦¬
+    void CleanupPixelData();                             // í”½ì…€ ë°ì´í„° ì •ë¦¬
 
 public:
     CTexture();

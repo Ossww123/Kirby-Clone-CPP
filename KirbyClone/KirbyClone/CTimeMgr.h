@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 class CTimeMgr
 {
@@ -9,10 +9,10 @@ private:
 	LARGE_INTEGER	m_llPrevCount;
 	LARGE_INTEGER	m_llFrequency;
 
-	double			m_dDT;			// ������ ������ �ð� ��
-	double			m_dAcc;			// 1�� üũ�� ���� ���� �ð� 
-	UINT			m_iCallCount;	// �Լ� ȣ�� Ƚ�� üũ
-	UINT			m_iFPS;			// �ʴ� ȣ�� Ƚ��
+	double			m_dDT;			// 프레임 사이의 시간 값
+	double			m_dAcc;			// 1초 체크를 위한 누적 시간 
+	UINT			m_iCallCount;	// 함수 호출 횟수 체크
+	UINT			m_iFPS;			// 초당 호출 횟수
 
 
 public:

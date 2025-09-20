@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CTimeMgr.h"
 #include "CCore.h"
 
@@ -21,10 +21,10 @@ CTimeMgr::~CTimeMgr()
 
 void CTimeMgr::init()
 {
-	// ÇöÀç Ä«¿îÆ®
+	// í˜„ìž¬ ì¹´ìš´íŠ¸
 	QueryPerformanceCounter(&m_llPrevCount);
 
-	// ÃÊ´ç Ä«¿îÆ® È½¼ö
+	// ì´ˆë‹¹ ì¹´ìš´íŠ¸ íšŸìˆ˜
 	QueryPerformanceFrequency(&m_llFrequency);
 }
 
@@ -32,10 +32,10 @@ void CTimeMgr::update()
 {
 	QueryPerformanceCounter(&m_llCurCount);
 
-	// ÀÌÀü ÇÁ·¹ÀÓÀÇ Ä«¿îÆÃ°ú, ÇöÀç ÇÁ·¹ÀÓ Ä«¿îÆÃ °ªÀÇ Â÷ÀÌ¸¦ ±¸ÇÑ´Ù.
+	// ì´ì „ í”„ë ˆìž„ì˜ ì¹´ìš´íŒ…ê³¼, í˜„ìž¬ í”„ë ˆìž„ ì¹´ìš´íŒ… ê°’ì˜ ì°¨ì´ë¥¼ êµ¬í•œë‹¤.
 	m_dDT = (double)(m_llCurCount.QuadPart - m_llPrevCount.QuadPart) / (double)m_llFrequency.QuadPart;
 
-	// ÀÌÀü Ä«¿îÆ® °ªÀ» ÇöÀç °ªÀ¸·Î °»½Å(´ÙÀ½¹ø¿¡ °è»êÀ» À§ÇØ¼­)
+	// ì´ì „ ì¹´ìš´íŠ¸ ê°’ì„ í˜„ìž¬ ê°’ìœ¼ë¡œ ê°±ì‹ (ë‹¤ìŒë²ˆì— ê³„ì‚°ì„ ìœ„í•´ì„œ)
 	m_llPrevCount = m_llCurCount;
 
 #ifdef _DEBUG
@@ -48,7 +48,7 @@ void CTimeMgr::update()
 void CTimeMgr::render()
 {
 	++m_iCallCount;
-	m_dAcc += m_dDT;  // DT ´©Àû
+	m_dAcc += m_dDT;  // DT ëˆ„ì 
 
 	if (m_dAcc >= 1.)
 	{

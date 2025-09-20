@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CScene.h"
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CEditorCore;
 
 class CScene_Tool : public CScene
@@ -12,25 +12,25 @@ public:
     virtual ~CScene_Tool();
 
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     void Enter() override;
     void Exit() override;
     void Update() override;
     void Render(HDC _dc) override;
 
 public:
-    // === ·¹º§ ÆÄÀÏ °ü¸® ===
+    // === ë ˆë²¨ íŒŒì¼ ê´€ë¦¬ ===
     void LoadLevel(const wstring& _strFileName);
     void SaveLevel(const wstring& _strFileName);
     void ClearLevel();
 
-    // === ¿¡µğÅÍ ½Ã½ºÅÛ Á¢±ÙÀÚ ===
+    // === ì—ë””í„° ì‹œìŠ¤í…œ ì ‘ê·¼ì ===
     CEditorCore* GetEditorCore() const { return m_pEditorCore; }
 
-    // === ¾À °´Ã¼ °ü¸® ===
+    // === ì”¬ ê°ì²´ ê´€ë¦¬ ===
     void ClearAllObjects() { DeleteAllObject(); }
 
 private:
-    // === ¸â¹ö º¯¼ö ===
-    CEditorCore* m_pEditorCore;  // ¿¡µğÅÍ ÇÙ½É ½Ã½ºÅÛ
+    // === ë©¤ë²„ ë³€ìˆ˜ ===
+    CEditorCore* m_pEditorCore;  // ì—ë””í„° í•µì‹¬ ì‹œìŠ¤í…œ
 };

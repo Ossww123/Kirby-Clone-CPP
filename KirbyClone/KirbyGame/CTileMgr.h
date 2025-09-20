@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 class CTexture;
 class CTile;
@@ -8,11 +8,11 @@ class CTileMgr
     SINGLE(CTileMgr);
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     void init();
 
 public:
-    // === Å¸ÀÏ Á¤º¸ °ü¸® ===
+    // === íƒ€ì¼ ì •ë³´ ê´€ë¦¬ ===
     void RegisterTileInfo(const tTileInfo& _tileInfo);
     tTileInfo* GetTileInfo(TILE_VISUAL_TYPE _eType) const;
     Vec2 GetTileDefaultSize(TILE_VISUAL_TYPE _eType) const;
@@ -21,7 +21,7 @@ private:
     void CreateDefaultTileInfos();
 
 public:
-    // === Å¸ÀÏ ÅØ½ºÃ³ °ü¸® ===
+    // === íƒ€ì¼ í…ìŠ¤ì²˜ ê´€ë¦¬ ===
     CTexture* LoadTileTexture(TILE_VISUAL_TYPE _eVisualType, const wstring& _strTexturePath);
     CTexture* FindTileTexture(TILE_VISUAL_TYPE _eVisualType) const;
 
@@ -29,16 +29,16 @@ private:
     void CreateDefaultTileTextures();
 
 public:
-    // === Å¸ÀÏ ½Ã°¢ Å¸ÀÔ À¯Æ¿¸®Æ¼ ===
+    // === íƒ€ì¼ ì‹œê° íƒ€ì… ìœ í‹¸ë¦¬í‹° ===
     const wchar_t* GetTileVisualName(TILE_VISUAL_TYPE _eType) const;
     vector<TILE_VISUAL_TYPE> GetAvailableTileVisualTypes() const;
 
 public:
-    // === Å¸ÀÏ ¼Ó¼º ¼³Á¤ µµ¿ì¹Ì ===
+    // === íƒ€ì¼ ì†ì„± ì„¤ì • ë„ìš°ë¯¸ ===
     void SetupTileProperties(CTile* _pTile, TILE_VISUAL_TYPE _eVisualType);
 
 private:
-    // === Å¸ÀÏ µ¥ÀÌÅÍ ===
-    map<TILE_VISUAL_TYPE, CTexture*>    m_mapTileTexture;   // Å¸ÀÏ ½Ã°¢ Å¸ÀÔº° ÅØ½ºÃ³
-    map<TILE_VISUAL_TYPE, tTileInfo>    m_mapTileInfo;      // Å¸ÀÏ Á¤º¸
+    // === íƒ€ì¼ ë°ì´í„° ===
+    map<TILE_VISUAL_TYPE, CTexture*>    m_mapTileTexture;   // íƒ€ì¼ ì‹œê° íƒ€ì…ë³„ í…ìŠ¤ì²˜
+    map<TILE_VISUAL_TYPE, tTileInfo>    m_mapTileInfo;      // íƒ€ì¼ ì •ë³´
 };

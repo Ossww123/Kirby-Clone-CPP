@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 #include "CObjectFactory.h"
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CEditorUI;
 class CEditorInput;
 class CEditorRenderer;
@@ -15,7 +15,7 @@ class CObject;
 class CEditorCore
 {
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     CEditorCore();
     ~CEditorCore();
 
@@ -25,18 +25,18 @@ public:
     void Shutdown();
 
 public:
-    // === ¸ğµå °ü¸® ===
+    // === ëª¨ë“œ ê´€ë¦¬ ===
     void ChangeMode(EDITOR_MODE _eMode);
     EDITOR_MODE GetCurrentMode() const { return m_eCurrentMode; }
     const wchar_t* GetModeString() const;
 
 public:
-    // === ¸¶¿ì½º °ü¸® ===
+    // === ë§ˆìš°ìŠ¤ ê´€ë¦¬ ===
     void SetMousePos(Vec2 _vPos) { m_vMousePos = _vPos; }
     Vec2 GetMousePos() const { return m_vMousePos; }
 
 public:
-    // === ¼±ÅÃ °ü¸® ===
+    // === ì„ íƒ ê´€ë¦¬ ===
     void SetSelectedObject(CObject* _pObj) { m_pSelectedObject = _pObj; };
     CObject* GetSelectedObject() const { return m_pSelectedObject; }
     void DeselectObject();
@@ -46,21 +46,21 @@ public:
     Vec2 GetDragStartPos() const { return m_vDragStartPos; }
 
 public:
-    // === UI °ü¸® ===
+    // === UI ê´€ë¦¬ ===
     void SetShowUI(bool _bShow) { m_bShowUI = _bShow; }
     bool IsShowUI() const { return m_bShowUI; }
 
 public:
-    // === ¸Ê Å©±â °ü¸® ===
+    // === ë§µ í¬ê¸° ê´€ë¦¬ ===
     void SetMapSize(Vec2 _vSize);
     Vec2 GetMapSize() const { return m_vMapSize; }
     void RenderMapBounds(HDC _dc);
 
 public:
-    // === Á¢±ÙÀÚ ÇÔ¼öµé ===
+    // === ì ‘ê·¼ì í•¨ìˆ˜ë“¤ ===
     CScene* GetWorkingScene() const { return m_pWorkingScene; }
 
-    // ÇÏÀ§ ½Ã½ºÅÛ Á¢±ÙÀÚ
+    // í•˜ìœ„ ì‹œìŠ¤í…œ ì ‘ê·¼ì
     CEditorUI* GetUI() const { return m_pUI; }
     CEditorInput* GetInput() const { return m_pInput; }
     CEditorRenderer* GetRenderer() const { return m_pRenderer; }
@@ -70,28 +70,28 @@ public:
     CEditorToolbar* GetToolbar() const { return m_pToolbar; }
 
 private:
-    // === ÇÏÀ§ ½Ã½ºÅÛµé ===
-    CEditorUI* m_pUI;               // UI °ü¸® ½Ã½ºÅÛ
-    CEditorInput* m_pInput;            // ÀÔ·Â Ã³¸® ½Ã½ºÅÛ
-    CEditorRenderer* m_pRenderer;         // ·»´õ¸µ ½Ã½ºÅÛ
-    CEditorFileManager* m_pFileManager;      // ÆÄÀÏ °ü¸® ½Ã½ºÅÛ
-    CEditorObjectManager* m_pObjectManager;    // ¿ÀºêÁ§Æ® °ü¸® ½Ã½ºÅÛ
-    CEditorCameraController* m_pCameraController; // Ä«¸Ş¶ó Á¦¾î ½Ã½ºÅÛ
-    CEditorToolbar* m_pToolbar;          // Åø¹Ù ½Ã½ºÅÛ
+    // === í•˜ìœ„ ì‹œìŠ¤í…œë“¤ ===
+    CEditorUI* m_pUI;               // UI ê´€ë¦¬ ì‹œìŠ¤í…œ
+    CEditorInput* m_pInput;            // ì…ë ¥ ì²˜ë¦¬ ì‹œìŠ¤í…œ
+    CEditorRenderer* m_pRenderer;         // ë Œë”ë§ ì‹œìŠ¤í…œ
+    CEditorFileManager* m_pFileManager;      // íŒŒì¼ ê´€ë¦¬ ì‹œìŠ¤í…œ
+    CEditorObjectManager* m_pObjectManager;    // ì˜¤ë¸Œì íŠ¸ ê´€ë¦¬ ì‹œìŠ¤í…œ
+    CEditorCameraController* m_pCameraController; // ì¹´ë©”ë¼ ì œì–´ ì‹œìŠ¤í…œ
+    CEditorToolbar* m_pToolbar;          // íˆ´ë°” ì‹œìŠ¤í…œ
 
-    // === ÀÛ¾÷ È¯°æ Á¤º¸ ===
-    CScene*     m_pWorkingScene;    // ÇöÀç ÀÛ¾÷ ÁßÀÎ ¾À (CScene_Tool¿¡¼­ ¹Ş¾Æ¿È)
-    Vec2        m_vMapSize;         // ¸Ê Å©±â Á¤º¸
+    // === ì‘ì—… í™˜ê²½ ì •ë³´ ===
+    CScene*     m_pWorkingScene;    // í˜„ì¬ ì‘ì—… ì¤‘ì¸ ì”¬ (CScene_Toolì—ì„œ ë°›ì•„ì˜´)
+    Vec2        m_vMapSize;         // ë§µ í¬ê¸° ì •ë³´
 
-    // === ¿¡µğÅÍ »óÅÂ ===
-    EDITOR_MODE m_eCurrentMode;     // ÇöÀç ¿¡µğÅÍ ¸ğµå
-    bool        m_bShowUI;          // UI Ç¥½Ã ¿©ºÎ
+    // === ì—ë””í„° ìƒíƒœ ===
+    EDITOR_MODE m_eCurrentMode;     // í˜„ì¬ ì—ë””í„° ëª¨ë“œ
+    bool        m_bShowUI;          // UI í‘œì‹œ ì—¬ë¶€
 
-    // === ¸¶¿ì½º »óÅÂ ===
-    Vec2        m_vMousePos;        // ¸¶¿ì½º À§Ä¡
+    // === ë§ˆìš°ìŠ¤ ìƒíƒœ ===
+    Vec2        m_vMousePos;        // ë§ˆìš°ìŠ¤ ìœ„ì¹˜
 
-    // === ¼±ÅÃ ¹× µå·¡±× »óÅÂ ===
-    CObject*    m_pSelectedObject;  // ¼±ÅÃµÈ ¿ÀºêÁ§Æ®
-    bool        m_bDragging;        // µå·¡±× ÁøÇà ¿©ºÎ
-    Vec2        m_vDragStartPos;    // µå·¡±× ½ÃÀÛ À§Ä¡
+    // === ì„ íƒ ë° ë“œë˜ê·¸ ìƒíƒœ ===
+    CObject*    m_pSelectedObject;  // ì„ íƒëœ ì˜¤ë¸Œì íŠ¸
+    bool        m_bDragging;        // ë“œë˜ê·¸ ì§„í–‰ ì—¬ë¶€
+    Vec2        m_vDragStartPos;    // ë“œë˜ê·¸ ì‹œì‘ ìœ„ì¹˜
 };

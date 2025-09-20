@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "gamePCH.h"
 #include "CEditorFileManager.h"
 #include "CEditorCore.h"
 #include "CEditorObjectManager.h"

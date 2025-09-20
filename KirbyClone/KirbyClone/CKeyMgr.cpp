@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CKeyMgr.h"
 #include "CCore.h"
 #include "CCamera.h"
@@ -14,12 +14,12 @@ int g_arrVK[(int)KEY::LAST] =
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
     'Z', 'X', 'C', 'V', 'B', 'N', 'M',
 
-    // ¼ýÀÚ Å° Ãß°¡
+    // ìˆ«ìž í‚¤ ì¶”ê°€
     '1', '2', '3', '4', '5',
     '6', '7', '8', '9', '0',
 
-    VK_MENU,    // ALT Å° (VK_MENU°¡ Alt Å°ÀÇ °¡»ó Å° ÄÚµå)
-    VK_HOME,    // HOME Å°
+    VK_MENU,    // ALT í‚¤ (VK_MENUê°€ Alt í‚¤ì˜ ê°€ìƒ í‚¤ ì½”ë“œ)
+    VK_HOME,    // HOME í‚¤
     VK_BACK,
 
     VK_SPACE,
@@ -49,11 +49,11 @@ void CKeyMgr::init()
 
 void CKeyMgr::update()
 {
-    // À©µµ¿ì°¡ Æ÷Ä¿½º »óÅÂÀÎÁö È®ÀÎ
+    // ìœˆë„ìš°ê°€ í¬ì»¤ìŠ¤ ìƒíƒœì¸ì§€ í™•ì¸
     HWND hWnd = CCore::GetInst()->GetMainHwnd();
     HWND hFocusedWnd = GetFocus();
 
-    // À©µµ¿ì°¡ Æ÷Ä¿½º »óÅÂ°¡ ¾Æ´Ï¶ó¸é ¸ðµç Å°¸¦ AWAY»óÅÂ·Î Ã³¸®
+    // ìœˆë„ìš°ê°€ í¬ì»¤ìŠ¤ ìƒíƒœê°€ ì•„ë‹ˆë¼ë©´ ëª¨ë“  í‚¤ë¥¼ AWAYìƒíƒœë¡œ ì²˜ë¦¬
     if (nullptr == hFocusedWnd || hWnd != hFocusedWnd)
     {
         for (size_t i = 0; i < (size_t)KEY::LAST; ++i)
@@ -72,23 +72,23 @@ void CKeyMgr::update()
         return;
     }
 
-    // ¸¶¿ì½º ÁÂÇ¥ ¾÷µ¥ÀÌÆ®
+    // ë§ˆìš°ìŠ¤ ì¢Œí‘œ ì—…ë°ì´íŠ¸
     UpdateMousePos();
 
-    // ¸ðµç Å°¿¡ ´ëÇØ »óÅÂ ¾÷µ¥ÀÌÆ®
+    // ëª¨ë“  í‚¤ì— ëŒ€í•´ ìƒíƒœ ì—…ë°ì´íŠ¸
     for (size_t i = 0; i < (size_t)KEY::LAST; ++i)
     {
-        // Å°°¡ ÇöÀç ´­·ÁÀÖ´ÂÁö È®ÀÎ
+        // í‚¤ê°€ í˜„ìž¬ ëˆŒë ¤ìžˆëŠ”ì§€ í™•ì¸
         if (GetAsyncKeyState(g_arrVK[i]) & 0x8000)
         {
             if (m_vecKey[i].bPrevPush)
             {
-                // ÀÌÀü¿¡µµ ´­·ÁÀÖ¾ú´Ù¸é HOLD
+                // ì´ì „ì—ë„ ëˆŒë ¤ìžˆì—ˆë‹¤ë©´ HOLD
                 m_vecKey[i].eState = KEY_STATE::HOLD;
             }
             else
             {
-                // ÀÌÀü¿¡ ¾È´­·ÁÀÖ¾ú´Ù¸é TAP
+                // ì´ì „ì— ì•ˆëˆŒë ¤ìžˆì—ˆë‹¤ë©´ TAP
                 m_vecKey[i].eState = KEY_STATE::TAP;
             }
             m_vecKey[i].bPrevPush = true;
@@ -97,12 +97,12 @@ void CKeyMgr::update()
         {
             if (m_vecKey[i].bPrevPush)
             {
-                // ÀÌÀü¿¡ ´­·ÁÀÖ¾ú´Ù¸é AWAY
+                // ì´ì „ì— ëˆŒë ¤ìžˆì—ˆë‹¤ë©´ AWAY
                 m_vecKey[i].eState = KEY_STATE::AWAY;
             }
             else
             {
-                // ÀÌÀü¿¡µµ ¾È´­·ÁÀÖ¾ú´Ù¸é NONE
+                // ì´ì „ì—ë„ ì•ˆëˆŒë ¤ìžˆì—ˆë‹¤ë©´ NONE
                 m_vecKey[i].eState = KEY_STATE::NONE;
             }
             m_vecKey[i].bPrevPush = false;
@@ -112,7 +112,7 @@ void CKeyMgr::update()
 
 void CKeyMgr::UpdateMousePos()
 {
-    // ¸¶¿ì½º ½ºÅ©¸° ÁÂÇ¥ ¾ò±â
+    // ë§ˆìš°ìŠ¤ ìŠ¤í¬ë¦° ì¢Œí‘œ ì–»ê¸°
     POINT ptMouse;
     GetCursorPos(&ptMouse);
     ScreenToClient(CCore::GetInst()->GetMainHwnd(), &ptMouse);
@@ -123,6 +123,6 @@ void CKeyMgr::UpdateMousePos()
 
 Vec2 CKeyMgr::GetMouseWorldPos()
 {
-    // ½ºÅ©¸° ÁÂÇ¥¸¦ ¿ùµå ÁÂÇ¥·Î º¯È¯
+    // ìŠ¤í¬ë¦° ì¢Œí‘œë¥¼ ì›”ë“œ ì¢Œí‘œë¡œ ë³€í™˜
     return CCamera::GetInst()->GetRealPos(m_vMousePos);
 }

@@ -1,16 +1,16 @@
-#pragma once
+ï»¿#pragma once
 
 class CGrid
 {
     SINGLE(CGrid);
 
 private:
-    float   m_fGridSize;        // ±×¸®µå Å©±â (ÇÈ¼¿ ´ÜÀ§)
-    bool    m_bShowGrid;        // ±×¸®µå Ç¥½Ã ¿©ºÎ
-    bool    m_bSnapToGrid;      // ±×¸®µå ½º³À È°¼ºÈ­
-    Vec2    m_vGridOffset;      // ±×¸®µå ¿ÀÇÁ¼Â (Ä«¸Ş¶ó ÀÌµ¿ ½Ã Á¤·Ä¿ë)
+    float   m_fGridSize;        // ê·¸ë¦¬ë“œ í¬ê¸° (í”½ì…€ ë‹¨ìœ„)
+    bool    m_bShowGrid;        // ê·¸ë¦¬ë“œ í‘œì‹œ ì—¬ë¶€
+    bool    m_bSnapToGrid;      // ê·¸ë¦¬ë“œ ìŠ¤ëƒ… í™œì„±í™”
+    Vec2    m_vGridOffset;      // ê·¸ë¦¬ë“œ ì˜¤í”„ì…‹ (ì¹´ë©”ë¼ ì´ë™ ì‹œ ì •ë ¬ìš©)
 
-    // ±×¸®µå ·»´õ¸µ »ö»ó
+    // ê·¸ë¦¬ë“œ ë Œë”ë§ ìƒ‰ìƒ
     COLORREF m_gridColor;
     COLORREF m_majorGridColor;
 
@@ -18,25 +18,25 @@ public:
     void init();
     void Render(HDC _dc);
 
-    // ±×¸®µå ¼³Á¤
+    // ê·¸ë¦¬ë“œ ì„¤ì •
     void SetGridSize(float _fSize) { m_fGridSize = _fSize; }
     void SetShowGrid(bool _bShow) { m_bShowGrid = _bShow; }
     void SetSnapToGrid(bool _bSnap) { m_bSnapToGrid = _bSnap; }
     void SetGridOffset(Vec2 _vOffset) { m_vGridOffset = _vOffset; }
 
-    // ±×¸®µå Á¤º¸ Á¶È¸
+    // ê·¸ë¦¬ë“œ ì •ë³´ ì¡°íšŒ
     float GetGridSize() { return m_fGridSize; }
     bool IsShowGrid() { return m_bShowGrid; }
     bool IsSnapToGrid() { return m_bSnapToGrid; }
 
-    // ±×¸®µå ½º³À ±â´É
-    Vec2 SnapToGrid(Vec2 _vPos);                    // À§Ä¡¸¦ °¡Àå °¡±î¿î ±×¸®µå¿¡ ¸ÂÃã
-    Vec2 GetGridPosition(Vec2 _vWorldPos);          // ¿ùµå ÁÂÇ¥¸¦ ±×¸®µå ÁÂÇ¥·Î º¯È¯
-    Vec2 GetWorldPosition(Vec2 _vGridPos);          // ±×¸®µå ÁÂÇ¥¸¦ ¿ùµå ÁÂÇ¥·Î º¯È¯
+    // ê·¸ë¦¬ë“œ ìŠ¤ëƒ… ê¸°ëŠ¥
+    Vec2 SnapToGrid(Vec2 _vPos);                    // ìœ„ì¹˜ë¥¼ ê°€ì¥ ê°€ê¹Œìš´ ê·¸ë¦¬ë“œì— ë§ì¶¤
+    Vec2 GetGridPosition(Vec2 _vWorldPos);          // ì›”ë“œ ì¢Œí‘œë¥¼ ê·¸ë¦¬ë“œ ì¢Œí‘œë¡œ ë³€í™˜
+    Vec2 GetWorldPosition(Vec2 _vGridPos);          // ê·¸ë¦¬ë“œ ì¢Œí‘œë¥¼ ì›”ë“œ ì¢Œí‘œë¡œ ë³€í™˜
 
-    // ±×¸®µå ¹üÀ§ °è»ê (È­¸é¿¡ º¸ÀÌ´Â ±×¸®µå¸¸ ·»´õ¸µÇÏ±â À§ÇÔ)
+    // ê·¸ë¦¬ë“œ ë²”ìœ„ ê³„ì‚° (í™”ë©´ì— ë³´ì´ëŠ” ê·¸ë¦¬ë“œë§Œ ë Œë”ë§í•˜ê¸° ìœ„í•¨)
     void GetVisibleGridRange(Vec2& _vStart, Vec2& _vEnd);
 
-    // ±×¸®µå Å©±â ÇÁ¸®¼Â
+    // ê·¸ë¦¬ë“œ í¬ê¸° í”„ë¦¬ì…‹
     void SetGridSizePreset(int _iPreset);           // 1: 32px, 2: 64px, 3: 128px, 4: 256px
 };

@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "gamePCH.h"
 #include "CSound.h"
 
 #pragma comment(lib, "winmm.lib")  // mciSendString을 위한 라이브러리

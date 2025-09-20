@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 class CEditorCore;
 
-// Åø¹Ù ¹öÆ° Á¤º¸ ±¸Á¶Ã¼
+// íˆ´ë°” ë²„íŠ¼ ì •ë³´ êµ¬ì¡°ì²´
 struct tToolbarButton
 {
     int iButtonID;
@@ -23,7 +23,7 @@ struct tToolbarButton
     {}
 };
 
-// Åø¹Ù ¹öÆ° ID ¿­°ÅÇü
+// íˆ´ë°” ë²„íŠ¼ ID ì—´ê±°í˜•
 enum class TOOLBAR_BUTTON_ID
 {
     NEW_LEVEL,
@@ -40,11 +40,11 @@ enum class TOOLBAR_BUTTON_ID
     SNAP_TOGGLE,
     UI_TOGGLE,
     SEPARATOR_3,
-    MAP_SIZE_LABEL,    // ¸Ê Å©±â ¶óº§
-    MAP_SIZE_SMALL,    // ÀÛÀº ¸Ê (1920x1080)
-    MAP_SIZE_MEDIUM,   // Áß°£ ¸Ê (3840x2160)
-    MAP_SIZE_LARGE,    // Å« ¸Ê (7680x4320)
-    MAP_SIZE_CUSTOM,   // »ç¿ëÀÚ Á¤ÀÇ
+    MAP_SIZE_LABEL,    // ë§µ í¬ê¸° ë¼ë²¨
+    MAP_SIZE_SMALL,    // ì‘ì€ ë§µ (1920x1080)
+    MAP_SIZE_MEDIUM,   // ì¤‘ê°„ ë§µ (3840x2160)
+    MAP_SIZE_LARGE,    // í° ë§µ (7680x4320)
+    MAP_SIZE_CUSTOM,   // ì‚¬ìš©ì ì •ì˜
     SEPARATOR_4,
     QUICK_SAVE,
     QUICK_LOAD,
@@ -56,29 +56,29 @@ class CEditorToolbar
 private:
     CEditorCore* m_pEditorCore;
 
-    // Åø¹Ù ¼³Á¤
+    // íˆ´ë°” ì„¤ì •
     int m_iToolbarHeight;
     int m_iButtonHeight;
     int m_iButtonMargin;
     int m_iSeparatorWidth;
 
-    // Á¤º¸ Ç¥½Ã ¿µ¿ª
+    // ì •ë³´ í‘œì‹œ ì˜ì—­
     int m_iInfoAreaX;
     int m_iInfoAreaWidth;
 
 
-    // ¹öÆ° ¸ñ·Ï
+    // ë²„íŠ¼ ëª©ë¡
     vector<tToolbarButton> m_vecButtons;
 
-    // ¸¶¿ì½º »óÅÂ
+    // ë§ˆìš°ìŠ¤ ìƒíƒœ
     Vec2 m_vMousePos;
     bool m_bMouseDown;
 
-    // ÅøÆÁ Ç¥½Ã
+    // íˆ´íŒ í‘œì‹œ
     tToolbarButton* m_pHoveredButton;
     float m_fTooltipTimer;
 
-    // ¸Ê Å©±â °ü·Ã
+    // ë§µ í¬ê¸° ê´€ë ¨
     Vec2 m_vCurrentMapSize;
     Vec2 m_vDefaultMapSize;
 
@@ -87,30 +87,30 @@ public:
     void Update();
     void Render(HDC _dc);
 
-    // ¸¶¿ì½º ÀÌº¥Æ® Ã³¸®
+    // ë§ˆìš°ìŠ¤ ì´ë²¤íŠ¸ ì²˜ë¦¬
     bool HandleMouseMove(Vec2 vMousePos);
     bool HandleMouseClick(Vec2 vMousePos);
     bool HandleMouseUp(Vec2 vMousePos);
 
-    // Åø¹Ù ¿µ¿ª Ã¼Å©
+    // íˆ´ë°” ì˜ì—­ ì²´í¬
     bool IsInToolbarArea(Vec2 vMousePos);
 
-    // ¸Ê Å©±â °ü·Ã ¸Ş¼­µå
+    // ë§µ í¬ê¸° ê´€ë ¨ ë©”ì„œë“œ
     void SetMapSize(Vec2 vSize);
     Vec2 GetMapSize() const { return m_vCurrentMapSize; }
     void ShowCustomMapSizeDialog();
 
 private:
-    // ¹öÆ° °ü¸®
+    // ë²„íŠ¼ ê´€ë¦¬
     void CreateButtons();
     void UpdateButtonStates();
     void UpdateMapSizeButtons();
     tToolbarButton* GetButtonAt(Vec2 vMousePos);
 
-    // ¹öÆ° ¾×¼Ç Ã³¸®
+    // ë²„íŠ¼ ì•¡ì…˜ ì²˜ë¦¬
     void ExecuteButtonAction(TOOLBAR_BUTTON_ID buttonID);
 
-    // ·»´õ¸µ
+    // ë Œë”ë§
     void RenderButton(HDC _dc, const tToolbarButton& button);
     void RenderSeparator(HDC _dc, int x, int y);
     void RenderTooltip(HDC _dc);
@@ -118,7 +118,7 @@ private:
     void RenderMapSizeLabel(HDC _dc, const tToolbarButton& button);
     void RenderInfoArea(HDC _dc);
 
-    // À¯Æ¿¸®Æ¼
+    // ìœ í‹¸ë¦¬í‹°
     COLORREF GetButtonColor(const tToolbarButton& button);
     wstring GetModeButtonText(EDITOR_MODE mode);
     bool IsModeButton(TOOLBAR_BUTTON_ID buttonID);
@@ -128,6 +128,6 @@ public:
     CEditorToolbar();
     ~CEditorToolbar();
 
-    // Á¢±ÙÀÚ
+    // ì ‘ê·¼ì
     int GetToolbarHeight() const { return m_iToolbarHeight; }
 };

@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "gamePCH.h"
 #include "CScene_Stage01.h"
 
 #include "CObject.h"

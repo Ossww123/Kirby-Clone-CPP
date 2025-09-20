@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CScene_Tool.h"
 #include "CEditorCore.h"
 #include "CCore.h"
@@ -13,7 +13,7 @@ CScene_Tool::CScene_Tool()
 
 CScene_Tool::~CScene_Tool()
 {
-    // ¾ÈÀüÀåÄ¡
+    // ì•ˆì „ìž¥ì¹˜
     if (m_pEditorCore)
     {
         delete m_pEditorCore;
@@ -23,20 +23,20 @@ CScene_Tool::~CScene_Tool()
 
 void CScene_Tool::Enter()
 {
-    // Ä«¸Þ¶ó ÃÊ±â À§Ä¡ ¼³Á¤
+    // ì¹´ë©”ë¼ ì´ˆê¸° ìœ„ì¹˜ ì„¤ì •
     CCamera::GetInst()->SetLookAt(Vec2(960.f, 960.f));
 
-    // ¿¡µðÅÍ ÄÚ¾î ½Ã½ºÅÛ »ý¼º ¹× ÃÊ±âÈ­
+    // ì—ë””í„° ì½”ì–´ ì‹œìŠ¤í…œ ìƒì„± ë° ì´ˆê¸°í™”
     m_pEditorCore = new CEditorCore();
     m_pEditorCore->Initialize(this);
 
-    // À©µµ¿ì Å¸ÀÌÆ² º¯°æ
+    // ìœˆë„ìš° íƒ€ì´í‹€ ë³€ê²½
     SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level Editor - Ready!");
 }
 
 void CScene_Tool::Exit()
 {
-    // ¿¡µðÅÍ ½Ã½ºÅÛ Á¾·á
+    // ì—ë””í„° ì‹œìŠ¤í…œ ì¢…ë£Œ
     if (m_pEditorCore)
     {
         m_pEditorCore->Shutdown();
@@ -44,13 +44,13 @@ void CScene_Tool::Exit()
         m_pEditorCore = nullptr;
     }
 
-    // ¾À °´Ã¼ Á¤¸®
+    // ì”¬ ê°ì²´ ì •ë¦¬
     DeleteAllObject();
 }
 
 void CScene_Tool::Update()
 {
-    // ¿¡µðÅÍ ÄÚ¾î ¾÷µ¥ÀÌÆ®
+    // ì—ë””í„° ì½”ì–´ ì—…ë°ì´íŠ¸
     if (m_pEditorCore)
     {
         m_pEditorCore->Update();
@@ -59,7 +59,7 @@ void CScene_Tool::Update()
 
 void CScene_Tool::Render(HDC _dc)
 {
-    // ¿¡µðÅÍ ÄÚ¾î ·»´õ¸µ
+    // ì—ë””í„° ì½”ì–´ ë Œë”ë§
     if (m_pEditorCore)
     {
         m_pEditorCore->Render(_dc);
@@ -68,7 +68,7 @@ void CScene_Tool::Render(HDC _dc)
 
 void CScene_Tool::LoadLevel(const wstring& _strFileName)
 {
-    // ÆÄÀÏ ¸Å´ÏÀú¸¦ ÅëÇÑ ·¹º§ ·Îµå
+    // íŒŒì¼ ë§¤ë‹ˆì €ë¥¼ í†µí•œ ë ˆë²¨ ë¡œë“œ
     if (m_pEditorCore && m_pEditorCore->GetFileManager())
     {
         m_pEditorCore->GetFileManager()->LoadLevel(_strFileName);
@@ -77,7 +77,7 @@ void CScene_Tool::LoadLevel(const wstring& _strFileName)
 
 void CScene_Tool::SaveLevel(const wstring& _strFileName)
 {
-    // ÆÄÀÏ ¸Å´ÏÀú¸¦ ÅëÇÑ ·¹º§ ÀúÀå
+    // íŒŒì¼ ë§¤ë‹ˆì €ë¥¼ í†µí•œ ë ˆë²¨ ì €ìž¥
     if (m_pEditorCore && m_pEditorCore->GetFileManager())
     {
         m_pEditorCore->GetFileManager()->SaveLevel(_strFileName);
@@ -86,15 +86,15 @@ void CScene_Tool::SaveLevel(const wstring& _strFileName)
 
 void CScene_Tool::ClearLevel()
 {
-    // SceneÀÇ ±âº» DeleteAllObject »ç¿ë
+    // Sceneì˜ ê¸°ë³¸ DeleteAllObject ì‚¬ìš©
     DeleteAllObject();
 
-    // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡ ÃÊ±âÈ­
+    // í”Œë ˆì´ì–´ ìŠ¤í° ìœ„ì¹˜ ì´ˆê¸°í™”
     if (m_pEditorCore && m_pEditorCore->GetObjectManager())
     {
         m_pEditorCore->GetObjectManager()->SetPlayerSpawnPos(Vec2(320.f, 320.f));
     }
 
-    // À©µµ¿ì Å¸ÀÌÆ² ¾÷µ¥ÀÌÆ®
+    // ìœˆë„ìš° íƒ€ì´í‹€ ì—…ë°ì´íŠ¸
     SetWindowText(CCore::GetInst()->GetMainHwnd(), L"Level cleared!");
 }

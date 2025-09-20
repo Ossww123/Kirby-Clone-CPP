@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "gamePCH.h"
 #include "CDoor.h"
 
 #include "CCollider.h"

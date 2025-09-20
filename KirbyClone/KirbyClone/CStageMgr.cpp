@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "gamePCH.h"
 #include "CStageMgr.h"
 #include "CStageImage.h"
 #include "CResMgr.h"

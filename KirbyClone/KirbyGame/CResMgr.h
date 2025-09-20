@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 class CRes;
 class CTexture;
@@ -8,7 +8,7 @@ class CResMgr
     SINGLE(CResMgr);
 
 private:
-    map<wstring, CRes*> m_mapTex;       // ÅØ½ºÃ³ ¸®¼Ò½º ¸Ê
+    map<wstring, CRes*> m_mapTex;       // í…ìŠ¤ì²˜ ë¦¬ì†ŒìŠ¤ ë§µ
 
 public:
     void init();
@@ -20,5 +20,5 @@ public:
     CTexture* LoadTextureWithAlpha(const wstring& _strKey, const wstring& _strRelativePath);
 
 private:
-    void CreateDefaultTexture();       // ±âº» ÅØ½ºÃ³ »ı¼º
+    void CreateDefaultTexture();       // ê¸°ë³¸ í…ìŠ¤ì²˜ ìƒì„±
 };

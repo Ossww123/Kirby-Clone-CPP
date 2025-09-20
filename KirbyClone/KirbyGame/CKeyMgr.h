@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 
 class CKeyMgr
@@ -17,11 +17,11 @@ public:
     bool IsKeyHold(KEY _eKey) { return m_vecKey[(int)_eKey].eState == KEY_STATE::HOLD; }
     bool IsKeyAway(KEY _eKey) { return m_vecKey[(int)_eKey].eState == KEY_STATE::AWAY; }
 
-    // ¸¶¿ì½º °ü·Ã ÇÔ¼ö
-    Vec2 GetMousePos() { return m_vMousePos; }      // ½ºÅ©¸° ÁÂÇ¥
-    Vec2 GetMouseWorldPos();                        // ¿ùµå ÁÂÇ¥ (Camera º¯È¯ Àû¿ë)
+    // ë§ˆìš°ìŠ¤ ê´€ë ¨ í•¨ìˆ˜
+    Vec2 GetMousePos() { return m_vMousePos; }      // ìŠ¤í¬ë¦° ì¢Œí‘œ
+    Vec2 GetMouseWorldPos();                        // ì›”ë“œ ì¢Œí‘œ (Camera ë³€í™˜ ì ìš©)
 
 private:
-    void UpdateMousePos();  // ¸¶¿ì½º ÁÂÇ¥ ¾÷µ¥ÀÌÆ®
+    void UpdateMousePos();  // ë§ˆìš°ìŠ¤ ì¢Œí‘œ ì—…ë°ì´íŠ¸
 };
 

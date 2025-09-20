@@ -2,7 +2,7 @@
 // Kirby assets used for educational purposes only
 // © HAL Laboratory / Nintendo
 
-#include "pch.h"
+#include "gamePCH.h"
 #include "framework.h"
 #include "KirbyGame.h"
 

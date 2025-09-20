@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "CObject.h"
 
 class CSpecialObject : public CObject
@@ -8,32 +8,32 @@ public:
     virtual ~CSpecialObject();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼öµé ===
-    void Update() override;               // ÀÚ½Ä Å¬·¡½º¿¡¼­ ÇÊ¿ä½Ã ±¸Çö
-    void Render(HDC _dc) override;          // CObjectÀÇ ±âº» ·»´õ¸µ »ç¿ë
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ë“¤ ===
+    void Update() override;               // ìì‹ í´ë˜ìŠ¤ì—ì„œ í•„ìš”ì‹œ êµ¬í˜„
+    void Render(HDC _dc) override;          // CObjectì˜ ê¸°ë³¸ ë Œë”ë§ ì‚¬ìš©
 
 public:
-    // === »óÈ£ÀÛ¿ë ½Ã½ºÅÛ ===
+    // === ìƒí˜¸ì‘ìš© ì‹œìŠ¤í…œ ===
     virtual void OnInteract(CObject* _pActor) {}
     virtual bool CanInteract(CObject* _pActor) const { return m_bIsActive && m_bIsInteractable; }
 
 public:
-    // === Setter ÇÔ¼öµé ===
+    // === Setter í•¨ìˆ˜ë“¤ ===
     void SetSpecialType(OBJECT_TYPE _eType) { m_eSpecialType = _eType; }
     void SetActive(bool _bActive) { m_bIsActive = _bActive; }
     void SetInteractable(bool _bInteractable) { m_bIsInteractable = _bInteractable; }
     void SetInteractionRange(float _fRange) { m_fInteractionRange = _fRange; }
 
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     OBJECT_TYPE GetSpecialType() const { return m_eSpecialType; }
     bool IsActive() const { return m_bIsActive; }
     bool IsInteractable() const { return m_bIsInteractable; }
     float GetInteractionRange() const { return m_fInteractionRange; }
 
 protected:
-    // === Æ¯¼ö ¿ÀºêÁ§Æ® ¼Ó¼º ===
-    OBJECT_TYPE     m_eSpecialType;         // Æ¯¼ö ¿ÀºêÁ§Æ® Å¸ÀÔ
-    bool            m_bIsActive;            // È°¼ºÈ­ »óÅÂ
-    bool            m_bIsInteractable;      // »óÈ£ÀÛ¿ë °¡´É ¿©ºÎ
-    float           m_fInteractionRange;    // »óÈ£ÀÛ¿ë °¡´É ¹üÀ§
+    // === íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ ì†ì„± ===
+    OBJECT_TYPE     m_eSpecialType;         // íŠ¹ìˆ˜ ì˜¤ë¸Œì íŠ¸ íƒ€ì…
+    bool            m_bIsActive;            // í™œì„±í™” ìƒíƒœ
+    bool            m_bIsInteractable;      // ìƒí˜¸ì‘ìš© ê°€ëŠ¥ ì—¬ë¶€
+    float           m_fInteractionRange;    // ìƒí˜¸ì‘ìš© ê°€ëŠ¥ ë²”ìœ„
 };

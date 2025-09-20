@@ -1,25 +1,25 @@
-#pragma once
+ï»¿#pragma once
 
-// ¸®¼Ò½º °ü¸® ±âº» Å¬·¡½º
+// ë¦¬ì†ŒìŠ¤ ê´€ë¦¬ ê¸°ë³¸ í´ë˜ìŠ¤
 class CRes
 {
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     CRes();
     virtual ~CRes();
 
 public:
-    // === ¸®¼Ò½º Á¤º¸ ¼³Á¤ ===
+    // === ë¦¬ì†ŒìŠ¤ ì •ë³´ ì„¤ì • ===
     void SetKey(const wstring& _strKey) { m_strKey = _strKey; }
     void SetRelativePath(const wstring& _strPath) { m_strRelativePath = _strPath; }
 
 public:
-    // === ¸®¼Ò½º Á¤º¸ Á¢±ÙÀÚ ===
+    // === ë¦¬ì†ŒìŠ¤ ì •ë³´ ì ‘ê·¼ì ===
     const wstring& GetKey() const { return m_strKey; }
     const wstring& GetRelativePath() const { return m_strRelativePath; }
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    wstring m_strKey;           // ¸®¼Ò½º Å°°ª
-    wstring m_strRelativePath;  // »ó´ë °æ·Î
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
+    wstring m_strKey;           // ë¦¬ì†ŒìŠ¤ í‚¤ê°’
+    wstring m_strRelativePath;  // ìƒëŒ€ ê²½ë¡œ
 };

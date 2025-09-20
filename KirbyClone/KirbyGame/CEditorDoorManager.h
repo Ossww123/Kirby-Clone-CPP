@@ -1,41 +1,41 @@
-#pragma once
+ï»¿#pragma once
 
 class CDoor;
 class CDoorPropertyDialog;
 
-// ·¹º§ ¿¡µğÅÍ¿¡¼­ ¹® ¿ÀºêÁ§Æ®¸¦ °ü¸®ÇÏ´Â Å¬·¡½º
+// ë ˆë²¨ ì—ë””í„°ì—ì„œ ë¬¸ ì˜¤ë¸Œì íŠ¸ë¥¼ ê´€ë¦¬í•˜ëŠ” í´ë˜ìŠ¤
 class CEditorDoorManager
 {
 private:
-    CDoorPropertyDialog* m_pPropertyDialog;   // ¹® ¼Ó¼º ´ÙÀÌ¾ó·Î±×
-    CDoor* m_pSelectedDoor;                   // ÇöÀç ¼±ÅÃµÈ ¹®
+    CDoorPropertyDialog* m_pPropertyDialog;   // ë¬¸ ì†ì„± ë‹¤ì´ì–¼ë¡œê·¸
+    CDoor* m_pSelectedDoor;                   // í˜„ì¬ ì„ íƒëœ ë¬¸
 
-    // ¹® ¿ÀºêÁ§Æ® ¸ñ·Ï (¾Àº° °ü¸®)
+    // ë¬¸ ì˜¤ë¸Œì íŠ¸ ëª©ë¡ (ì”¬ë³„ ê´€ë¦¬)
     map<wstring, vector<CDoor*>> m_mapSceneDoors;
 
 public:
-    // ¹® ¿ÀºêÁ§Æ® °ü¸®
+    // ë¬¸ ì˜¤ë¸Œì íŠ¸ ê´€ë¦¬
     void AddDoor(CDoor* pDoor, const wstring& strSceneName);
     void RemoveDoor(CDoor* pDoor, const wstring& strSceneName);
     void ClearAllDoors();
 
-    // ¹® ¼±ÅÃ ¹× ÆíÁı
+    // ë¬¸ ì„ íƒ ë° í¸ì§‘
     void SelectDoor(CDoor* pDoor);
     bool ShowDoorProperties(HWND hParent);
 
-    // ¹® ¿¬°á °ËÁõ
+    // ë¬¸ ì—°ê²° ê²€ì¦
     bool ValidateDoorConnections(const wstring& strSceneName);
     vector<wstring> GetConnectionErrors(const wstring& strSceneName);
 
-    // ¹® ¸ñ·Ï Á¶È¸
+    // ë¬¸ ëª©ë¡ ì¡°íšŒ
     vector<CDoor*> GetDoorsInScene(const wstring& strSceneName);
     CDoor* FindDoorByID(const wstring& strSceneName, const wstring& strDoorID);
 
-    // ¿¡µğÅÍ UI ¾÷µ¥ÀÌÆ®
+    // ì—ë””í„° UI ì—…ë°ì´íŠ¸
     void UpdateDoorList(HWND hListCtrl, const wstring& strSceneName);
-    void RenderDoorConnections(HDC _dc);  // ¹® ¿¬°á ½Ã°¢È­
+    void RenderDoorConnections(HDC _dc);  // ë¬¸ ì—°ê²° ì‹œê°í™”
 
-    // ÀÚµ¿ ¿¬°á ±â´É
+    // ìë™ ì—°ê²° ê¸°ëŠ¥
     void AutoConnectDoors(const wstring& strScene1, const wstring& strScene2);
     void SuggestDoorConnections(const wstring& strSceneName);
 

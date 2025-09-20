@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CEditorCore.h"
 #include "CBackground.h"
 #include "CObject.h"
@@ -9,7 +9,7 @@
 #include "CCamera.h"
 #include "CStageMgr.h"
 
-// ÇÏÀ§ ½Ã½ºÅÛ
+// í•˜ìœ„ ì‹œìŠ¤í…œ
 #include "CEditorUI.h"
 #include "CEditorInput.h"
 #include "CEditorRenderer.h"
@@ -45,7 +45,7 @@ void CEditorCore::Initialize(CScene* _pScene)
 {
     m_pWorkingScene = _pScene;
 
-    // ÇÏÀ§ ½Ã½ºÅÛµé »ı¼º
+    // í•˜ìœ„ ì‹œìŠ¤í…œë“¤ ìƒì„±
     m_pUI = new CEditorUI();
     m_pInput = new CEditorInput();
     m_pRenderer = new CEditorRenderer();
@@ -54,7 +54,7 @@ void CEditorCore::Initialize(CScene* _pScene)
     m_pCameraController = new CEditorCameraController();
     m_pToolbar = new CEditorToolbar();
 
-    // ÇÏÀ§ ½Ã½ºÅÛµé ÃÊ±âÈ­
+    // í•˜ìœ„ ì‹œìŠ¤í…œë“¤ ì´ˆê¸°í™”
     m_pUI->Initialize(this, _pScene);
     m_pInput->Initialize(this);
     m_pRenderer->Initialize(this);
@@ -63,17 +63,17 @@ void CEditorCore::Initialize(CScene* _pScene)
     m_pCameraController->Initialize(this);
     m_pToolbar->Initialize(this);
 
-    // ±×¸®µå ½Ã½ºÅÛ ÃÊ±âÈ­
+    // ê·¸ë¦¬ë“œ ì‹œìŠ¤í…œ ì´ˆê¸°í™”
     CGrid::GetInst()->init();
 
-    // ±âº» ¼³Á¤
+    // ê¸°ë³¸ ì„¤ì •
     m_eCurrentMode = EDITOR_MODE::NORMAL;
     m_bShowUI = true;
     m_pSelectedObject = nullptr;
     m_bDragging = false;
     SetMapSize(Vec2(3840.f, 640.f));
 
-    // Åø¹Ù ÃÊ±âÈ­ ÈÄ ¸Ê Å©±â µ¿±âÈ­
+    // íˆ´ë°” ì´ˆê¸°í™” í›„ ë§µ í¬ê¸° ë™ê¸°í™”
     if (m_pToolbar)
     {
         m_pToolbar->SetMapSize(m_vMapSize);
@@ -82,52 +82,52 @@ void CEditorCore::Initialize(CScene* _pScene)
 
 void CEditorCore::Update()
 {
-    // SceneÀÇ ±âº» ¿ÀºêÁ§Æ®µé ¾÷µ¥ÀÌÆ®
+    // Sceneì˜ ê¸°ë³¸ ì˜¤ë¸Œì íŠ¸ë“¤ ì—…ë°ì´íŠ¸
     if (m_pWorkingScene)
     {
         m_pWorkingScene->CScene::Update();
     }
 
-    // ½ºÅ×ÀÌÁö ¸Å´ÏÀú ¾÷µ¥ÀÌÆ®
+    // ìŠ¤í…Œì´ì§€ ë§¤ë‹ˆì € ì—…ë°ì´íŠ¸
     CStageMgr::GetInst()->Update();
 
-    // ÇÏÀ§ ½Ã½ºÅÛµé ¾÷µ¥ÀÌÆ® (¼ø¼­ Áß¿ä)
-    m_pCameraController->Update();      // Ä«¸Ş¶ó ¸ÕÀú
-    m_pInput->Update();                 // ÀÔ·Â Ã³¸®
-    m_pObjectManager->Update();         // ¿ÀºêÁ§Æ® °ü¸® (¹è°æ ¾÷µ¥ÀÌÆ® Æ÷ÇÔ)
-    m_pToolbar->Update();               // Åø¹Ù ¾÷µ¥ÀÌÆ®
+    // í•˜ìœ„ ì‹œìŠ¤í…œë“¤ ì—…ë°ì´íŠ¸ (ìˆœì„œ ì¤‘ìš”)
+    m_pCameraController->Update();      // ì¹´ë©”ë¼ ë¨¼ì €
+    m_pInput->Update();                 // ì…ë ¥ ì²˜ë¦¬
+    m_pObjectManager->Update();         // ì˜¤ë¸Œì íŠ¸ ê´€ë¦¬ (ë°°ê²½ ì—…ë°ì´íŠ¸ í¬í•¨)
+    m_pToolbar->Update();               // íˆ´ë°” ì—…ë°ì´íŠ¸
 }
 
 void CEditorCore::Render(HDC _dc)
 {
-    // ¸ğµç ·»´õ¸µÀ» ¿¡µğÅÍ¿¡¼­ Ã³¸® (¼ø¼­ Áß¿ä)
+    // ëª¨ë“  ë Œë”ë§ì„ ì—ë””í„°ì—ì„œ ì²˜ë¦¬ (ìˆœì„œ ì¤‘ìš”)
 
-    // ¹è°æ ·»´õ¸µ (¸Ç µÚ)
+    // ë°°ê²½ ë Œë”ë§ (ë§¨ ë’¤)
     if (m_pObjectManager->GetCurrentBackground())
     {
         m_pObjectManager->GetCurrentBackground()->Render(_dc);
     }
 
-    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ·»´õ¸µ (¹è°æ°ú °ÔÀÓ °´Ã¼ »çÀÌ)
+    // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ë Œë”ë§ (ë°°ê²½ê³¼ ê²Œì„ ê°ì²´ ì‚¬ì´)
     CStageMgr::GetInst()->Render(_dc);
 
-    // SceneÀÇ ¸ğµç °ÔÀÓ ¿ÀºêÁ§Æ® ·»´õ¸µ (Å¸ÀÏ, ¸ó½ºÅÍ, ¾ÆÀÌÅÛ µî)
+    // Sceneì˜ ëª¨ë“  ê²Œì„ ì˜¤ë¸Œì íŠ¸ ë Œë”ë§ (íƒ€ì¼, ëª¬ìŠ¤í„°, ì•„ì´í…œ ë“±)
     if (m_pWorkingScene)
     {
         m_pWorkingScene->CScene::Render(_dc);
     }
 
-    // ±×¸®µå ·»´õ¸µ (°ÔÀÓ ¿ÀºêÁ§Æ® À§¿¡)
+    // ê·¸ë¦¬ë“œ ë Œë”ë§ (ê²Œì„ ì˜¤ë¸Œì íŠ¸ ìœ„ì—)
     CGrid::GetInst()->Render(_dc);
     RenderMapBounds(_dc);
 
-    // ¿¡µğÅÍ Àü¿ë ·»´õ¸µ (¹Ì¸®º¸±â, ¼±ÅÃ ¹Ú½º µî)
+    // ì—ë””í„° ì „ìš© ë Œë”ë§ (ë¯¸ë¦¬ë³´ê¸°, ì„ íƒ ë°•ìŠ¤ ë“±)
     m_pRenderer->Render(_dc);
 
-    // Åø¹Ù ·»´õ¸µ (UIº¸´Ù ¸ÕÀú)
+    // íˆ´ë°” ë Œë”ë§ (UIë³´ë‹¤ ë¨¼ì €)
     m_pToolbar->Render(_dc);
 
-    // UI ·»´õ¸µ (¸Ç ¾Õ)
+    // UI ë Œë”ë§ (ë§¨ ì•)
     if (m_bShowUI)
     {
         m_pUI->Render(_dc);
@@ -136,7 +136,7 @@ void CEditorCore::Render(HDC _dc)
 
 void CEditorCore::Shutdown()
 {
-    // ÇÏÀ§ ½Ã½ºÅÛµé »èÁ¦
+    // í•˜ìœ„ ì‹œìŠ¤í…œë“¤ ì‚­ì œ
     if (m_pUI)
     {
         delete m_pUI;
@@ -173,7 +173,7 @@ void CEditorCore::Shutdown()
         m_pToolbar = nullptr;
     }
 
-    // ¼±ÅÃ ÇØÁ¦
+    // ì„ íƒ í•´ì œ
     m_pSelectedObject = nullptr;
     m_pWorkingScene = nullptr;
 }
@@ -197,11 +197,11 @@ void CEditorCore::ChangeMode(EDITOR_MODE _eMode)
         m_pObjectManager->ChangeObjectCategory(L"Special");
         break;
     case EDITOR_MODE::PLACE_STAGE:
-        // Stage Image ¸ğµå¿¡¼­´Â º°µµ Ä«Å×°í¸® ÇÊ¿ä ¾øÀ½
+        // Stage Image ëª¨ë“œì—ì„œëŠ” ë³„ë„ ì¹´í…Œê³ ë¦¬ í•„ìš” ì—†ìŒ
         break;
     }
 
-    // ¸ğµå º¯°æ ½Ã ¼±ÅÃ ÇØÁ¦
+    // ëª¨ë“œ ë³€ê²½ ì‹œ ì„ íƒ í•´ì œ
     if (_eMode != EDITOR_MODE::SELECT)
     {
         DeselectObject();
@@ -236,7 +236,7 @@ void CEditorCore::SetMapSize(Vec2 vSize)
 {
     m_vMapSize = vSize;
 
-    // Ä«¸Ş¶ó °æ°è ¼³Á¤
+    // ì¹´ë©”ë¼ ê²½ê³„ ì„¤ì •
     if (m_pCameraController)
     {
         Vec2 vMin = Vec2(0.f, 0.f);
@@ -244,10 +244,10 @@ void CEditorCore::SetMapSize(Vec2 vSize)
         m_pCameraController->SetCameraBounds(vMin, vMax);
     }
 
-    // ±×¸®µå¿¡ ¸Ê Å©±â ¾Ë¸²
+    // ê·¸ë¦¬ë“œì— ë§µ í¬ê¸° ì•Œë¦¼
     if (CGrid::GetInst())
     {
-        // CGrid¿¡ ¸Ê Å©±â ¼³Á¤ ¸Ş¼­µå°¡ ÀÖ´Ù¸é
+        // CGridì— ë§µ í¬ê¸° ì„¤ì • ë©”ì„œë“œê°€ ìˆë‹¤ë©´
         // CGrid::GetInst()->SetMapBounds(Vec2(0.f, 0.f), vSize);
     }
 }
@@ -256,22 +256,22 @@ void CEditorCore::RenderMapBounds(HDC _dc)
 {
     if (!m_pWorkingScene) return;
 
-    // Ä«¸Ş¶ó º¯È¯ Àû¿ë
+    // ì¹´ë©”ë¼ ë³€í™˜ ì ìš©
     Vec2 vCameraPos = CCamera::GetInst()->GetLookAt();
     Vec2 vResolution = CCore::GetInst()->GetResolution();
     Vec2 vOffset = vResolution / 2.f - vCameraPos;
 
-    // ½ÇÁ¦ ÁÂÇ¥°è·Î ¸Ê °æ°è¼± ±×¸®±â
+    // ì‹¤ì œ ì¢Œí‘œê³„ë¡œ ë§µ ê²½ê³„ì„  ê·¸ë¦¬ê¸°
     HPEN hPen = CreatePen(PS_DASH, 2, RGB(255, 0, 0));
     HPEN hOldPen = (HPEN)SelectObject(_dc, hPen);
 
-    // ¸Ê °æ°è »ç°¢Çü: (0,0) ~ (width, height)
+    // ë§µ ê²½ê³„ ì‚¬ê°í˜•: (0,0) ~ (width, height)
     int left = (int)(0 + vOffset.x);
     int right = (int)(m_vMapSize.x + vOffset.x);
     int top = (int)(0 + vOffset.y);
     int bottom = (int)(m_vMapSize.y + vOffset.y);
 
-    // °æ°è¼± ±×¸®±â
+    // ê²½ê³„ì„  ê·¸ë¦¬ê¸°
     MoveToEx(_dc, left, top, nullptr);
     LineTo(_dc, right, top);
     LineTo(_dc, right, bottom);
@@ -281,7 +281,7 @@ void CEditorCore::RenderMapBounds(HDC _dc)
     SelectObject(_dc, hOldPen);
     DeleteObject(hPen);
 
-    // ¸Ê Å©±â ÅØ½ºÆ® Ç¥½Ã
+    // ë§µ í¬ê¸° í…ìŠ¤íŠ¸ í‘œì‹œ
     SetBkMode(_dc, TRANSPARENT);
     SetTextColor(_dc, RGB(255, 0, 0));
 

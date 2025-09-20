@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CResMgr.h"
 
 #include "CPathMgr.h"
@@ -10,7 +10,7 @@ CResMgr::CResMgr()
 
 CResMgr::~CResMgr()
 {
-    // ¸ğµç ¸®¼Ò½º ÇØÁ¦
+    // ëª¨ë“  ë¦¬ì†ŒìŠ¤ í•´ì œ
     map<wstring, CRes*>::iterator iter = m_mapTex.begin();
     for (; iter != m_mapTex.end(); ++iter)
     {
@@ -25,14 +25,14 @@ void CResMgr::init()
 
 CTexture* CResMgr::LoadTexture(const wstring& _strKey, const wstring& _strRelativePath)
 {
-    // ÀÌ¹Ì ·ÎµåµÈ ÅØ½ºÃ³°¡ ÀÖ´ÂÁö È®ÀÎ
+    // ì´ë¯¸ ë¡œë“œëœ í…ìŠ¤ì²˜ê°€ ìˆëŠ”ì§€ í™•ì¸
     CTexture* pTex = FindTexture(_strKey);
     if (nullptr != pTex)
     {
         return pTex;
     }
 
-    // »õ·Î¿î ÅØ½ºÃ³ »ı¼º ¹× ·Îµå
+    // ìƒˆë¡œìš´ í…ìŠ¤ì²˜ ìƒì„± ë° ë¡œë“œ
     wstring strFilePath = CPathMgr::GetInst()->GetContentPath();
     strFilePath += _strRelativePath;
 
@@ -40,7 +40,7 @@ CTexture* CResMgr::LoadTexture(const wstring& _strKey, const wstring& _strRelati
     if (FAILED(pTex->Load(strFilePath)))
     {
         delete pTex;
-        MessageBox(nullptr, L"ÅØ½ºÃ³ ·Îµå ½ÇÆĞ", L"¸®¼Ò½º ·Îµå ½ÇÆĞ", MB_OK);
+        MessageBox(nullptr, L"í…ìŠ¤ì²˜ ë¡œë“œ ì‹¤íŒ¨", L"ë¦¬ì†ŒìŠ¤ ë¡œë“œ ì‹¤íŒ¨", MB_OK);
         return nullptr;
     }
 
@@ -65,10 +65,10 @@ CTexture* CResMgr::FindTexture(const wstring& _strKey)
 
 void CResMgr::AddTexture(const wstring& _strKey, CTexture* _pTexture)
 {
-    // ÀÌ¹Ì Á¸ÀçÇÏ´Â Å°ÀÎÁö È®ÀÎ
+    // ì´ë¯¸ ì¡´ì¬í•˜ëŠ” í‚¤ì¸ì§€ í™•ì¸
     if (FindTexture(_strKey))
     {
-        MessageBox(nullptr, L"ÀÌ¹Ì Á¸ÀçÇÏ´Â ÅØ½ºÃ³ Å°ÀÔ´Ï´Ù.", L"¸®¼Ò½º ¸Å´ÏÀú ¿À·ù", MB_OK);
+        MessageBox(nullptr, L"ì´ë¯¸ ì¡´ì¬í•˜ëŠ” í…ìŠ¤ì²˜ í‚¤ì…ë‹ˆë‹¤.", L"ë¦¬ì†ŒìŠ¤ ë§¤ë‹ˆì € ì˜¤ë¥˜", MB_OK);
         return;
     }
 
@@ -77,14 +77,14 @@ void CResMgr::AddTexture(const wstring& _strKey, CTexture* _pTexture)
 
 CTexture* CResMgr::LoadTextureWithAlpha(const wstring& _strKey, const wstring& _strRelativePath)
 {
-    // ÀÌ¹Ì ·ÎµåµÈ ÅØ½ºÃ³°¡ ÀÖ´ÂÁö È®ÀÎ
+    // ì´ë¯¸ ë¡œë“œëœ í…ìŠ¤ì²˜ê°€ ìˆëŠ”ì§€ í™•ì¸
     CTexture* pTex = FindTexture(_strKey);
     if (nullptr != pTex)
     {
         return pTex;
     }
 
-    // »õ·Î¿î ÅØ½ºÃ³ »ı¼º ¹× ¾ËÆÄ Ã¤³Î Áö¿ø ·Îµå
+    // ìƒˆë¡œìš´ í…ìŠ¤ì²˜ ìƒì„± ë° ì•ŒíŒŒ ì±„ë„ ì§€ì› ë¡œë“œ
     wstring strFilePath = CPathMgr::GetInst()->GetContentPath();
     strFilePath += _strRelativePath;
 
@@ -92,7 +92,7 @@ CTexture* CResMgr::LoadTextureWithAlpha(const wstring& _strKey, const wstring& _
     if (FAILED(pTex->LoadWithAlpha(strFilePath)))
     {
         delete pTex;
-        MessageBox(nullptr, L"¾ËÆÄ Ã¤³Î ÅØ½ºÃ³ ·Îµå ½ÇÆĞ", L"¸®¼Ò½º ·Îµå ½ÇÆĞ", MB_OK);
+        MessageBox(nullptr, L"ì•ŒíŒŒ ì±„ë„ í…ìŠ¤ì²˜ ë¡œë“œ ì‹¤íŒ¨", L"ë¦¬ì†ŒìŠ¤ ë¡œë“œ ì‹¤íŒ¨", MB_OK);
         return nullptr;
     }
 
@@ -105,6 +105,6 @@ CTexture* CResMgr::LoadTextureWithAlpha(const wstring& _strKey, const wstring& _
 
 void CResMgr::CreateDefaultTexture()
 {
-    // ±âº» ÅØ½ºÃ³µéÀ» ¿©±â¼­ ¹Ì¸® ·ÎµåÇÒ ¼ö ÀÖ½À´Ï´Ù.
-    // ¿¹: LoadTexture(L"DefaultPlayer", L"texture\\player.bmp");
+    // ê¸°ë³¸ í…ìŠ¤ì²˜ë“¤ì„ ì—¬ê¸°ì„œ ë¯¸ë¦¬ ë¡œë“œí•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+    // ì˜ˆ: LoadTexture(L"DefaultPlayer", L"texture\\player.bmp");
 }

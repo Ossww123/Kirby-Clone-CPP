@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "gamePCH.h"
 #include "CFadeEffect.h"
 #include "CTimeMgr.h"
 #include "CCore.h"

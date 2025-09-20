@@ -1,4 +1,4 @@
-#include "pch.h"
+Ôªø#include "gamePCH.h"
 #include "CSceneMgr.h"
 #include "CKeyMgr.h"
 #include "CEventMgr.h"
@@ -19,7 +19,7 @@ CSceneMgr::CSceneMgr()
 
 CSceneMgr::~CSceneMgr()
 {
-    // ∏µÁ æ¿ ¡§∏Æ
+    // Î™®Îì† Ïî¨ Ï†ïÎ¶¨
     for (UINT i = 0; i < (UINT)SCENE_TYPE::END; ++i)
     {
         if (nullptr != m_arrScene[i])
@@ -29,13 +29,13 @@ CSceneMgr::~CSceneMgr()
 
 void CSceneMgr::init()
 {
-    // ∏µÁ æ¿ ª˝º∫
+    // Î™®Îì† Ïî¨ ÏÉùÏÑ±
     m_arrScene[(UINT)SCENE_TYPE::START] = new CScene_Start;
-    m_arrScene[(UINT)SCENE_TYPE::TOOL] = new CScene_Tool;
+    //m_arrScene[(UINT)SCENE_TYPE::TOOL] = new CScene_Tool;
     m_arrScene[(UINT)SCENE_TYPE::STAGE_01] = new CScene_Stage01;
     m_arrScene[(UINT)SCENE_TYPE::STAGE_02] = new CScene_Stage02;
 
-    // Ω√¿€ æ¿ º≥¡§
+    // ÏãúÏûë Ïî¨ ÏÑ§Ï†ï
     m_eCurSceneType = SCENE_TYPE::START;
     m_pCurScene = m_arrScene[(UINT)m_eCurSceneType];
 
@@ -47,19 +47,19 @@ void CSceneMgr::init()
 
 void CSceneMgr::update()
 {
-    // «ˆ¿Á æ¿ æ˜µ•¿Ã∆Æ
+    // ÌòÑÏû¨ Ïî¨ ÏóÖÎç∞Ïù¥Ìä∏
     if (m_pCurScene)
     {
         m_pCurScene->Update();
     }
 
-    // ¿¸ø™ æ¿ ¿¸»Ø ≈∞ √≥∏Æ
+    // Ï†ÑÏó≠ Ïî¨ Ï†ÑÌôò ÌÇ§ Ï≤òÎ¶¨
     HandleGlobalSceneTransition();
 }
 
 void CSceneMgr::render(HDC _dc)
 {
-    // «ˆ¿Á æ¿ ∑ª¥ı∏µ
+    // ÌòÑÏû¨ Ïî¨ Î†åÎçîÎßÅ
     if (m_pCurScene)
     {
         m_pCurScene->Render(_dc);
@@ -68,10 +68,10 @@ void CSceneMgr::render(HDC _dc)
 
 void CSceneMgr::ChangeScene(SCENE_TYPE _eNext)
 {
-    // æ¿∫∞ «ÿªÛµµ º≥¡§ (æ¿ ∫Ø∞Ê ¿¸ø° ¿˚øÎ)
+    // Ïî¨Î≥Ñ Ìï¥ÏÉÅÎèÑ ÏÑ§Ï†ï (Ïî¨ Î≥ÄÍ≤Ω Ï†ÑÏóê Ï†ÅÏö©)
     ApplySceneResolution(_eNext);
 
-    // æ¿ ¿¸»Ø Ω««‡
+    // Ïî¨ Ï†ÑÌôò Ïã§Ìñâ
     if (m_pCurScene)
     {
         m_pCurScene->Exit();
@@ -90,20 +90,20 @@ void CSceneMgr::ApplySceneResolution(SCENE_TYPE _eSceneType)
 {
     switch (_eSceneType)
     {
-    case SCENE_TYPE::TOOL:
-        // ≈¯ æ¿: ∑π∫ß ø°µ≈ÕøÎ ≈´ «ÿªÛµµ (1920x1080)
-        CCore::GetInst()->SetToolResolution();
-        break;
+        //case SCENE_TYPE::TOOL:
+        //    // Ìà¥ Ïî¨: Î†àÎ≤® ÏóêÎîîÌÑ∞Ïö© ÌÅ∞ Ìï¥ÏÉÅÎèÑ (1920x1080)
+        //    CCore::GetInst()->SetToolResolution();
+        //    break;
 
     case SCENE_TYPE::START:
     case SCENE_TYPE::STAGE_01:
     case SCENE_TYPE::STAGE_02:
-        // ∞‘¿” æ¿µÈ: ∞‘¿”∫∏¿Ã 4πË «ÿªÛµµ (960x640)
+        // Í≤åÏûÑ Ïî¨Îì§: Í≤åÏûÑÎ≥¥Ïù¥ 4Î∞∞ Ìï¥ÏÉÅÎèÑ (960x640)
         CCore::GetInst()->SetGameResolution();
         break;
 
     default:
-        // ±‚∫ª∞™: ∞‘¿” «ÿªÛµµ
+        // Í∏∞Î≥∏Í∞í: Í≤åÏûÑ Ìï¥ÏÉÅÎèÑ
         CCore::GetInst()->SetGameResolution();
         break;
     }
@@ -111,25 +111,25 @@ void CSceneMgr::ApplySceneResolution(SCENE_TYPE _eSceneType)
 
 void CSceneMgr::HandleGlobalSceneTransition()
 {
-    // START °Í TOOL ≈‰±€ (Ctrl+T)
-    if (KEY_TAP(KEY::T) && KEY_HOLD(KEY::CTRL))
-    {
-        SCENE_TYPE targetScene = (m_pCurScene == m_arrScene[(UINT)SCENE_TYPE::START])
-                                ? SCENE_TYPE::TOOL
-                                : SCENE_TYPE::START;
+    // START ‚Üî TOOL ÌÜ†Í∏Ä (Ctrl+T)
+    //if (KEY_TAP(KEY::T) && KEY_HOLD(KEY::CTRL))
+    //{
+    //    SCENE_TYPE targetScene = (m_pCurScene == m_arrScene[(UINT)SCENE_TYPE::START])
+    //                            ? SCENE_TYPE::TOOL
+    //                            : SCENE_TYPE::START;
 
-        tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)targetScene);
-        CEventMgr::GetInst()->AddEvent(event);
-    }
+    //    tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)targetScene);
+    //    CEventMgr::GetInst()->AddEvent(event);
+    //}
 
-    // STAGE_01∑Œ ¿Ãµø (Ctrl+1)
+    // STAGE_01Î°ú Ïù¥Îèô (Ctrl+1)
     if (KEY_TAP(KEY::ALPHA_1) && KEY_HOLD(KEY::CTRL))
     {
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::STAGE_01);
         CEventMgr::GetInst()->AddEvent(event);
     }
 
-    // STAGE_02∑Œ ¿Ãµø (Ctrl+2)
+    // STAGE_02Î°ú Ïù¥Îèô (Ctrl+2)
     if (KEY_TAP(KEY::ALPHA_2) && KEY_HOLD(KEY::CTRL))
     {
         tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)SCENE_TYPE::STAGE_02);

@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "gamePCH.h"
 #include "CBackgroundMgr.h"
 #include "CBackground.h"
 #include "CResMgr.h"
@@ -10,7 +10,7 @@ CBackgroundMgr::CBackgroundMgr()
 
 CBackgroundMgr::~CBackgroundMgr()
 {
-    // ¸ğµç ¹è°æ ÇØÁ¦
+    // ëª¨ë“  ë°°ê²½ í•´ì œ
     for (auto& pair : m_mapBackground)
     {
         delete pair.second;
@@ -25,12 +25,12 @@ void CBackgroundMgr::init()
 
 CBackground* CBackgroundMgr::CreateBackground(BACKGROUND_TYPE _eType, const wstring& _strTexturePath)
 {
-    // ÀÌ¹Ì Á¸ÀçÇÏ´Â ¹è°æÀÎÁö È®ÀÎ
+    // ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ë°°ê²½ì¸ì§€ í™•ì¸
     CBackground* pExistBg = FindBackground(_eType);
     if (pExistBg)
         return pExistBg;
 
-    // ÅØ½ºÃ³ ·Îµå
+    // í…ìŠ¤ì²˜ ë¡œë“œ
     wstring strKey = L"Background_";
 
     switch (_eType)
@@ -45,16 +45,16 @@ CBackground* CBackgroundMgr::CreateBackground(BACKGROUND_TYPE _eType, const wstr
 
     if (!pTexture)
     {
-        MessageBox(nullptr, L"¹è°æ ÅØ½ºÃ³ ·Îµå ½ÇÆĞ", L"¿¡·¯", MB_OK);
+        MessageBox(nullptr, L"ë°°ê²½ í…ìŠ¤ì²˜ ë¡œë“œ ì‹¤íŒ¨", L"ì—ëŸ¬", MB_OK);
         return nullptr;
     }
 
-    // »õ ¹è°æ »ı¼º
+    // ìƒˆ ë°°ê²½ ìƒì„±
     CBackground* pNewBg = new CBackground;
     pNewBg->SetBackgroundTexture(pTexture);
     pNewBg->SetupBackground(_eType);
 
-    // ¸Ê¿¡ Ãß°¡
+    // ë§µì— ì¶”ê°€
     m_mapBackground.insert(make_pair(_eType, pNewBg));
 
     return pNewBg;
@@ -94,7 +94,7 @@ vector<BACKGROUND_TYPE> CBackgroundMgr::GetAvailableBackgroundTypes()
 
 void CBackgroundMgr::CreateDefaultBackgrounds()
 {
-    // »õ·Î¿î ¹è°æµé »ı¼º
+    // ìƒˆë¡œìš´ ë°°ê²½ë“¤ ìƒì„±
     CreateBackground(BACKGROUND_TYPE::BACKGROUND1, L"background\\background1.bmp");
     CreateBackground(BACKGROUND_TYPE::BACKGROUND2, L"background\\background2.bmp");
     CreateBackground(BACKGROUND_TYPE::BACKGROUND3, L"background\\background3.bmp");

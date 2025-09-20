@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "CBasicMonster.h"
 
 class CWaddleDee : public CBasicMonster
@@ -8,13 +8,13 @@ public:
     virtual ~CWaddleDee();
 
 public:
-    // === °¡»ó ÇÔ¼ö ±¸Çö ===
-    void Move() override;                   // ±âº» °È±â ÀÌµ¿
+    // === ê°€ìƒ í•¨ìˆ˜ êµ¬í˜„ ===
+    void Move() override;                   // ê¸°ë³¸ ê±·ê¸° ì´ë™
 
 protected:
-    // === ¾Ö´Ï¸ŞÀÌ¼Ç ¸ÅÇÎ ¼³Á¤ ±¸Çö ===
+    // === ì• ë‹ˆë©”ì´ì…˜ ë§¤í•‘ ì„¤ì • êµ¬í˜„ ===
     void SetupAnimationMapping() override;
 
 private:
-    void ChangeDirection();                 // ¹æÇâ ÀüÈ¯ ·ÎÁ÷
+    void ChangeDirection();                 // ë°©í–¥ ì „í™˜ ë¡œì§
 };

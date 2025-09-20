@@ -26,6 +26,6 @@ using std::make_pair;
 #include <commdlg.h>
 #include <mmsystem.h>
 
-#include "define.h"
-#include "enum.h"
-#include "struct.h"
+#include <KirbyEngine/define.h>
+#include <KirbyEngine/enum.h>
+#include <KirbyEngine/struct.h>

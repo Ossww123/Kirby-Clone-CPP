@@ -1,42 +1,42 @@
-#pragma once
+ï»¿#pragma once
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CStageImage;
 class CTexture;
 
-// ½ºÅ×ÀÌÁö ÀÌ¹ÌÁöµéÀ» °ü¸®ÇÏ´Â ¸Å´ÏÀú Å¬·¡½º
+// ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ë“¤ì„ ê´€ë¦¬í•˜ëŠ” ë§¤ë‹ˆì € í´ë˜ìŠ¤
 class CStageMgr
 {
     SINGLE(CStageMgr);
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     void init();
     void Update();
     void Render(HDC _dc);
 
 public:
-    // === ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö »ı¼º ¹× °ü¸® ===
+    // === ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ìƒì„± ë° ê´€ë¦¬ ===
     CStageImage* CreateStageImage(STAGE_IMAGE_TYPE _eType, const wstring& _strTexturePath);
     CStageImage* FindStageImage(STAGE_IMAGE_TYPE _eType) const;
     void SetCurrentStageImage(STAGE_IMAGE_TYPE _eType);
 
 private:
-    // === ½ºÅ×ÀÌÁö »ı¼º °ü·Ã ³»ºÎ Ã³¸® ===
+    // === ìŠ¤í…Œì´ì§€ ìƒì„± ê´€ë ¨ ë‚´ë¶€ ì²˜ë¦¬ ===
     void CreateDefaultStageImages();
 
 public:
-    // === ÇöÀç ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö Á¢±ÙÀÚ ===
+    // === í˜„ì¬ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ì ‘ê·¼ì ===
     CStageImage* GetCurrentStageImage() const { return m_pCurrentStageImage; }
     STAGE_IMAGE_TYPE GetCurrentStageType() const;
 
 public:
-    // === ½ºÅ×ÀÌÁö Á¤º¸ À¯Æ¿¸®Æ¼ ===
+    // === ìŠ¤í…Œì´ì§€ ì •ë³´ ìœ í‹¸ë¦¬í‹° ===
     const wchar_t* GetStageImageName(STAGE_IMAGE_TYPE _eType) const;
     vector<STAGE_IMAGE_TYPE> GetAvailableStageImageTypes() const;
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
-    map<STAGE_IMAGE_TYPE, CStageImage*> m_mapStageImage;    // ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö ¸Ê
-    CStageImage* m_pCurrentStageImage; // ÇöÀç ¼±ÅÃµÈ ½ºÅ×ÀÌÁö ÀÌ¹ÌÁö
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
+    map<STAGE_IMAGE_TYPE, CStageImage*> m_mapStageImage;    // ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€ ë§µ
+    CStageImage* m_pCurrentStageImage; // í˜„ì¬ ì„ íƒëœ ìŠ¤í…Œì´ì§€ ì´ë¯¸ì§€
 };

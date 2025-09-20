@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "CObjectFactory.h"
 
 class CEditorCore;
@@ -7,60 +7,60 @@ class CBackground;
 class CEditorObjectManager
 {
 public:
-    // === »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     CEditorObjectManager();
     ~CEditorObjectManager();
 
 public:
-    // === ÇÙ½É »ı¸íÁÖ±â ÇÔ¼ö ===
+    // === í•µì‹¬ ìƒëª…ì£¼ê¸° í•¨ìˆ˜ ===
     void Initialize(CEditorCore* _pCore);
     void Update();
 
 public:
-    // === ¿ÀºêÁ§Æ® ¹èÄ¡/»èÁ¦ °ü¸® ===
+    // === ì˜¤ë¸Œì íŠ¸ ë°°ì¹˜/ì‚­ì œ ê´€ë¦¬ ===
     void PlaceObject(Vec2 _vPos);
     void DeleteObjectAtPos(Vec2 _vPos);
     CObject* FindObjectAtPos(Vec2 _vPos);
 
 public:
-    // === ¿ÀºêÁ§Æ® Ä«Å×°í¸® °ü¸® ===
+    // === ì˜¤ë¸Œì íŠ¸ ì¹´í…Œê³ ë¦¬ ê´€ë¦¬ ===
     void ChangeObjectCategory(const wstring& _strCategory);
     void NextObjectInCategory();
     void PrevObjectInCategory();
     void SetCurrentSubType(int index);
 
 public:
-    // === ¹è°æ ½Ã½ºÅÛ °ü¸® ===
+    // === ë°°ê²½ ì‹œìŠ¤í…œ ê´€ë¦¬ ===
     void ChangeBackground(BACKGROUND_TYPE _eBgType);
     void NextBackground();
     void PrevBackground();
     void SetCurrentBackgroundType(BACKGROUND_TYPE _eCurrentBgType) { m_eCurrentBgType = _eCurrentBgType; }
 
 private:
-    // === ¹è°æ ½Ã½ºÅÛ ³»ºÎ ÇÔ¼ö ===
+    // === ë°°ê²½ ì‹œìŠ¤í…œ ë‚´ë¶€ í•¨ìˆ˜ ===
     void InitializeBackgroundSystem();
 
 public:
-    // === Å¸ÀÏ ½Ã°¢Àû Å¸ÀÔ °ü¸® ===
+    // === íƒ€ì¼ ì‹œê°ì  íƒ€ì… ê´€ë¦¬ ===
     void NextTileVisual();
     void PrevTileVisual();
 
 private:
-    // === Å¸ÀÏ ½Ã½ºÅÛ ³»ºÎ ÇÔ¼ö ===
+    // === íƒ€ì¼ ì‹œìŠ¤í…œ ë‚´ë¶€ í•¨ìˆ˜ ===
     void InitializeTileVisualSystem();
 
 public:
-    // === ·¹º§ °ü¸® ÇÔ¼öµé ===
-    void ClearAllObjects();           // ¸ğµç ¿ÀºêÁ§Æ® »èÁ¦
-    void ResetToDefault();            // ±âº» ¼³Á¤À¸·Î ¸®¼Â
+    // === ë ˆë²¨ ê´€ë¦¬ í•¨ìˆ˜ë“¤ ===
+    void ClearAllObjects();           // ëª¨ë“  ì˜¤ë¸Œì íŠ¸ ì‚­ì œ
+    void ResetToDefault();            // ê¸°ë³¸ ì„¤ì •ìœ¼ë¡œ ë¦¬ì…‹
 
 public:
-    // === ÇÃ·¹ÀÌ¾î ½ºÆù °ü¸® ===
+    // === í”Œë ˆì´ì–´ ìŠ¤í° ê´€ë¦¬ ===
     void SetPlayerSpawnPos(Vec2 _vPos) { m_vPlayerSpawnPos = _vPos; }
     void SetShowPlayerSpawn(bool _bShow) { m_bShowPlayerSpawn = _bShow; }
 
 public:
-    // === Getter ÇÔ¼öµé ===
+    // === Getter í•¨ìˆ˜ë“¤ ===
     OBJECT_TYPE GetCurrentObjectType() const { return m_eCurrentObjectType; }
     TILE_VISUAL_TYPE GetCurrentTileVisual() const { return m_eCurrentTileVisual; }
     BACKGROUND_TYPE GetCurrentBackgroundType() const { return m_eCurrentBgType; }
@@ -75,34 +75,34 @@ public:
     Vec2 GetPlayerSpawnPos() const { return m_vPlayerSpawnPos; }
     bool IsShowPlayerSpawn() const { return m_bShowPlayerSpawn; }
 
-    int GetTotalObjectCount() const;        // ÀüÃ¼ ¿ÀºêÁ§Æ® ¼ö ¹İÈ¯
+    int GetTotalObjectCount() const;        // ì „ì²´ ì˜¤ë¸Œì íŠ¸ ìˆ˜ ë°˜í™˜
     const wchar_t* GetCurrentObjectName() const;
     const wchar_t* GetBackgroundName(BACKGROUND_TYPE _eType) const;
     const wchar_t* GetTileVisualName(TILE_VISUAL_TYPE _eType) const;
 
 private:
-    // === ¸â¹ö º¯¼öµé ===
+    // === ë©¤ë²„ ë³€ìˆ˜ë“¤ ===
 
-    // === ¿¡µğÅÍ ÄÚ¾î ÂüÁ¶ ===
-    CEditorCore* m_pEditorCore;     // ¿¡µğÅÍ ÄÚ¾î ÂüÁ¶
+    // === ì—ë””í„° ì½”ì–´ ì°¸ì¡° ===
+    CEditorCore* m_pEditorCore;     // ì—ë””í„° ì½”ì–´ ì°¸ì¡°
 
-    // === ¿ÀºêÁ§Æ® ÆÑÅä¸® °ü·Ã ===
-    OBJECT_TYPE         m_eCurrentObjectType;  // ÇöÀç ¼±ÅÃµÈ ¿ÀºêÁ§Æ® Å¸ÀÔ
-    int                 m_iCurrentSubType;     // ÇöÀç ¼­ºê Å¸ÀÔ ÀÎµ¦½º
-    vector<OBJECT_TYPE> m_vecCurrentCategory;  // ÇöÀç Ä«Å×°í¸®ÀÇ ¿ÀºêÁ§Æ® ¸ñ·Ï
+    // === ì˜¤ë¸Œì íŠ¸ íŒ©í† ë¦¬ ê´€ë ¨ ===
+    OBJECT_TYPE         m_eCurrentObjectType;  // í˜„ì¬ ì„ íƒëœ ì˜¤ë¸Œì íŠ¸ íƒ€ì…
+    int                 m_iCurrentSubType;     // í˜„ì¬ ì„œë¸Œ íƒ€ì… ì¸ë±ìŠ¤
+    vector<OBJECT_TYPE> m_vecCurrentCategory;  // í˜„ì¬ ì¹´í…Œê³ ë¦¬ì˜ ì˜¤ë¸Œì íŠ¸ ëª©ë¡
 
-    // === ¹è°æ ½Ã½ºÅÛ °ü·Ã ===
-    CBackground* m_pCurrentBackground;   // ÇöÀç ¹è°æ °´Ã¼
-    BACKGROUND_TYPE             m_eCurrentBgType;       // ÇöÀç ¹è°æ Å¸ÀÔ
-    vector<BACKGROUND_TYPE>     m_vecBackgroundTypes;   // »ç¿ë °¡´ÉÇÑ ¹è°æ Å¸ÀÔµé
+    // === ë°°ê²½ ì‹œìŠ¤í…œ ê´€ë ¨ ===
+    CBackground* m_pCurrentBackground;   // í˜„ì¬ ë°°ê²½ ê°ì²´
+    BACKGROUND_TYPE             m_eCurrentBgType;       // í˜„ì¬ ë°°ê²½ íƒ€ì…
+    vector<BACKGROUND_TYPE>     m_vecBackgroundTypes;   // ì‚¬ìš© ê°€ëŠ¥í•œ ë°°ê²½ íƒ€ì…ë“¤
 
-    // === Å¸ÀÏ ½Ã°¢Àû Å¸ÀÔ °ü·Ã ===
-    TILE_VISUAL_TYPE            m_eCurrentTileVisual;   // ÇöÀç Å¸ÀÏ ½Ã°¢Àû Å¸ÀÔ
-    vector<TILE_VISUAL_TYPE>    m_vecTileVisualTypes;   // »ç¿ë °¡´ÉÇÑ Å¸ÀÏ ½Ã°¢Àû Å¸ÀÔµé
-    int                         m_iTileVisualIndex;     // Å¸ÀÏ ½Ã°¢Àû Å¸ÀÔ ÀÎµ¦½º
+    // === íƒ€ì¼ ì‹œê°ì  íƒ€ì… ê´€ë ¨ ===
+    TILE_VISUAL_TYPE            m_eCurrentTileVisual;   // í˜„ì¬ íƒ€ì¼ ì‹œê°ì  íƒ€ì…
+    vector<TILE_VISUAL_TYPE>    m_vecTileVisualTypes;   // ì‚¬ìš© ê°€ëŠ¥í•œ íƒ€ì¼ ì‹œê°ì  íƒ€ì…ë“¤
+    int                         m_iTileVisualIndex;     // íƒ€ì¼ ì‹œê°ì  íƒ€ì… ì¸ë±ìŠ¤
 
-    // === ÇÃ·¹ÀÌ¾î ½ºÆù °ü·Ã ===
-    Vec2                m_vPlayerSpawnPos;      // ÇÃ·¹ÀÌ¾î ½ºÆù À§Ä¡
-    bool                m_bShowPlayerSpawn;     // ÇÃ·¹ÀÌ¾î ½ºÆù Ç¥½Ã ¿©ºÎ
-    bool                m_bPlayerSpawnMode;     // ÇÃ·¹ÀÌ¾î ½ºÆù ¸ğµå ¿©ºÎ
+    // === í”Œë ˆì´ì–´ ìŠ¤í° ê´€ë ¨ ===
+    Vec2                m_vPlayerSpawnPos;      // í”Œë ˆì´ì–´ ìŠ¤í° ìœ„ì¹˜
+    bool                m_bShowPlayerSpawn;     // í”Œë ˆì´ì–´ ìŠ¤í° í‘œì‹œ ì—¬ë¶€
+    bool                m_bPlayerSpawnMode;     // í”Œë ˆì´ì–´ ìŠ¤í° ëª¨ë“œ ì—¬ë¶€
 };

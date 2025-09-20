@@ -1,33 +1,33 @@
-#pragma once
+ï»¿#pragma once
 
 class CPlayer;
 
 class CPlayerHealthSystem
 {
 private:
-    CPlayer* m_pOwner;              // ÇÃ·¹ÀÌ¾î ÂüÁ¶
+    CPlayer* m_pOwner;              // í”Œë ˆì´ì–´ ì°¸ì¡°
 
-    // === Ã¼·Â °ü·Ã ===
-    int m_iMaxHP;                   // ÃÖ´ë Ã¼·Â (6)
-    int m_iCurrentHP;               // ÇöÀç Ã¼·Â
+    // === ì²´ë ¥ ê´€ë ¨ ===
+    int m_iMaxHP;                   // ìµœëŒ€ ì²´ë ¥ (6)
+    int m_iCurrentHP;               // í˜„ì¬ ì²´ë ¥
 
-    // === ¹«Àû »óÅÂ °ü·Ã ===
-    bool m_bIsInvincible;           // ¹«Àû »óÅÂ
-    float m_fInvincibleTime;        // ¹«Àû Áö¼Ó ½Ã°£
-    float m_fInvincibleTimer;       // ¹«Àû Å¸ÀÌ¸Ó
-    float m_fBlinkInterval;         // ±ôºıÀÓ °£°İ
+    // === ë¬´ì  ìƒíƒœ ê´€ë ¨ ===
+    bool m_bIsInvincible;           // ë¬´ì  ìƒíƒœ
+    float m_fInvincibleTime;        // ë¬´ì  ì§€ì† ì‹œê°„
+    float m_fInvincibleTimer;       // ë¬´ì  íƒ€ì´ë¨¸
+    float m_fBlinkInterval;         // ê¹œë¹¡ì„ ê°„ê²©
 
-    // === °ÔÀÓ¿À¹ö °ü·Ã ===
-    bool m_bIsGameOver;             // °ÔÀÓ¿À¹ö »óÅÂ
-    float m_fGameOverY;             // ³«»ç °ÔÀÓ¿À¹ö Y ÁÂÇ¥
-    float m_fGameOverTimer;         // °ÔÀÓ¿À¹ö ÈÄ ´ë±â ½Ã°£
-    float m_fGameOverDelay;         // Àç½ÃÀÛ ´ë±â ½Ã°£ (2ÃÊ)
+    // === ê²Œì„ì˜¤ë²„ ê´€ë ¨ ===
+    bool m_bIsGameOver;             // ê²Œì„ì˜¤ë²„ ìƒíƒœ
+    float m_fGameOverY;             // ë‚™ì‚¬ ê²Œì„ì˜¤ë²„ Y ì¢Œí‘œ
+    float m_fGameOverTimer;         // ê²Œì„ì˜¤ë²„ í›„ ëŒ€ê¸° ì‹œê°„
+    float m_fGameOverDelay;         // ì¬ì‹œì‘ ëŒ€ê¸° ì‹œê°„ (2ì´ˆ)
 
-    // === ³Ë¹é °ü·Ã ===
-    bool m_bKnockbackActive;        // ³Ë¹é ÁøÇàÁß
-    float m_fKnockbackTimer;        // ³Ë¹é Áö¼Ó ½Ã°£
-    float m_fKnockbackDuration;     // ³Ë¹é ÃÑ Áö¼Ó ½Ã°£
-    Vec2 m_vKnockbackForce;         // ³Ë¹é Èû
+    // === ë„‰ë°± ê´€ë ¨ ===
+    bool m_bKnockbackActive;        // ë„‰ë°± ì§„í–‰ì¤‘
+    float m_fKnockbackTimer;        // ë„‰ë°± ì§€ì† ì‹œê°„
+    float m_fKnockbackDuration;     // ë„‰ë°± ì´ ì§€ì† ì‹œê°„
+    Vec2 m_vKnockbackForce;         // ë„‰ë°± í˜
 
 public:
     CPlayerHealthSystem(CPlayer* _pOwner);
@@ -38,46 +38,46 @@ public:
     void Update();
     void Render(HDC _dc);
 
-    // === Ã¼·Â °ü¸® ===
+    // === ì²´ë ¥ ê´€ë¦¬ ===
     void TakeDamage(int _iDamage = 1, Vec2 _vKnockbackDir = Vec2(0.f, 0.f));
     void Heal(int _iHeal = 1);
     void SetHP(int _iHP);
     void SetMaxHP(int _iMaxHP);
 
-    // === °ÔÅÍ ÇÔ¼öµé ===
+    // === ê²Œí„° í•¨ìˆ˜ë“¤ ===
     int GetCurrentHP() const { return m_iCurrentHP; }
     int GetMaxHP() const { return m_iMaxHP; }
     float GetHPRatio() const { return (float)m_iCurrentHP / (float)m_iMaxHP; }
 
-    // === »óÅÂ Ã¼Å© ===
+    // === ìƒíƒœ ì²´í¬ ===
     bool IsInvincible() const { return m_bIsInvincible; }
     bool IsGameOver() const { return m_bIsGameOver; }
     bool IsKnockbackActive() const { return m_bKnockbackActive; }
-    bool ShouldRenderBlink() const;     // ±ôºıÀÓ ·»´õ¸µ ¿©ºÎ
+    bool ShouldRenderBlink() const;     // ê¹œë¹¡ì„ ë Œë”ë§ ì—¬ë¶€
 
-    // === °ÔÀÓ¿À¹ö °ü·Ã ===
+    // === ê²Œì„ì˜¤ë²„ ê´€ë ¨ ===
     void SetGameOverY(float _fY) { m_fGameOverY = _fY; }
-    void ForceGameOver();               // °­Á¦ °ÔÀÓ¿À¹ö
-    void RestartStage();                // ½ºÅ×ÀÌÁö Àç½ÃÀÛ
+    void ForceGameOver();               // ê°•ì œ ê²Œì„ì˜¤ë²„
+    void RestartStage();                // ìŠ¤í…Œì´ì§€ ì¬ì‹œì‘
 
-    // === ¹«Àû °ü·Ã ===
+    // === ë¬´ì  ê´€ë ¨ ===
     void StartInvincible(float _fTime = 2.0f);
     void StopInvincible() { m_bIsInvincible = false; m_fInvincibleTimer = 0.f; }
 
 private:
-    // === ¾÷µ¥ÀÌÆ® ÇÔ¼öµé ===
-    void UpdateInvincible();           // ¹«Àû ½Ã°£ ¾÷µ¥ÀÌÆ®
-    void UpdateGameOver();             // °ÔÀÓ¿À¹ö Ã³¸®
-    void UpdateKnockback();            // ³Ë¹é Ã³¸®
-    void CheckGameOverConditions();    // °ÔÀÓ¿À¹ö Á¶°Ç Ã¼Å©
+    // === ì—…ë°ì´íŠ¸ í•¨ìˆ˜ë“¤ ===
+    void UpdateInvincible();           // ë¬´ì  ì‹œê°„ ì—…ë°ì´íŠ¸
+    void UpdateGameOver();             // ê²Œì„ì˜¤ë²„ ì²˜ë¦¬
+    void UpdateKnockback();            // ë„‰ë°± ì²˜ë¦¬
+    void CheckGameOverConditions();    // ê²Œì„ì˜¤ë²„ ì¡°ê±´ ì²´í¬
 
-    // === ·»´õ¸µ ÇÔ¼öµé ===
-    void RenderHealthUI(HDC _dc);      // Ã¼·Â UI ·»´õ¸µ
-    void RenderGameOverUI(HDC _dc);    // °ÔÀÓ¿À¹ö UI ·»´õ¸µ
+    // === ë Œë”ë§ í•¨ìˆ˜ë“¤ ===
+    void RenderHealthUI(HDC _dc);      // ì²´ë ¥ UI ë Œë”ë§
+    void RenderGameOverUI(HDC _dc);    // ê²Œì„ì˜¤ë²„ UI ë Œë”ë§
 
-    // === È¿°ú ÇÔ¼öµé ===
+    // === íš¨ê³¼ í•¨ìˆ˜ë“¤ ===
     void ApplyKnockback(Vec2 _vDirection, float _fPower = 200.f);
-    void PlayDamageEffects();          // ÇÇ°İ È¿°ú (»ç¿îµå, È­¸é Èçµé¸² µî)
-    void PlayHealEffects();            // È¸º¹ È¿°ú
-    void PlayGameOverEffects();        // °ÔÀÓ¿À¹ö È¿°ú
+    void PlayDamageEffects();          // í”¼ê²© íš¨ê³¼ (ì‚¬ìš´ë“œ, í™”ë©´ í”ë“¤ë¦¼ ë“±)
+    void PlayHealEffects();            // íšŒë³µ íš¨ê³¼
+    void PlayGameOverEffects();        // ê²Œì„ì˜¤ë²„ íš¨ê³¼
 };

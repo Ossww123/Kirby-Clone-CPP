@@ -1,4 +1,4 @@
-#pragma once
+О╩©#pragma once
 
 class CBackground;
 class CTexture;
@@ -8,19 +8,19 @@ class CBackgroundMgr
     SINGLE(CBackgroundMgr);
 
 private:
-    map<BACKGROUND_TYPE, CBackground*> m_mapBackground;   // ╧Х╟Ф ╦й
+    map<BACKGROUND_TYPE, CBackground*> m_mapBackground;   // К╟╟Й╡╫ К╖╣
 
 public:
     void init();
 
-    // ╧Х╟Ф ╩Щ╪╨ ╧в ╟Э╦╝
+    // К╟╟Й╡╫ Л┐²Л└╠ К╟▐ Й╢─К╕╛
     CBackground* CreateBackground(BACKGROUND_TYPE _eType, const wstring& _strTexturePath);
     CBackground* FindBackground(BACKGROUND_TYPE _eType);
 
-    // ╧Х╟Ф е╦ют ╟Э╥ц ю╞ф©╦╝ф╪
+    // К╟╟Й╡╫ М┐─Л·┘ Й╢─К═╗ Л°═М▀╦К╕╛М▀╟
     const wchar_t* GetBackgroundName(BACKGROUND_TYPE _eType);
     vector<BACKGROUND_TYPE> GetAvailableBackgroundTypes();
 
 private:
-    void CreateDefaultBackgrounds();    // ╠Б╨╩ ╧Х╟Ф╣И ╩Щ╪╨
+    void CreateDefaultBackgrounds();    // Й╦╟КЁ╦ К╟╟Й╡╫К⌠╓ Л┐²Л└╠
 };
