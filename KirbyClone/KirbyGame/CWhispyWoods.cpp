@@ -211,7 +211,7 @@ void CWhispyWoods::SetupAnimationMapping()
     m_mapStateToAnimation[MONSTER_STATE::DAMAGE] = L"DAMAGE";    // 데미지받는상태
     m_mapStateToAnimation[MONSTER_STATE::DEFEAT1] = L"DEFEAT1";  // 패배 애니메이션 1단계
     m_mapStateToAnimation[MONSTER_STATE::DEFEAT3] = L"DEFEAT3";  // 패배 애니메이션 3단계
-    m_mapStateToAnimation[MONSTER_STATE::EDITOR_IDLE] = L"IDLE"; // 에디터에서도 IDLE 애니메이션 사용
+    // m_mapStateToAnimation[MONSTER_STATE::EDITOR_IDLE] = L"IDLE"; // 에디터에서도 IDLE 애니메이션 사용 - 현재 미사용
 }
 
 void CWhispyWoods::ExecuteRandomAttack()

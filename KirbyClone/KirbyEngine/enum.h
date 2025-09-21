@@ -214,12 +214,13 @@ enum class MONSTER_STATE
     DEFEAT1 ,        // 패배 애니메이션 1단계
     DEFEAT3 ,        // 패배 애니메이션 3단계
 
-    EDITOR_IDLE,
+    // EDITOR_IDLE,     // 에디터 전용 상태 - 현재 미사용
 
     END
 };
 
-// 에디터 모드 열거형 (확장)
+// 에디터 모드 열거형 (확장) - 현재 미사용, 나중에 에디터 구현시 활성화
+/*
 enum class EDITOR_MODE
 {
     NORMAL ,             // 기본 모드
@@ -241,6 +242,7 @@ enum class EDITOR_MODE
 
     END
 };
+*/
 
 // 오브젝트 타입 열거형 추가
 enum class OBJECT_TYPE

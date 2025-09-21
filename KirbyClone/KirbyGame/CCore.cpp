@@ -17,8 +17,6 @@
 #include "CUIMgr.h"
 #include "CFadeEffect.h"
 
-// === 정적 멤버 변수 정의 ===
-bool CCore::s_bShowDebugVisuals = false;
 
 CCore::CCore ( )
 	: m_hWnd ( 0 )
@@ -102,11 +100,6 @@ void CCore::update ( )
 	CTimeMgr::GetInst ( )->update ( );
 	CKeyMgr::GetInst ( )->update ( );
 	
-	// CTRL 키로 디버그 시각 요소 토글
-	if (CKeyMgr::GetInst()->IsKeyTap(KEY::CTRL))
-	{
-		ToggleDebugVisuals();
-	}
 
 	// 카메라 및 씬 업데이트
 	CCamera::GetInst ( )->update ( );

@@ -477,35 +477,22 @@ void CBoss::MovePlayerToCenterAndStartVictoryWait()
 
 void CBoss::StartVictoryDance()
 {
-    OutputDebugString(L"[DEBUG] StartVictoryDance() called\n");
-    
     CScene* pCurrentScene = CSceneMgr::GetInst()->GetCurScene();
     if (!pCurrentScene)
     {
-        OutputDebugString(L"[DEBUG] ERROR: No current scene!\n");
         return;
     }
-    
+
     // 플레이어 찾기
     const vector<CObject*>& vecPlayers = pCurrentScene->GetGroupObject(GROUP_TYPE::PLAYER);
     if (!vecPlayers.empty() && vecPlayers[0])
     {
         CPlayer* pPlayer = (CPlayer*)vecPlayers[0];
-        
-        OutputDebugString(L"[DEBUG] Player found, releasing victory sequence waiting\n");
-        
+
         // 승리 시퀀스 입력 차단 해제
         pPlayer->SetVictorySequenceWaiting(false);
-        
-        OutputDebugString(L"[DEBUG] Forcing state change to VICTORY_DANCE\n");
-        
+
         // 승리 춤 상태로 변경 (StateMachine을 통해 강제 전환)
         pPlayer->GetStateMachine()->ForceStateChange(PLAYER_STATE::VICTORY_DANCE);
-        
-        OutputDebugString(L"[DEBUG] VICTORY_DANCE state change completed\n");
-    }
-    else
-    {
-        OutputDebugString(L"[DEBUG] ERROR: No player found!\n");
     }
 }

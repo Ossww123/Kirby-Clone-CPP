@@ -163,10 +163,6 @@ void CPlayerStateMachine::ChangeStateInternal ( PLAYER_STATE _eState )
     // 유효성 검사
     if ( !CanChangeToState ( _eState ) )
     {
-        // 디버깅: 유효성 검사 실패
-        char debugMsg[256];
-        sprintf_s(debugMsg, "State transition BLOCKED: %d -> %d\n", (int)m_eCurState, (int)_eState);
-        OutputDebugStringA(debugMsg);
         return;
     }
 

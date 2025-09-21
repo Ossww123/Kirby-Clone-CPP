@@ -41,7 +41,7 @@ void CTile::Update ( )
 void CTile::Render ( HDC _dc )
 {
     // 디버그 시각 요소가 켜져 있을 때만 투명 타일과 트리거 박스 렌더링
-    if ( CCore::IsDebugVisualsVisible ( ) )
+    if ( false ) // 디버깅 시각 요소 제거
     {
         // 타일 타입별 렌더링 처리
         switch ( m_eVisualType )

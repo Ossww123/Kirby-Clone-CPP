@@ -300,9 +300,9 @@ void CMonster::ChangeState(MONSTER_STATE _eState)
             case MONSTER_STATE::BEING_INHALED:
                 pAnimator->Play(L"DAMAGE", true);  // 빨아들어지는 동안 계속 재생
                 break;
-            case MONSTER_STATE::EDITOR_IDLE:
-                pAnimator->Play(L"IDLE", true);
-                break;
+            // case MONSTER_STATE::EDITOR_IDLE: // 에디터 전용 상태 - 현재 미사용
+            //     pAnimator->Play(L"IDLE", true);
+            //     break;
             default:
                 pAnimator->Play(L"IDLE", true);
                 break;
@@ -323,34 +323,21 @@ void CMonster::TurnAround()
 
 void CMonster::SetEditorMode(bool _bEditorMode)
 {
-    bool bPrevEditorMode = m_bEditorMode;
     m_bEditorMode = _bEditorMode;
-    
-    // 에디터 모드에서 게임 모드로 전환될 때 초기화
-    if (bPrevEditorMode && !_bEditorMode)
+
+    // 게임에서는 항상 false로 설정되므로 게임 모드로 초기화
+    if (!_bEditorMode)
     {
-        // 리지드바디 다시 활성화
+        // 리지드바디 활성화
         if (GetRigidBody())
         {
             GetRigidBody()->SetUseGravity(true);
             GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
         }
-        
+
         // 게임 상태로 초기화
         ChangeState(MONSTER_STATE::IDLE);
         m_fStateTimer = 0.f;
-    }
-    // 게임 모드에서 에디터 모드로 전환될 때
-    else if (!bPrevEditorMode && _bEditorMode)
-    {
-        // 물리 효과 정지
-        if (GetRigidBody())
-        {
-            GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
-        }
-        
-        // 에디터 전용 상태로 변경
-        ChangeState(MONSTER_STATE::EDITOR_IDLE);
     }
 }
 
@@ -413,9 +400,9 @@ void CMonster::UpdateState()
     case MONSTER_STATE::ATTACK:
         UpdateAttack();
         break;
-    case MONSTER_STATE::EDITOR_IDLE:
-        UpdateEditorIdle();
-        break;
+    // case MONSTER_STATE::EDITOR_IDLE: // 에디터 전용 상태 - 현재 미사용
+    //     UpdateEditorIdle();
+    //     break;
     }
 }
 

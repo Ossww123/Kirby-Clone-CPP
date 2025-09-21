@@ -101,18 +101,6 @@ void CAbilityStar::Update()
         UpdatePhysics();
     }
     
-    // === 디버깅: 위치와 속도 출력 ===
-    static float debugTimer = 0.f;
-    debugTimer += fDT;
-    if (debugTimer >= 0.5f)  // 0.5초마다 출력
-    {
-        Vec2 vPos = GetPos();
-        wchar_t debugText[256];
-        swprintf_s(debugText, L"AbilityStar - Pos: (%.1f, %.1f), Vel: (%.1f, %.1f), OnGround: %s\n", 
-                   vPos.x, vPos.y, m_vVelocity.x, m_vVelocity.y, m_bOnGround ? L"true" : L"false");
-        OutputDebugString(debugText);
-        debugTimer = 0.f;
-    }
     
     // 땅 충돌 체크
     CheckGroundCollision();

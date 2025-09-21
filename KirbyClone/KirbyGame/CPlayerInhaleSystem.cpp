@@ -355,15 +355,6 @@ void CPlayerInhaleSystem::SwallowTarget(CObject* _pTarget)
             // StateMachine에 능력 정보 저장 (실제 적용은 나중)
             m_pOwner->GetStateMachine()->SetPendingCopyAbility(ability);
             
-            // 디버그 출력
-            const char* abilityName = "";
-            switch (ability)
-            {
-            case COPY_ABILITY::FIRE: abilityName = "FIRE"; break;
-            case COPY_ABILITY::BEAM: abilityName = "BEAM"; break;
-            case COPY_ABILITY::SPARK: abilityName = "SPARK"; break;
-            default: abilityName = "UNKNOWN"; break;
-            }
         }
     }
 

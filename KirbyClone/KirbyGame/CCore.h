@@ -43,9 +43,6 @@ public:
     static float GetPixelScale() { return PIXEL_SCALE; }
     static Vec2 GetGameBoyResolution() { return Vec2(160.f, 144.f); }
     
-    // === 디버그 가시성 토글 ===
-    static bool IsDebugVisualsVisible() { return s_bShowDebugVisuals; }
-    static void ToggleDebugVisuals() { s_bShowDebugVisuals = !s_bShowDebugVisuals; }
 
 private:
     // === 윈도우 변수들 ===
@@ -57,6 +54,4 @@ private:
     HBITMAP m_hBit;         // 백버퍼용 비트맵 (화면 크기와 동일)
     HDC     m_memDC;        // 백버퍼용 메모리 DC (더블버퍼링 핵심)
     
-    // === 정적 멤버 변수 ===
-    static bool s_bShowDebugVisuals; // 디버그 시각 요소 표시 여부
 };
