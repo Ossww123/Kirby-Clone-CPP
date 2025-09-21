@@ -6,7 +6,6 @@
 #include "CCore.h"
 #include "CScene.h"
 #include "CScene_Start.h"
-#include "CScene_Tool.h"
 #include "CScene_Stage01.h"
 #include "CScene_Stage02.h"
 

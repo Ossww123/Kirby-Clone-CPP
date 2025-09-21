@@ -8,9 +8,11 @@ public:
     // === 게임 상수들 ===
     static constexpr int GAME_WIDTH = 960;      // 게임보이 해상도 4배 (240*4)
     static constexpr int GAME_HEIGHT = 640;     // 게임보이 해상도 4배 (160*4)
-    static constexpr int TOOL_WIDTH = 1920;     // 툴 해상도 (풀 스크린)
-    static constexpr int TOOL_HEIGHT = 1080;    // 툴 해상도 (풀 스크린)
     static constexpr float PIXEL_SCALE = 4.0f;  // 픽셀아트 4배 확대
+
+    // === 윈도우 위치 상수 ===
+    static constexpr int WINDOW_POS_X = 100;    // 윈도우 기본 X 위치
+    static constexpr int WINDOW_POS_Y = 100;    // 윈도우 기본 Y 위치
 
 public:
     // === 메인 진입점 함수들 ===
@@ -24,7 +26,6 @@ private:
 public:
     // === 해상도 설정 ===
     void SetGameResolution();                           // 게임 해상도로 설정 (960x640)
-    void SetToolResolution();                           // 툴 해상도로 설정 (1920x1080)
 
 private:
     // === 해상도 변경 내부 함수 ===

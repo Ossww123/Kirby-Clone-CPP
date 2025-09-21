@@ -4,7 +4,6 @@
 #include "CCollider.h"
 #include "CCore.h"
 #include "CSceneMgr.h"
-#include "CScene_Tool.h"
 
 CTile::CTile ( )
     : m_eTileType ( OBJECT_TYPE::TILE_GROUND )

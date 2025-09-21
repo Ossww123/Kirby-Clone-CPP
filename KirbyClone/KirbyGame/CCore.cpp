@@ -53,7 +53,7 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	// 윈도우 크기 조정
 	RECT rt = { 0, 0, ( long ) m_ptResolution.x, ( long ) m_ptResolution.y };
 	AdjustWindowRectEx ( &rt , style , hasMenu , exstyle );
-	SetWindowPos ( m_hWnd , nullptr , 100 , 100 , rt.right - rt.left , rt.bottom - rt.top , 0 );
+	SetWindowPos ( m_hWnd , nullptr , WINDOW_POS_X , WINDOW_POS_Y , rt.right - rt.left , rt.bottom - rt.top , 0 );
 
 	// 더블 버퍼링 초기화
 	m_hDC = GetDC ( m_hWnd );
@@ -88,13 +88,6 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	// UI 매니저 초기화
 	CUIMgr::GetInst ( )->Init ( );
 	CFadeEffect::GetInst ( )->Init ( );
-
-	//// 테스트 코드
-	//CAnimationDataMgr::GetInst()->init();
-	//CAnimationDataMgr::GetInst()->CreateSampleAnimationFile(L"test_player.json");
-	//CAnimationDataMgr::GetInst()->TestDirectLoad();
-
-	//CAnimationDataMgr::GetInst()->TestLoadAnimationFile(L"test_player.json");
 
 	return S_OK;
 }
@@ -156,10 +149,6 @@ void CCore::SetGameResolution ( )
 	ChangeResolution ( GAME_WIDTH , GAME_HEIGHT );
 }
 
-void CCore::SetToolResolution ( )
-{
-	ChangeResolution ( TOOL_WIDTH , TOOL_HEIGHT );
-}
 
 void CCore::ChangeResolution ( int _iWidth , int _iHeight )
 {
@@ -185,7 +174,7 @@ void CCore::UpdateWindowSize ( )
 {
 	RECT rt = { 0, 0, ( long ) m_ptResolution.x, ( long ) m_ptResolution.y };
 	AdjustWindowRect ( &rt , WS_OVERLAPPEDWINDOW , true );
-	SetWindowPos ( m_hWnd , nullptr , 100 , 100 ,
+	SetWindowPos ( m_hWnd , nullptr , WINDOW_POS_X , WINDOW_POS_Y ,
 		rt.right - rt.left , rt.bottom - rt.top , 0 );
 }
 
