@@ -9,7 +9,6 @@
 #include "CCamera.h"
 #include "CPathMgr.h"
 #include "CResMgr.h"
-#include "CGrid.h"
 #include "CBackgroundMgr.h"
 #include "CTileMgr.h"
 #include "CStageMgr.h"
@@ -83,7 +82,6 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	CCollisionMgr::GetInst ( )->init ( );
 	CEventMgr::GetInst ( )->init ( );
 	CCamera::GetInst ( )->init ( m_ptResolution.x , m_ptResolution.y );
-	CGrid::GetInst ( )->init ( );
 
 	// UI 매니저 초기화
 	CUIMgr::GetInst ( )->Init ( );

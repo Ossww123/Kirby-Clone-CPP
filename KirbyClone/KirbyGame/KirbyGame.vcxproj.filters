@@ -131,9 +131,6 @@
     <Filter Include="Engine\03. Manager\PathMgr">
       <UniqueIdentifier>{4227ecc2-b3b3-4115-a9ee-92a24e1f5c86}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\03. Manager\Grid">
-      <UniqueIdentifier>{c44c4294-feca-42bf-82bf-926a20e64e36}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\03. Manager\BackgroundMgr">
       <UniqueIdentifier>{6ceefb21-02ac-483c-85b4-1df5be06aeab}</UniqueIdentifier>
     </Filter>
@@ -392,9 +389,6 @@
     <ClInclude Include="..\KirbyGame\CUIMgr.h">
       <Filter>Engine\03. Manager\UIMgr</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CGrid.h">
-      <Filter>Engine\03. Manager\Grid</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CSparky.h">
       <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>
     </ClInclude>
@@ -599,9 +593,6 @@
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CUIMgr.cpp">
       <Filter>Engine\03. Manager\UIMgr</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CGrid.cpp">
-      <Filter>Engine\03. Manager\Grid</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CSparky.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>

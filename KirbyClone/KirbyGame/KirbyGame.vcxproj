@@ -168,7 +168,6 @@
     <ClInclude Include="..\KirbyGame\CEventMgr.h" />
     <ClInclude Include="..\KirbyGame\CFadeEffect.h" />
     <ClInclude Include="..\KirbyGame\CGordo.h" />
-    <ClInclude Include="..\KirbyGame\CGrid.h" />
     <ClInclude Include="..\KirbyGame\CHotHead.h" />
     <ClInclude Include="..\KirbyGame\CInvincibleMonster.h" />
     <ClInclude Include="..\KirbyGame\CItem.h" />
@@ -239,7 +238,6 @@
     <ClCompile Include="..\KirbyGame\CEventMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CFadeEffect.cpp" />
     <ClCompile Include="..\KirbyGame\CGordo.cpp" />
-    <ClCompile Include="..\KirbyGame\CGrid.cpp" />
     <ClCompile Include="..\KirbyGame\CHotHead.cpp" />
     <ClCompile Include="..\KirbyGame\CInvincibleMonster.cpp" />
     <ClCompile Include="..\KirbyGame\CItem.cpp" />
