@@ -1,5 +1,6 @@
 #include "gamePCH.h"
 #include "CWhispyWoods.h"
+#include "CMonsterFactory.h"
 
 #include "CTimeMgr.h"
 #include "CSceneMgr.h"
@@ -305,14 +306,11 @@ void CWhispyWoods::AttackPattern2_AirPuff()
 
 void CWhispyWoods::CreateApple(Vec2 _vPos)
 {
-    // 사과 오브젝트 생성
-    CApple* pApple = new CApple();
-    
+    // CMonsterFactory를 통해 사과 생성
+    CApple* pApple = CMonsterFactory::CreateApple(_vPos);
+
     if (pApple)
     {
-        pApple->SetPos(_vPos);
-        pApple->SetScale(Vec2(32.f, 32.f));  // 적절한 크기
-        
         // 씬에 추가
         CScene* pScene = CSceneMgr::GetInst()->GetCurScene();
         if (pScene)

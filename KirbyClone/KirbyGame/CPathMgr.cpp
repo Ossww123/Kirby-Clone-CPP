@@ -21,8 +21,8 @@ void CPathMgr::init()
     // 실행 파일이 있는 경로에서 상위로 이동하여 Content 폴더를 찾는다
     m_strContentPath = szBuffer;
 
-    // bin 폴더에서 상위로 이동
-    size_t iFind = m_strContentPath.rfind(L"\\bin");
+    // KirbyGame 프로젝트 폴더에서 상위로 이동하여 루트 폴더로 가기
+    size_t iFind = m_strContentPath.rfind(L"\\KirbyGame");
     if (iFind != wstring::npos)
     {
         m_strContentPath = m_strContentPath.substr(0, iFind);

@@ -1,14 +1,6 @@
 #pragma once
 
 class CObject;
-class CWaddleDee;
-class CWaddleDoo;
-class CBrontoBurt;
-class CGordo;
-class CHotHead;
-class CSparky;
-class CWhispyWoods;
-class CApple;
 
 class CObjectFactory
 {
@@ -23,20 +15,9 @@ public:
 
     // 카테고리별 생성 함수들
     static CObject* CreatePlayer ( Vec2 _vPos );
-    static CObject* CreateMonster ( OBJECT_TYPE _eMonsterType , Vec2 _vPos );
     static CObject* CreateItem ( OBJECT_TYPE _eItemType , Vec2 _vPos );
     static CObject* CreateTile ( OBJECT_TYPE _eTileType , Vec2 _vPos );
     static CObject* CreateSpecialObject ( OBJECT_TYPE _eObjectType , Vec2 _vPos );
-
-    // === 몬스터별 세부 생성 함수들 ===
-    static CWaddleDee* CreateWaddleDee ( Vec2 _vPos );
-    static CWaddleDoo* CreateWaddleDoo ( Vec2 _vPos );
-    static CBrontoBurt* CreateBrontoBurt ( Vec2 _vPos );
-    static CGordo* CreateGordo ( Vec2 _vPos );
-    static CHotHead* CreateHotHead ( Vec2 _vPos );
-    static CSparky* CreateSparky ( Vec2 _vPos );
-    static CWhispyWoods* CreateWhispyWoods ( Vec2 _vPos );
-    static CApple* CreateApple ( Vec2 _vPos );
 
 
     // 유틸리티 함수들
@@ -60,7 +41,6 @@ public:
 
 private:
     // 내부 설정 함수들
-    static void SetupMonsterAI ( CObject* _pMonster , OBJECT_TYPE _eType );
     static void SetupItemProperties ( CObject* _pItem , OBJECT_TYPE _eType );
     static void SetupTileProperties ( CObject* _pTile , OBJECT_TYPE _eType );
 };

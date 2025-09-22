@@ -173,9 +173,6 @@
     <Filter Include="Engine\06. Resource">
       <UniqueIdentifier>{80b73b89-a976-4430-a557-f25e5bb2e4f0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\06. Resource\Texture">
-      <UniqueIdentifier>{abab6160-08e0-42eb-9857-216a246b8f57}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\06. Resource\Background">
       <UniqueIdentifier>{38c000b4-0135-4f97-a564-05b8fda0ce55}</UniqueIdentifier>
     </Filter>
@@ -398,9 +395,6 @@
     <ClInclude Include="..\KirbyGame\CStageImage.h">
       <Filter>Engine\06. Resource\StageImage</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CTexture.h">
-      <Filter>Engine\06. Resource\Texture</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CWaddleDee.h">
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
     </ClInclude>
@@ -412,6 +406,9 @@
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CWhispyWoods.h">
       <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
+    </ClInclude>
+    <ClInclude Include="CMonsterFactory.h">
+      <Filter>Engine\08. Factory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -603,9 +600,6 @@
     <ClCompile Include="..\KirbyGame\CStageImage.cpp">
       <Filter>Engine\06. Resource\StageImage</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CTexture.cpp">
-      <Filter>Engine\06. Resource\Texture</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CWaddleDee.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
     </ClCompile>
@@ -617,6 +611,9 @@
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CWhispyWoods.cpp">
       <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
+    </ClCompile>
+    <ClCompile Include="CMonsterFactory.cpp">
+      <Filter>Engine\08. Factory</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

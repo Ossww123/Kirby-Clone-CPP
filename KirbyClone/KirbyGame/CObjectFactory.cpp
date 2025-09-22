@@ -1,15 +1,7 @@
 #include "gamePCH.h"
 #include "CObjectFactory.h"
+#include "CMonsterFactory.h"
 
-// 몬스터 클래스들 include
-#include "CWaddleDee.h"
-#include "CWaddleDoo.h"
-#include "CBrontoBurt.h"
-#include "CGordo.h"
-#include "CHotHead.h"
-#include "CSparky.h"
-#include "CWhispyWoods.h"
-#include "CApple.h"
 
 #include "CTileMgr.h"
 #include "CObject.h"
@@ -43,7 +35,7 @@ CObject* CObjectFactory::CreateObject ( OBJECT_TYPE _eType , Vec2 _vPos )
     case OBJECT_TYPE::MONSTER_HOT_HEAD:
     case OBJECT_TYPE::MONSTER_SPARKY:
     case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
-        pObject = CreateMonster ( _eType , _vPos );
+        pObject = CMonsterFactory::CreateMonster ( _eType , _vPos );
         break;
 
         // 아이템 타입들
@@ -99,40 +91,6 @@ CObject* CObjectFactory::CreatePlayer ( Vec2 _vPos )
     return pPlayer;
 }
 
-CObject* CObjectFactory::CreateMonster ( OBJECT_TYPE _eMonsterType , Vec2 _vPos )
-{
-    CObject* pMonster = nullptr;
-
-    // 각 몬스터별 세부 생성 함수 호출
-    switch ( _eMonsterType )
-    {
-    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-        pMonster = CreateWaddleDee ( _vPos );
-        break;
-    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
-        pMonster = CreateWaddleDoo ( _vPos );
-        break;
-    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-        pMonster = CreateBrontoBurt ( _vPos );
-        break;
-    case OBJECT_TYPE::MONSTER_GORDOS:
-        pMonster = CreateGordo ( _vPos );
-        break;
-    case OBJECT_TYPE::MONSTER_HOT_HEAD:
-        pMonster = CreateHotHead ( _vPos );
-        break;
-    case OBJECT_TYPE::MONSTER_SPARKY:
-        pMonster = CreateSparky ( _vPos );
-        break;
-    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
-        pMonster = CreateWhispyWoods ( _vPos );
-        break;
-    default:
-        return nullptr;
-    }
-
-    return pMonster;
-}
 
 CObject* CObjectFactory::CreateItem ( OBJECT_TYPE _eItemType , Vec2 _vPos )
 {
@@ -247,103 +205,6 @@ CObject* CObjectFactory::CreateSpecialObject ( OBJECT_TYPE _eObjectType , Vec2 _
     return pObject;
 }
 
-CWaddleDee* CObjectFactory::CreateWaddleDee ( Vec2 _vPos )
-{
-    CWaddleDee* pWaddleDee = new CWaddleDee;
-    pWaddleDee->SetPos ( _vPos );
-    pWaddleDee->SetScale ( Vec2 ( 64.f , 64.f ) );
-
-    // 웨이들 디 전용 설정
-    // (생성자에서 대부분 처리되므로 추가 설정은 최소화)
-
-    return pWaddleDee;
-}
-
-CWaddleDoo* CObjectFactory::CreateWaddleDoo ( Vec2 _vPos )
-{
-    CWaddleDoo* pWaddleDoo = new CWaddleDoo;
-    pWaddleDoo->SetPos ( _vPos );
-    pWaddleDoo->SetScale ( Vec2 ( 64.f , 64.f ) );
-
-    // 웨이들 두 전용 설정
-    // pWaddleDoo->SetAttackRange(150.f);  // 향후 공격 범위 설정 추가
-
-    return pWaddleDoo;
-}
-
-CBrontoBurt* CObjectFactory::CreateBrontoBurt ( Vec2 _vPos )
-{
-    CBrontoBurt* pBrontoBurt = new CBrontoBurt;
-    pBrontoBurt->SetPos ( _vPos );
-    pBrontoBurt->SetScale ( Vec2 ( 72.f , 64.f ) );  // 조금 더 큰 크기
-
-    // 브론토 버트 전용 설정
-    // pBrontoBurt->SetFlightHeight(_vPos.y);  // 향후 비행 높이 설정 추가
-
-    return pBrontoBurt;
-}
-
-CGordo* CObjectFactory::CreateGordo ( Vec2 _vPos )
-{
-    CGordo* pGordo = new CGordo;
-    pGordo->SetPos ( _vPos );
-    pGordo->SetScale ( Vec2 ( 80.f , 80.f ) );  // 더 큰 크기
-
-    // 고르도 전용 설정
-    // pGordo->SetMoveDirection(GORDO_MOVE_TYPE::HORIZONTAL);  // 이동 방향 설정 추가
-
-    return pGordo;
-}
-
-CHotHead* CObjectFactory::CreateHotHead ( Vec2 _vPos )
-{
-    CHotHead* pHotHead = new CHotHead;
-    pHotHead->SetPos ( _vPos );
-    pHotHead->SetScale ( Vec2 ( 64.f , 64.f ) );
-
-    // 핫 헤드 전용 설정
-    // pHotHead->SetFireRange(120.f);  // 화염 공격 범위 설정 추가
-
-    return pHotHead;
-}
-
-CSparky* CObjectFactory::CreateSparky ( Vec2 _vPos )
-{
-    CSparky* pSparky = new CSparky;
-    pSparky->SetPos ( _vPos );
-    pSparky->SetScale ( Vec2 ( 64.f , 64.f ) );
-
-    // 스파키 전용 설정
-    // pSparky->SetElectricRange(100.f);  // 전기 공격 범위 설정 추가
-
-    return pSparky;
-}
-
-CWhispyWoods* CObjectFactory::CreateWhispyWoods ( Vec2 _vPos )
-{
-    CWhispyWoods* pWhispyWoods = new CWhispyWoods;
-    pWhispyWoods->SetPos ( _vPos );
-    pWhispyWoods->SetScale ( Vec2 ( 128.f , 160.f ) );  // 큰 보스 크기
-
-    // 위스피 우즈 전용 설정
-    // pWhispyWoods->SetBossHP(1000);      // 보스 체력 설정 추가
-    // pWhispyWoods->SetBossPhase(BOSS_PHASE::INTRO);  // 초기 페이즈 설정
-
-    return pWhispyWoods;
-}
-
-CApple* CObjectFactory::CreateApple ( Vec2 _vPos )
-{
-    CApple* pApple = new CApple;
-    pApple->SetPos ( _vPos );
-    pApple->SetScale ( Vec2 ( 32.f , 32.f ) );  // 작은 사과 크기
-
-    // 사과 전용 설정
-    pApple->SetGravity(true);        // 중력 적용
-    pApple->SetLifetime(10.f);       // 10초 생존시간
-
-    return pApple;
-}
 
 const wchar_t* CObjectFactory::GetObjectTypeName ( OBJECT_TYPE _eType )
 {
@@ -352,14 +213,15 @@ const wchar_t* CObjectFactory::GetObjectTypeName ( OBJECT_TYPE _eType )
         // 플레이어
     case OBJECT_TYPE::PLAYER: return L"Player";
 
-        // 몬스터들 (구현된 부분)
-    case OBJECT_TYPE::MONSTER_WADDLE_DEE: return L"Waddle Dee";
-    case OBJECT_TYPE::MONSTER_WADDLE_DOO: return L"Waddle Doo";
-    case OBJECT_TYPE::MONSTER_BRONTO_BURT: return L"Bronto Burt";
-    case OBJECT_TYPE::MONSTER_GORDOS: return L"Gordos";
-    case OBJECT_TYPE::MONSTER_HOT_HEAD: return L"Hot Head";
-    case OBJECT_TYPE::MONSTER_SPARKY: return L"Sparky";
-    case OBJECT_TYPE::MONSTER_WHISPY_WOODS: return L"Whispy Woods";
+        // 몬스터들 - CMonsterFactory로 위임
+    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
+    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
+    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
+    case OBJECT_TYPE::MONSTER_GORDOS:
+    case OBJECT_TYPE::MONSTER_HOT_HEAD:
+    case OBJECT_TYPE::MONSTER_SPARKY:
+    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
+        return CMonsterFactory::GetMonsterTypeName(_eType);
 
         // 아이템들
     case OBJECT_TYPE::ITEM_STAR: return L"Star";
@@ -660,31 +522,6 @@ vector<COLLISION_TYPE> CObjectFactory::GetAvailableCollisionTypes ( )
     result.push_back ( COLLISION_TYPE::TRIGGER );
 
     return result;
-}
-
-void CObjectFactory::SetupMonsterAI ( CObject* _pMonster , OBJECT_TYPE _eType )
-{
-    // TODO: 몬스터 타입별 AI 설정
-    // 현재는 기본 CMonster 클래스의 동작을 따르므로 향후 확장
-
-    switch ( _eType )
-    {
-    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-        // 기본 좌우 이동 AI (현재 CMonster 기본 동작)
-        break;
-
-    case OBJECT_TYPE::MONSTER_GORDOS:
-        // 흡입되지 않는 적들 - 향후 특수 클래스 필요
-        break;
-
-    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-        // 날아다니는 AI - 향후 특수 클래스 필요
-        break;
-
-    case OBJECT_TYPE::MONSTER_HOT_HEAD:
-        // 불 공격 AI - 향후 특수 클래스 필요
-        break;
-    }
 }
 
 void CObjectFactory::SetupItemProperties ( CObject* _pItem , OBJECT_TYPE _eType )

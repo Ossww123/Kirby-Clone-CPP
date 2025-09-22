@@ -1,7 +1,6 @@
 #pragma once
 
 class CCollider;
-class CTexture;
 class CAnimator;
 class CRigidBody;
 
@@ -39,10 +38,6 @@ public:
     Vec2 GetPos() const { return m_vPos; }
     Vec2 GetScale() const { return m_vScale; }
 
-public:
-    // === 텍스처 관리 ===
-    void SetTexture(CTexture* _pTex) { m_pTex = _pTex; }
-    CTexture* GetTexture() const { return m_pTex; }
 
 public:
     // === 생명 상태 관리 ===
@@ -58,10 +53,8 @@ public:
 
 private:
     // === 렌더링 내부 함수들 ===
-    float GetRenderScale() const;
     void RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale);
     void RenderWithAnimator(HDC _dc, float _fScale);
-    void RenderWithTexture(HDC _dc, const Vec2& _vRenderPos, float _fScale);
     void RenderDefaultShape(HDC _dc, const Vec2& _vRenderPos, float _fScale);
     void RenderCollider(HDC _dc);
 
@@ -77,9 +70,6 @@ private:
     Vec2 m_vScale;                  // 크기
     bool m_bAlive;                  // 생존 상태
     OBJECT_TYPE m_eObjectType;      // 오브젝트 타입
-
-    // === 텍스처 ===
-    CTexture* m_pTex;               // 텍스처
 
     // === 컴포넌트들 ===
     CCollider* m_pCollider;         // 충돌체 컴포넌트

@@ -3,7 +3,6 @@
 #include "CCollider.h"
 #include "CAnimator.h"
 #include "CCamera.h"
-#include "CTexture.h"
 #include "CRigidBody.h"
 #include "CCore.h"
 #include "CSceneMgr.h"
@@ -17,7 +16,6 @@ CObject::CObject()
 	, m_pAnimator(nullptr)
 	, m_pRigidBody(nullptr)
 	, m_bAlive(true)
-	, m_pTex(nullptr)
 	, m_eObjectType(OBJECT_TYPE::END)
 {
 }
@@ -29,7 +27,6 @@ CObject::CObject(OBJECT_TYPE _eType)
 	, m_pAnimator(nullptr)
 	, m_pRigidBody(nullptr)
 	, m_bAlive(true)
-	, m_pTex(nullptr)
 	, m_eObjectType(_eType)
 {
 }
@@ -62,7 +59,7 @@ void CObject::Render(HDC _dc)
     Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(m_vPos);
 
     // 스케일 팩터 결정
-    float fScale = GetRenderScale();
+    float fScale = CCore::PIXEL_SCALE;
 
     // === 디버깅: 몬스터 렌더링 확인 ===
     if (m_eObjectType >= OBJECT_TYPE::MONSTER_WADDLE_DEE &&
@@ -101,21 +98,13 @@ void CObject::CreateRigidBody()
 	m_pRigidBody->m_pOwner = this;
 }
 
-float CObject::GetRenderScale() const
-{
-    return 4.0f;
-}
 
 void CObject::RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 {
-    // 우선순위: 애니메이터 → 텍스처 → 기본 사각형
+    // 우선순위: 애니메이터 → 기본 사각형
     if (nullptr != m_pAnimator)
     {
         RenderWithAnimator(_dc, _fScale);
-    }
-    else if (nullptr != m_pTex)
-    {
-        RenderWithTexture(_dc, _vRenderPos, _fScale);
     }
     else
     {
@@ -129,28 +118,6 @@ void CObject::RenderWithAnimator(HDC _dc, float _fScale)
     m_pAnimator->RenderScaled(_dc, _fScale);
 }
 
-void CObject::RenderWithTexture(HDC _dc, const Vec2& _vRenderPos, float _fScale)
-{
-    // 텍스처 정보 가져오기
-    UINT width = m_pTex->GetWidth();
-    UINT height = m_pTex->GetHeight();
-
-    // 스케일된 크기 계산
-    int scaledWidth = (int)(width * _fScale);
-    int scaledHeight = (int)(height * _fScale);
-
-    // 렌더링 위치 계산 (중앙 기준)
-    int renderX = (int)(_vRenderPos.x - scaledWidth / 2.f);
-    int renderY = (int)(_vRenderPos.y - scaledHeight / 2.f);
-
-    // 스케일된 텍스처 렌더링
-    StretchBlt(_dc,
-        renderX, renderY,
-        scaledWidth, scaledHeight,
-        m_pTex->GetDC(),
-        0, 0, width, height,
-        SRCCOPY);
-}
 
 void CObject::RenderDefaultShape(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 {

@@ -202,7 +202,6 @@
     <ClInclude Include="..\KirbyGame\CSpecialObject.h" />
     <ClInclude Include="..\KirbyGame\CStageImage.h" />
     <ClInclude Include="..\KirbyGame\CStageMgr.h" />
-    <ClInclude Include="..\KirbyGame\CTexture.h" />
     <ClInclude Include="..\KirbyGame\CTile.h" />
     <ClInclude Include="..\KirbyGame\CTileMgr.h" />
     <ClInclude Include="..\KirbyGame\CTimeMgr.h" />
@@ -210,6 +209,7 @@
     <ClInclude Include="..\KirbyGame\CWaddleDee.h" />
     <ClInclude Include="..\KirbyGame\CWaddleDoo.h" />
     <ClInclude Include="..\KirbyGame\CWhispyWoods.h" />
+    <ClInclude Include="CMonsterFactory.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="gamePCH.h" />
     <ClInclude Include="KirbyGame.h" />
@@ -272,7 +272,6 @@
     <ClCompile Include="..\KirbyGame\CSpecialObject.cpp" />
     <ClCompile Include="..\KirbyGame\CStageImage.cpp" />
     <ClCompile Include="..\KirbyGame\CStageMgr.cpp" />
-    <ClCompile Include="..\KirbyGame\CTexture.cpp" />
     <ClCompile Include="..\KirbyGame\CTile.cpp" />
     <ClCompile Include="..\KirbyGame\CTileMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CTimeMgr.cpp" />
@@ -280,6 +279,7 @@
     <ClCompile Include="..\KirbyGame\CWaddleDee.cpp" />
     <ClCompile Include="..\KirbyGame\CWaddleDoo.cpp" />
     <ClCompile Include="..\KirbyGame\CWhispyWoods.cpp" />
+    <ClCompile Include="CMonsterFactory.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
   </ItemGroup>
   <ItemGroup>
