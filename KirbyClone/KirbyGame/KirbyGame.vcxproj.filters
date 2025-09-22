@@ -134,9 +134,6 @@
     <Filter Include="Engine\03. Manager\TileMgr">
       <UniqueIdentifier>{ec3a351e-6930-4684-9675-4a3d4b5ed14f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\03. Manager\StageMgr">
-      <UniqueIdentifier>{3cc50d68-9225-47ce-be04-094de5f496f6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\03. Manager\AnimationDataMgr">
       <UniqueIdentifier>{0e9a3292-22d3-452f-9d8e-611f2cd875e2}</UniqueIdentifier>
     </Filter>
@@ -169,9 +166,6 @@
     </Filter>
     <Filter Include="Engine\06. Resource">
       <UniqueIdentifier>{80b73b89-a976-4430-a557-f25e5bb2e4f0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\06. Resource\StageImage">
-      <UniqueIdentifier>{ac8c351a-d5a0-41ab-a9b0-08b864a094fd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\06. Resource\Sound">
       <UniqueIdentifier>{2c97ba06-2fbe-4e28-b2bd-de5620b91b93}</UniqueIdentifier>
@@ -368,9 +362,6 @@
     <ClInclude Include="..\KirbyGame\CSoundMgr.h">
       <Filter>Engine\03. Manager\SoundMgr</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CStageMgr.h">
-      <Filter>Engine\03. Manager\StageMgr</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CTileMgr.h">
       <Filter>Engine\03. Manager\TileMgr</Filter>
     </ClInclude>
@@ -385,9 +376,6 @@
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CSpecialObject.h">
       <Filter>Engine\04. Object\SpecialObject</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CStageImage.h">
-      <Filter>Engine\06. Resource\StageImage</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CWaddleDee.h">
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
@@ -576,9 +564,6 @@
     <ClCompile Include="..\KirbyGame\CSoundMgr.cpp">
       <Filter>Engine\03. Manager\SoundMgr</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CStageMgr.cpp">
-      <Filter>Engine\03. Manager\StageMgr</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CTileMgr.cpp">
       <Filter>Engine\03. Manager\TileMgr</Filter>
     </ClCompile>
@@ -593,9 +578,6 @@
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CSpecialObject.cpp">
       <Filter>Engine\04. Object\SpecialObject</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CStageImage.cpp">
-      <Filter>Engine\06. Resource\StageImage</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CWaddleDee.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>

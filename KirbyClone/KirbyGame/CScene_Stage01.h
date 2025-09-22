@@ -15,7 +15,7 @@ private:
     void LoadStageLevel(const wstring& _strFileName);
     CObject* CreateObjectFromData(const tLevelObjectData& _objData);
     void CreateDefaultLevel();
-    void ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _eBgType, STAGE_IMAGE_TYPE _eStageType);
+    void ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _eBgType);
 
 private:
     // === 스테이지별 초기 설정 ===

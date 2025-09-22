@@ -10,7 +10,6 @@
 #include "CPathMgr.h"
 #include "CResMgr.h"
 #include "CTileMgr.h"
-#include "CStageMgr.h"
 #include "CAnimationDataMgr.h"
 #include "CSoundMgr.h"
 #include "CUIMgr.h"
@@ -71,7 +70,6 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 
 	// 게임 콘텐츠 매니저들 초기화
 	CTileMgr::GetInst ( )->init ( );
-	CStageMgr::GetInst ( )->init ( );
 
 	// 게임 로직 매니저 초기화
 	CSceneMgr::GetInst ( )->init ( );

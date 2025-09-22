@@ -198,8 +198,6 @@
     <ClInclude Include="..\KirbyGame\CSoundMgr.h" />
     <ClInclude Include="..\KirbyGame\CSparky.h" />
     <ClInclude Include="..\KirbyGame\CSpecialObject.h" />
-    <ClInclude Include="..\KirbyGame\CStageImage.h" />
-    <ClInclude Include="..\KirbyGame\CStageMgr.h" />
     <ClInclude Include="..\KirbyGame\CTile.h" />
     <ClInclude Include="..\KirbyGame\CTileMgr.h" />
     <ClInclude Include="..\KirbyGame\CTimeMgr.h" />
@@ -269,8 +267,6 @@
     <ClCompile Include="..\KirbyGame\CSoundMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CSparky.cpp" />
     <ClCompile Include="..\KirbyGame\CSpecialObject.cpp" />
-    <ClCompile Include="..\KirbyGame\CStageImage.cpp" />
-    <ClCompile Include="..\KirbyGame\CStageMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CTile.cpp" />
     <ClCompile Include="..\KirbyGame\CTileMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CTimeMgr.cpp" />

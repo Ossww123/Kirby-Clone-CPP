@@ -325,16 +325,6 @@ enum class COLLISION_TYPE
     END
 };
 
-// 스테이지 이미지 타입
-enum class STAGE_IMAGE_TYPE
-{
-    STAGE_01 ,           // 첫 번째 스테이지
-    STAGE_02 ,           // 두 번째 스테이지
-    STAGE_03 ,
-    CUSTOM ,             // 사용자 커스텀 스테이지
-
-    END
-};
 
 enum class TILE_VISUAL_TYPE
 {

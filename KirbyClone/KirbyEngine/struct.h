@@ -391,10 +391,6 @@ struct tLevelData
 	Vec2 vLevelBoundsMax;
 	float fGameOverY;
 
-	// 스테이지 이미지 시스템
-	wstring strStageImagePath;
-	STAGE_IMAGE_TYPE eStageType;
-	Vec2 vStageImagePos;
 
 	tLevelData()
 		: strLevelName(L"Untitled")
@@ -404,9 +400,6 @@ struct tLevelData
 		, vLevelBoundsMin(Vec2(0.f, 0.f))
 		, vLevelBoundsMax(Vec2(4096.f, 640.f))
 		, fGameOverY(736.f)
-		, strStageImagePath(L"")
-		, eStageType(STAGE_IMAGE_TYPE::STAGE_01)
-		, vStageImagePos(Vec2(0.f, 0.f))
 	{}
 };
 

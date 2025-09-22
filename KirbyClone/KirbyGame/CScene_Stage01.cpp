@@ -15,9 +15,7 @@
 #include "CPathMgr.h"
 #include "CEventMgr.h"
 #include "CTileMgr.h"
-#include "CStageMgr.h"
 #include "CPlayerDataMgr.h"
-#include "CStageImage.h"
 #include "CMonsterSpawnMgr.h"
 #include "CUIMgr.h"
 #include "CFadeEffect.h"
@@ -122,8 +120,6 @@ void CScene_Stage01::Update()
 
 void CScene_Stage01::Render(HDC _dc)
 {
-    CStageMgr::GetInst()->Render(_dc);
-
     // 부모 클래스의 Render 호출 (모든 객체 렌더링)
     CScene::Render(_dc);
 
@@ -231,19 +227,12 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
         fclose(pFile);
 
         // 로드된 정보 적용
-        ApplyLoadedLevelData(vPlayerSpawn, (BACKGROUND_TYPE)backgroundType, (STAGE_IMAGE_TYPE)stageImageType);
+        ApplyLoadedLevelData(vPlayerSpawn, (BACKGROUND_TYPE)backgroundType);
         
         // 카메라에 스테이지 경계 설정
         CCamera::GetInst()->SetStageBounds(vLevelBoundsMin, vLevelBoundsMax);
 
 
-        // 스테이지 이미지를 맵 크기에 맞게 재배치
-        CStageImage* pStageImage = CStageMgr::GetInst()->GetCurrentStageImage();
-        if (pStageImage)
-        {
-            Vec2 vMapSize = vLevelBoundsMax - vLevelBoundsMin;
-            pStageImage->SetImageToBottomLeft(vMapSize);
-        }
 
         // 성공 메시지
         wchar_t szMsg[256];
@@ -370,20 +359,12 @@ void CScene_Stage01::CreateDefaultLevel()
         vecPlayer[0]->SetPos(Vec2(320.f, 320.f)); // 새로운 맵 크기에 맞는 기본 위치
     }
 
-    // 기본 스테이지 이미지 설정
-    CStageMgr::GetInst()->SetCurrentStageImage(STAGE_IMAGE_TYPE::STAGE_01);
     
     // 기본 스테이지 경계 설정 (레벨 데이터가 없을 때만 사용)
     Vec2 vDefaultMapSize = Vec2(4096.f, 640.f);
     CCamera::GetInst()->SetStageBounds(Vec2(0.f, 0.f), vDefaultMapSize);
 
 
-    // 기본 레벨에서도 스테이지 이미지를 맵 크기에 맞게 배치
-    CStageImage* pStageImage = CStageMgr::GetInst()->GetCurrentStageImage();
-    if (pStageImage)
-    {
-        pStageImage->SetImageToBottomLeft(vDefaultMapSize);
-    }
 }
 
 // === 스테이지별 초기 설정 ===
@@ -399,7 +380,7 @@ void CScene_Stage01::InitializeStage()
 
 // === 로드된 레벨 데이터 적용 ===
 
-void CScene_Stage01::ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _eBgType, STAGE_IMAGE_TYPE _eStageType)
+void CScene_Stage01::ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _eBgType)
 {
     // 플레이어 스폰 위치 적용
     const vector<CObject*>& vecPlayer = GetGroupObject(GROUP_TYPE::PLAYER);
@@ -409,6 +390,4 @@ void CScene_Stage01::ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _e
     }
 
 
-    // 스테이지 이미지 적용
-    CStageMgr::GetInst()->SetCurrentStageImage(_eStageType);
 }
