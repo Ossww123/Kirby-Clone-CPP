@@ -22,11 +22,12 @@ CMonster::CMonster()
     , m_fSpeed(DEFAULT_SPEED)
     , m_iDir(1)
     , m_fIdleTime(DEFAULT_IDLE_TIME)
-    , m_bHitWall(false)
-    , m_fGroundCheckDist(32.f)
-    , m_fWallCheckDist(32.f)
     , m_pEnemyTex(nullptr)
     , m_bEditorMode(false)
+    , m_bWallCollision(false)
+    , m_bGroundCollision(false)
+    , m_bPrevWallCollision(false)
+    , m_bPrevGroundCollision(false)
 {
     // 기본 컴포넌트 생성
     CreateCollider();
@@ -67,6 +68,9 @@ void CMonster::Update()
 
     // 스테이지 경계 체크 (경계를 벗어나면 Dead 처리)
     CheckStageBounds();
+
+    // 충돌 상태 업데이트 (이전 프레임 상태 저장)
+    UpdateCollisionState();
 
     // 상태 업데이트
     UpdateState();
@@ -350,19 +354,6 @@ void CMonster::MoveHorizontal(float speed)
     }
 }
 
-void CMonster::HandleWallCollision()
-{
-    // 벽 충돌 시 방향 전환
-    if (CheckWallAhead())
-    {
-        TurnAround();
-        m_bHitWall = true;
-    }
-    else
-    {
-        m_bHitWall = false;
-    }
-}
 
 void CMonster::LoadEnemySpriteSheet()
 {
@@ -510,87 +501,71 @@ void CMonster::UpdateAttack()
     }
 }
 
-bool CMonster::CheckWallAhead()
+
+void CMonster::UpdateCollisionState()
 {
-    // 실제 타일과의 충돌 검사 구현
-    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-    if (!pCurScene)
-        return false;
+    // 이전 프레임 충돌 상태 저장
+    m_bPrevWallCollision = m_bWallCollision;
+    m_bPrevGroundCollision = m_bGroundCollision;
 
-    const vector<CObject*>& vecTiles = pCurScene->GetGroupObject(GROUP_TYPE::TILE);
-
-    Vec2 vMyPos = GetPos();
-    Vec2 vCheckPos = Vec2(vMyPos.x + (m_fWallCheckDist * m_iDir), vMyPos.y);
-
-    // 몬스터의 충돌체 크기
-    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
-
-    for (CObject* pTile : vecTiles)
-    {
-        if (!pTile || pTile->IsDead())
-            continue;
-
-        CTile* pTileObj = dynamic_cast<CTile*>(pTile);
-        if (!pTileObj || !pTileObj->IsSolid())
-            continue;
-
-        Vec2 vTilePos = pTile->GetPos();
-        Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
-
-        // AABB 충돌 검사
-        if (abs(vCheckPos.x - vTilePos.x) < (vMyScale.x + vTileScale.x) / 2.f &&
-            abs(vMyPos.y - vTilePos.y) < (vMyScale.y + vTileScale.y) / 2.f)
-        {
-            return true;
-        }
-    }
-
-    return false;
+    // 현재 프레임 충돌 상태 초기화 (OnCollision에서 다시 설정됨)
+    m_bWallCollision = false;
+    m_bGroundCollision = false;
 }
 
-bool CMonster::CheckGroundAhead()
+
+
+void CMonster::HandleTileCollisionEnter(CTile* _pTile)
 {
-    // 실제 타일과의 바닥 검사 구현
-    CScene* pCurScene = CSceneMgr::GetInst()->GetCurScene();
-    if (!pCurScene)
-        return false;
-
-    const vector<CObject*>& vecTiles = pCurScene->GetGroupObject(GROUP_TYPE::TILE);
-
     Vec2 vMyPos = GetPos();
-    Vec2 vCheckPos = Vec2(vMyPos.x + (m_fWallCheckDist * m_iDir), vMyPos.y + m_fGroundCheckDist);
+    Vec2 vTilePos = _pTile->GetPos();
+    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(56.f, 56.f);
+    Vec2 vTileScale = _pTile->GetCollider() ? _pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
 
-    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(32.f, 32.f);
+    // 타일과의 상대적 위치를 계산하여 벽 충돌인지 바닥 충돌인지 판단
+    float deltaX = abs(vMyPos.x - vTilePos.x);
+    float deltaY = abs(vMyPos.y - vTilePos.y);
 
-    for (CObject* pTile : vecTiles)
+    float overlapX = (vMyScale.x + vTileScale.x) / 2.f - deltaX;
+    float overlapY = (vMyScale.y + vTileScale.y) / 2.f - deltaY;
+
+    // 겹침이 더 작은 축을 기준으로 충돌 방향 결정
+    if (overlapX < overlapY)
     {
-        if (!pTile || pTile->IsDead())
-            continue;
-
-        CTile* pTileObj = dynamic_cast<CTile*>(pTile);
-        if (!pTileObj || !pTileObj->IsSolid())
-            continue;
-
-        Vec2 vTilePos = pTile->GetPos();
-        Vec2 vTileScale = pTile->GetCollider() ? pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
-
-        // 발 아래쪽 위치에 타일이 있는지 검사
-        if (abs(vCheckPos.x - vTilePos.x) < (vMyScale.x + vTileScale.x) / 2.f &&
-            abs(vCheckPos.y - vTilePos.y) < (vMyScale.y + vTileScale.y) / 2.f)
-        {
-            return true;
-        }
+        // 좌우 충돌 (벽) - 방향 전환 처리
+        TurnAround();
     }
-
-    return false;
 }
 
-void CMonster::UpdateEditorIdle()
+void CMonster::UpdateTileCollisionState(CTile* _pTile)
 {
-    // 에디터 모드에서는 아무 행동도 하지 않음
-    // - AI 비활성화 (상태 변경 없음)
-    // - 물리 효과 비활성화 (중력, 이동 없음)
-    // - 단순히 위치에 배치된 상태로만 유치
+    Vec2 vMyPos = GetPos();
+    Vec2 vTilePos = _pTile->GetPos();
+    Vec2 vMyScale = GetCollider() ? GetCollider()->GetScale() : Vec2(56.f, 56.f);
+    Vec2 vTileScale = _pTile->GetCollider() ? _pTile->GetCollider()->GetScale() : Vec2(64.f, 64.f);
+
+    // 타일과의 상대적 위치를 계산하여 벽 충돌인지 바닥 충돌인지 판단
+    float deltaX = abs(vMyPos.x - vTilePos.x);
+    float deltaY = abs(vMyPos.y - vTilePos.y);
+
+    float overlapX = (vMyScale.x + vTileScale.x) / 2.f - deltaX;
+    float overlapY = (vMyScale.y + vTileScale.y) / 2.f - deltaY;
+
+    // 겹침이 더 작은 축을 기준으로 충돌 방향 결정
+    if (overlapX < overlapY)
+    {
+        // 좌우 충돌 (벽)
+        m_bWallCollision = true;
+    }
+    else
+    {
+        // 상하 충돌 (바닥/천장)
+        if (vMyPos.y > vTilePos.y)
+        {
+            // 바닥 충돌
+            m_bGroundCollision = true;
+        }
+    }
 }
 
 void CMonster::CheckStageBounds()
@@ -598,9 +573,9 @@ void CMonster::CheckStageBounds()
     // 카메라의 스테이지 경계 정보 가져오기
     Vec2 vStageBoundsMin, vStageBoundsMax;
     CCamera::GetInst()->GetStageBounds(vStageBoundsMin, vStageBoundsMax);
-    
+
     Vec2 vMyPos = GetPos();
-    
+
     // 스테이지 경계를 벗어났는지 확인
     if (vMyPos.x < vStageBoundsMin.x - 100.f || vMyPos.x > vStageBoundsMax.x + 100.f ||
         vMyPos.y < vStageBoundsMin.y - 100.f || vMyPos.y > vStageBoundsMax.y + 100.f)

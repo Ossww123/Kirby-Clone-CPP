@@ -33,14 +33,17 @@ void CWaddleDee::Move ( )
         return;
     }
 
-    // 벽 체크와 바닥 체크 결과 확인
-    bool wallAhead = CheckWallAhead ( );
-    bool groundAhead = CheckGroundAhead ( );
-
-    // 앞방에 벽이 있거나 바닥이 없으면 방향 전환
-    if ( wallAhead || !groundAhead )
+    // 벽과 충돌했으면 방향 전환 (충돌 콜백에서 이미 방향이 바뀌었지만 상태도 변경)
+    if (m_bWallCollision && !m_bPrevWallCollision)
     {
-        ChangeState ( MONSTER_STATE::TURN );
+        ChangeState(MONSTER_STATE::TURN);
+        return;
+    }
+
+    // 바닥과 충돌하지 않으면 방향 전환 (낭떠러지 감지)
+    if (!m_bGroundCollision && m_bPrevGroundCollision)
+    {
+        ChangeState(MONSTER_STATE::TURN);
         return;
     }
 

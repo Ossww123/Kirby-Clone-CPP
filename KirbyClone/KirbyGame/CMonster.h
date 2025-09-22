@@ -2,6 +2,7 @@
 #include "CObject.h"
 
 class CTexture;
+class CTile;
 
 class CMonster : public CObject
 {
@@ -69,7 +70,6 @@ public:
 protected:
     // === 공통 이동 함수들 (자식 클래스에서 사용) ===
     void MoveHorizontal(float speed);          // 좌우 이동
-    void HandleWallCollision();                // 벽 충돌 처리
 
     // === 공통 애니메이션 유틸리티 ===
     void LoadEnemySpriteSheet();               // 공통 스프라이트 시트 로드
@@ -89,13 +89,16 @@ protected:
     virtual void UpdateBeingInhaled();
     virtual void UpdateAttackReady();
     virtual void UpdateAttack();
-    virtual void UpdateEditorIdle();  // 에디터 전용 IDLE 상태
 
 public:
     // === 충돌 체크 유틸리티 ===
-    bool CheckWallAhead();
-    bool CheckGroundAhead();
     void CheckStageBounds();                   // 스테이지 경계 체크
+
+private:
+    // === 충돌 상태 관리 ===
+    void UpdateCollisionState();                   // 충돌 상태 업데이트
+    void HandleTileCollisionEnter(CTile* _pTile);  // 타일과의 충돌 시작 처리 (일회성)
+    void UpdateTileCollisionState(CTile* _pTile);  // 타일과의 충돌 상태 업데이트 (매 프레임)
 
 protected:
     // === 애니메이션 매핑 (자식 클래스에서 설정) ===
@@ -113,10 +116,11 @@ protected:
     int     m_iDir;             // 이동 방향 (-1: 왼쪽, 1: 오른쪽)
     float   m_fIdleTime;        // 대기 시간
 
-    // === 충돌 체크 관련 ===
-    bool    m_bHitWall;         // 벽 충돌 여부
-    float   m_fGroundCheckDist; // 바닥 체크 거리
-    float   m_fWallCheckDist;   // 벽 체크 거리
+    // === 충돌 상태 관련 ===
+    bool    m_bWallCollision;   // 벽과 충돌 중인지
+    bool    m_bGroundCollision; // 바닥과 충돌 중인지
+    bool    m_bPrevWallCollision;   // 이전 프레임 벽 충돌 상태
+    bool    m_bPrevGroundCollision; // 이전 프레임 바닥 충돌 상태
 
     // === 공통 텍스처 ===
     CTexture* m_pEnemyTex;      // enemies.bmp 텍스처

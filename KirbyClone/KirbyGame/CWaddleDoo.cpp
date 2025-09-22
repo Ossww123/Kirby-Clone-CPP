@@ -60,8 +60,15 @@ void CWaddleDoo::Move()
         return;
     }
 
-    // 앞방에 벽이 있거나 바닥이 없으면 방향 전환
-    if (CheckWallAhead() || !CheckGroundAhead())
+    // 벽과 충돌했으면 방향 전환 (충돌 콜백에서 이미 방향이 바뀌었지만 상태도 변경)
+    if (m_bWallCollision && !m_bPrevWallCollision)
+    {
+        ChangeState(MONSTER_STATE::TURN);
+        return;
+    }
+
+    // 바닥과 충돌하지 않으면 방향 전환 (낭떠러지 감지)
+    if (!m_bGroundCollision && m_bPrevGroundCollision)
     {
         ChangeState(MONSTER_STATE::TURN);
         return;
