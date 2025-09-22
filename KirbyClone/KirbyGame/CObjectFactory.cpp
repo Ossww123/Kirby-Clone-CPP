@@ -1,6 +1,7 @@
 #include "gamePCH.h"
 #include "CObjectFactory.h"
 #include "CMonsterFactory.h"
+#include "CBackgroundFactory.h"
 
 
 #include "CTileMgr.h"
@@ -66,6 +67,11 @@ CObject* CObjectFactory::CreateObject ( OBJECT_TYPE _eType , Vec2 _vPos )
     case OBJECT_TYPE::OBJECT_SWITCH:
     case OBJECT_TYPE::OBJECT_MIRROR:
         pObject = CreateSpecialObject ( _eType , _vPos );
+        break;
+
+        // 배경 오브젝트
+    case OBJECT_TYPE::OBJECT_BACKGROUND:
+        pObject = CBackgroundFactory::CreateBackground ( BACKGROUND_TYPE::STATIC , _vPos );
         break;
 
     default:
@@ -246,6 +252,7 @@ const wchar_t* CObjectFactory::GetObjectTypeName ( OBJECT_TYPE _eType )
     case OBJECT_TYPE::OBJECT_DOOR: return L"Door";
     case OBJECT_TYPE::OBJECT_SWITCH: return L"Switch";
     case OBJECT_TYPE::OBJECT_MIRROR: return L"Mirror";
+    case OBJECT_TYPE::OBJECT_BACKGROUND: return L"Background";
 
     default: return L"Unknown";
     }
@@ -326,6 +333,7 @@ Vec2 CObjectFactory::GetDefaultScale ( OBJECT_TYPE _eType )
     case OBJECT_TYPE::OBJECT_DOOR:          return Vec2 ( 64.f , 128.f );
     case OBJECT_TYPE::OBJECT_SWITCH:        return Vec2 ( 48.f , 32.f );
     case OBJECT_TYPE::OBJECT_MIRROR:        return Vec2 ( 96.f , 128.f );
+    case OBJECT_TYPE::OBJECT_BACKGROUND:    return Vec2 ( 640.f , 480.f );
     default:                                return Vec2 ( 64.f , 64.f );
     }
 }

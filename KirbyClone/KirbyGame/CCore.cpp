@@ -9,7 +9,6 @@
 #include "CCamera.h"
 #include "CPathMgr.h"
 #include "CResMgr.h"
-#include "CBackgroundMgr.h"
 #include "CTileMgr.h"
 #include "CStageMgr.h"
 #include "CAnimationDataMgr.h"
@@ -71,7 +70,6 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	CAnimationDataMgr::GetInst ( )->init ( );
 
 	// 게임 콘텐츠 매니저들 초기화
-	CBackgroundMgr::GetInst ( )->init ( );
 	CTileMgr::GetInst ( )->init ( );
 	CStageMgr::GetInst ( )->init ( );
 

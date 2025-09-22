@@ -1,8 +1,6 @@
 #pragma once
 #include "CScene.h"
 
-class CBackground;
-
 class CScene_Stage01 : public CScene
 {
 public:
@@ -24,9 +22,6 @@ private:
     void InitializeStage();
 
 private:
-    // === 배경 시스템 관련 함수들 ===
-    void InitializeBackgroundSystem();
-    void ChangeBackground(BACKGROUND_TYPE _eBgType);
 
 public:
     // === 생성자/소멸자 ===
@@ -39,7 +34,4 @@ private:
     // === 레벨 파일 관리 ===
     wstring         m_strLevelFile;         // 로드할 레벨 파일명
 
-    // === 배경 시스템 ===
-    CBackground* m_pCurrentBackground;   // 현재 배경
-    BACKGROUND_TYPE m_eCurrentBgType;       // 현재 배경 타입
 };

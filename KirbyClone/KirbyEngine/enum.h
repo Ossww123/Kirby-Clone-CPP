@@ -286,6 +286,7 @@ enum class OBJECT_TYPE
     OBJECT_DOOR ,            // 문
     OBJECT_SWITCH ,          // 스위치
     OBJECT_MIRROR ,          // 거울 (게임 제목에 맞게)
+    OBJECT_BACKGROUND ,      // 배경 오브젝트
 
     EFFECT,
 
@@ -295,6 +296,11 @@ enum class OBJECT_TYPE
 // 배경 타입 열거형
 enum class BACKGROUND_TYPE
 {
+    STATIC ,             // 정적 배경 (스케일링만)
+    SCROLLABLE ,         // 스크롤 가능한 배경
+    PARALLAX ,           // 패럴랙스 스크롤 배경
+
+    // 실제 배경 이미지들
     BACKGROUND1 ,        // background1.bmp
     BACKGROUND2 ,        // background2.bmp
     BACKGROUND3 ,        // background3.bmp

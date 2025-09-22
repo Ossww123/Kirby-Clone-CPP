@@ -131,9 +131,6 @@
     <Filter Include="Engine\03. Manager\PathMgr">
       <UniqueIdentifier>{4227ecc2-b3b3-4115-a9ee-92a24e1f5c86}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\03. Manager\BackgroundMgr">
-      <UniqueIdentifier>{6ceefb21-02ac-483c-85b4-1df5be06aeab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\03. Manager\TileMgr">
       <UniqueIdentifier>{ec3a351e-6930-4684-9675-4a3d4b5ed14f}</UniqueIdentifier>
     </Filter>
@@ -173,9 +170,6 @@
     <Filter Include="Engine\06. Resource">
       <UniqueIdentifier>{80b73b89-a976-4430-a557-f25e5bb2e4f0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\06. Resource\Background">
-      <UniqueIdentifier>{38c000b4-0135-4f97-a564-05b8fda0ce55}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\06. Resource\StageImage">
       <UniqueIdentifier>{ac8c351a-d5a0-41ab-a9b0-08b864a094fd}</UniqueIdentifier>
     </Filter>
@@ -205,6 +199,12 @@
     </Filter>
     <Filter Include="Engine\10. Module">
       <UniqueIdentifier>{74a85f7d-4da8-4f18-b5bd-09c1b48fefbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\06. Resource\Texture">
+      <UniqueIdentifier>{b0044dd0-5113-4acf-b84f-36327bd770fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Background">
+      <UniqueIdentifier>{be254779-cca9-4874-9253-0383c618697b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -241,12 +241,6 @@
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CApple.h">
       <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CBackground.h">
-      <Filter>Engine\06. Resource\Background</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CBackgroundMgr.h">
-      <Filter>Engine\03. Manager\BackgroundMgr</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CBasicMonster.h">
       <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
@@ -410,6 +404,15 @@
     <ClInclude Include="CMonsterFactory.h">
       <Filter>Engine\08. Factory</Filter>
     </ClInclude>
+    <ClInclude Include="CTexture.h">
+      <Filter>Engine\06. Resource\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="CBackground.h">
+      <Filter>Engine\04. Object\Background</Filter>
+    </ClInclude>
+    <ClInclude Include="CBackgroundFactory.h">
+      <Filter>Engine\08. Factory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyGame.rc">
@@ -446,12 +449,6 @@
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CApple.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CBackground.cpp">
-      <Filter>Engine\06. Resource\Background</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CBackgroundMgr.cpp">
-      <Filter>Engine\03. Manager\BackgroundMgr</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CBasicMonster.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
@@ -613,6 +610,15 @@
       <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
     </ClCompile>
     <ClCompile Include="CMonsterFactory.cpp">
+      <Filter>Engine\08. Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="CTexture.cpp">
+      <Filter>Engine\06. Resource\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="CBackground.cpp">
+      <Filter>Engine\04. Object\Background</Filter>
+    </ClCompile>
+    <ClCompile Include="CBackgroundFactory.cpp">
       <Filter>Engine\08. Factory</Filter>
     </ClCompile>
   </ItemGroup>

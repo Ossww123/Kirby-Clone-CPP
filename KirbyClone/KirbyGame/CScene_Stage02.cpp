@@ -15,33 +15,36 @@
 #include "CPathMgr.h"
 #include "CEventMgr.h"
 #include "CTileMgr.h"
-#include "CBackground.h"
-#include "CBackgroundMgr.h"
 #include "CStageMgr.h"
 #include "CPlayerDataMgr.h"
 #include "CStageImage.h"
 #include "CMonsterSpawnMgr.h"
 #include "CUIMgr.h"
 #include "CSoundMgr.h"
+#include "CBackgroundFactory.h"
 
 
 CScene_Stage02::CScene_Stage02()
     : m_strLevelFile(L"STAGE02")
-    , m_pCurrentBackground(nullptr)
-    , m_eCurrentBgType(BACKGROUND_TYPE::BACKGROUND2)  // Stage02는 배경2 사용
 {
 }
 
 CScene_Stage02::~CScene_Stage02()
 {
-    // 배경은 CBackgroundMgr에서 관리하므로 여기서 삭제하지 않음
-    m_pCurrentBackground = nullptr;
 }
 
 // === 핵심 생명주기 함수들 ===
 
 void CScene_Stage02::Enter()
 {
+    // 배경 오브젝트 생성 (Stage02는 Background2 사용)
+    CObject* pBackground = CBackgroundFactory::CreateBackgroundWithTexture(
+        BACKGROUND_TYPE::BACKGROUND2,
+        L"background\\background2.bmp",
+        Vec2(320.f, 240.f)  // 화면 중앙
+    );
+    AddObject(pBackground, GROUP_TYPE::DEFAULT);
+
     // 기본 플레이어 생성 (레벨 로드에서 위치가 덮어씌워질 수 있음)
     CPlayer* pPlayer = new CPlayer;
     pPlayer->SetPos(Vec2(320.f, 320.f)); // 샘플용 맵 크기에 맞는 기본 위치
@@ -59,9 +62,6 @@ void CScene_Stage02::Enter()
     // 몬스터 스폰 매니저 초기화
     CMonsterSpawnMgr::GetInst()->Initialize();
     CMonsterSpawnMgr::GetInst()->SetPlayer(pPlayer);
-
-    // 배경 시스템 초기화
-    InitializeBackgroundSystem();
 
     // 스테이지 초기화
     InitializeStage();
@@ -94,12 +94,6 @@ void CScene_Stage02::Exit()
 
 void CScene_Stage02::Update()
 {
-    // 배경 업데이트
-    if (m_pCurrentBackground)
-    {
-        m_pCurrentBackground->Update();
-    }
-
     // 몬스터 스폰 매니저 업데이트
     CMonsterSpawnMgr::GetInst()->Update();
 
@@ -121,12 +115,6 @@ void CScene_Stage02::Update()
 
 void CScene_Stage02::Render(HDC _dc)
 {
-    // 배경 먼저 렌더링
-    if (m_pCurrentBackground)
-    {
-        m_pCurrentBackground->Render(_dc);
-    }
-
     CStageMgr::GetInst()->Render(_dc);
 
     // 부모 클래스의 Render 호출 (모든 객체 렌더링)
@@ -238,13 +226,6 @@ void CScene_Stage02::LoadStageLevel(const wstring& _strFileName)
         
         // 카메라에 스테이지 경계 설정
         CCamera::GetInst()->SetStageBounds(vLevelBoundsMin, vLevelBoundsMax);
-
-        // 배경에 스테이지 크기 설정
-        if (m_pCurrentBackground)
-        {
-            Vec2 vMapSize = vLevelBoundsMax - vLevelBoundsMin;
-            m_pCurrentBackground->SetStageSize(vMapSize);
-        }
 
         // 스테이지 이미지를 맵 크기에 맞게 재배치
         CStageImage* pStageImage = CStageMgr::GetInst()->GetCurrentStageImage();
@@ -387,12 +368,6 @@ void CScene_Stage02::CreateDefaultLevel()
     Vec2 vDefaultMapSize = Vec2(4096.f, 640.f);
     CCamera::GetInst()->SetStageBounds(Vec2(0.f, 0.f), vDefaultMapSize);
 
-    // 배경에 기본 스테이지 크기 설정
-    if (m_pCurrentBackground)
-    {
-        m_pCurrentBackground->SetStageSize(vDefaultMapSize);
-    }
-
     // 기본 레벨에서도 스테이지 이미지를 맵 크기에 맞게 배치
     CStageImage* pStageImage = CStageMgr::GetInst()->GetCurrentStageImage();
     if (pStageImage)
@@ -410,9 +385,6 @@ void CScene_Stage02::ApplyLoadedLevelData(Vec2 _vPlayerSpawn, BACKGROUND_TYPE _e
         vecPlayer[0]->SetPos(_vPlayerSpawn);
     }
 
-    // 배경 적용
-    ChangeBackground(_eBgType);
-
     // 스테이지 이미지 적용
     CStageMgr::GetInst()->SetCurrentStageImage(_eStageType);
 }
@@ -425,19 +397,4 @@ void CScene_Stage02::InitializeStage()
     // 예: 배경음악, 환경 설정, 특수 이벤트 등
 
     // 현재는 기본 설정만
-}
-
-// === 배경 시스템 관련 함수들 ===
-
-void CScene_Stage02::InitializeBackgroundSystem()
-{
-    // 기본 배경 설정 (Stage02는 Background2 사용)
-    m_eCurrentBgType = BACKGROUND_TYPE::BACKGROUND2;
-    m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(m_eCurrentBgType);
-}
-
-void CScene_Stage02::ChangeBackground(BACKGROUND_TYPE _eBgType)
-{
-    m_eCurrentBgType = _eBgType;
-    m_pCurrentBackground = CBackgroundMgr::GetInst()->FindBackground(_eBgType);
 }

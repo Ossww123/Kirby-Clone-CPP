@@ -153,8 +153,6 @@
     <ClInclude Include="..\KirbyGame\CAnimationDataMgr.h" />
     <ClInclude Include="..\KirbyGame\CAnimator.h" />
     <ClInclude Include="..\KirbyGame\CApple.h" />
-    <ClInclude Include="..\KirbyGame\CBackground.h" />
-    <ClInclude Include="..\KirbyGame\CBackgroundMgr.h" />
     <ClInclude Include="..\KirbyGame\CBasicMonster.h" />
     <ClInclude Include="..\KirbyGame\CBoss.h" />
     <ClInclude Include="..\KirbyGame\CBrontoBurt.h" />
@@ -209,7 +207,10 @@
     <ClInclude Include="..\KirbyGame\CWaddleDee.h" />
     <ClInclude Include="..\KirbyGame\CWaddleDoo.h" />
     <ClInclude Include="..\KirbyGame\CWhispyWoods.h" />
+    <ClInclude Include="CBackgroundFactory.h" />
+    <ClInclude Include="CBackground.h" />
     <ClInclude Include="CMonsterFactory.h" />
+    <ClInclude Include="CTexture.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="gamePCH.h" />
     <ClInclude Include="KirbyGame.h" />
@@ -223,8 +224,6 @@
     <ClCompile Include="..\KirbyGame\CAnimationDataMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CAnimator.cpp" />
     <ClCompile Include="..\KirbyGame\CApple.cpp" />
-    <ClCompile Include="..\KirbyGame\CBackground.cpp" />
-    <ClCompile Include="..\KirbyGame\CBackgroundMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CBasicMonster.cpp" />
     <ClCompile Include="..\KirbyGame\CBoss.cpp" />
     <ClCompile Include="..\KirbyGame\CBrontoBurt.cpp" />
@@ -279,7 +278,10 @@
     <ClCompile Include="..\KirbyGame\CWaddleDee.cpp" />
     <ClCompile Include="..\KirbyGame\CWaddleDoo.cpp" />
     <ClCompile Include="..\KirbyGame\CWhispyWoods.cpp" />
+    <ClCompile Include="CBackgroundFactory.cpp" />
+    <ClCompile Include="CBackground.cpp" />
     <ClCompile Include="CMonsterFactory.cpp" />
+    <ClCompile Include="CTexture.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
   </ItemGroup>
   <ItemGroup>
