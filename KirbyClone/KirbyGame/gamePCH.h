@@ -25,6 +25,7 @@ using std::make_pair;
 
 #include <commdlg.h>
 #include <mmsystem.h>
+#include <cassert>
 
 #include <KirbyEngine/define.h>
 #include <KirbyEngine/enum.h>
