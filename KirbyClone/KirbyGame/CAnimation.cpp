@@ -3,58 +3,31 @@
 #include "CTexture.h"
 #include "CCamera.h"
 #include "CTimeMgr.h"
-
 #pragma comment(lib, "msimg32.lib")
 
-CAnimation::CAnimation()
-    : m_strName{}
-    , m_pTex(nullptr)
-    , m_vecFrame{}
-    , m_iCurFrame(0)
-    , m_fAccTime(0.f)
-    , m_bFinish(false)
-    , m_bLoop(true)
-{
-}
-
-CAnimation::~CAnimation()
-{
-}
+CAnimation::CAnimation() {}
+CAnimation::~CAnimation() { ReleaseFlipSurfaces(); }
 
 void CAnimation::Update()
 {
-    if (m_bFinish || m_vecFrame.empty())
-        return;
+    if (m_vecFrame.empty()) return;
 
-    // 델타타임 누적
     m_fAccTime += CTimeMgr::GetInst()->GetfDT();
+    const float curDur = m_vecFrame[m_iCurFrame].fDuration;
 
-    // 현재 프레임의 지속시간을 넘었다면 다음 프레임으로
-    if (m_fAccTime >= m_vecFrame[m_iCurFrame].fDuration)
+    if (m_fAccTime >= curDur)
     {
+        m_fAccTime -= curDur;
         ++m_iCurFrame;
-        m_fAccTime = 0.f;
-
-        // 마지막 프레임에 도달했다면
         if (m_iCurFrame >= (int)m_vecFrame.size())
         {
-            if (m_bLoop)
-            {
-                m_iCurFrame = 0;  // 반복
-            }
-            else
-            {
-                --m_iCurFrame;   // 마지막 프레임에서 유지
+            if (m_bLoop) m_iCurFrame = 0;
+            else {
+                m_iCurFrame = (int)m_vecFrame.size() - 1;
                 m_bFinish = true;
             }
         }
     }
-}
-
-void CAnimation::Render(HDC _dc, Vec2 _vPos)
-{
-    // �⺻ ũ��(1.0��)�� ������
-    RenderScaled(_dc, _vPos, 1.0f);
 }
 
 void CAnimation::Reset()
@@ -64,175 +37,108 @@ void CAnimation::Reset()
     m_bFinish = false;
 }
 
-void CAnimation::Create(CTexture* _pTex, Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
-    float _fDuration, int _iFrameCount, bool _bLoop)
+void CAnimation::AddFrame(Vec2 vLT, Vec2 vSlice, float dur, Vec2 vOffset)
 {
-    // 유효성 검사
-    if (nullptr == _pTex || _iFrameCount <= 0 || _fDuration <= 0.f)
-        return;
-
-    // 기본 설정
-    m_pTex = _pTex;
-    m_bLoop = _bLoop;
-
-    // 기존 프레임들 삭제
-    m_vecFrame.clear();
-
-    // 프레임들 생성
-    for (int i = 0; i < _iFrameCount; ++i)
-    {
-        tAnimFrame frame;
-        frame.vLT = Vec2(_vLT.x + _vStep.x * i, _vLT.y);
-        frame.vSlice = _vSliceSize;
-        frame.fDuration = _fDuration;
-
-        m_vecFrame.push_back(frame);
-    }
-}
-
-
-
-void CAnimation::AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration)
-{
-    // 유효성 검사
-    if (_fDuration <= 0.f)
-        return;
-
-    tAnimFrame frame;
-    frame.vLT = _vLT;
-    frame.vSlice = _vSliceSize;
-    frame.fDuration = _fDuration;
-
-    m_vecFrame.push_back(frame);
+    if (dur <= 0.f) return;
+    tAnimFrame fr;
+    fr.vLT = vLT; fr.vSlice = vSlice; fr.vOffset = vOffset; fr.fDuration = dur;
+    m_vecFrame.push_back(fr);
 }
 
 void CAnimation::ClearFrames()
 {
     m_vecFrame.clear();
-    m_iCurFrame = 0;
-    m_fAccTime = 0.f;
-    m_bFinish = false;
+    Reset();
 }
 
-void CAnimation::RenderScaled(HDC _dc, Vec2 _vPos, float _fScale, bool _bFlipX)
+void CAnimation::RenderScaled(HDC _dc, const Vec2& _vWorldPos, float _fScale, bool _flipX)
 {
-    if (!IsValidRenderState())
-        return;
+    if (!m_pSheet || m_vecFrame.empty()) return;
 
     // 카메라 좌표 변환
-    Vec2 vRenderPos = CCamera::GetInst()->GetRenderPos(_vPos);
-    const tAnimFrame& frame = m_vecFrame[m_iCurFrame];
-    Vec2 vDestSize = frame.vSlice * _fScale;
+    Vec2 vScreen = CCamera::GetInst()->GetRenderPos(_vWorldPos);
 
-    // 실제 프레임 렌더링 (플립 포함)
-    RenderFrame(_dc, vRenderPos, frame, vDestSize, _bFlipX);
+    const tAnimFrame& fr = m_vecFrame[m_iCurFrame];
+    RenderFrame(_dc, fr, vScreen, _fScale, _flipX);
 }
 
-bool CAnimation::IsValidCreateParams(CTexture* _pTex, int _iFrameCount, float _fDuration) const
+void CAnimation::RenderFrame(HDC _dc, const tAnimFrame& fr, const Vec2& vScreenPos, float fScale, bool flipX)
 {
-    return (_pTex != nullptr && _iFrameCount > 0 && _fDuration > 0.f);
-}
+    if (!m_pSheet) return;
 
-bool CAnimation::IsValidRenderState() const
-{
-    return (m_pTex != nullptr && !m_vecFrame.empty() &&
-        m_iCurFrame >= 0 && m_iCurFrame < (int)m_vecFrame.size());
-}
+    const int srcL = (int)fr.vLT.x;
+    const int srcT = (int)fr.vLT.y;
+    const int srcW = (int)fr.vSlice.x;
+    const int srcH = (int)fr.vSlice.y;
 
-void CAnimation::CreateFrameSequence(Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
-    float _fDuration, int _iFrameCount)
-{
-    for (int i = 0; i < _iFrameCount; ++i)
+    const int dstW = (int)(fr.vSlice.x * fScale);
+    const int dstH = (int)(fr.vSlice.y * fScale);
+
+    // 피벗 오프셋 적용(픽셀 스냅)
+    const int dstX = (int)(vScreenPos.x - fr.vOffset.x * fScale);
+    const int dstY = (int)(vScreenPos.y - fr.vOffset.y * fScale);
+
+    HDC  hSrcDC = m_pSheet->GetDC();
+    UINT ck = m_pSheet->GetColorKey(); // CTexture에 반드시 구현
+
+    if (!flipX)
     {
-        tAnimFrame frame;
-        frame.vLT = Vec2(_vLT.x + _vStep.x * i, _vLT.y);
-        frame.vSlice = _vSliceSize;
-        frame.fDuration = _fDuration;
-
-        m_vecFrame.push_back(frame);
+        TransparentBlt(_dc, dstX - dstW / 2, dstY - dstH / 2, dstW, dstH,
+            hSrcDC, srcL, srcT, srcW, srcH, ck);
+        return;
     }
+
+    // === flipX ===
+    EnsureFlipSurfaces(POINT{ dstW, dstH });
+
+    // 1) 원본을 DC1에 스케일 붙여넣기
+    TransparentBlt(m_hFlipDC1, 0, 0, dstW, dstH,
+        hSrcDC, srcL, srcT, srcW, srcH, ck);
+
+    // 2) DC1 → DC2로 가로 플립 복사(음수 폭)
+    StretchBlt(m_hFlipDC2,
+        dstW - 1, 0, -dstW, dstH,
+        m_hFlipDC1, 0, 0, dstW, dstH, SRCCOPY);
+
+    // 3) DC2를 화면으로 전송
+    TransparentBlt(_dc, dstX - dstW / 2, dstY - dstH / 2, dstW, dstH,
+        m_hFlipDC2, 0, 0, dstW, dstH, ck);
 }
 
-void CAnimation::RenderFrame(HDC _dc, const Vec2& _vRenderPos, const tAnimFrame& _frame,
-    const Vec2& _vDestSize, bool _bFlipX)
+void CAnimation::EnsureFlipSurfaces(const POINT& sizePx)
 {
-    if (_bFlipX)
-    {
-        // 플립을 위한 메모리 DC 2개 생성 (투명도 처리용)
-        HDC memDC1 = CreateCompatibleDC(_dc);
-        HDC memDC2 = CreateCompatibleDC(_dc);
-        HBITMAP memBmp1 = CreateCompatibleBitmap(_dc, (int)_vDestSize.x, (int)_vDestSize.y);
-        HBITMAP memBmp2 = CreateCompatibleBitmap(_dc, (int)_vDestSize.x, (int)_vDestSize.y);
-        HBITMAP oldBmp1 = (HBITMAP)SelectObject(memDC1, memBmp1);
-        HBITMAP oldBmp2 = (HBITMAP)SelectObject(memDC2, memBmp2);
-        
-        // 첫 번째 DC를 마젠타로 채움 (투명색)
-        HBRUSH magentaBrush = CreateSolidBrush(RGB(255, 0, 255));
-        RECT fillRect = {0, 0, (int)_vDestSize.x, (int)_vDestSize.y};
-        FillRect(memDC1, &fillRect, magentaBrush);
-        DeleteObject(magentaBrush);
-        
-        // 원본 이미지를 첫 번째 DC에 투명 블릿
-        TransparentBlt(memDC1,
-            0, 0,
-            (int)_vDestSize.x,
-            (int)_vDestSize.y,
-            m_pTex->GetDC(),
-            (int)_frame.vLT.x,
-            (int)_frame.vLT.y,
-            (int)_frame.vSlice.x,
-            (int)_frame.vSlice.y,
-            RGB(255, 0, 255));
-        
-        // 두 번째 DC를 마젠타로 채움
-        HBRUSH magentaBrush2 = CreateSolidBrush(RGB(255, 0, 255));
-        FillRect(memDC2, &fillRect, magentaBrush2);
-        DeleteObject(magentaBrush2);
-        
-        // 첫 번째 DC를 두 번째 DC에 플립해서 복사
-        StretchBlt(memDC2,
-            (int)_vDestSize.x - 1, 0,  // xDest, yDest (시작 X, Y)
-            -(int)_vDestSize.x,        // wDest (음수 너비로 플립)
-            (int)_vDestSize.y,         // hDest (높이)
-            memDC1,                    // hdcSrc
-            0, 0,                      // xSrc, ySrc
-            (int)_vDestSize.x,         // wSrc
-            (int)_vDestSize.y,         // hSrc
-            SRCCOPY);
-        
-        // 플립된 이미지를 화면에 투명 블릿
-        TransparentBlt(_dc,
-            (int)(_vRenderPos.x - _vDestSize.x / 2.f),
-            (int)(_vRenderPos.y - _vDestSize.y / 2.f),
-            (int)_vDestSize.x,
-            (int)_vDestSize.y,
-            memDC2,
-            0, 0,
-            (int)_vDestSize.x,
-            (int)_vDestSize.y,
-            RGB(255, 0, 255));
-        
-        // 리소스 정리
-        SelectObject(memDC1, oldBmp1);
-        SelectObject(memDC2, oldBmp2);
-        DeleteObject(memBmp1);
-        DeleteObject(memBmp2);
-        DeleteDC(memDC1);
-        DeleteDC(memDC2);
-    }
-    else
-    {
-        // 일반 렌더링
-        TransparentBlt(_dc,
-            (int)(_vRenderPos.x - _vDestSize.x / 2.f),
-            (int)(_vRenderPos.y - _vDestSize.y / 2.f),
-            (int)_vDestSize.x,
-            (int)_vDestSize.y,
-            m_pTex->GetDC(),
-            (int)_frame.vLT.x,
-            (int)_frame.vLT.y,
-            (int)_frame.vSlice.x,
-            (int)_frame.vSlice.y,
-            RGB(255, 0, 255));  // 마젠타 컬러키
-    }
+    if (m_cachedSize.x == sizePx.x && m_cachedSize.y == sizePx.y &&
+        m_hFlipDC1 && m_hFlipDC2 && m_hFlipBmp1 && m_hFlipBmp2)
+        return;
+
+    ReleaseFlipSurfaces();
+
+    // 대상 DC 기준으로 호환 DC/Bitmap 생성
+    HDC hCompat = GetDC(nullptr);
+    m_hFlipDC1 = CreateCompatibleDC(hCompat);
+    m_hFlipDC2 = CreateCompatibleDC(hCompat);
+    m_hFlipBmp1 = CreateCompatibleBitmap(hCompat, sizePx.x, sizePx.y);
+    m_hFlipBmp2 = CreateCompatibleBitmap(hCompat, sizePx.x, sizePx.y);
+    ReleaseDC(nullptr, hCompat);
+
+    SelectObject(m_hFlipDC1, m_hFlipBmp1);
+    SelectObject(m_hFlipDC2, m_hFlipBmp2);
+
+    // 마젠타로 초기화(투명색)
+    RECT rc{ 0,0,sizePx.x,sizePx.y };
+    HBRUSH magenta = CreateSolidBrush(RGB(255, 0, 255));
+    FillRect(m_hFlipDC1, &rc, magenta);
+    FillRect(m_hFlipDC2, &rc, magenta);
+    DeleteObject(magenta);
+
+    m_cachedSize = sizePx;
+}
+
+void CAnimation::ReleaseFlipSurfaces()
+{
+    if (m_hFlipDC1) { DeleteDC(m_hFlipDC1); m_hFlipDC1 = nullptr; }
+    if (m_hFlipDC2) { DeleteDC(m_hFlipDC2); m_hFlipDC2 = nullptr; }
+    if (m_hFlipBmp1) { DeleteObject(m_hFlipBmp1); m_hFlipBmp1 = nullptr; }
+    if (m_hFlipBmp2) { DeleteObject(m_hFlipBmp2); m_hFlipBmp2 = nullptr; }
+    m_cachedSize = POINT{ 0,0 };
 }

@@ -98,31 +98,23 @@ bool CAnimationDataMgr::SaveAnimationFile(const wstring& _strFilePath, const tAn
 // === 게임 런타임 지원 ===
 void CAnimationDataMgr::LoadAnimationsIntoAnimator(CAnimator* _pAnimator, const wstring& _strFilePath)
 {
-    if (!_pAnimator)
-        return;
+    if (!_pAnimator) return;
 
-    // 애니메이션 파일 로드
     tAnimationFileData fileData = LoadAnimationFile(_strFilePath);
-    if (fileData.mapAnimations.empty())
-        return;
+    if (fileData.mapAnimations.empty()) return;
 
-    // 텍스처 로드
+    // 텍스처(시트) 로드
     CTexture* pTexture = CResMgr::GetInst()->LoadTexture(fileData.strTexturePath, fileData.strTexturePath);
-    if (!pTexture)
-        return;
+    if (!pTexture) return;
 
-    // 각 애니메이션을 CAnimator에 추가
+    // 각 애니메이션을 Animator에 주입 (반드시 SetSheet 사용)
     for (auto& pair : fileData.mapAnimations)
     {
-        const wstring& strAnimName = pair.first;
+        const wstring& name = pair.first;
         const tAnimationData& animData = pair.second;
 
-        // CAnimation 객체 생성
         CAnimation* pAnim = CreateTemporaryAnimation(animData, pTexture);
-        if (pAnim)
-        {
-            _pAnimator->AddCustomAnimation(strAnimName, pAnim);
-        }
+        if (pAnim) _pAnimator->AddCustomAnimation(name, pAnim);
     }
 }
 
@@ -135,7 +127,7 @@ CAnimation* CAnimationDataMgr::CreateTemporaryAnimation(const tAnimationData& _d
     // CAnimation 객체 생성
     CAnimation* pAnim = new CAnimation;
     pAnim->SetName(_data.strName);
-    pAnim->SetTexture(_pTexture);
+    pAnim->SetSheet(_pTexture);
     pAnim->SetLoop(_data.bLoop);
 
     // 프레임 데이터 추가
@@ -214,27 +206,6 @@ bool CAnimationDataMgr::IsValidAnimationFile(const wstring& _strFilePath)
 
     wstring extension = _strFilePath.substr(dotPos);
     return (extension == L".json" || extension == L".anim");
-}
-
-// === 유틸리티 함수들 ===
-tAnimationData CAnimationDataMgr::ConvertFromCAnimation(CAnimation* _pAnim)
-{
-    tAnimationData result;
-
-    if (!_pAnim)
-        return result;
-
-    result.strName = _pAnim->GetName();
-
-    // 프레임 데이터 변환
-    int frameCount = _pAnim->GetMaxFrame();
-    for (int i = 0; i < frameCount; ++i)
-    {
-        tAnimFrame& frame = _pAnim->GetFrame(i);
-        result.vecFrames.push_back(frame);  // 직접 추가 가능
-    }
-
-    return result;
 }
 
 // 테스트용 함수들
@@ -618,34 +589,29 @@ tAnimationData CAnimationDataMgr::ParseSingleAnimation(const wstring& _content, 
 
 tAnimFrame CAnimationDataMgr::ParseSingleFrame(const wstring& _content, size_t _startPos, size_t _endPos)
 {
-    tAnimFrame result;
+    tAnimFrame result; // vOffset은 {0,0} 기본
 
     wstring frameContent = _content.substr(_startPos, _endPos - _startPos);
 
-    // vLT 파싱
     size_t vltPos = frameContent.find(L"\"vLT\"");
-    if (vltPos != wstring::npos)
-    {
-        result.vLT = ExtractVec2FromJson(frameContent, vltPos);
-    }
+    if (vltPos != wstring::npos) result.vLT = ExtractVec2FromJson(frameContent, vltPos);
 
-    // vSlice 파싱
     size_t vslicePos = frameContent.find(L"\"vSlice\"");
-    if (vslicePos != wstring::npos)
-    {
-        result.vSlice = ExtractVec2FromJson(frameContent, vslicePos);
-    }
+    if (vslicePos != wstring::npos) result.vSlice = ExtractVec2FromJson(frameContent, vslicePos);
 
-    // fDuration 파싱
     size_t durationPos = frameContent.find(L"\"fDuration\"");
     if (durationPos != wstring::npos)
     {
-        wstring durationStr = ExtractNumberFromJson(frameContent, durationPos);
-        result.fDuration = (float)_wtof(durationStr.c_str());
+        wstring d = ExtractNumberFromJson(frameContent, durationPos);
+        result.fDuration = (float)_wtof(d.c_str());
     }
+
+    size_t voffPos = frameContent.find(L"\"vOffset\"");
+    if (voffPos != wstring::npos) result.vOffset = ExtractVec2FromJson(frameContent, voffPos);
 
     return result;
 }
+
 
 // === 파일 처리 내부 구현 ===
 wstring CAnimationDataMgr::ReadTextFile(const wstring& _strFilePath)

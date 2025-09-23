@@ -30,7 +30,6 @@ public:
 
 public:
     // === 유틸리티 함수 ===
-    tAnimationData ConvertFromCAnimation(CAnimation* _pAnim);
     wstring GetAnimationDirectory() const { return m_strAnimationDir; }
     void SetAnimationDirectory(const wstring& _strDir) { m_strAnimationDir = _strDir; }
 

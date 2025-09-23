@@ -12,6 +12,8 @@ private:
     bool    m_bHasAlpha;    // 알파 채널 보유 여부
     BYTE* m_pPixelData;   // 32비트 픽셀 데이터 (알파 채널 포함)
 
+    COLORREF  m_colorKey = RGB(255, 0, 255); // 기본값(마젠타)
+
 public:
     // 기존 로드 함수 (24비트 BMP, 마젠타 호환용)
     HRESULT Load(const wstring& _strFilePath);
@@ -35,6 +37,7 @@ public:
     HDC GetDC() { return m_dc; }
     bool HasAlpha() { return m_bHasAlpha; }
     int GetBitsPerPixel() { return m_tInfo.bmBitsPixel; }
+    COLORREF  GetColorKey() const { return m_colorKey; }
 
 private:
     // 내부 헬퍼 함수들

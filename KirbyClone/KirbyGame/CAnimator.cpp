@@ -1,165 +1,97 @@
 #include "gamePCH.h"
 #include "CAnimator.h"
 #include "CAnimation.h"
+#include "CTexture.h"
 #include "CObject.h"
-#include "CCore.h"  // 추가: GetPixelScale() 사용
+#include "CCore.h"
 
-CAnimator::CAnimator()
-    : m_pOwner(nullptr)
-    , m_pCurAnim(nullptr)
-    , m_bRepeat(false)
-    , m_bFlipX(false)
-{
-}
-
+CAnimator::CAnimator() {}
 CAnimator::~CAnimator()
 {
-    // 안전한 해제를 위한 확인
-    if (!m_mapAnim.empty())
-    {
-        // 동적으로 할당된 메모리 해제
-        for (map<wstring, CAnimation*>::iterator iter = m_mapAnim.begin();
-            iter != m_mapAnim.end(); )
-        {
-            if (iter->second != nullptr)
-            {
-                delete iter->second;
-                iter->second = nullptr;
-            }
-            iter = m_mapAnim.erase(iter);  // erase 후 다음 iterator 반환
-        }
-    }
+    for (auto& kv : m_mapAnim) delete kv.second;
+    m_mapAnim.clear();
+    m_pCurAnim = nullptr;
 }
 
 void CAnimator::Update()
 {
-    if (nullptr == m_pCurAnim)
-        return;
-
-    // 현재 애니메이션 업데이트
-    m_pCurAnim->Update();
-
-    // 애니메이션 완료 후 처리
-    if (m_pCurAnim->IsFinish() && !m_bRepeat)
-    {
-        m_pCurAnim = nullptr;
-    }
+    if (m_pCurAnim) m_pCurAnim->Update();
 }
 
 void CAnimator::Render(HDC _dc)
 {
-    if (nullptr == m_pCurAnim || nullptr == m_pOwner)
-        return;
+    if (!m_pCurAnim || !m_pOwner) return;
 
-    // 오브젝트 위치 가져오기
-    Vec2 vPos = m_pOwner->GetPos();
+    const float baseScale = CCore::PIXEL_SCALE;
+    const float scale = baseScale;
 
-    // 스케일링 계산
-    float fScale = CCore::GetPixelScale();
+    // 최종 flipX = 오브젝트.Transform.flipX OR Animator.m_bFlipX
+    bool flipX = m_bFlipX;
+    // CObject에 IsFlipX() 존재(Transform2D 반영) 확인됨
+    flipX = flipX || m_pOwner->IsFlipX();
 
-    // 스케일링된 렌더링 (플립 포함)
-    m_pCurAnim->RenderScaled(_dc, vPos, fScale, m_bFlipX);
+    m_pCurAnim->RenderScaled(_dc, m_pOwner->GetPos(), scale, flipX);
 }
 
-void CAnimator::CreateAnimation(const wstring& _strName, CTexture* _pTex,
-    Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
-    float _fDuration, int _iFrameCount, bool _bLoop)
+void CAnimator::RenderScaled(HDC _dc, float scale)
 {
-    // 유효성 검사
-    if (_strName.empty() || nullptr == _pTex)
-        return;
+    if (!m_pCurAnim || !m_pOwner) return;
+    if (scale <= 0.f) scale = CCore::PIXEL_SCALE;
 
-    // 중복 애니메이션 체크
-    CAnimation* pExistingAnim = FindAnimation(_strName);
-    if (nullptr != pExistingAnim)
-        return;
-
-    // 새 애니메이션 생성
-    CAnimation* pAnim = new CAnimation;
-    pAnim->SetName(_strName);
-    pAnim->SetTexture(_pTex);
-    pAnim->Create(_pTex, _vLT, _vSliceSize, _vStep, _fDuration, _iFrameCount, _bLoop);
-
-    // 맵에 추가
-    m_mapAnim.insert(make_pair(_strName, pAnim));
+    bool flipX = m_bFlipX || m_pOwner->IsFlipX();
+    m_pCurAnim->RenderScaled(_dc, m_pOwner->GetPos(), scale, flipX);
 }
 
-void CAnimator::AddCustomAnimation(const wstring& _strName, CAnimation* _pAnim)
+void CAnimator::RenderAtPosition(HDC _dc, Vec2 worldPos, float scale)
 {
-    // 유효성 검사
-    if (_strName.empty() || nullptr == _pAnim)
-        return;
+    if (!m_pCurAnim) return;
+    if (scale <= 0.f) scale = CCore::PIXEL_SCALE;
 
-    // 같은 애니메이션이 있다면 교체
-    auto iter = m_mapAnim.find(_strName);
-    if (iter != m_mapAnim.end())
+    bool flipX = m_bFlipX;
+    if (m_pOwner) flipX = flipX || m_pOwner->IsFlipX();
+
+    m_pCurAnim->RenderScaled(_dc, worldPos, scale, flipX);
+}
+
+void CAnimator::CreateAnimation(const std::wstring& name, CTexture* sheet,
+    Vec2 vLT, Vec2 vSlice, Vec2 vStep,
+    float dur, int count, bool loop)
+{
+    if (!sheet || count <= 0 || dur <= 0.f) return;
+
+    CAnimation* anim = new CAnimation;
+    anim->SetName(name);
+    anim->SetSheet(sheet);
+    anim->SetLoop(loop);
+
+    for (int i = 0; i < count; ++i)
     {
-        delete iter->second;
-        iter->second = _pAnim;
+        Vec2 lt = Vec2(vLT.x + vStep.x * i, vLT.y + vStep.y * i);
+        anim->AddFrame(lt, vSlice, dur); // vOffset은 기본 {0,0}
     }
-    else
-    {
-        // 새 애니메이션 추가
-        m_mapAnim.insert(make_pair(_strName, _pAnim));
-    }
+    m_mapAnim[name] = anim;
 }
 
-void CAnimator::LoadAnimation(const wstring& _strRelativePath)
+void CAnimator::AddCustomAnimation(const std::wstring& name, CAnimation* anim)
 {
-    // TODO: 파일에서 애니메이션 정보 로드
-    // 현재 미구현 상태
+    if (!anim) return;
+    anim->SetName(name);
+    m_mapAnim[name] = anim;
 }
 
-void CAnimator::SaveAnimation(const wstring& _strRelativePath)
+void CAnimator::Play(const std::wstring& name, bool repeat)
 {
-    // TODO: 애니메이션 정보를 파일로 저장  
-    // 현재 미구현 상태
-}
+    CAnimation* found = FindAnimation(name);
+    if (!found) return;
 
-void CAnimator::Play(const wstring& _strName, bool _bRepeat)
-{
-    // 애니메이션 찾기
-    CAnimation* pTargetAnim = FindAnimation(_strName);
-    if (nullptr == pTargetAnim)
-        return;
-
-    // 애니메이션 재생 설정
-    m_pCurAnim = pTargetAnim;
-    m_bRepeat = _bRepeat;
+    m_bRepeat = repeat;
+    found->SetLoop(repeat);
+    m_pCurAnim = found;
     m_pCurAnim->Reset();
 }
 
-void CAnimator::RenderScaled(HDC _dc, float _fScale)
+CAnimation* CAnimator::FindAnimation(const std::wstring& name)
 {
-    if (nullptr == m_pCurAnim || nullptr == m_pOwner)
-        return;
-
-    // 오브젝트 위치 가져오기
-    Vec2 vPos = m_pOwner->GetPos();
-
-    // 스케일링된 렌더링
-    m_pCurAnim->RenderScaled(_dc, vPos, _fScale);
-}
-
-void CAnimator::RenderAtPosition(HDC _dc, Vec2 _vPos, float _fScale)
-{
-    if (nullptr == m_pCurAnim)
-        return;
-
-    // 스케일이 0이면 기본 픽셀 스케일 사용
-    if (_fScale <= 0.f)
-        _fScale = CCore::GetPixelScale();
-
-    // 지정된 위치에서 렌더링 (플립 포함)
-    m_pCurAnim->RenderScaled(_dc, _vPos, _fScale, m_bFlipX);
-}
-
-CAnimation* CAnimator::FindAnimation(const wstring& _strName)
-{
-    auto iter = m_mapAnim.find(_strName);
-
-    if (iter == m_mapAnim.end())
-        return nullptr;
-
-    return iter->second;
+    auto it = m_mapAnim.find(name);
+    return (it == m_mapAnim.end()) ? nullptr : it->second;
 }

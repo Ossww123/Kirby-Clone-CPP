@@ -229,22 +229,16 @@ struct tEvent
 // 애니메이션 프레임 정보
 struct tAnimFrame
 {
-	Vec2 vLT;           // 스프라이트 시트에서 좌상단 좌표
-	Vec2 vSlice;        // 프레임 크기 (가로, 세로)
-	float fDuration;    // 이 프레임의 지속 시간
+	Vec2  vLT{ 0, 0 };        // 시트에서 좌상단
+	Vec2  vSlice{ 0, 0 };     // 시트에서 영역 크기
+	Vec2  vOffset{ 0, 0 };    // 화면 기준 오프셋(중심/피벗 보정)
+	float fDuration{ 0.1f };  // 이 프레임 유지 시간(초)
 
-	tAnimFrame()
-		: vLT{}
-		, vSlice{}
-		, fDuration(0.1f)
-	{}
-
-	tAnimFrame(Vec2 _vLT, Vec2 _vSlice, float _fDuration)
-		: vLT(_vLT)
-		, vSlice(_vSlice)
-		, fDuration(_fDuration)
-	{}
+	tAnimFrame() = default;
+	tAnimFrame(Vec2 lt, Vec2 slice, float dur, Vec2 offset = {})
+		: vLT(lt), vSlice(slice), vOffset(offset), fDuration(dur) {}
 };
+
 
 // 애니메이션 데이터 (파일 저장용)
 struct tAnimationData

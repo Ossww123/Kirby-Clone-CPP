@@ -8,58 +8,50 @@ public:
     CAnimation();
     ~CAnimation();
 
-public:
-    // === 기본 시스템 함수들 ===
-    void Update();
-    void Render(HDC _dc, Vec2 _vPos);
-    void Reset();
+    // 런루프
+    void  Update(); // CTimeMgr 사용
+    void  Reset();
 
-public:
-    // === 애니메이션 생성 및 관리 ===
-    void Create(CTexture* _pTex, Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
-        float _fDuration, int _iFrameCount, bool _bLoop = true);
-    void AddFrame(Vec2 _vLT, Vec2 _vSliceSize, float _fDuration);
-    void ClearFrames();
+    // 렌더
+    void  Render(HDC _dc, Vec2 _vWorldPos) { RenderScaled(_dc, _vWorldPos, 1.f, false); }
+    void  RenderScaled(HDC _dc, const Vec2& _vWorldPos, float _fScale, bool _flipX);
 
-public:
-    // === 렌더링 옵션 ===
-    void RenderScaled(HDC _dc, Vec2 _vPos, float _fScale, bool _bFlipX = false);
+    // 데이터/컨트롤
+    void  SetName(const std::wstring& n) { m_strName = n; }
+    const std::wstring& GetName() const { return m_strName; }
 
-private:
-    // === 유효성 검사 ===
-    bool IsValidCreateParams(CTexture* _pTex, int _iFrameCount, float _fDuration) const;
-    bool IsValidRenderState() const;
+    void  SetLoop(bool b) { m_bLoop = b; }
+    bool  IsLoop() const { return m_bLoop; }
 
-private:
-    // === 내부 처리 ===
-    void CreateFrameSequence(Vec2 _vLT, Vec2 _vSliceSize, Vec2 _vStep,
-        float _fDuration, int _iFrameCount);
-    void RenderFrame(HDC _dc, const Vec2& _vRenderPos, const tAnimFrame& _frame,
-        const Vec2& _vDestSize, bool _bFlipX = false);
+    void  SetSheet(CTexture* tex) { m_pSheet = tex; }
+    CTexture* GetSheet() const { return m_pSheet; }
 
-public:
-    // === Setter 함수들 ===
-    void SetName(const wstring& _strName) { m_strName = _strName; }
-    void SetTexture(CTexture* _pTex) { m_pTex = _pTex; }
-    void SetLoop(bool _bLoop) { m_bLoop = _bLoop; }
+    // 프레임 구성
+    void  AddFrame(Vec2 vLT, Vec2 vSlice, float dur, Vec2 vOffset = Vec2{ 0,0 });
+    void  ClearFrames();
 
-public:
-    // === Getter 함수들 ===
-    const wstring& GetName() const { return m_strName; }
-    bool IsFinish() const { return m_bFinish; }
-    tAnimFrame& GetFrame(int _iIdx) { return m_vecFrame[_iIdx]; }
-    int GetMaxFrame() const { return (int)m_vecFrame.size(); }
-    int GetCurFrame() const { return m_iCurFrame; }
-    CTexture* GetTexture() const { return m_pTex; }
+    int   GetCurFrameIndex() const { return m_iCurFrame; }
+    int   GetFrameCount()    const { return (int)m_vecFrame.size(); }
 
 private:
-    // === 멤버 변수들 ===
-    wstring m_strName;                  // 애니메이션 이름
-    CTexture* m_pTex;                   // 스프라이트 시트 텍스처
-    vector<tAnimFrame> m_vecFrame;      // 애니메이션 프레임들
+    void  RenderFrame(HDC _dc, const tAnimFrame& fr, const Vec2& vWorldPos, float fScale, bool flipX);
+    void  EnsureFlipSurfaces(const POINT& sizePx);
+    void  ReleaseFlipSurfaces();
 
-    int m_iCurFrame;                    // 현재 프레임 인덱스
-    float m_fAccTime;                   // 누적 시간
-    bool m_bFinish;                     // 애니메이션 완료 상태
-    bool m_bLoop;                       // 반복 재생 상태
+private:
+    std::wstring          m_strName;
+    std::vector<tAnimFrame> m_vecFrame;
+    int                   m_iCurFrame{ 0 };
+    float                 m_fAccTime{ 0.f };
+    bool                  m_bLoop{ true };
+    bool                  m_bFinish{ false };
+
+    CTexture* m_pSheet{ nullptr }; // 애니메이션 단위 시트 1개
+
+    // 좌우반전용 캐시
+    HDC                   m_hFlipDC1{ nullptr };
+    HDC                   m_hFlipDC2{ nullptr };
+    HBITMAP               m_hFlipBmp1{ nullptr };
+    HBITMAP               m_hFlipBmp2{ nullptr };
+    POINT                 m_cachedSize{ 0,0 };
 };

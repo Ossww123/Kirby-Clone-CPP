@@ -143,6 +143,7 @@
     <ClInclude Include="enum.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="enginePCH.h" />
+    <ClInclude Include="struct.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyEngine.cpp" />
