@@ -191,6 +191,9 @@
     <Filter Include="Engine\04. Object\Monster\BasicMonster\WaddleDoo">
       <UniqueIdentifier>{6b7aa13d-d2d8-4d40-8788-2dbef252b367}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Kirby">
+      <UniqueIdentifier>{5b2b1604-eb08-45f2-8e98-2efa48db571d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -389,6 +392,9 @@
     <ClInclude Include="AbilityTypes.h">
       <Filter>Engine\10. Module</Filter>
     </ClInclude>
+    <ClInclude Include="CKirby.h">
+      <Filter>Engine\04. Object\Kirby</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyGame.rc">
@@ -584,6 +590,9 @@
     </ClCompile>
     <ClCompile Include="TileCollision.cpp">
       <Filter>Engine\10. Module</Filter>
+    </ClCompile>
+    <ClCompile Include="CKirby.cpp">
+      <Filter>Engine\04. Object\Kirby</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

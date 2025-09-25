@@ -205,6 +205,7 @@
     <ClInclude Include="AbilityTypes.h" />
     <ClInclude Include="CBackgroundFactory.h" />
     <ClInclude Include="CBackground.h" />
+    <ClInclude Include="CKirby.h" />
     <ClInclude Include="CMonsterFactory.h" />
     <ClInclude Include="CTexture.h" />
     <ClInclude Include="framework.h" />
@@ -272,6 +273,7 @@
     <ClCompile Include="..\KirbyGame\CWhispyWoods.cpp" />
     <ClCompile Include="CBackgroundFactory.cpp" />
     <ClCompile Include="CBackground.cpp" />
+    <ClCompile Include="CKirby.cpp" />
     <ClCompile Include="CMonsterFactory.cpp" />
     <ClCompile Include="CTexture.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
