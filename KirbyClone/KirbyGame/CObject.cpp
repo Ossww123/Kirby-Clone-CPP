@@ -11,31 +11,23 @@
 
 CObject::CObject()
     : m_Transform{}
-	, m_pCollider(nullptr)
-	, m_pAnimator(nullptr)
-	, m_pRigidBody(nullptr)
-	, m_bAlive(true)
-	, m_eObjectType(OBJECT_TYPE::END)
+    , m_bAlive(true)
+    , m_ObjectType(OBJECT_TYPE::END)
+    , m_Group(GROUP_TYPE::DEFAULT)
 {
 }
 
 CObject::CObject(OBJECT_TYPE _eType)
     : m_Transform{}
-	, m_pCollider(nullptr)
-	, m_pAnimator(nullptr)
-	, m_pRigidBody(nullptr)
-	, m_bAlive(true)
-	, m_eObjectType(_eType)
+    , m_bAlive(true)
+    , m_ObjectType(_eType)
+    , m_Group(GROUP_TYPE::DEFAULT)
 {
 }
 
 CObject::~CObject()
 {
     OnDestroy();
-
-    if (m_pCollider) { delete m_pCollider;  m_pCollider = nullptr; }
-    if (m_pAnimator) { delete m_pAnimator;  m_pAnimator = nullptr; }
-    if (m_pRigidBody) { delete m_pRigidBody; m_pRigidBody = nullptr; }
 }
 
 void CObject::Render(HDC _dc)
@@ -51,23 +43,21 @@ void CObject::Render(HDC _dc)
 
 void CObject::CreateCollider() {
     if (m_pCollider) { assert(false && "CreateCollider called twice"); return; }
-    m_pCollider = new CCollider;
+    m_pCollider = std::make_unique<CCollider>();
     m_pCollider->m_pOwner = this;
 }
 
 void CObject::CreateAnimator() {
     if (m_pAnimator) { assert(false && "CreateAnimator called twice"); return; }
-    m_pAnimator = new CAnimator;
+    m_pAnimator = std::make_unique<CAnimator>();
     m_pAnimator->m_pOwner = this;
 }
 
 void CObject::CreateRigidBody() {
     if (m_pRigidBody) { assert(false && "CreateRigidBody called twice"); return; }
-    m_pRigidBody = new CRigidBody;
+    m_pRigidBody = std::make_unique<CRigidBody>();
     m_pRigidBody->m_pOwner = this;
 }
-
-
 
 void CObject::RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 {

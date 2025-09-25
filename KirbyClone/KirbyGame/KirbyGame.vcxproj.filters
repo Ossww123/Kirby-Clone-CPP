@@ -53,18 +53,6 @@
     <Filter Include="Engine\04. Object\Monster\BasicMonster">
       <UniqueIdentifier>{00d286f2-f97a-4534-a68c-863c8915f372}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster">
-      <UniqueIdentifier>{54b38dd7-d24f-4798-ba5d-f36c2aee8ee5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo">
-      <UniqueIdentifier>{6b7aa13d-d2d8-4d40-8788-2dbef252b367}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead">
-      <UniqueIdentifier>{9795650d-74b7-4177-843d-0a25703787eb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky">
-      <UniqueIdentifier>{68b959a3-501c-4c7c-88d9-e1dde2aee8c0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\04. Object\Monster\BasicMonster\WaddleDee">
       <UniqueIdentifier>{1c9cd92c-5ef6-4b1f-a27e-956b93d4cdd4}</UniqueIdentifier>
     </Filter>
@@ -73,12 +61,6 @@
     </Filter>
     <Filter Include="Engine\04. Object\Monster\BasicMonster\Apple">
       <UniqueIdentifier>{118b0a41-4d16-4b9d-beaf-d27263051609}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Monster\InvincibleMonster">
-      <UniqueIdentifier>{340f07fb-b532-4e47-8c7e-218bd838f006}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Monster\InvincibleMonster\Gordo">
-      <UniqueIdentifier>{085f4df6-c865-4b38-9044-7d63b3193dc3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\04. Object\Item">
       <UniqueIdentifier>{d544412b-1ffc-491c-bcae-5ef05ed0bc8d}</UniqueIdentifier>
@@ -200,6 +182,15 @@
     <Filter Include="Engine\04. Object\Background">
       <UniqueIdentifier>{be254779-cca9-4874-9253-0383c618697b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\HotHead">
+      <UniqueIdentifier>{9795650d-74b7-4177-843d-0a25703787eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\Sparky">
+      <UniqueIdentifier>{68b959a3-501c-4c7c-88d9-e1dde2aee8c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Monster\BasicMonster\WaddleDoo">
+      <UniqueIdentifier>{6b7aa13d-d2d8-4d40-8788-2dbef252b367}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -254,9 +245,6 @@
     <ClInclude Include="..\KirbyGame\CCollisionMgr.h">
       <Filter>Engine\03. Manager\CollisionMgr</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CCopyMonster.h">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CDeathEffect.h">
       <Filter>Engine\04. Object\DeathEffect</Filter>
     </ClInclude>
@@ -269,14 +257,8 @@
     <ClInclude Include="..\KirbyGame\CFadeEffect.h">
       <Filter>Engine\10. Module</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CGordo.h">
-      <Filter>Engine\04. Object\Monster\InvincibleMonster\Gordo</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CHotHead.h">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CInvincibleMonster.h">
-      <Filter>Engine\04. Object\Monster\InvincibleMonster</Filter>
+      <Filter>Engine\04. Object\Monster\BasicMonster\HotHead</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CItem.h">
       <Filter>Engine\04. Object\Item</Filter>
@@ -372,7 +354,7 @@
       <Filter>Engine\03. Manager\UIMgr</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CSparky.h">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>
+      <Filter>Engine\04. Object\Monster\BasicMonster\Sparky</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CSpecialObject.h">
       <Filter>Engine\04. Object\SpecialObject</Filter>
@@ -381,7 +363,7 @@
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CWaddleDoo.h">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo</Filter>
+      <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDoo</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CTile.h">
       <Filter>Engine\04. Object\Tile</Filter>
@@ -400,6 +382,12 @@
     </ClInclude>
     <ClInclude Include="CBackgroundFactory.h">
       <Filter>Engine\08. Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="TileCollision.h">
+      <Filter>Engine\10. Module</Filter>
+    </ClInclude>
+    <ClInclude Include="AbilityTypes.h">
+      <Filter>Engine\10. Module</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -456,9 +444,6 @@
     <ClCompile Include="..\KirbyGame\CCollisionMgr.cpp">
       <Filter>Engine\03. Manager\CollisionMgr</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CCopyMonster.cpp">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CDeathEffect.cpp">
       <Filter>Engine\04. Object\DeathEffect</Filter>
     </ClCompile>
@@ -471,14 +456,8 @@
     <ClCompile Include="..\KirbyGame\CFadeEffect.cpp">
       <Filter>Engine\10. Module</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CGordo.cpp">
-      <Filter>Engine\04. Object\Monster\InvincibleMonster\Gordo</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CHotHead.cpp">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\HotHead</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CInvincibleMonster.cpp">
-      <Filter>Engine\04. Object\Monster\InvincibleMonster</Filter>
+      <Filter>Engine\04. Object\Monster\BasicMonster\HotHead</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CItem.cpp">
       <Filter>Engine\04. Object\Item</Filter>
@@ -574,7 +553,7 @@
       <Filter>Engine\03. Manager\UIMgr</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CSparky.cpp">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\Sparky</Filter>
+      <Filter>Engine\04. Object\Monster\BasicMonster\Sparky</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CSpecialObject.cpp">
       <Filter>Engine\04. Object\SpecialObject</Filter>
@@ -583,7 +562,7 @@
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CWaddleDoo.cpp">
-      <Filter>Engine\04. Object\Monster\BasicMonster\CopyMonster\WaddleDoo</Filter>
+      <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDoo</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CTile.cpp">
       <Filter>Engine\04. Object\Tile</Filter>
@@ -602,6 +581,9 @@
     </ClCompile>
     <ClCompile Include="CBackgroundFactory.cpp">
       <Filter>Engine\08. Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="TileCollision.cpp">
+      <Filter>Engine\10. Module</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

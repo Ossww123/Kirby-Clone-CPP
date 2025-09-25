@@ -27,7 +27,7 @@ void CScene::Update()
         // 플레이어만 업데이트 (연출용 애니메이션 재생)
         for (size_t j = 0; j < m_arrObj[(UINT)GROUP_TYPE::PLAYER].size(); ++j)
         {
-            if (m_arrObj[(UINT)GROUP_TYPE::PLAYER][j]->IsActive())
+            if (m_arrObj[(UINT)GROUP_TYPE::PLAYER][j]->IsAlive())
             {
                 m_arrObj[(UINT)GROUP_TYPE::PLAYER][j]->Update();
             }
@@ -39,7 +39,7 @@ void CScene::Update()
             for (size_t j = 0; j < m_arrObj[(UINT)GROUP_TYPE::MONSTER].size(); ++j)
             {
                 CObject* pObj = m_arrObj[(UINT)GROUP_TYPE::MONSTER][j];
-                if (pObj->IsActive())
+                if (pObj->IsAlive())
                 {
                     CMonster* pMonster = dynamic_cast<CMonster*>(pObj);
                     if (pMonster && pMonster->IsBoss())
@@ -58,7 +58,7 @@ void CScene::Update()
     {
         for (size_t j = 0; j < m_arrObj[i].size(); ++j)
         {
-            if (m_arrObj[i][j]->IsActive())
+            if (m_arrObj[i][j]->IsAlive())
             {
                 m_arrObj[i][j]->Update();
             }
@@ -92,7 +92,7 @@ void CScene::Render(HDC _dc)
         {
             for (size_t j = 0; j < m_arrObj[groupIndex].size(); ++j)
             {
-                if (m_arrObj[groupIndex][j]->IsActive())
+                if (m_arrObj[groupIndex][j]->IsAlive())
                 {
                     m_arrObj[groupIndex][j]->Render(_dc);
                 }
@@ -106,7 +106,7 @@ void CScene::Render(HDC _dc)
     {
         for (size_t j = 0; j < m_arrObj[uiIndex].size(); ++j)
         {
-            if (m_arrObj[uiIndex][j]->IsActive())
+            if (m_arrObj[uiIndex][j]->IsAlive())
             {
                 m_arrObj[uiIndex][j]->Render(_dc);
             }

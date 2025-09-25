@@ -1,191 +1,163 @@
 #include "gamePCH.h"
 #include "CMonsterFactory.h"
 
-// 몬스터 클래스들 include
+#include "CBasicMonster.h"
 #include "CWaddleDee.h"
-#include "CWaddleDoo.h"
 #include "CBrontoBurt.h"
-#include "CGordo.h"
+#include "CWaddleDoo.h"
 #include "CHotHead.h"
 #include "CSparky.h"
 #include "CWhispyWoods.h"
-#include "CApple.h"
 
-CObject* CMonsterFactory::CreateMonster(OBJECT_TYPE _eMonsterType, Vec2 _vPos)
+#include <algorithm>
+#include <cwctype>
+
+// ----- 내부 헬퍼 -----
+static bool& s_inited()
 {
-    CObject* pMonster = nullptr;
+    static bool inited = false;
+    return inited;
+}
 
-    // 각 몬스터별 세부 생성 함수 호출
-    switch (_eMonsterType)
+std::unordered_map<std::wstring, CMonsterFactory::CreateFn>& CMonsterFactory::Registry()
+{
+    static std::unordered_map<std::wstring, CreateFn> reg;
+    return reg;
+}
+
+std::wstring CMonsterFactory::Normalize(const std::wstring& s)
+{
+    std::wstring out; out.reserve(s.size());
+    for (wchar_t ch : s)
     {
-    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-        pMonster = CreateWaddleDee(_vPos);
-        break;
-    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
-        pMonster = CreateWaddleDoo(_vPos);
-        break;
-    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-        pMonster = CreateBrontoBurt(_vPos);
-        break;
-    case OBJECT_TYPE::MONSTER_GORDOS:
-        pMonster = CreateGordo(_vPos);
-        break;
-    case OBJECT_TYPE::MONSTER_HOT_HEAD:
-        pMonster = CreateHotHead(_vPos);
-        break;
-    case OBJECT_TYPE::MONSTER_SPARKY:
-        pMonster = CreateSparky(_vPos);
-        break;
-    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
-        pMonster = CreateWhispyWoods(_vPos);
-        break;
-    default:
-        return nullptr;
+        if (ch == L'_' || ch == L' ' || ch == L'-') continue; // 구분자 제거
+        out.push_back(std::towlower(ch));
+    }
+    return out;
+}
+
+void CMonsterFactory::EnsureDefaults()
+{
+    if (s_inited()) return;
+    s_inited() = true;
+
+    // 기본 등록: 여러 별칭을 같은 생성자에 맵핑
+    auto& reg = Registry();
+
+    auto regAll = [&](std::initializer_list<const wchar_t*> names, CreateFn fn)
+        {
+            for (auto* n : names) reg[Normalize(n)] = fn;
+        };
+
+    regAll({ L"WaddleDee", L"Waddle_Dee", L"waddledee" }, []() { return new CWaddleDee(); });
+    regAll({ L"BrontoBurt", L"Bronto_Burt", L"brontoburt" }, []() { return new CBrontoBurt(); });
+    regAll({ L"WaddleDoo", L"Waddle_Doo", L"waddledoo" }, []() { return new CWaddleDoo(); });
+    regAll({ L"HotHead",   L"Hot_Head",   L"hothead" }, []() { return new CHotHead(); });
+    regAll({ L"Sparky",    L"sparky" }, []() { return new CSparky(); });
+    regAll({ L"WhispyWoods", L"Whispy_Woods", L"whispywoods" }, []() { return new CWhispyWoods(); });
+}
+
+// ----- 공용 API -----
+
+void CMonsterFactory::Register(const std::wstring& name, CreateFn fn)
+{
+    EnsureDefaults();
+    Registry()[Normalize(name)] = std::move(fn);
+}
+
+std::vector<std::wstring> CMonsterFactory::RegisteredNames()
+{
+    EnsureDefaults();
+    std::vector<std::wstring> v;
+    v.reserve(Registry().size());
+    for (auto& kv : Registry()) v.push_back(kv.first);
+    return v;
+}
+
+// enum 기반
+CMonster* CMonsterFactory::Create(MONSTER_KIND kind,
+    const Vec2& pos,
+    CObject* pTarget,
+    const BasicMonsterConfig* cfg)
+{
+    EnsureDefaults();
+
+    CMonster* obj = nullptr;
+    switch (kind)
+    {
+    case MONSTER_KIND::WADDLE_DEE:  obj = new CWaddleDee();  break;
+    case MONSTER_KIND::BRONTO_BURT: obj = new CBrontoBurt(); break;
+    case MONSTER_KIND::WADDLE_DOO:  obj = new CWaddleDoo(); break;
+    case MONSTER_KIND::HOT_HEAD:    obj = new CHotHead();   break;
+    case MONSTER_KIND::SPARKY:      obj = new CSparky();    break;
+    case MONSTER_KIND::WHISPY_WOODS: obj = new CWhispyWoods(); break;
+    default:                        obj = nullptr;           break;
     }
 
-    return pMonster;
-}
+    if (!obj) return nullptr;
 
-CWaddleDee* CMonsterFactory::CreateWaddleDee(Vec2 _vPos)
-{
-    CWaddleDee* pWaddleDee = new CWaddleDee;
-    pWaddleDee->SetPos(_vPos);
-    pWaddleDee->SetScale(Vec2(64.f, 64.f));
+    // 공통 초기화
+    obj->SetPos(pos);
 
-    // 웨이들 디 전용 설정
-    // (생성자에서 대부분 처리되므로 추가 설정은 최소화)
-
-    return pWaddleDee;
-}
-
-CWaddleDoo* CMonsterFactory::CreateWaddleDoo(Vec2 _vPos)
-{
-    CWaddleDoo* pWaddleDoo = new CWaddleDoo;
-    pWaddleDoo->SetPos(_vPos);
-    pWaddleDoo->SetScale(Vec2(64.f, 64.f));
-
-    // 웨이들 두 전용 설정
-    // pWaddleDoo->SetAttackRange(150.f);  // 향후 공격 범위 설정 추가
-
-    return pWaddleDoo;
-}
-
-CBrontoBurt* CMonsterFactory::CreateBrontoBurt(Vec2 _vPos)
-{
-    CBrontoBurt* pBrontoBurt = new CBrontoBurt;
-    pBrontoBurt->SetPos(_vPos);
-    pBrontoBurt->SetScale(Vec2(72.f, 64.f));  // 조금 더 큰 크기
-
-    // 브론토 버트 전용 설정
-    // pBrontoBurt->SetFlightHeight(_vPos.y);  // 향후 비행 높이 설정 추가
-
-    return pBrontoBurt;
-}
-
-CGordo* CMonsterFactory::CreateGordo(Vec2 _vPos)
-{
-    CGordo* pGordo = new CGordo;
-    pGordo->SetPos(_vPos);
-    pGordo->SetScale(Vec2(80.f, 80.f));  // 더 큰 크기
-
-    // 고르도 전용 설정
-    // pGordo->SetMoveDirection(GORDO_MOVE_TYPE::HORIZONTAL);  // 이동 방향 설정 추가
-
-    return pGordo;
-}
-
-CHotHead* CMonsterFactory::CreateHotHead(Vec2 _vPos)
-{
-    CHotHead* pHotHead = new CHotHead;
-    pHotHead->SetPos(_vPos);
-    pHotHead->SetScale(Vec2(64.f, 64.f));
-
-    // 핫 헤드 전용 설정
-    // pHotHead->SetFireRange(120.f);  // 화염 공격 범위 설정 추가
-
-    return pHotHead;
-}
-
-CSparky* CMonsterFactory::CreateSparky(Vec2 _vPos)
-{
-    CSparky* pSparky = new CSparky;
-    pSparky->SetPos(_vPos);
-    pSparky->SetScale(Vec2(64.f, 64.f));
-
-    // 스파키 전용 설정
-    // pSparky->SetElectricRange(100.f);  // 전기 공격 범위 설정 추가
-
-    return pSparky;
-}
-
-CWhispyWoods* CMonsterFactory::CreateWhispyWoods(Vec2 _vPos)
-{
-    CWhispyWoods* pWhispyWoods = new CWhispyWoods;
-    pWhispyWoods->SetPos(_vPos);
-    pWhispyWoods->SetScale(Vec2(128.f, 160.f));  // 큰 보스 크기
-
-    // 위스피 우즈 전용 설정
-    // pWhispyWoods->SetBossHP(1000);      // 보스 체력 설정 추가
-    // pWhispyWoods->SetBossPhase(BOSS_PHASE::INTRO);  // 초기 페이즈 설정
-
-    return pWhispyWoods;
-}
-
-CApple* CMonsterFactory::CreateApple(Vec2 _vPos)
-{
-    CApple* pApple = new CApple;
-    pApple->SetPos(_vPos);
-    pApple->SetScale(Vec2(32.f, 32.f));  // 작은 사과 크기
-
-    // 사과 전용 설정
-    pApple->SetGravity(true);        // 중력 적용
-    pApple->SetLifetime(10.f);       // 10초 생존시간
-
-    return pApple;
-}
-
-const wchar_t* CMonsterFactory::GetMonsterTypeName(OBJECT_TYPE _eType)
-{
-    switch (_eType)
+    // 타깃/설정 적용 (CBasicMonster에만 해당)
+    if (pTarget)
     {
-    case OBJECT_TYPE::MONSTER_WADDLE_DEE: return L"WaddleDee";
-    case OBJECT_TYPE::MONSTER_WADDLE_DOO: return L"WaddleDoo";
-    case OBJECT_TYPE::MONSTER_BRONTO_BURT: return L"BrontoBurt";
-    case OBJECT_TYPE::MONSTER_GORDOS: return L"Gordo";
-    case OBJECT_TYPE::MONSTER_HOT_HEAD: return L"HotHead";
-    case OBJECT_TYPE::MONSTER_SPARKY: return L"Sparky";
-    case OBJECT_TYPE::MONSTER_WHISPY_WOODS: return L"WhispyWoods";
-    default: return L"Unknown Monster";
+        if (auto* basic = dynamic_cast<CBasicMonster*>(obj))
+            basic->SetTarget(pTarget);
     }
-}
-
-GROUP_TYPE CMonsterFactory::GetMonsterGroup(OBJECT_TYPE _eType)
-{
-    return GROUP_TYPE::MONSTER;
-}
-
-Vec2 CMonsterFactory::GetMonsterDefaultScale(OBJECT_TYPE _eType)
-{
-    switch (_eType)
+    if (cfg)
     {
-    case OBJECT_TYPE::MONSTER_WADDLE_DEE: return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_WADDLE_DOO: return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_BRONTO_BURT: return Vec2(72.f, 64.f);
-    case OBJECT_TYPE::MONSTER_GORDOS: return Vec2(80.f, 80.f);
-    case OBJECT_TYPE::MONSTER_HOT_HEAD: return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_SPARKY: return Vec2(64.f, 64.f);
-    case OBJECT_TYPE::MONSTER_WHISPY_WOODS: return Vec2(128.f, 160.f);
-    default: return Vec2(64.f, 64.f);
+        if (auto* basic = dynamic_cast<CBasicMonster*>(obj))
+            basic->SetConfig(*cfg);
     }
+
+    return obj;
 }
 
-bool CMonsterFactory::IsMonsterType(OBJECT_TYPE _eType)
+// 문자열 기반
+CMonster* CMonsterFactory::Create(const std::wstring& name,
+    const Vec2& pos,
+    CObject* pTarget,
+    const BasicMonsterConfig* cfg)
 {
-    return _eType >= OBJECT_TYPE::MONSTER_WADDLE_DEE && _eType <= OBJECT_TYPE::MONSTER_WHISPY_WOODS;
+    EnsureDefaults();
+
+    const auto key = Normalize(name);
+    auto it = Registry().find(key);
+    if (it == Registry().end()) return nullptr;
+
+    CMonster* obj = it->second();
+    if (!obj) return nullptr;
+
+    obj->SetPos(pos);
+
+    if (pTarget)
+    {
+        if (auto* basic = dynamic_cast<CBasicMonster*>(obj))
+            basic->SetTarget(pTarget);
+    }
+    if (cfg)
+    {
+        if (auto* basic = dynamic_cast<CBasicMonster*>(obj))
+            basic->SetConfig(*cfg);
+    }
+
+    return obj;
 }
 
-void CMonsterFactory::SetupMonsterAI(CObject* _pMonster, OBJECT_TYPE _eType)
+// unique_ptr 버전들
+std::unique_ptr<CMonster> CMonsterFactory::CreateUnique(MONSTER_KIND kind,
+    const Vec2& pos,
+    CObject* pTarget,
+    const BasicMonsterConfig* cfg)
 {
-    // 몬스터별 AI 설정 (향후 확장)
-    // 현재는 생성자에서 처리되므로 추가 설정 없음
+    return std::unique_ptr<CMonster>(Create(kind, pos, pTarget, cfg));
+}
+
+std::unique_ptr<CMonster> CMonsterFactory::CreateUnique(const std::wstring& name,
+    const Vec2& pos,
+    CObject* pTarget,
+    const BasicMonsterConfig* cfg)
+{
+    return std::unique_ptr<CMonster>(Create(name, pos, pTarget, cfg));
 }

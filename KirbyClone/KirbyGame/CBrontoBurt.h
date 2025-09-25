@@ -5,23 +5,17 @@ class CBrontoBurt : public CBasicMonster
 {
 public:
     CBrontoBurt();
-    virtual ~CBrontoBurt();
-
-public:
-    // === 가상 함수 구현 ===
-    void Move() override;                   // 사인파 비행 패턴
+    ~CBrontoBurt() override = default;
 
 protected:
-    // === 애니메이션 매핑 설정 구현 ===
-    void SetupAnimationMapping() override;
+    // 수평 + 상하 파동 비행
+    void Move() override;
+
+    // 필요 시 애니 매핑 커스텀
+    // void SetupAnimationMapping() override;
 
 private:
-    // === 비행 패턴 로직 ===
-    void UpdateFlightPattern();             // 사인파 비행 패턴 업데이트
-
-private:
-    float   m_fFlightTimer;                 // 비행 패턴용 타이머
-    float   m_fWaveAmplitude;               // 사인파 진폭
-    float   m_fWaveFrequency;               // 사인파 주파수
-    Vec2    m_vStartPos;                    // 시작 위치 (기준점)
+    float m_fWaveTime = 0.f;  // 누적 시간
+    float m_fWaveSpeed = 2.2f; // 파동 속도(라디안/초)
+    float m_fWaveVelAmp = 60.f; // 수직 속도 진폭(px/s)
 };

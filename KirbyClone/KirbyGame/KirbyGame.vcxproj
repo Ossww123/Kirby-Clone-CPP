@@ -159,15 +159,12 @@
     <ClInclude Include="..\KirbyGame\CCamera.h" />
     <ClInclude Include="..\KirbyGame\CCollider.h" />
     <ClInclude Include="..\KirbyGame\CCollisionMgr.h" />
-    <ClInclude Include="..\KirbyGame\CCopyMonster.h" />
     <ClInclude Include="..\KirbyGame\CCore.h" />
     <ClInclude Include="..\KirbyGame\CDeathEffect.h" />
     <ClInclude Include="..\KirbyGame\CDoor.h" />
     <ClInclude Include="..\KirbyGame\CEventMgr.h" />
     <ClInclude Include="..\KirbyGame\CFadeEffect.h" />
-    <ClInclude Include="..\KirbyGame\CGordo.h" />
     <ClInclude Include="..\KirbyGame\CHotHead.h" />
-    <ClInclude Include="..\KirbyGame\CInvincibleMonster.h" />
     <ClInclude Include="..\KirbyGame\CItem.h" />
     <ClInclude Include="..\KirbyGame\CKeyMgr.h" />
     <ClInclude Include="..\KirbyGame\CMonster.h" />
@@ -205,6 +202,7 @@
     <ClInclude Include="..\KirbyGame\CWaddleDee.h" />
     <ClInclude Include="..\KirbyGame\CWaddleDoo.h" />
     <ClInclude Include="..\KirbyGame\CWhispyWoods.h" />
+    <ClInclude Include="AbilityTypes.h" />
     <ClInclude Include="CBackgroundFactory.h" />
     <ClInclude Include="CBackground.h" />
     <ClInclude Include="CMonsterFactory.h" />
@@ -214,6 +212,7 @@
     <ClInclude Include="KirbyGame.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="TileCollision.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\KirbyGame\CAbilityStar.cpp" />
@@ -228,15 +227,12 @@
     <ClCompile Include="..\KirbyGame\CCamera.cpp" />
     <ClCompile Include="..\KirbyGame\CCollider.cpp" />
     <ClCompile Include="..\KirbyGame\CCollisionMgr.cpp" />
-    <ClCompile Include="..\KirbyGame\CCopyMonster.cpp" />
     <ClCompile Include="..\KirbyGame\CCore.cpp" />
     <ClCompile Include="..\KirbyGame\CDeathEffect.cpp" />
     <ClCompile Include="..\KirbyGame\CDoor.cpp" />
     <ClCompile Include="..\KirbyGame\CEventMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CFadeEffect.cpp" />
-    <ClCompile Include="..\KirbyGame\CGordo.cpp" />
     <ClCompile Include="..\KirbyGame\CHotHead.cpp" />
-    <ClCompile Include="..\KirbyGame\CInvincibleMonster.cpp" />
     <ClCompile Include="..\KirbyGame\CItem.cpp" />
     <ClCompile Include="..\KirbyGame\CKeyMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CMonster.cpp" />
@@ -279,6 +275,7 @@
     <ClCompile Include="CMonsterFactory.cpp" />
     <ClCompile Include="CTexture.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
+    <ClCompile Include="TileCollision.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyGame.rc" />

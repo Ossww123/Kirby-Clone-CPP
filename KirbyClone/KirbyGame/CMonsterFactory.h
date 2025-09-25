@@ -1,44 +1,69 @@
 #pragma once
+#include <memory>
+#include <functional>
+#include <unordered_map>
+#include <vector>
+#include <string>
 
-class CObject;
-class CWaddleDee;
-class CWaddleDoo;
-class CBrontoBurt;
-class CGordo;
-class CHotHead;
-class CSparky;
-class CWhispyWoods;
-class CApple;
+#include "CMonster.h"         // CMonster, MONSTER_STATE 등
+#include "CObject.h"          // Vec2, CObject
+
+// 전방 선언 (CBasicMonster의 설정 구조체)
+struct BasicMonsterConfig;
+
+// 생성 타입(필요시 계속 추가)
+enum class MONSTER_KIND : unsigned char
+{
+    WADDLE_DEE,
+    BRONTO_BURT,
+    WADDLE_DOO,
+    HOT_HEAD,  
+    SPARKY,
+
+
+
+    WHISPY_WOODS,
+    // … add more
+};
+
 
 class CMonsterFactory
 {
-private:
-    // 팩토리는 정적 클래스로 사용
-    CMonsterFactory() = delete;
-    ~CMonsterFactory() = delete;
-
 public:
-    // 몬스터 생성 함수
-    static CObject* CreateMonster(OBJECT_TYPE _eMonsterType, Vec2 _vPos);
+    // === 주요 생성 API ===
+    // 1) enum 기반
+    static CMonster* Create(MONSTER_KIND kind,
+        const Vec2& pos,
+        CObject* pTarget = nullptr,
+        const BasicMonsterConfig* cfg = nullptr);
 
-    // === 몬스터별 세부 생성 함수들 ===
-    static CWaddleDee* CreateWaddleDee(Vec2 _vPos);
-    static CWaddleDoo* CreateWaddleDoo(Vec2 _vPos);
-    static CBrontoBurt* CreateBrontoBurt(Vec2 _vPos);
-    static CGordo* CreateGordo(Vec2 _vPos);
-    static CHotHead* CreateHotHead(Vec2 _vPos);
-    static CSparky* CreateSparky(Vec2 _vPos);
-    static CWhispyWoods* CreateWhispyWoods(Vec2 _vPos);
-    static CApple* CreateApple(Vec2 _vPos);
+    // 2) 문자열 이름 기반 (대소문자/언더스코어 무시)
+    static CMonster* Create(const std::wstring& name,
+        const Vec2& pos,
+        CObject* pTarget = nullptr,
+        const BasicMonsterConfig* cfg = nullptr);
 
-    // 몬스터 관련 유틸리티 함수들
-    static const wchar_t* GetMonsterTypeName(OBJECT_TYPE _eType);
-    static GROUP_TYPE GetMonsterGroup(OBJECT_TYPE _eType);
-    static Vec2 GetMonsterDefaultScale(OBJECT_TYPE _eType);
-    static bool IsMonsterType(OBJECT_TYPE _eType);
+    // 3) unique_ptr 버전이 필요하면 이걸 사용 (엔진이 스마트포인터를 받는다면)
+    static std::unique_ptr<CMonster> CreateUnique(MONSTER_KIND kind,
+        const Vec2& pos,
+        CObject* pTarget = nullptr,
+        const BasicMonsterConfig* cfg = nullptr);
+
+    static std::unique_ptr<CMonster> CreateUnique(const std::wstring& name,
+        const Vec2& pos,
+        CObject* pTarget = nullptr,
+        const BasicMonsterConfig* cfg = nullptr);
+
+    // === 커스텀 등록 (모드/에디터 확장용) ===
+    using CreateFn = std::function<CMonster* ()>;
+    static void Register(const std::wstring& name, CreateFn fn); // 이름 기반 등록
+    static std::vector<std::wstring> RegisteredNames();
 
 private:
-    // 내부 설정 함수
-    static void SetupMonsterAI(CObject* _pMonster, OBJECT_TYPE _eType);
-};
+    static void EnsureDefaults();              // 기본 몬스터 등록
+    static std::wstring Normalize(const std::wstring& s);
 
+private:
+    // 이름 레지스트리 (정규화된 소문자 키)
+    static std::unordered_map<std::wstring, CreateFn>& Registry();
+};

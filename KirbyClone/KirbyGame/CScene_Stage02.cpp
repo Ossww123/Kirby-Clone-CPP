@@ -258,7 +258,6 @@ CObject* CScene_Stage02::CreateObjectFromData(const tLevelObjectData& _objData)
                 if (pMonster)
                 {
                     // 게임 모드로 설정
-                    pMonster->SetEditorMode(false);
                     pMonster->SetDirection((int)_objData.fDirection);
                     pMonster->ChangeState(MONSTER_STATE::IDLE);
                 }

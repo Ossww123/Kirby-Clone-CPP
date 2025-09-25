@@ -88,7 +88,7 @@ CTile* CPlayerCollisionSystem::FindSupportingTile() const
 
     for (CObject* pObj : vecTiles)
     {
-        if (!pObj || pObj->IsDead()) continue;
+        if (!pObj || !pObj->IsAlive()) continue;
 
         CTile* pTile = dynamic_cast<CTile*>(pObj);
         if (!pTile || !pTile->IsSolid()) continue;

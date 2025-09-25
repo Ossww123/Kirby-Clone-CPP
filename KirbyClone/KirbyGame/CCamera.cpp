@@ -62,7 +62,7 @@ void CCamera::UpdateTargetTracking()
         return;
 
     // 타겟이 죽었다면 타겟을 nullptr로 설정
-    if (m_pTargetObj->IsDead())
+    if (!m_pTargetObj->IsAlive())
     {
         m_pTargetObj = nullptr;
         return;

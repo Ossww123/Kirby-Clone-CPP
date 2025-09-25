@@ -76,7 +76,7 @@ void CPlayerInhaleSystem::StartInhale()
         for (CObject* pObj : vecMonsters)
         {
             CBasicMonster* pBasic = dynamic_cast<CBasicMonster*>(pObj);
-            if (pBasic && !pObj->IsDead())
+            if (pBasic && pObj->IsAlive())
             {
                 pBasic->SetInhaled(false);
             }
@@ -108,7 +108,7 @@ void CPlayerInhaleSystem::UpdateInhale()
             
         InhaleTargetInfo& targetInfo = m_vecInhaleTargets[i];
         
-        if (!targetInfo.pTarget || targetInfo.pTarget->IsDead())
+        if (!targetInfo.pTarget || !targetInfo.pTarget->IsAlive())
         {
             m_vecInhaleTargets.erase(m_vecInhaleTargets.begin() + i);
             continue;
@@ -231,7 +231,7 @@ void CPlayerInhaleSystem::UpdateInhaleTargets()
     for (CObject* pObj : vecItems)
     {
         CAbilityStar* pAbilityStar = dynamic_cast<CAbilityStar*>(pObj);
-        if (pAbilityStar && !pObj->IsDead())
+        if (pAbilityStar && pObj->IsAlive())
         {
             Vec2 vItemPos = pObj->GetPos();
             Vec2 vDiff = vItemPos - vPlayerPos;
@@ -276,11 +276,11 @@ void CPlayerInhaleSystem::UpdateInhaleTargets()
 
 void CPlayerInhaleSystem::SwallowTarget(CObject* _pTarget)
 {
-    if (!_pTarget || m_bHasMouthful || _pTarget->IsDead())
+    if (!_pTarget || m_bHasMouthful || !_pTarget->IsAlive())
         return;
 
     // 이미 삭제 예정인 오브젝트라면 무시
-    if (_pTarget->IsDead())
+    if (!_pTarget->IsAlive())
         return;
 
     // 물고 있는 상태로 설정
@@ -428,7 +428,7 @@ void CPlayerInhaleSystem::UpdateInhaleDirection()
 
 bool CPlayerInhaleSystem::IsValidInhaleTarget(CObject* _pTarget)
 {
-    if (!_pTarget || _pTarget->IsDead())
+    if (!_pTarget || !_pTarget->IsAlive())
         return false;
 
     // 몬스터 빨아들이기 가능 여부 확인
@@ -450,7 +450,7 @@ bool CPlayerInhaleSystem::IsValidInhaleTarget(CObject* _pTarget)
 
 void CPlayerInhaleSystem::ApplyInhaleForce(CObject* _pTarget)
 {
-    if (!_pTarget || !m_pOwner || _pTarget->IsDead())
+    if (!_pTarget || !m_pOwner || !_pTarget->IsAlive())
         return;
 
     // InhaleTargetInfo에서 해당 대상을 찾기
@@ -572,7 +572,7 @@ bool CPlayerInhaleSystem::HasBeingInhaledMonsters() const
     
     for (CObject* pObj : vecMonsters)
     {
-        if (pObj && !pObj->IsDead())
+        if (pObj && !pObj->!IsAlive())
         {
             CBasicMonster* pBasic = dynamic_cast<CBasicMonster*>(pObj);
             if (pBasic && pBasic->IsBeingInhaled())
@@ -606,10 +606,10 @@ void CPlayerInhaleSystem::UpdateParticles()
         
         // 디버그: 파티클 상태 확인
         bool bIsNull = !pParticle;
-        bool bIsDead = pParticle ? pParticle->IsDead() : false;
+        bool bIsDead = pParticle ? pParticle->!IsAlive() : false;
         bool bIsNotAlive = pParticle ? !pParticle->IsAlive() : true;
 
-        if (!pParticle || pParticle->IsDead() || !pParticle->IsAlive())
+        if (!pParticle || pParticle->!IsAlive() || !pParticle->IsAlive())
         {
             it = m_vecAirParticles.erase(it);
         }

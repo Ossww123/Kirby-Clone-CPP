@@ -124,7 +124,7 @@ void CCollisionMgr::CollisionGroupUpdate(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
                 {
                     // 이전에도 충돌 - 계속 충돌 중 (OnCollision)
                     // 둘 중 하나라도 죽을 예정이면 충돌 해제
-                    if (vecLeft[i]->IsDead() || vecRight[j]->IsDead())
+                    if (vecLeft[i]->!IsAlive() || !vecRight[j]->IsAlive())
                     {
                         // 이벤트로 충돌 종료 처리
                         tEvent event(EVENT_TYPE::COLLISION_EXIT, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);
@@ -142,7 +142,7 @@ void CCollisionMgr::CollisionGroupUpdate(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
                 {
                     // 이전에는 충돌하지 않음 - 충돌 시작 (OnCollisionEnter)
                     // 둘 중 하나라도 죽을 예정이면 충돌하지 않음
-                    if (!vecLeft[i]->IsDead() && !vecRight[j]->IsDead())
+                    if (vecLeft[i]->IsAlive() && vecRight[j]->IsAlive())
                     {
                         // 이벤트로 충돌 시작 처리
                         tEvent event(EVENT_TYPE::COLLISION_ENTER, (DWORD_PTR)pLeftCol, (DWORD_PTR)pRightCol);

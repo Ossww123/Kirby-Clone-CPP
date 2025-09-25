@@ -5,16 +5,9 @@ class CWaddleDee : public CBasicMonster
 {
 public:
     CWaddleDee();
-    virtual ~CWaddleDee();
-
-public:
-    // === 가상 함수 구현 ===
-    void Move() override;                   // 기본 걷기 이동
+    ~CWaddleDee() override = default;
 
 protected:
-    // === 애니메이션 매핑 설정 구현 ===
-    void SetupAnimationMapping() override;
-
-private:
-    void ChangeDirection();                 // 방향 전환 로직
+    // 애니 이름이 시트와 다를 때만 필요 시 오버라이드
+    // void SetupAnimationMapping() override;
 };

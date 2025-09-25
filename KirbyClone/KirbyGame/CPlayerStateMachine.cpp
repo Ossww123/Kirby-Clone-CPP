@@ -553,7 +553,7 @@ void CPlayerStateMachine::ExecuteFireAttack ( )
                 for (CObject* pObj : projList)
                 {
                     CProjectile* pProj = dynamic_cast<CProjectile*>(pObj);
-                    if (pProj && pProj->GetProjectileType() == PROJECTILE_TYPE::KIRBY_FIRE && !pProj->IsDead())
+                    if (pProj && pProj->GetProjectileType() == PROJECTILE_TYPE::KIRBY_FIRE && !pProj->!IsAlive())
                     {
                         fireballCount++;
                     }
@@ -716,7 +716,7 @@ void CPlayerStateMachine::ExecuteSparkAttack ( )
         }
         
         // 전기장이 없으면 생성
-        if ( !m_pElectricField || m_pElectricField->IsDead() )
+        if ( !m_pElectricField || !m_pElectricField->IsAlive() )
         {
             Vec2 kirbyPos = m_pOwner->GetPos();
             
@@ -745,7 +745,7 @@ void CPlayerStateMachine::ExecuteSparkAttack ( )
     else
     {
         // X키를 떼면 전기장 즉시 삭제
-        if ( m_pElectricField && !m_pElectricField->IsDead() )
+        if ( m_pElectricField && !m_pElectricField->!IsAlive() )
         {
             m_pElectricField->SetDead();
             m_pElectricField = nullptr;
@@ -780,7 +780,7 @@ void CPlayerStateMachine::ExecuteFireHoldAttack ( )
             for (CObject* pObj : projObjects)
             {
                 CProjectile* pProj = dynamic_cast<CProjectile*>(pObj);
-                if (pProj && pProj->GetProjectileType() == PROJECTILE_TYPE::KIRBY_FIRE && !pProj->IsDead())
+                if (pProj && pProj->GetProjectileType() == PROJECTILE_TYPE::KIRBY_FIRE && !pProj->!IsAlive())
                 {
                     fireballCount++;
                 }
@@ -830,7 +830,7 @@ void CPlayerStateMachine::ExecuteSparkHoldAttack ( )
         return;
     
     // 전기장이 없으면 생성
-    if ( !m_pElectricField || m_pElectricField->IsDead() )
+    if ( !m_pElectricField || m_pElectricField->!IsAlive() )
     {
         Vec2 kirbyPos = m_pOwner->GetPos();
         
@@ -1377,7 +1377,7 @@ void CPlayerStateMachine::OnEnterDamageState ( )
         m_eCopyAbility = COPY_ABILITY::NONE;
         
         // 스파크 능력의 경우 전기장도 즉시 제거
-        if (currentAbility == COPY_ABILITY::SPARK && m_pElectricField && !m_pElectricField->IsDead())
+        if (currentAbility == COPY_ABILITY::SPARK && m_pElectricField && !m_pElectricField->!IsAlive())
         {
             m_pElectricField->SetDead();
             m_pElectricField = nullptr;
@@ -3012,7 +3012,7 @@ void CPlayerStateMachine::HandleDropAbility()
         m_eCopyAbility = COPY_ABILITY::NONE;
         
         // 스파크 능력의 경우 전기장도 즉시 제거
-        if (currentAbility == COPY_ABILITY::SPARK && m_pElectricField && !m_pElectricField->IsDead())
+        if (currentAbility == COPY_ABILITY::SPARK && m_pElectricField && !m_pElectricField->!IsAlive())
         {
             m_pElectricField->SetDead();
             m_pElectricField = nullptr;

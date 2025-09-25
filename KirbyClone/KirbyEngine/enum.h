@@ -202,17 +202,13 @@ enum class MONSTER_STATE
     IDLE ,
     WALK ,
     TURN ,
+    FLY, 
 
     // 새로 추가할 상태들
     DAMAGE ,         // 데미지를 받는 상태
     BEING_INHALED ,  // 빨아들려지는 상태
     ATTACK_READY ,   // 공격 준비 상태
     ATTACK ,         // 공격 상태
-    FLY ,           // 비행 상태 (브론토 버트, 고르도)
-
-    // 보스 패배 상태들
-    DEFEAT1 ,        // 패배 애니메이션 1단계
-    DEFEAT3 ,        // 패배 애니메이션 3단계
 
     // EDITOR_IDLE,     // 에디터 전용 상태 - 현재 미사용
 

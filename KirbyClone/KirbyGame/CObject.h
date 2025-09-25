@@ -11,7 +11,6 @@ struct Transform2D {
     float rotationRad{ 0.f }; // 기본 0, 확장용
 };
 
-
 class CObject
 {
 public:
@@ -50,13 +49,12 @@ public:
 
 public:
     // === Transform 접근 ===
-    // 기존 호환용 래퍼
     void SetPos(Vec2 _vPos) { m_Transform.position = _vPos; }
     void SetScale(Vec2 _vScale) { m_Transform.scale = _vScale; }
     Vec2 GetPos() const { return m_Transform.position; }
     Vec2 GetScale() const { return m_Transform.scale; }
 
-    // 신규: flip/rotation
+    // flip/rotation
     bool  IsFlipX() const { return m_Transform.flipX; }
     void  SetFlipX(bool v) { m_Transform.flipX = v; }
     float GetRotationRad() const { return m_Transform.rotationRad; }
@@ -69,15 +67,19 @@ public:
 
 public:
     // === 생명 상태 ===
-    bool IsDead()   const { return !m_bAlive; }
+    bool IsAlive() const { return m_bAlive; }
     void SetDead() { m_bAlive = false; }
-    bool IsActive() const { return m_bAlive; }
-    void Revive() { m_bAlive = true; }
+    void SetAlive() { m_bAlive = true; }
 
 public:
     // === 오브젝트 타입 ===
-    void SetType(OBJECT_TYPE _eType) { m_eObjectType = _eType; }
-    OBJECT_TYPE GetType() const { return m_eObjectType; }
+    void        SetType(OBJECT_TYPE t) { m_ObjectType = t; }
+    OBJECT_TYPE GetType() const { return m_ObjectType; }
+
+    void        SetGroup(GROUP_TYPE g) { m_Group = g; }
+    GROUP_TYPE  GetGroup() const { return m_Group; }
+
+    bool IsInGroup(GROUP_TYPE g) const { return m_Group == g; }
 
 private:
     // === 내부 렌더 ===
@@ -90,23 +92,25 @@ private:
 
 public:
     // === 컴포넌트 접근자 === (const 오버로드 포함)
-    CCollider* GetCollider() { return m_pCollider; }
-    const CCollider* GetCollider() const { return m_pCollider; }
+    CCollider* GetCollider() { return m_pCollider.get(); }
+    const CCollider* GetCollider() const { return m_pCollider.get(); }
 
-    CAnimator* GetAnimator() { return m_pAnimator; }
-    const CAnimator* GetAnimator() const { return m_pAnimator; }
+    CAnimator* GetAnimator() { return m_pAnimator.get(); }
+    const CAnimator* GetAnimator() const { return m_pAnimator.get(); }
 
-    CRigidBody* GetRigidBody() { return m_pRigidBody; }
-    const CRigidBody* GetRigidBody() const { return m_pRigidBody; }
+    CRigidBody* GetRigidBody() { return m_pRigidBody.get(); }
+    const CRigidBody* GetRigidBody() const { return m_pRigidBody.get(); }
 
 private:
     // === 기본 속성 ===
-    Transform2D m_Transform{};        // 위치/스케일/플립/회전 일원화
+    Transform2D m_Transform{};
     bool        m_bAlive{ true };
-    OBJECT_TYPE m_eObjectType{ OBJECT_TYPE::END };
 
-    // === 컴포넌트 ===
-    CCollider* m_pCollider{ nullptr };
-    CAnimator* m_pAnimator{ nullptr };
-    CRigidBody* m_pRigidBody{ nullptr };
+    OBJECT_TYPE m_ObjectType{ OBJECT_TYPE::END }; // 세부 식별자
+    GROUP_TYPE  m_Group{ GROUP_TYPE::DEFAULT };   // 충돌/필터용 그룹
+
+    // === 컴포넌트 (unique_ptr) ===
+    std::unique_ptr<CCollider>  m_pCollider;
+    std::unique_ptr<CAnimator>  m_pAnimator;
+    std::unique_ptr<CRigidBody> m_pRigidBody;
 };

@@ -187,7 +187,7 @@ void CEventMgr::ExecutePlayerDamage(tEvent& _event)
     
     Vec2* pKnockbackDir = (Vec2*)_event.lParam;
 
-    if (!pPlayer || pPlayer->IsDead())
+    if (!pPlayer || !pPlayer->IsAlive())
     {
         // 메모리 정리
         if (pKnockbackDir)
@@ -249,7 +249,7 @@ void CEventMgr::ExecuteMonsterDamage(tEvent& _event)
     CMonster* pMonster = (CMonster*)_event.wParam;
     CProjectile* pProjectile = (CProjectile*)_event.lParam;
 
-    if (!pMonster || pMonster->IsDead())
+    if (!pMonster || pMonster->!IsAlive())
         return;
 
     // === 보스 데미지 처리 ===

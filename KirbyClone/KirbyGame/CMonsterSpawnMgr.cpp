@@ -117,7 +117,7 @@ void CMonsterSpawnMgr::Update()
                 iActiveCount--;
             }
             // 몬스터가 죽었는지 확인
-            else if (spawnData.pActiveMonster && spawnData.pActiveMonster->IsDead())
+            else if (spawnData.pActiveMonster && spawnData.pActiveMonster->!IsAlive())
             {
                 // 죽은 몬스터는 비활성화 및 죽은 상태로 마킹
                 spawnData.bIsActive = false;
@@ -134,7 +134,7 @@ int CMonsterSpawnMgr::GetActiveMonsterCount() const
     int iCount = 0;
     for (const auto& spawnData : m_vecSpawnData)
     {
-        if (spawnData.bIsActive && spawnData.pActiveMonster && !spawnData.pActiveMonster->IsDead())
+        if (spawnData.bIsActive && spawnData.pActiveMonster && !spawnData.pActiveMonster->!IsAlive())
         {
             iCount++;
         }
@@ -198,9 +198,6 @@ CMonster* CMonsterSpawnMgr::CreateMonsterInstance(OBJECT_TYPE _eType, Vec2 _vPos
     
     if (pMonster)
     {
-        // 게임 모드로 설정 (에디터 모드 아님)
-        pMonster->SetEditorMode(false);
-        
         // 방향 설정
         pMonster->SetDirection((int)_fDirection);
         

@@ -246,7 +246,7 @@ void CProjectile::UpdateMovement()
 void CProjectile::UpdateLifeTime()
 {
     // 이미 삭제 예정이면 더 이상 처리하지 않음
-    if (IsDead()) return;
+    if (!IsAlive()) return;
     
     // 회전 빔인 경우 자체적으로 수명 관리하므로 건너뛰기
     if (m_bIsRotatingBeam) return;

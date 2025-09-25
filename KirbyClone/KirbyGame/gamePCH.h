@@ -16,9 +16,16 @@ using std::to_wstring;
 using std::map;
 using std::make_pair;
 
+
+#include <unordered_map>
+using std::unordered_map;
+
 #include <algorithm>
+using std::max;
+
 #include <cwctype> 
 
+#include <limits>
 #include <functional>
 
 #include <cmath>
@@ -26,6 +33,7 @@ using std::make_pair;
 #include <commdlg.h>
 #include <mmsystem.h>
 #include <cassert>
+#include <memory>
 
 #include <KirbyEngine/define.h>
 #include <KirbyEngine/enum.h>

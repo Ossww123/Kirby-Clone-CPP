@@ -1,130 +1,121 @@
 #pragma once
 #include "CObject.h"
+#include "AbilityTypes.h"
+#include <initializer_list>
 
+// 전방 선언
 class CTexture;
-class CTile;
+class CCollider;
+
+// === 몬스터 공통 스탯 ==============================================
+struct MonsterStats {
+    int   maxHp{ 1 };
+    int   hp{ 1 };
+    float moveSpeed{ 80.f }; // 기본 이동속도(보행용)
+    int   contactDamage{ 1 };
+};
 
 class CMonster : public CObject
 {
 public:
-    // === 정적 상수들 ===
-    static constexpr float DEFAULT_SPEED = 80.f;
+    // === 상수 타이밍들 ===
     static constexpr float DEFAULT_IDLE_TIME = 1.f;
     static constexpr float DAMAGE_DURATION = 0.5f;
     static constexpr float TURN_DURATION = 0.2f;
+    static constexpr float IFAME_DURATION = 0.30f; // 피격 무적
+    static constexpr float HURT_STUN_TIME = 0.10f; // 경직
 
 public:
     CMonster();
     virtual ~CMonster();
 
-public:
-    // === 핵심 생명주기 함수들 ===
+    // === 생명주기 ===
     void Update() override;
-    void Render(HDC _dc) override;
 
-public:
-    // === 충돌 콜백 함수들 ===
+    // === 충돌 콜백 ===
     void OnCollisionEnter(CCollider* _pOther) override;
     void OnCollision(CCollider* _pOther) override;
     void OnCollisionExit(CCollider* _pOther) override;
 
-private:
-    // === 충돌 처리 헬퍼 함수 ===
-    void HandleTileCollision(CObject* _pTile);
+protected:
+    // === 파생 필수 구현 ===
+    virtual void Move() = 0;                     // 상태 틱에서만 호출 (속도 의도 계산)
+    virtual bool CanBeInhaled() const = 0;
+    virtual bool IsBeingInhaled() const = 0;
+    virtual bool HasAttack() const { return false; }
+    virtual bool IsBoss()    const { return false; }
+
+    // === 애니메이션 ===
+    void LoadAnimationsFromFile(const std::wstring& _strFileName);
+    virtual void SetupAnimationMapping() = 0;
 
 public:
-    // === 가상 인터페이스 (자식 클래스에서 구현) ===
-    virtual void Move() = 0;                    // 이동 패턴 (순수 가상)
-    virtual bool CanBeInhaled() const = 0;      // 빨아들임 가능 여부 (순수 가상)
-    virtual bool IsBeingInhaled() const = 0;    // 빨아들여지고 있는 상태 여부 (순수 가상)
-    virtual bool HasAttack() const { return false; }   // 공격 가능 여부
-    virtual bool IsBoss() const { return false; }      // 보스 여부 (기본: false)
+    // === 상태 ===
+    void           ChangeState(MONSTER_STATE _eState);
+    MONSTER_STATE  GetCurrentState()  const { return m_eCurState; }
+    MONSTER_STATE  GetPreviousState() const { return m_ePrevState; }
+    float          GetStateTime()     const { return m_fStateTimer; }
+
+    // === 전투/피격 ===
+    virtual void   TakeDamage(int dmg = 1, Vec2 knockback = Vec2{ 0.f, 0.f });
+    bool           IsInvincible() const { return m_fInvTime > 0.f; }
+
+    // === 방향 ===
+    bool           IsFacingRight() const { return m_iDir > 0; }
+    void           SetDirection(int _iDir) { m_iDir = (_iDir >= 0 ? 1 : -1); SetFlipX(m_iDir > 0); }
+    int            GetDirection() const { return m_iDir; }
+    void           TurnAround(); // flipX 동기화 포함
+
+    // === 스탯 ===
+    void                 SetStats(const MonsterStats& s) { m_stats = s; }
+    MonsterStats& Stats() { return m_stats; }
+    const MonsterStats& Stats() const { return m_stats; }
 
 protected:
-    // === 애니메이션 시스템 (자식 클래스에서 사용) ===
-    void LoadAnimationsFromFile(const wstring& _strFileName);   // JSON 파일에서 애니메이션 로드
-    virtual void SetupAnimationMapping() = 0;                   // 자식 클래스에서 애니메이션 매핑 설정
+    // === 공통 이동 헬퍼 ===
+    void MoveHorizontal(float speed);
 
-public:
-    // === 몬스터 기본 인터페이스 ===
-    OBJECT_TYPE GetMonsterType() const { return GetType(); }
+    // === 공통 리소스 ===
+    void LoadEnemySpriteSheet();
 
-    // === 상태 관리 ===
-    void ChangeState(MONSTER_STATE _eState);
-    MONSTER_STATE GetCurrentState() const { return m_eCurState; }
-    MONSTER_STATE GetPreviousState() const { return m_ePrevState; }
-
-    // === 액션 함수들 ===
-    virtual void TakeDamage();
-    void TurnAround();
-    
-    // === 방향 관련 함수들 ===
-    bool IsFacingRight() const { return m_iDir > 0; }
-    void SetDirection(int _iDir) { m_iDir = _iDir; }
-    int GetDirection() const { return m_iDir; }
-    
-    // === 에디터 관련 함수들 ===
-    void SetEditorMode(bool _bEditorMode);
-    bool IsInEditorMode() const { return m_bEditorMode; }
-
-protected:
-    // === 공통 이동 함수들 (자식 클래스에서 사용) ===
-    void MoveHorizontal(float speed);          // 좌우 이동
-
-    // === 공통 애니메이션 유틸리티 ===
-    void LoadEnemySpriteSheet();               // 공통 스프라이트 시트 로드
+    // === 애니메이션 매핑 안전 API (m_map은 private 유지) ===
+    void MapAnim(MONSTER_STATE s, const std::wstring& name);
+    void MapAnims(std::initializer_list<std::pair<MONSTER_STATE, const wchar_t*>> list);
+    void ClearAnimMap();
 
 private:
-    // === 상태 업데이트 ===
+    // === 내부 상태 업데이트 ===
     void UpdateState();
-    void UpdateMove();
+    void UpdateIdle();
+    void UpdateWalk();
+    void UpdateFly();
+    void UpdateTurn();
+    void UpdateDamage();
+    void UpdateBeingInhaled();
+    void UpdateAttackReady();
+    void UpdateAttack();
 
-protected:
-    // === 개별 상태 업데이트 함수들 ===
-    virtual void UpdateIdle();
-    virtual void UpdateWalk();
-    virtual void UpdateFly();
-    virtual void UpdateTurn();
-    virtual void UpdateDamage();
-    virtual void UpdateBeingInhaled();
-    virtual void UpdateAttackReady();
-    virtual void UpdateAttack();
-
-public:
-    // === 충돌 체크 유틸리티 ===
-    void CheckStageBounds();                   // 스테이지 경계 체크
+    // === 타이머 ===
+    void UpdateTimers(float dt);
 
 private:
-    // === 충돌 상태 관리 ===
-    void UpdateCollisionState();                   // 충돌 상태 업데이트
-    void HandleTileCollisionEnter(CTile* _pTile);  // 타일과의 충돌 시작 처리 (일회성)
-    void UpdateTileCollisionState(CTile* _pTile);  // 타일과의 충돌 상태 업데이트 (매 프레임)
+    // 상태
+    MONSTER_STATE m_eCurState;
+    MONSTER_STATE m_ePrevState;
+    float         m_fStateTimer;
 
-protected:
-    // === 애니메이션 매핑 (자식 클래스에서 설정) ===
-    map<MONSTER_STATE, wstring> m_mapStateToAnimation;  // 상태 → 애니메이션 이름 매핑
+    // 이동/방향
+    int   m_iDir;              // -1: 왼쪽(기본), +1: 오른쪽
+    float m_fIdleTime;
 
-protected:
-    // === 상태 관리 ===
-    MONSTER_STATE   m_eCurState;        // 현재 상태
-    MONSTER_STATE   m_ePrevState;       // 이전 상태
-    float           m_fStateTimer;      // 상태 타이머
+    // 전투/피격
+    MonsterStats m_stats{};
+    float        m_fInvTime{ 0.f };   // 피격 무적
+    float        m_fHurtStun{ 0.f };  // 경직
 
-protected:
-    // === 이동 관련 (자식 클래스에서 접근 가능) ===
-    float   m_fSpeed;           // 이동 속도
-    int     m_iDir;             // 이동 방향 (-1: 왼쪽, 1: 오른쪽)
-    float   m_fIdleTime;        // 대기 시간
+    // 리소스
+    CTexture* m_pEnemyTex;
 
-    // === 충돌 상태 관련 ===
-    bool    m_bWallCollision;   // 벽과 충돌 중인지
-    bool    m_bGroundCollision; // 바닥과 충돌 중인지
-    bool    m_bPrevWallCollision;   // 이전 프레임 벽 충돌 상태
-    bool    m_bPrevGroundCollision; // 이전 프레임 바닥 충돌 상태
-
-    // === 공통 텍스처 ===
-    CTexture* m_pEnemyTex;      // enemies.bmp 텍스처
-    
-    // === 에디터 관련 ===
-    bool    m_bEditorMode;      // 에디터 모드 여부
+    // 상태→애니메이션 이름 매핑 (private 유지)
+    std::unordered_map<MONSTER_STATE, std::wstring> m_mapStateToAnimation;
 };
