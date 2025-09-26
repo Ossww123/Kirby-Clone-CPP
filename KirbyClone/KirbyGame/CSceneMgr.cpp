@@ -67,8 +67,6 @@ void CSceneMgr::render(HDC _dc)
 
 void CSceneMgr::ChangeScene(SCENE_TYPE _eNext)
 {
-    ApplySceneResolution(_eNext);
-
     if (m_pCurScene) m_pCurScene->Exit();
 
     m_eCurSceneType = _eNext;
@@ -77,42 +75,8 @@ void CSceneMgr::ChangeScene(SCENE_TYPE _eNext)
     if (m_pCurScene) m_pCurScene->Enter();
 }
 
-void CSceneMgr::ApplySceneResolution(SCENE_TYPE _eSceneType)
-{
-    switch (_eSceneType)
-    {
-        //case SCENE_TYPE::TOOL:
-        //    // 툴 씬: 레벨 에디터용 큰 해상도 (1920x1080)
-        //    CCore::GetInst()->SetToolResolution();
-        //    break;
-
-    case SCENE_TYPE::START:
-    case SCENE_TYPE::STAGE_01:
-    case SCENE_TYPE::STAGE_02:
-        // 게임 씬들: 게임보이 4배 해상도 (960x640)
-        CCore::GetInst()->SetGameResolution();
-        break;
-
-    default:
-        // 기본값: 게임 해상도
-        CCore::GetInst()->SetGameResolution();
-        break;
-    }
-}
-
 void CSceneMgr::HandleGlobalSceneTransition()
 {
-    // START ↔ TOOL 토글 (Ctrl+T)
-    //if (KEY_TAP(KEY::T) && KEY_HOLD(KEY::CTRL))
-    //{
-    //    SCENE_TYPE targetScene = (m_pCurScene == m_arrScene[(UINT)SCENE_TYPE::START])
-    //                            ? SCENE_TYPE::TOOL
-    //                            : SCENE_TYPE::START;
-
-    //    tEvent event(EVENT_TYPE::SCENE_CHANGE, 0, (DWORD_PTR)targetScene);
-    //    CEventMgr::GetInst()->AddEvent(event);
-    //}
-
     // STAGE_01로 이동 (Ctrl+1)
     if (KEY_TAP(KEY::ALPHA_1) && KEY_HOLD(KEY::CTRL))
     {

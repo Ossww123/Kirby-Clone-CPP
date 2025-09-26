@@ -24,16 +24,6 @@ private:
     void render();          // progress()에서 호출 - 화면 렌더링
 
 public:
-    // === 해상도 설정 ===
-    void SetGameResolution();                           // 게임 해상도로 설정 (960x640)
-
-private:
-    // === 해상도 변경 내부 함수 ===
-    void ChangeResolution(int _iWidth, int _iHeight);   // 해상도 변경
-    void RecreateBackBuffer();                          // 백버퍼 재생성 함수
-    void UpdateWindowSize();                            // 윈도우 크기 변경 함수
-
-public:
     // === Getter 함수들 ===
     HDC GetMainDC() const { return m_hDC; }
     HWND GetMainHwnd() const { return m_hWnd; }
@@ -41,8 +31,6 @@ public:
 
     // === 정적 유틸리티 함수들 ===
     static float GetPixelScale() { return PIXEL_SCALE; }
-    static Vec2 GetGameBoyResolution() { return Vec2(160.f, 144.f); }
-    
 
 private:
     // === 윈도우 변수들 ===

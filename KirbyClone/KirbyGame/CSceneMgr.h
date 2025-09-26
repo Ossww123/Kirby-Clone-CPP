@@ -20,7 +20,6 @@ public:
     SCENE_TYPE GetCurSceneType() const { return m_eCurSceneType; }
 
 private:
-    void ApplySceneResolution(SCENE_TYPE _eSceneType);  // 씬별 해상도 설정
     void HandleGlobalSceneTransition();                 // 전역 키 입력 처리
 
 private:
