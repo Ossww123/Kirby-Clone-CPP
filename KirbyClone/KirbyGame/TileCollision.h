@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <optional>
 
 class CObject;
@@ -6,26 +6,26 @@ class CTile;
 class CRigidBody;
 class CCollider;
 
-enum class TileKind { Solid, OneWay, PassThrough /* reserved: Slope µî */ };
+enum class TileKind { Solid, OneWay, PassThrough /* reserved: Slope ë“± */ };
 
 struct TileCollisionOpts {
-    bool  enableOneWay = true;     // ¿ø¿şÀÌ(³»·Á°¥ ¶§¸¸ Ãæµ¹)
-    float oneWayVelY = -50.f;    // ¾Æ·¡·Î ÀÌ¼ÓÀÌ ÀÌ °ª ÀÌÇÏÀÏ ¶§¸¸ ¿ø¿şÀÌ Ãæµ¹
-    float skin = 0.5f;     // ºĞ¸® ÈÄ °ãÄ§ ¹æÁö ¿©À¯
+    bool  enableOneWay = true;     // ì›ì›¨ì´(ë‚´ë ¤ê°ˆ ë•Œë§Œ ì¶©ëŒ)
+    float oneWayVelY = -50.f;    // ì•„ë˜ë¡œ ì´ì†ì´ ì´ ê°’ ì´í•˜ì¼ ë•Œë§Œ ì›ì›¨ì´ ì¶©ëŒ
+    float skin = 0.5f;     // ë¶„ë¦¬ í›„ ê²¹ì¹¨ ë°©ì§€ ì—¬ìœ 
 };
 
 struct TileContactInfo {
     bool  wall = false;
     bool  ground = false;
     bool  ceiling = false;
-    Vec2  normal{ 0.f, 0.f };        // Á¢ÃË ¹ı¼± (º®: (-/+1,0), Áö¸é:(0,1), ÃµÀå:(0,-1))
-    Vec2  separation{ 0.f, 0.f };    // Àû¿ëµÈ º¸Á¤ º¤ÅÍ
-    CTile* tile = nullptr;         // (¼±ÅÃ) ÇÊ¿ä ½Ã ÂüÁ¶
+    Vec2  normal{ 0.f, 0.f };        // ì ‘ì´‰ ë²•ì„  (ë²½: (-/+1,0), ì§€ë©´:(0,1), ì²œì¥:(0,-1))
+    Vec2  separation{ 0.f, 0.f };    // ì ìš©ëœ ë³´ì • ë²¡í„°
+    CTile* tile = nullptr;         // (ì„ íƒ) í•„ìš” ì‹œ ì°¸ì¡°
 };
 
 namespace TileCollision {
-    // actor: µ¿Àû ¿ÀºêÁ§Æ®(¸ó½ºÅÍ/ÇÃ·¹ÀÌ¾î µî), tileObj: Å¸ÀÏ ¿ÀºêÁ§Æ®
-    // ¹İÈ¯: Ãæµ¹/ºĞ¸® ¼öÇà ¿©ºÎ
+    // actor: ë™ì  ì˜¤ë¸Œì íŠ¸(ëª¬ìŠ¤í„°/í”Œë ˆì´ì–´ ë“±), tileObj: íƒ€ì¼ ì˜¤ë¸Œì íŠ¸
+    // ë°˜í™˜: ì¶©ëŒ/ë¶„ë¦¬ ìˆ˜í–‰ ì—¬ë¶€
     bool ResolveAgainstTile(CObject& actor, CObject& tileObj,
         const TileCollisionOpts& opts,
         TileContactInfo& out);

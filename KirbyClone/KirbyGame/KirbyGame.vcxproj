@@ -81,6 +81,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -100,6 +101,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -119,6 +121,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,6 +141,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -152,7 +156,6 @@
     <ClInclude Include="..\KirbyGame\CAnimation.h" />
     <ClInclude Include="..\KirbyGame\CAnimationDataMgr.h" />
     <ClInclude Include="..\KirbyGame\CAnimator.h" />
-    <ClInclude Include="..\KirbyGame\CApple.h" />
     <ClInclude Include="..\KirbyGame\CBasicMonster.h" />
     <ClInclude Include="..\KirbyGame\CBoss.h" />
     <ClInclude Include="..\KirbyGame\CBrontoBurt.h" />
@@ -174,7 +177,6 @@
     <ClInclude Include="..\KirbyGame\CPathMgr.h" />
     <ClInclude Include="..\KirbyGame\CPlayer.h" />
     <ClInclude Include="..\KirbyGame\CPlayerCollisionSystem.h" />
-    <ClInclude Include="..\KirbyGame\CPlayerDataMgr.h" />
     <ClInclude Include="..\KirbyGame\CPlayerHealthSystem.h" />
     <ClInclude Include="..\KirbyGame\CPlayerInhaleSystem.h" />
     <ClInclude Include="..\KirbyGame\CPlayerInputManager.h" />
@@ -194,24 +196,32 @@
     <ClInclude Include="..\KirbyGame\CSound.h" />
     <ClInclude Include="..\KirbyGame\CSoundMgr.h" />
     <ClInclude Include="..\KirbyGame\CSparky.h" />
-    <ClInclude Include="..\KirbyGame\CSpecialObject.h" />
     <ClInclude Include="..\KirbyGame\CTile.h" />
     <ClInclude Include="..\KirbyGame\CTileMgr.h" />
     <ClInclude Include="..\KirbyGame\CTimeMgr.h" />
-    <ClInclude Include="..\KirbyGame\CUIMgr.h" />
     <ClInclude Include="..\KirbyGame\CWaddleDee.h" />
     <ClInclude Include="..\KirbyGame\CWaddleDoo.h" />
     <ClInclude Include="..\KirbyGame\CWhispyWoods.h" />
     <ClInclude Include="AbilityTypes.h" />
+    <ClInclude Include="BossSystem.h" />
     <ClInclude Include="CBackgroundFactory.h" />
     <ClInclude Include="CBackground.h" />
     <ClInclude Include="CKirby.h" />
+    <ClInclude Include="CKirbyHealthSystem.h" />
+    <ClInclude Include="CKirbyMovement.h" />
     <ClInclude Include="CMonsterFactory.h" />
     <ClInclude Include="CTexture.h" />
+    <ClInclude Include="CUIElement.h" />
+    <ClInclude Include="CUIGameHUD.h" />
+    <ClInclude Include="DamageSystem.h" />
+    <ClInclude Include="DoorSystem.h" />
+    <ClInclude Include="EventDef.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="GameFlowSystem.h" />
     <ClInclude Include="gamePCH.h" />
     <ClInclude Include="KirbyGame.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SceneChangeSystem.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TileCollision.h" />
   </ItemGroup>
@@ -221,7 +231,6 @@
     <ClCompile Include="..\KirbyGame\CAnimation.cpp" />
     <ClCompile Include="..\KirbyGame\CAnimationDataMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CAnimator.cpp" />
-    <ClCompile Include="..\KirbyGame\CApple.cpp" />
     <ClCompile Include="..\KirbyGame\CBasicMonster.cpp" />
     <ClCompile Include="..\KirbyGame\CBoss.cpp" />
     <ClCompile Include="..\KirbyGame\CBrontoBurt.cpp" />
@@ -243,7 +252,6 @@
     <ClCompile Include="..\KirbyGame\CPathMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CPlayer.cpp" />
     <ClCompile Include="..\KirbyGame\CPlayerCollisionSystem.cpp" />
-    <ClCompile Include="..\KirbyGame\CPlayerDataMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CPlayerHealthSystem.cpp" />
     <ClCompile Include="..\KirbyGame\CPlayerInhaleSystem.cpp" />
     <ClCompile Include="..\KirbyGame\CPlayerInputManager.cpp" />
@@ -263,20 +271,27 @@
     <ClCompile Include="..\KirbyGame\CSound.cpp" />
     <ClCompile Include="..\KirbyGame\CSoundMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CSparky.cpp" />
-    <ClCompile Include="..\KirbyGame\CSpecialObject.cpp" />
     <ClCompile Include="..\KirbyGame\CTile.cpp" />
     <ClCompile Include="..\KirbyGame\CTileMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CTimeMgr.cpp" />
-    <ClCompile Include="..\KirbyGame\CUIMgr.cpp" />
     <ClCompile Include="..\KirbyGame\CWaddleDee.cpp" />
     <ClCompile Include="..\KirbyGame\CWaddleDoo.cpp" />
     <ClCompile Include="..\KirbyGame\CWhispyWoods.cpp" />
+    <ClCompile Include="BossSystem.cpp" />
     <ClCompile Include="CBackgroundFactory.cpp" />
     <ClCompile Include="CBackground.cpp" />
     <ClCompile Include="CKirby.cpp" />
+    <ClCompile Include="CKirbyHealthSystem.cpp" />
+    <ClCompile Include="CKirbyMovement.cpp" />
     <ClCompile Include="CMonsterFactory.cpp" />
     <ClCompile Include="CTexture.cpp" />
+    <ClCompile Include="CUIElement.cpp" />
+    <ClCompile Include="CUIGameHUD.cpp" />
+    <ClCompile Include="DamageSystem.cpp" />
+    <ClCompile Include="DoorSystem.cpp" />
+    <ClCompile Include="GameFlowSystem.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
+    <ClCompile Include="SceneChangeSystem.cpp" />
     <ClCompile Include="TileCollision.cpp" />
   </ItemGroup>
   <ItemGroup>

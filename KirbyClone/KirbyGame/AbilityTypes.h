@@ -1,24 +1,24 @@
-#pragma once
+ï»¿#pragma once
 #include <cstdint>
 
-// === Copy Ability ½Äº°ÀÚ ===
+// === Copy Ability ì‹ë³„ì ===
 enum class AbilityGift : std::uint8_t {
     None, Fire, Beam, Spark, Cutter, Sword, Ice, Bomb
 };
 
-// === ÈíÀÔ/»ïÅ´ ÆÄÀÌÇÁ¶óÀÎ¿¡ Àü´ŞµÇ´Â ÅäÅ« ===
+// === í¡ì…/ì‚¼í‚´ íŒŒì´í”„ë¼ì¸ì— ì „ë‹¬ë˜ëŠ” í† í° ===
 struct AbilitySourceToken {
     AbilityGift gift{ AbilityGift::None };
     int         potency{ 1 };
 };
 
-// === ÈíÀÔ °¡´ÉÇÑ ´ë»ó °øÅë ÀÎÅÍÆäÀÌ½º ===
+// === í¡ì… ê°€ëŠ¥í•œ ëŒ€ìƒ ê³µí†µ ì¸í„°í˜ì´ìŠ¤ ===
 class IInhalable {
 public:
     virtual ~IInhalable() = default;
     virtual bool IsInhalable() const = 0;
     virtual AbilitySourceToken GetAbilityToken() const = 0;
-    virtual void OnInhaledStart() {}   // »¡·Á°¡±â ½ÃÀÛ
-    virtual void OnSwallowed() {}   // ¿ÏÀü »ïÅ´
-    virtual void OnSpatOut() {}   // º°·Î ¹ñÈû
+    virtual void OnInhaledStart() {}   // ë¹¨ë ¤ê°€ê¸° ì‹œì‘
+    virtual void OnSwallowed() {}   // ì™„ì „ ì‚¼í‚´
+    virtual void OnSpatOut() {}   // ë³„ë¡œ ë±‰í˜
 };

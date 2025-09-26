@@ -59,20 +59,11 @@
     <Filter Include="Engine\04. Object\Monster\BasicMonster\BrontoBurt">
       <UniqueIdentifier>{1a4848c9-81fe-4f75-be8b-ec11e0a19154}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\04. Object\Monster\BasicMonster\Apple">
-      <UniqueIdentifier>{118b0a41-4d16-4b9d-beaf-d27263051609}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\04. Object\Item">
       <UniqueIdentifier>{d544412b-1ffc-491c-bcae-5ef05ed0bc8d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\04. Object\Tile">
       <UniqueIdentifier>{cb7c1184-b4a1-494c-afbb-b2cbea6b0a29}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\SpecialObject">
-      <UniqueIdentifier>{9e5af8f3-3a55-441e-8d4d-117fe28e9d06}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\SpecialObject\Door">
-      <UniqueIdentifier>{34d0c97e-32eb-455c-bccf-f04963d4a126}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\04. Object\Projectile">
       <UniqueIdentifier>{75cded34-09fd-4f19-9235-fe970ca2e19a}</UniqueIdentifier>
@@ -122,14 +113,8 @@
     <Filter Include="Engine\03. Manager\SoundMgr">
       <UniqueIdentifier>{77d7de34-2531-4354-b964-81dcc698b717}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\03. Manager\PlayerDataMgr">
-      <UniqueIdentifier>{79c37517-76db-42c2-9f37-a33b68b70f9e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\03. Manager\MonsterSpawnMgr">
       <UniqueIdentifier>{9ff413a8-ce3f-4f70-adb2-4ae4d8c9c2a5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\03. Manager\UIMgr">
-      <UniqueIdentifier>{ec1713b8-653d-44d3-a495-80ae166f614e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\05. Scene">
       <UniqueIdentifier>{5d314e5c-e425-41a5-a2ad-1bf8942f7489}</UniqueIdentifier>
@@ -194,6 +179,39 @@
     <Filter Include="Engine\04. Object\Kirby">
       <UniqueIdentifier>{5b2b1604-eb08-45f2-8e98-2efa48db571d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Kirby\KirbyMovement">
+      <UniqueIdentifier>{dfebabba-1eac-4af6-a6a2-ff2e22087e39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Kirby\KirbyHealthSystem">
+      <UniqueIdentifier>{f9cf7dbb-dc61-481b-95bf-613a7c294ab3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\UIElement">
+      <UniqueIdentifier>{ac1846c9-2506-4d5d-8172-9c13fd72b9b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\UIElement\UIGameHUD">
+      <UniqueIdentifier>{165a0e76-0f1e-4f9e-b87e-edc98dbd3f6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr\EventSystems">
+      <UniqueIdentifier>{66f3394d-4c8b-4e21-947c-a081029a7f48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr\EventSystems\SceneChangeSystem">
+      <UniqueIdentifier>{421fc3d1-b4b0-4684-8b35-0afa78acb982}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr\EventSystems\BossSystem">
+      <UniqueIdentifier>{e30f3fdf-124f-4cdd-9629-fa5a9e0acbc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr\EventSystems\DoorSystem">
+      <UniqueIdentifier>{adb5114a-2e82-4a64-ac85-b83fc8a7165e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr\EventSystems\DamageSystem">
+      <UniqueIdentifier>{bb97a6ed-9143-458f-865c-aea2776d6cca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr\EventSystems\GameFlowSystem">
+      <UniqueIdentifier>{fa6ed3c1-9be9-4b2c-b4b6-a0695edf7c1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Door">
+      <UniqueIdentifier>{34d0c97e-32eb-455c-bccf-f04963d4a126}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -227,9 +245,6 @@
     <ClInclude Include="..\KirbyGame\CAnimator.h">
       <Filter>Engine\07. Component\Animator</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CApple.h">
-      <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CBasicMonster.h">
       <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
     </ClInclude>
@@ -252,7 +267,7 @@
       <Filter>Engine\04. Object\DeathEffect</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CDoor.h">
-      <Filter>Engine\04. Object\SpecialObject\Door</Filter>
+      <Filter>Engine\04. Object\Door</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CEventMgr.h">
       <Filter>Engine\03. Manager\EventMgr</Filter>
@@ -289,9 +304,6 @@
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CPlayerCollisionSystem.h">
       <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayerDataMgr.h">
-      <Filter>Engine\03. Manager\PlayerDataMgr</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CPlayerHealthSystem.h">
       <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
@@ -353,14 +365,8 @@
     <ClInclude Include="..\KirbyGame\CTimeMgr.h">
       <Filter>Engine\03. Manager\TimeMgr</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CUIMgr.h">
-      <Filter>Engine\03. Manager\UIMgr</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CSparky.h">
       <Filter>Engine\04. Object\Monster\BasicMonster\Sparky</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CSpecialObject.h">
-      <Filter>Engine\04. Object\SpecialObject</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CWaddleDee.h">
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
@@ -394,6 +400,36 @@
     </ClInclude>
     <ClInclude Include="CKirby.h">
       <Filter>Engine\04. Object\Kirby</Filter>
+    </ClInclude>
+    <ClInclude Include="CKirbyMovement.h">
+      <Filter>Engine\04. Object\Kirby\KirbyMovement</Filter>
+    </ClInclude>
+    <ClInclude Include="CKirbyHealthSystem.h">
+      <Filter>Engine\04. Object\Kirby\KirbyHealthSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CUIElement.h">
+      <Filter>Engine\04. Object\UIElement</Filter>
+    </ClInclude>
+    <ClInclude Include="CUIGameHUD.h">
+      <Filter>Engine\04. Object\UIElement\UIGameHUD</Filter>
+    </ClInclude>
+    <ClInclude Include="EventDef.h">
+      <Filter>Engine\03. Manager\EventMgr</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneChangeSystem.h">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\SceneChangeSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BossSystem.h">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\BossSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="DoorSystem.h">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\DoorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="DamageSystem.h">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\DamageSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="GameFlowSystem.h">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\GameFlowSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -429,9 +465,6 @@
     <ClCompile Include="..\KirbyGame\CAnimator.cpp">
       <Filter>Engine\07. Component\Animator</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CApple.cpp">
-      <Filter>Engine\04. Object\Monster\BasicMonster\Apple</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CBasicMonster.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster</Filter>
     </ClCompile>
@@ -454,7 +487,7 @@
       <Filter>Engine\04. Object\DeathEffect</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CDoor.cpp">
-      <Filter>Engine\04. Object\SpecialObject\Door</Filter>
+      <Filter>Engine\04. Object\Door</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CEventMgr.cpp">
       <Filter>Engine\03. Manager\EventMgr</Filter>
@@ -491,9 +524,6 @@
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CPlayerCollisionSystem.cpp">
       <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayerDataMgr.cpp">
-      <Filter>Engine\03. Manager\PlayerDataMgr</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CPlayerHealthSystem.cpp">
       <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
@@ -555,14 +585,8 @@
     <ClCompile Include="..\KirbyGame\CTimeMgr.cpp">
       <Filter>Engine\03. Manager\TimeMgr</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CUIMgr.cpp">
-      <Filter>Engine\03. Manager\UIMgr</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CSparky.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster\Sparky</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CSpecialObject.cpp">
-      <Filter>Engine\04. Object\SpecialObject</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CWaddleDee.cpp">
       <Filter>Engine\04. Object\Monster\BasicMonster\WaddleDee</Filter>
@@ -593,6 +617,33 @@
     </ClCompile>
     <ClCompile Include="CKirby.cpp">
       <Filter>Engine\04. Object\Kirby</Filter>
+    </ClCompile>
+    <ClCompile Include="CKirbyMovement.cpp">
+      <Filter>Engine\04. Object\Kirby\KirbyMovement</Filter>
+    </ClCompile>
+    <ClCompile Include="CKirbyHealthSystem.cpp">
+      <Filter>Engine\04. Object\Kirby\KirbyHealthSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CUIElement.cpp">
+      <Filter>Engine\04. Object\UIElement</Filter>
+    </ClCompile>
+    <ClCompile Include="CUIGameHUD.cpp">
+      <Filter>Engine\04. Object\UIElement\UIGameHUD</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneChangeSystem.cpp">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\SceneChangeSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BossSystem.cpp">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\BossSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="DoorSystem.cpp">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\DoorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="DamageSystem.cpp">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\DamageSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="GameFlowSystem.cpp">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\GameFlowSystem</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,53 +1,62 @@
 #pragma once
-#include "CSpecialObject.h"
+#include "CObject.h"
 
-class CAnimator;
-
-// CSpecialObject를 상속받는 문 클래스
-class CDoor : public CSpecialObject
+// 문 오브젝트: 충돌 범위 + 간단한 입력만 처리. 나머지는 시스템에서 처리.
+class CDoor : public CObject
 {
 public:
     CDoor();
-    virtual ~CDoor();
+    ~CDoor() override;
 
-public:
-    // === 메인 진입점 함수들 ===
+    // --- CObject 기본 수명주기 ---
     void Update() override;
     void Render(HDC _dc) override;
 
-public:
-    // === 충돌 처리 ===
-    void OnCollisionEnter(CCollider* _pOther) override;
+    // --- 충돌 콜백 ---
+    void OnCollision(CCollider* _pOther) override;
     void OnCollisionExit(CCollider* _pOther) override;
 
-private:
-    // === 상호작용 시스템 ===
-    void CheckPlayerInteraction();
-
-    // === 씬 전환 처리 ===
-    void ProcessDoorTransition();
-
-private:
-    // === 렌더링 시스템 ===
-    void RenderDoorVisual(HDC _dc);
-    void RenderInteractionUI(HDC _dc);
-
 public:
-    // === Setter 함수들 ===
-    void SetTargetScene(SCENE_TYPE _eScene) { m_eTargetScene = _eScene; }
-    void SetTargetPosition(Vec2 _vPos) { m_vTargetPosition = _vPos; }
+    // --- 문 설정 ---
+    void SetTargetScene(SCENE_TYPE sc) { m_targetScene = sc; }
+    SCENE_TYPE GetTargetScene() const { return m_targetScene; }
 
-    // === Getter 함수들 ===
-    SCENE_TYPE GetTargetScene() const { return m_eTargetScene; }
-    Vec2 GetTargetPosition() const { return m_vTargetPosition; }
-    bool CanInteract() const { return m_bCanInteract; }
+    void SetTargetPosition(const Vec2& pos) { m_targetSpawn = pos; }
+    Vec2 GetTargetPosition() const { return m_targetSpawn; }
+
+    // 플레이어가 범위 안에서 ↑ 입력을 눌러야 들어가는지(기본: true)
+    void SetRequireInput(bool v) { m_requireInput = v; }
+    bool GetRequireInput() const { return m_requireInput; }
+
+    // 자동 입장(=Overlap 즉시 입장) 켜기/끄기
+    void SetAutoEnterOnOverlap(bool v) { m_requireInput = !v; }
+
+    // 활성/비활성
+    void SetEnabled(bool v) { m_enabled = v; }
+    bool IsEnabled() const { return m_enabled; }
+
+    // 충돌체 설정(편의): 크기/오프셋 (월드 단위)
+    void ConfigureCollider(const Vec2& size, const Vec2& offset = Vec2(0.f, 0.f));
+
+    // 재트리거 지연(초) 설정
+    void SetRetriggerDelay(float sec) { m_retriggerDelay = (std::max)(0.f, sec); }
 
 private:
-    // === 씬 이동 정보 ===
-    SCENE_TYPE      m_eTargetScene;         // 이동할 씬
-    Vec2            m_vTargetPosition;      // 목표 씬에서의 플레이어 위치
+    // 입장 이벤트 발행 (한 곳에서만 호출)
+    void TryFireDoorEnter();
 
-    // === 상호작용 상태 ===
-    bool            m_bPlayerNear;          // 플레이어 근처에 있는지
-    bool            m_bCanInteract;         // 상호작용 가능한지
+private:
+    // 목적지
+    SCENE_TYPE m_targetScene{ SCENE_TYPE::START };
+    Vec2       m_targetSpawn{ 256.f, 384.f };
+
+    // 상태
+    bool  m_enabled{ true };
+    bool  m_playerInside{ false };
+    bool  m_requireInput{ true };   // true면 ↑ 입력 필요, false면 자동
+    float m_cooldown{ 0.f };
+    float m_retriggerDelay{ 0.5f }; // 중복 트리거 방지
+
+    // 디버그 표시
+    bool  m_debugDraw{ false };
 };

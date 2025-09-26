@@ -19,6 +19,7 @@ public:
     // === 오브젝트 관리 ===
     void AddObject(CObject* _pObj, GROUP_TYPE _eType);
     const vector<CObject*>& GetGroupObject(GROUP_TYPE _eType) { return m_arrObj[(UINT)_eType]; }
+    bool DetachObject(CObject* obj);
 
 public:
     // === 일시정지 관리 ===

@@ -12,7 +12,11 @@
 #include "CTileMgr.h"
 #include "CAnimationDataMgr.h"
 #include "CSoundMgr.h"
-#include "CUIMgr.h"
+#include "SceneChangeSystem.h"
+#include "BossSystem.h"
+#include "DoorSystem.h"
+#include "DamageSystem.h"
+#include "GameFlowSystem.h"
 #include "CFadeEffect.h"
 
 
@@ -27,6 +31,13 @@ CCore::CCore ( )
 
 CCore::~CCore ( )
 {
+	// 시스템 구독 해제
+	GameFlowSystem::Shutdown();
+	DamageSystem::Shutdown();
+	DoorSystem::Shutdown();
+	BossSystem::Shutdown();
+	SceneChangeSystem::Shutdown();
+
 	// 메인 DC 해제
 	ReleaseDC ( m_hWnd , m_hDC );
 
@@ -58,28 +69,30 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	HBITMAP hOldBit = ( HBITMAP ) SelectObject ( m_memDC , m_hBit );
 	DeleteObject ( hOldBit );
 
-	// 핵심 매니저 초기화
-	CTimeMgr::GetInst ( )->init ( );
-	CKeyMgr::GetInst ( )->init ( );
-	CPathMgr::GetInst ( )->init ( );
-	CResMgr::GetInst ( )->init ( );
-	CSoundMgr::GetInst ( )->init ( );
+	// ── 엔진/리소스 매니저 ─────────────────────
+	CTimeMgr::GetInst()->init();
+	CKeyMgr::GetInst()->init();
+	CPathMgr::GetInst()->init();
+	CResMgr::GetInst()->init();
+	CSoundMgr::GetInst()->init();
+	CAnimationDataMgr::GetInst()->init();
+	CTileMgr::GetInst()->init();
 
-	// 애니메이션 데이터 매니저 초기화
-	CAnimationDataMgr::GetInst ( )->init ( );
+	// ── 이벤트 버스 먼저 ───────────────────────
+	CEventMgr::GetInst()->init();             // (슬림: 큐 초기화만)
 
-	// 게임 콘텐츠 매니저들 초기화
-	CTileMgr::GetInst ( )->init ( );
+	// ── 이벤트 수행 시스템(구독 등록) ───────────
+	SceneChangeSystem::Init();
+	BossSystem::Init();
+	DoorSystem::Init();
+	DamageSystem::Init();
+	GameFlowSystem::Init();
 
-	// 게임 로직 매니저 초기화
-	CSceneMgr::GetInst ( )->init ( );
-	CCollisionMgr::GetInst ( )->init ( );
-	CEventMgr::GetInst ( )->init ( );
-	CCamera::GetInst ( )->init ( m_ptResolution.x , m_ptResolution.y );
-
-	// UI 매니저 초기화
-	CUIMgr::GetInst ( )->Init ( );
-	CFadeEffect::GetInst ( )->Init ( );
+	// ── 씬/충돌/카메라/연출 ────────────────────
+	CSceneMgr::GetInst()->init();             // 씬 생성/Enter() 진행
+	CCollisionMgr::GetInst()->init();
+	CCamera::GetInst()->init(m_ptResolution.x, m_ptResolution.y);
+	CFadeEffect::GetInst()->Init();
 
 	return S_OK;
 }

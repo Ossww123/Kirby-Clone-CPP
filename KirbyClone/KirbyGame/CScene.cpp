@@ -2,143 +2,109 @@
 #include "CScene.h"
 #include "CObject.h"
 #include "CMonster.h"
-#include "CUIMgr.h"
 #include "CFadeEffect.h"
 
-CScene::CScene()
-    : m_bPaused(false)
-{
-}
+#include <algorithm>
 
-CScene::~CScene()
-{
-    // 씬이 소멸할 때 관리하던 모든 오브젝트 삭제
-    DeleteAllObject();
-}
+CScene::CScene() : m_bPaused(false) {}
+CScene::~CScene() { DeleteAllObject(); }
 
 void CScene::Update()
 {
-    // 카피능력 연출 중에는 게임 일시정지 (플레이어만 업데이트)
-    bool bAbilityPresentation = CFadeEffect::GetInst()->IsPausingGame();
-    
-    // 일시정지 상태거나 카피능력 연출 중이면 업데이트 제한
-    if (m_bPaused || bAbilityPresentation)
-    {
-        // 플레이어만 업데이트 (연출용 애니메이션 재생)
-        for (size_t j = 0; j < m_arrObj[(UINT)GROUP_TYPE::PLAYER].size(); ++j)
-        {
-            if (m_arrObj[(UINT)GROUP_TYPE::PLAYER][j]->IsAlive())
-            {
-                m_arrObj[(UINT)GROUP_TYPE::PLAYER][j]->Update();
-            }
+    if (m_bPaused) {
+        // (필요시) 플레이어/보스만 업데이트하는 특수 로직 유지 가능
+        for (auto* obj : m_arrObj[(UINT)GROUP_TYPE::PLAYER])
+            if (obj->IsAlive()) obj->Update();
+        for (auto* obj : m_arrObj[(UINT)GROUP_TYPE::MONSTER]) {
+            if (!obj->IsAlive()) continue;
+            if (auto* m = dynamic_cast<CMonster*>(obj))
+                if (m->IsBoss()) obj->Update();
         }
-        
-        // 일시정지 중에도 보스는 격파 시퀀스를 위해 업데이트
-        if (m_bPaused)
-        {
-            for (size_t j = 0; j < m_arrObj[(UINT)GROUP_TYPE::MONSTER].size(); ++j)
-            {
-                CObject* pObj = m_arrObj[(UINT)GROUP_TYPE::MONSTER][j];
-                if (pObj->IsAlive())
-                {
-                    CMonster* pMonster = dynamic_cast<CMonster*>(pObj);
-                    if (pMonster && pMonster->IsBoss())
-                    {
-                        pObj->Update();
-                    }
-                }
-            }
-        }
-        
         return;
     }
 
-    // 활성화된 오브젝트만 업데이트
-    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
-    {
-        for (size_t j = 0; j < m_arrObj[i].size(); ++j)
-        {
-            if (m_arrObj[i][j]->IsAlive())
-            {
-                m_arrObj[i][j]->Update();
-            }
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i) {
+        for (auto* obj : m_arrObj[i]) {
+            if (obj->IsAlive()) obj->Update();
         }
     }
-    
-    // Dead 오브젝트들 정리 (비활성화만, 삭제 안함)
+
     DeleteDeadObjects();
 }
 
 void CScene::Render(HDC _dc)
 {
-    // 커스텀 렌더링 순서: 투사체를 먼저 렌더링하여 배경에 배치
+    // 렌더 순서: (기존 유지) + UI 그룹은 마지막에
     GROUP_TYPE renderOrder[] = {
         GROUP_TYPE::DEFAULT,
         GROUP_TYPE::TILE,
-        GROUP_TYPE::PROJ_PLAYER,    // 투사체들을 먼저 렌더링
+        GROUP_TYPE::PROJ_PLAYER,
         GROUP_TYPE::PROJ_MONSTER,
-        GROUP_TYPE::PLAYER,         // 플레이어/몬스터를 나중에 렌더링
+        GROUP_TYPE::PLAYER,
         GROUP_TYPE::MONSTER,
         GROUP_TYPE::ITEM,
         GROUP_TYPE::SPECIAL,
         GROUP_TYPE::EFFECT
     };
 
-    // 지정된 순서대로 렌더링
-    for (GROUP_TYPE groupType : renderOrder)
-    {
-        UINT groupIndex = (UINT)groupType;
-        if (groupIndex < (UINT)GROUP_TYPE::END)
-        {
-            for (size_t j = 0; j < m_arrObj[groupIndex].size(); ++j)
-            {
-                if (m_arrObj[groupIndex][j]->IsAlive())
-                {
-                    m_arrObj[groupIndex][j]->Render(_dc);
-                }
-            }
+    for (GROUP_TYPE g : renderOrder) {
+        const UINT gi = (UINT)g;
+        if (gi >= (UINT)GROUP_TYPE::END) continue;
+        for (auto* obj : m_arrObj[gi]) {
+            if (obj->IsAlive()) obj->Render(_dc);
         }
     }
 
-    // UI 그룹이 있다면 별도로 렌더링
-    UINT uiIndex = (UINT)GROUP_TYPE::UI;
-    if (uiIndex < (UINT)GROUP_TYPE::END)
-    {
-        for (size_t j = 0; j < m_arrObj[uiIndex].size(); ++j)
-        {
-            if (m_arrObj[uiIndex][j]->IsAlive())
-            {
-                m_arrObj[uiIndex][j]->Render(_dc);
-            }
+    // UI 그룹은 항상 최상단
+    const UINT uiIndex = (UINT)GROUP_TYPE::UI;
+    if (uiIndex < (UINT)GROUP_TYPE::END) {
+        for (auto* obj : m_arrObj[uiIndex]) {
+            if (obj->IsAlive()) obj->Render(_dc);
         }
     }
-
-    // UI는 항상 최상위에 렌더링
-    CUIMgr::GetInst()->RenderGameUI(_dc);
 }
 
 void CScene::DeleteAllObject()
 {
-    // 모든 그룹의 오브젝트 삭제
-    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i)
-    {
-        for (size_t j = 0; j < m_arrObj[i].size(); ++j)
-        {
-            delete m_arrObj[i][j];
-        }
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i) {
+        for (auto* obj : m_arrObj[i]) delete obj;
         m_arrObj[i].clear();
     }
 }
 
 void CScene::AddObject(CObject* _pObj, GROUP_TYPE _eType)
 {
-    // 벡터에 추가
+    // 그룹에 맞게 삽입
     m_arrObj[(UINT)_eType].push_back(_pObj);
+
+    //   캐리오버 호환: 오브젝트 자신의 그룹 기록도 맞춰 둠
+    //   (DetachObject가 obj->GetGroupType()를 우선 사용한다면 필수)
+    _pObj->SetGroup(_eType);
 }
 
 void CScene::DeleteDeadObjects()
 {
-    // 오브젝트 풀 시스템: Dead 오브젝트는 삭제하지 않고 비활성화만 유지
-    // 실제 삭제는 씬 전환시에만 발생 (DeleteAllObject에서)
-    // 이렇게 하면 빨아들이기 중 발생하는 더블 삭제 문제를 방지할 수 있음
+    // 현재 정책: Dead는 씬 전환 시에만 delete. 여기서는 미삭제(풀)
+    // 필요 시 Dead만 골라 erase/remove_if로 빠르게 정리하도록 확장 가능.
+}
+
+bool CScene::DetachObject(CObject* obj)
+{
+    if (!obj) return false;
+
+    // 1) obj가 들고 있는 그룹에서 먼저 시도
+    const GROUP_TYPE g = obj->GetGroup();
+    if ((UINT)g < (UINT)GROUP_TYPE::END) {
+        auto& v = m_arrObj[(UINT)g];
+        auto it = std::find(v.begin(), v.end(), obj);
+        if (it != v.end()) { v.erase(it); return true; }
+    }
+
+    // 2) 못 찾으면 전체 그룹 탐색 (안전장치)
+    for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i) {
+        auto& v = m_arrObj[i];
+        auto it = std::find(v.begin(), v.end(), obj);
+        if (it != v.end()) { v.erase(it); return true; }
+    }
+    return false;
 }

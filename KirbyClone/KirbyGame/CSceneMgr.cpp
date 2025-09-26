@@ -67,22 +67,14 @@ void CSceneMgr::render(HDC _dc)
 
 void CSceneMgr::ChangeScene(SCENE_TYPE _eNext)
 {
-    // 씬별 해상도 설정 (씬 변경 전에 적용)
     ApplySceneResolution(_eNext);
 
-    // 씬 전환 실행
-    if (m_pCurScene)
-    {
-        m_pCurScene->Exit();
-    }
+    if (m_pCurScene) m_pCurScene->Exit();
 
     m_eCurSceneType = _eNext;
     m_pCurScene = m_arrScene[(UINT)_eNext];
 
-    if (m_pCurScene)
-    {
-        m_pCurScene->Enter();
-    }
+    if (m_pCurScene) m_pCurScene->Enter();
 }
 
 void CSceneMgr::ApplySceneResolution(SCENE_TYPE _eSceneType)

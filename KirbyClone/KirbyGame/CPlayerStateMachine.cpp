@@ -464,7 +464,7 @@ void CPlayerStateMachine::ExecuteAttackState ( )
     if (m_bAbilityAcquisitionAttack && 
         m_fAttackTimer >= m_fAttackDuration - 0.2f && m_fAttackTimer < m_fAttackDuration - 0.1f)
     {
-        CFadeEffect::GetInst()->ReleaseFadeHold(); // 암전 유지 해제
+        //CFadeEffect::GetInst()->ReleaseFadeHold(); // 암전 유지 해제
         CFadeEffect::GetInst()->StartFadeIn(FADE_COLOR::BLACK, 0.3f); // 페이드인 시작
     }
     
@@ -1259,7 +1259,7 @@ void CPlayerStateMachine::OnEnterAttackState ( )
     // 능력 획득 연출 중인 경우 암전 유지 설정
     if (m_bAbilityAcquisitionAttack)
     {
-        CFadeEffect::GetInst()->HoldCurrentFade();
+        //CFadeEffect::GetInst()->HoldCurrentFade();
     }
     
     // 능력별 초기화 처리 및 공격 시간 설정

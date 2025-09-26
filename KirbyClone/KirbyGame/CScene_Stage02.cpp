@@ -2,11 +2,10 @@
 #include "CScene_Stage02.h"
 
 #include "CObject.h"
-#include "CPlayer.h"
+//#include "CPlayer.h"
 #include "CMonster.h"
 #include "CTile.h"
 #include "CItem.h"
-#include "CSpecialObject.h"
 #include "CObjectFactory.h"
 
 #include "CKeyMgr.h"
@@ -15,9 +14,7 @@
 #include "CPathMgr.h"
 #include "CEventMgr.h"
 #include "CTileMgr.h"
-#include "CPlayerDataMgr.h"
 #include "CMonsterSpawnMgr.h"
-#include "CUIMgr.h"
 #include "CSoundMgr.h"
 #include "CBackgroundFactory.h"
 
@@ -95,9 +92,6 @@ void CScene_Stage02::Update()
     // 몬스터 스폰 매니저 업데이트
     CMonsterSpawnMgr::GetInst()->Update();
 
-    // UI 매니저 업데이트 (보스 HP바 애니메이션 등)
-    CUIMgr::GetInst()->Update();
-
     // 부모 클래스의 Update 호출 (모든 객체 업데이트)
     CScene::Update();
 
@@ -115,9 +109,6 @@ void CScene_Stage02::Render(HDC _dc)
 {
     // 부모 클래스의 Render 호출 (모든 객체 렌더링)
     CScene::Render(_dc);
-
-    // UI 렌더링 (플레이어 체력, 보스 HP바 등)
-    CUIMgr::GetInst()->RenderGameUI(_dc);
 }
 
 // === 레벨 로드 관련 함수들 ===

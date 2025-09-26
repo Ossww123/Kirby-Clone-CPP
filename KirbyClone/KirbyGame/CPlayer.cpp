@@ -20,7 +20,6 @@
 #include "CPlayerMovement.h"
 #include "CPlayerHealthSystem.h"
 #include "CPlayerCollisionSystem.h"
-#include "CPlayerDataMgr.h"
 
 CPlayer::CPlayer()
     : m_pStateMachine(nullptr)

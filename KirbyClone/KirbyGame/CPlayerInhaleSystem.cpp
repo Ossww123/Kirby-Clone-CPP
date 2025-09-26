@@ -606,10 +606,10 @@ void CPlayerInhaleSystem::UpdateParticles()
         
         // 디버그: 파티클 상태 확인
         bool bIsNull = !pParticle;
-        bool bIsDead = pParticle ? pParticle->!IsAlive() : false;
+        bool bIsDead = pParticle ? !pParticle->IsAlive() : false;
         bool bIsNotAlive = pParticle ? !pParticle->IsAlive() : true;
 
-        if (!pParticle || pParticle->!IsAlive() || !pParticle->IsAlive())
+        if (!pParticle || !pParticle->IsAlive() || !pParticle->IsAlive())
         {
             it = m_vecAirParticles.erase(it);
         }

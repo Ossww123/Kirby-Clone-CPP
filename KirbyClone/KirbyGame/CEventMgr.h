@@ -3,46 +3,28 @@
 #include <unordered_map>
 #include <functional>
 #include <algorithm>
-#include <cstdint>
+#include "EventDef.h"
 
-// enum class 해시
-struct EnumClassHash {
-    template<typename T> size_t operator()(T v) const { return static_cast<size_t>(v); }
-};
+struct EnumClassHash { template<typename T> size_t operator()(T v) const { return (size_t)v; } };
 
-class CEventMgr
-{
-    SINGLE(CEventMgr);  // GetInst(), private ctor/dtor
-
+class CEventMgr {
+    SINGLE(CEventMgr);
 public:
     using ListenerId = size_t;
 
-    void init();     // 선택: 필요 없으면 비워둠
-    void update();   // 프레임 말에 호출 → 큐에 쌓인 이벤트 일괄 디스패치
+    void init() {}
+    void update(); // 프레임 말에 호출
 
-    // === 이벤트 큐 ===
-    void AddEvent(const tEvent& e) { m_queue.push_back(e); }             // 기존 호환
-    void Enqueue(const tEvent& e) { m_queue.push_back(e); }             // 별칭
+    void AddEvent(const tEvent& e) { m_queue.push_back(e); } // Enqueue alias
     void ClearQueue() { m_queue.clear(); }
 
-    // === 구독/해지 ===
     ListenerId Subscribe(EVENT_TYPE type, std::function<void(const tEvent&)> cb, int priority = 0);
     void       Unsubscribe(EVENT_TYPE type, ListenerId id);
 
-    // 전부 초기화(테스트/씬전환 등에서 필요하면 사용)
     void ClearAll();
 
-    // 복사/이동 금지
-    CEventMgr(const CEventMgr&) = delete;
-    CEventMgr& operator=(const CEventMgr&) = delete;
-
 private:
-    struct Listener {
-        ListenerId id{};
-        int        priority{};
-        std::function<void(const tEvent&)> fn;
-    };
-
+    struct Listener { ListenerId id{}; int priority{}; std::function<void(const tEvent&)> fn; };
     void Dispatch(const tEvent& e);
     bool IsStillSubscribed(EVENT_TYPE type, ListenerId id) const;
 

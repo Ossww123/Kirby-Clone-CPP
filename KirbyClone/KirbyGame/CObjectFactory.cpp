@@ -11,7 +11,6 @@
 #include "CMonster.h"
 #include "CItem.h"
 #include "CTile.h"
-#include "CSpecialObject.h"
 #include "CDoor.h"
 
 CObject* CObjectFactory::CreateObject ( OBJECT_TYPE _eType , Vec2 _vPos )

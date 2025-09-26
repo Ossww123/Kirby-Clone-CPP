@@ -1,67 +1,44 @@
-#include "gamePCH.h"
+ï»¿#include "gamePCH.h"
 #include "CKirby.h"
+#include "CKirbyMovement.h"
+#include "CKirbyHealthSystem.h"
 
-// ¿£Áø/ÇÁ·ÎÁ§Æ® Çì´õ
 #include "CAnimator.h"
 #include "CRigidBody.h"
 #include "CCollider.h"
 #include "CPlayerInputManager.h"
 #include "CTimeMgr.h"
 
-// ===========================
-// °£´ÜÇÑ ¾Ö´Ï ÇïÆÛ
-// ===========================
 #define PLAY(animName, loop) do { if(ctx.anim) (ctx.anim)->Play(L##animName, loop); } while(0)
 
-// ===========================
-// ³»ºÎ »óÅÂ ±¸Çö(±âº» ÀÌµ¿¸¸)
-// ===========================
-
+// ===== States =====
 class StGrounded : public KirbyState {
 public:
     StGrounded() : KirbyState(KIRBY_STATE::GROUNDED) {}
-    void OnEnter(KirbyStateCtx& ctx) override {
-        if (ctx.body) ctx.body->SetGround(true);
-    }
+    void OnEnter(KirbyStateCtx& ctx) override { if (ctx.body) ctx.body->SetGround(true); }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
-        // Á¡ÇÁ ÀÔ·Â °øÅë Ã³¸®
-        if (ctx.input && ctx.input->IsJumpTap()) {
-            out = KIRBY_STATE::JUMP;
-            return;
-        }
-        // Áö¸éÀÌ ¾Æ´Ï°Ô µÇ¸é ³«ÇÏ
-        if (ctx.body && !ctx.body->IsGround()) {
-            out = KIRBY_STATE::FALL;
-        }
+        if (ctx.input && ctx.input->IsJumpTap()) { out = KIRBY_STATE::JUMP; return; }
+        if (ctx.body && !ctx.body->IsGround()) { out = KIRBY_STATE::FALL; }
     }
 };
 
 class StAirborne : public KirbyState {
 public:
     StAirborne() : KirbyState(KIRBY_STATE::AIRBORNE) {}
-    void OnEnter(KirbyStateCtx& ctx) override {
-        if (ctx.body) ctx.body->SetGround(false);
-    }
+    void OnEnter(KirbyStateCtx& ctx) override { if (ctx.body) ctx.body->SetGround(false); }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
-        // ÂøÁö ½Ã Áö»ó ·çÆ®·Î º¹±Í
-        if (ctx.body && ctx.body->IsGround()) {
-            out = KIRBY_STATE::IDLE;
-        }
+        if (ctx.body && ctx.body->IsGround()) { out = KIRBY_STATE::IDLE; }
     }
 };
 
 class StIdle : public KirbyState {
 public:
     StIdle() : KirbyState(KIRBY_STATE::IDLE) {}
-    void OnEnter(KirbyStateCtx& ctx) override { PLAY("IDLE", true); }
+    void OnEnter(KirbyStateCtx& ctx) override { PLAY("IDLE", true); if (ctx.move) ctx.move->StopHorizontal(); }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
         if (!ctx.input) return;
-        if (ctx.input->IsMovingLeft() || ctx.input->IsMovingRight()) {
-            out = KIRBY_STATE::WALK; return;
-        }
-        if (ctx.input->IsMovingDown()) {
-            out = KIRBY_STATE::CROUCH; return;
-        }
+        if (ctx.input->IsMovingLeft() || ctx.input->IsMovingRight()) { out = KIRBY_STATE::WALK; return; }
+        if (ctx.input->IsMovingDown()) { out = KIRBY_STATE::CROUCH; return; }
     }
 };
 
@@ -70,18 +47,11 @@ public:
     StWalk() : KirbyState(KIRBY_STATE::WALK) {}
     void OnEnter(KirbyStateCtx& ctx) override { PLAY("WALK", true); }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
-        if (!ctx.input || !ctx.body) return;
-
-        const int dir = ctx.input->GetHorizontalInput(); // -1,0,1
+        if (!ctx.input || !ctx.move) return;
+        const int dir = ctx.input->GetHorizontalInput();
         if (dir == 0) { out = KIRBY_STATE::IDLE; return; }
-
-        // ·± ÀüÈ¯(´õºíÅÇ)
-        if (ctx.input->IsDoubleTapLeft() || ctx.input->IsDoubleTapRight()) {
-            out = KIRBY_STATE::RUN; return;
-        }
-
-        ctx.body->SetVelocityX(dir > 0 ? 150.f : -150.f);
-        if (ctx.self) ctx.self->SetFacingRight(dir > 0);
+        if (ctx.input->IsDoubleTapLeft() || ctx.input->IsDoubleTapRight()) { out = KIRBY_STATE::RUN; return; }
+        ctx.move->MoveWalk(dir);
     }
 };
 
@@ -90,25 +60,20 @@ public:
     StRun() : KirbyState(KIRBY_STATE::RUN) {}
     void OnEnter(KirbyStateCtx& ctx) override { PLAY("RUN", true); }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
-        if (!ctx.input || !ctx.body) return;
-
+        if (!ctx.input || !ctx.move) return;
         const int dir = ctx.input->GetHorizontalInput();
         if (dir == 0) { out = KIRBY_STATE::IDLE; return; }
-
-        ctx.body->SetVelocityX(dir > 0 ? 300.f : -300.f);
-        if (ctx.self) ctx.self->SetFacingRight(dir > 0);
+        ctx.move->MoveRun(dir);
     }
 };
 
 class StCrouch : public KirbyState {
 public:
     StCrouch() : KirbyState(KIRBY_STATE::CROUCH) {}
-    void OnEnter(KirbyStateCtx& ctx) override { PLAY("CROUCH", true); }
+    void OnEnter(KirbyStateCtx& ctx) override { PLAY("CROUCH", true); if (ctx.move) ctx.move->StopHorizontal(); }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
         if (!ctx.input) return;
-        if (!ctx.input->IsMovingDown()) {
-            out = KIRBY_STATE::IDLE; return;
-        }
+        if (!ctx.input->IsMovingDown()) { out = KIRBY_STATE::IDLE; return; }
     }
 };
 
@@ -117,15 +82,10 @@ public:
     StJump() : KirbyState(KIRBY_STATE::JUMP) {}
     void OnEnter(KirbyStateCtx& ctx) override {
         PLAY("JUMP", false);
-        if (ctx.body) {
-            ctx.body->SetGround(false);
-            ctx.body->SetVelocityY(-640.f); // ÃÊ±â Á¡ÇÁ·Â
-        }
+        if (ctx.move) ctx.move->Jump();
     }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
-        if (ctx.body && ctx.body->GetVelocity().y > 0.f) {
-            out = KIRBY_STATE::FALL;
-        }
+        if (ctx.body && ctx.body->GetVelocity().y > 0.f) { out = KIRBY_STATE::FALL; }
     }
 };
 
@@ -134,20 +94,14 @@ public:
     StFall() : KirbyState(KIRBY_STATE::FALL) {}
     void OnEnter(KirbyStateCtx& ctx) override { PLAY("FALL", true); }
     void Update(KirbyStateCtx& ctx, float, KIRBY_STATE& out) override {
-        if (ctx.body && ctx.body->IsGround()) {
-            out = KIRBY_STATE::IDLE;
-        }
+        if (ctx.body && ctx.body->IsGround()) { out = KIRBY_STATE::IDLE; }
     }
 };
 
-// ===========================
-// CKirby ±¸Çö
-// ===========================
-
+// ===== CKirby =====
 CKirby::CKirby() {
     SetType(OBJECT_TYPE::PLAYER);
 
-    // ÄÄÆ÷³ÍÆ®
     CreateAnimator();
     CreateRigidBody();
     CreateCollider();
@@ -164,12 +118,13 @@ CKirby::CKirby() {
     }
 
     m_input = std::make_unique<CPlayerInputManager>();
+    m_move = std::make_unique<CKirbyMovement>(this);
+    m_health = std::make_unique<CKirbyHealthSystem>(this);
 
     LoadDefaultAnimations();
     BuildHFSM();
     ChangeState(KIRBY_STATE::IDLE);
 
-    // ÃÊ±â Æ®·£½ºÆû
     SetPos(Vec2(640.f, 384.f));
     SetScale(Vec2(64.f, 64.f));
 }
@@ -177,14 +132,10 @@ CKirby::CKirby() {
 CKirby::~CKirby() {}
 
 void CKirby::LoadDefaultAnimations() {
-    if (auto* ani = GetAnimator()) {
-        ani->Play(L"IDLE", true);
-    }
+    if (auto* ani = GetAnimator()) ani->Play(L"IDLE", true);
 }
 
-void CKirby::LoadAbilityAnimations(int) {
-    // TODO: Ä«ÇÇ ´É·Â/Æû¿¡ µû¸¥ ¾Ö´Ï Å¬¸³ ¹ÙÀÎµù
-}
+void CKirby::LoadAbilityAnimations(int) {}
 
 KirbyState* CKirby::FindNode(KirbyState* node, KIRBY_STATE id) {
     if (!node) return nullptr;
@@ -196,35 +147,47 @@ KirbyState* CKirby::FindNode(KirbyState* node, KIRBY_STATE id) {
 }
 
 std::vector<KirbyState*> CKirby::BuildPathToRoot(KirbyState* n) {
-    std::vector<KirbyState*> path;
-    while (n) { path.push_back(n); n = n->parent; }
-    std::reverse(path.begin(), path.end());
-    return path;
+    std::vector<KirbyState*> v; while (n) { v.push_back(n); n = n->parent; }
+    std::reverse(v.begin(), v.end()); return v;
 }
 
 KirbyState* CKirby::LCA(KirbyState* a, KirbyState* b) {
-    auto pa = BuildPathToRoot(a);
-    auto pb = BuildPathToRoot(b);
-    KirbyState* last = nullptr;
-    size_t i = 0;
+    auto pa = BuildPathToRoot(a), pb = BuildPathToRoot(b);
+    KirbyState* last = nullptr; size_t i = 0;
     while (i < pa.size() && i < pb.size() && pa[i] == pb[i]) { last = pa[i]; ++i; }
     return last;
+}
+
+void CKirby::ResetForRespawn(bool briefInvincible)
+{
+    if (auto* hs = GetHealth()) {
+        const int maxhp = hs->GetMaxHP();
+        hs->SetHP(maxhp);
+        hs->ClearInvincibility();
+        if (briefInvincible) hs->StartInvincible(0.5f); // ì§§ì€ ì‹œìž‘ ë¬´ì 
+    }
+
+    // TODO(ëŠ¥ë ¥ ì‹œìŠ¤í…œ ë¶™ì„ ë•Œ): ì¹´í”¼ ëŠ¥ë ¥ ì´ˆê¸°í™”ê°€ í•„ìš”í•˜ë©´ ì—¬ê¸°ì„œ ì²˜ë¦¬
+    // ex) SetCopyAbility(COPY_ABILITY::NONE);
+
+    // ì†ë„/ì ‘ì§€ ìƒíƒœ ì´ˆê¸°í™”
+    if (auto* rb = GetRigidBody()) {
+        rb->SetVelocity(Vec2(0.f, 0.f));
+        rb->SetGround(false);
+    }
 }
 
 void CKirby::BuildHFSM() {
     m_root = std::make_unique<KirbyState>(KIRBY_STATE::ROOT);
 
-    // ½´ÆÛ »óÅÂ
     m_nodeGROUNDED = m_root->AddChild(std::make_unique<StGrounded>());
     m_nodeAIRBORNE = m_root->AddChild(std::make_unique<StAirborne>());
 
-    // Áö»ó ¸®ÇÁ
     m_nodeIDLE = m_nodeGROUNDED->AddChild(std::make_unique<StIdle>());
     m_nodeWALK = m_nodeGROUNDED->AddChild(std::make_unique<StWalk>());
     m_nodeRUN = m_nodeGROUNDED->AddChild(std::make_unique<StRun>());
     m_nodeCROUCH = m_nodeGROUNDED->AddChild(std::make_unique<StCrouch>());
 
-    // °øÁß ¸®ÇÁ
     m_nodeJUMP = m_nodeAIRBORNE->AddChild(std::make_unique<StJump>());
     m_nodeFALL = m_nodeAIRBORNE->AddChild(std::make_unique<StFall>());
 
@@ -237,74 +200,57 @@ void CKirby::ChangeState(KIRBY_STATE target) {
 
     KirbyState* from = m_curNode;
     if (!from) {
-        // ÃÖÃÊ ÁøÀÔ: °æ·Î´ë·Î Enter
         auto path = BuildPathToRoot(to);
         for (auto* n : path) n->OnEnter(m_ctx);
-        m_curNode = to;
-        m_curLeaf = target;
-        return;
+        m_curNode = to; m_curLeaf = target; return;
     }
 
     KirbyState* lca = LCA(from, to);
+    for (KirbyState* n = from; n && n != lca; n = n->parent) n->OnExit(m_ctx);
 
-    // Exit: from¿¡¼­ LCA±îÁö
-    for (KirbyState* n = from; n && n != lca; n = n->parent) {
-        n->OnExit(m_ctx);
-    }
-
-    // Enter: LCA¡æto °æ·Î Áß °øÅë ÇÁ¸®ÇÈ½º Á¦¿Ü
     auto pathTo = BuildPathToRoot(to);
     auto pathFrom = BuildPathToRoot(from);
-    size_t skip = 0;
-    while (skip < pathTo.size() && skip < pathFrom.size() && pathTo[skip] == pathFrom[skip]) ++skip;
-    for (size_t i = skip; i < pathTo.size(); ++i) {
-        pathTo[i]->OnEnter(m_ctx);
-    }
+    size_t skip = 0; while (skip < pathTo.size() && skip < pathFrom.size() && pathTo[skip] == pathFrom[skip]) ++skip;
+    for (size_t i = skip; i < pathTo.size(); ++i) pathTo[i]->OnEnter(m_ctx);
 
-    m_curNode = to;
-    m_curLeaf = target;
+    m_curNode = to; m_curLeaf = target;
 }
 
 void CKirby::Update() {
-    // ÀÔ·Â ¾÷µ¥ÀÌÆ®
     if (m_input) m_input->Update();
 
-    // ÄÁÅØ½ºÆ® Ã¤¿ì±â
     m_ctx.self = this;
     m_ctx.input = m_input.get();
     m_ctx.body = GetRigidBody();
     m_ctx.anim = GetAnimator();
+    m_ctx.move = m_move.get();
 
-    // »óÅÂ ¾÷µ¥ÀÌÆ®
     if (m_curNode) {
         const float dt = CTimeMgr::GetInst()->GetfDT();
-        KIRBY_STATE requested = KIRBY_STATE::END;
-        m_curNode->Update(m_ctx, dt, requested);
-
-        if (requested != KIRBY_STATE::END && requested != m_curLeaf) {
-            ChangeState(requested);
-        }
+        KIRBY_STATE req = KIRBY_STATE::END;
+        m_curNode->Update(m_ctx, dt, req);
+        if (req != KIRBY_STATE::END && req != m_curLeaf) ChangeState(req);
     }
 
-    // ¿õÅ©¸®±â µîÀ¸·Î ÄÝ¶óÀÌ´õ Å©±â°¡ ¹Ù²ð ¼ö ÀÖÀ¸´Ï º¸Á¤
+    // ì„œë¸Œì‹œìŠ¤í…œ ì—…ë°ì´íŠ¸
+    if (m_move)   m_move->Update(CTimeMgr::GetInst()->GetfDT());
+    if (m_health) m_health->Update(CTimeMgr::GetInst()->GetfDT());
+
     UpdateColliderSize();
 
-    // ¹°¸®/¾Ö´Ï °»½Å(°¢ ¿£ÁøÀÇ Update »ç¿ë)
-    if (auto* rb = GetRigidBody())  rb->Update();
-    if (auto* an = GetAnimator())   an->Update();
+    if (auto* rb = GetRigidBody()) rb->Update();
+    if (auto* an = GetAnimator())  an->Update();
 }
 
 void CKirby::Render(HDC dc) {
     if (auto* an = GetAnimator()) {
-        // º¸´ø ¹æÇâ ¡æ ¾Ö´Ï ¹ÝÀü
         an->SetFlipX(!IsFacingRight());
         an->Render(dc);
     }
     else {
         CObject::Render(dc);
     }
-
-    // ÇÊ¿ä ½Ã: GetCollider()->RenderScaled(dc, 1.0f);
+    // ë””ë²„ê·¸ ì½œë¼ì´ë” ê·¸ë¦¬ê¸° ì›í•˜ë©´: if (GetCollider()) GetCollider()->RenderScaled(dc, 1.0f);
 }
 
 void CKirby::OnCollisionEnter(CCollider* other) { (void)other; }
@@ -313,7 +259,6 @@ void CKirby::OnCollisionExit(CCollider* other) { (void)other; }
 
 void CKirby::UpdateColliderSize() {
     if (!GetCollider()) return;
-
     const bool isCrouch = (m_curLeaf == KIRBY_STATE::CROUCH);
     const Vec2 target = isCrouch ? m_vCrouchCollider : m_vNormalCollider;
 
@@ -331,7 +276,7 @@ void CKirby::AdjustPositionForColliderResize(const Vec2& oldS, const Vec2& newS)
     const float diffY = oldS.y - newS.y;
     if (fabsf(diffY) > 0.1f) {
         Vec2 p = GetPos();
-        p.y += diffY * 0.5f; // ¹Ù´Ú ±âÁØÀ¸·Î Áß½É º¸Á¤
+        p.y += diffY * 0.5f;
         SetPos(p);
     }
 }

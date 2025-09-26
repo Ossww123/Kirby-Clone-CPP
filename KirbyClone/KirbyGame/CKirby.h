@@ -1,28 +1,30 @@
-#pragma once
+ï»¿#pragma once
 #include <memory>
 #include <vector>
 #include <cstdint>
 #include "CObject.h"
 
-// Àü¹æ ¼±¾ğ
+// ì „ë°© ì„ ì–¸
 class CAnimator;
 class CRigidBody;
 class CCollider;
 class CPlayerInputManager;
+class CKirbyMovement;
+class CKirbyHealthSystem;
 
 // ===========================
-// KIRBY HFSM ³ëµå ID
+// KIRBY HFSM ë…¸ë“œ ID
 // ===========================
 enum class KIRBY_STATE : uint16_t {
     ROOT = 0,
 
-    // °øÅë ½´ÆÛ»óÅÂ
+    // ê³µí†µ ìŠˆí¼ìƒíƒœ
     GROUNDED,
     IDLE, WALK, RUN, CROUCH,
     AIRBORNE,
     JUMP, FALL,
 
-    // ÀÌÈÄ È®Àå Æ®¸®(Áö±İÀº ¹Ì±¸Çö)
+    // ì´í›„ í™•ì¥ íŠ¸ë¦¬(ì§€ê¸ˆì€ ë¯¸êµ¬í˜„)
     INHALE_TREE, INHALE, INHALE_KEEP, SWALLOW, EXHALE,
     MOUTHFUL_TREE, MOUTHFUL_IDLE, MOUTHFUL_WALK, MOUTHFUL_RUN, MOUTHFUL_JUMP, MOUTHFUL_FALL,
     COMBAT_TREE, ATTACK, ATTACK_HOLD,
@@ -33,17 +35,18 @@ enum class KIRBY_STATE : uint16_t {
 };
 
 // ===========================
-// HFSM ÄÁÅØ½ºÆ®
+// HFSM ì»¨í…ìŠ¤íŠ¸
 // ===========================
 struct KirbyStateCtx {
     class CKirby* self{ nullptr };
     CPlayerInputManager* input{ nullptr };
     CRigidBody* body{ nullptr };
     CAnimator* anim{ nullptr };
+    CKirbyMovement* move{ nullptr };
 };
 
 // ===========================
-// HFSM »óÅÂ º£ÀÌ½º
+// HFSM ìƒíƒœ ë² ì´ìŠ¤
 // ===========================
 class KirbyState {
 public:
@@ -57,7 +60,7 @@ public:
 
     virtual void OnEnter(KirbyStateCtx&) {}
     virtual void OnExit(KirbyStateCtx&) {}
-    // Update¿¡¼­ ´Ù¸¥ ¸®ÇÁ »óÅÂ·Î ÀüÈ¯À» ¿øÇÏ¸é outRequested¿¡ ¸ñÇ¥ leaf¸¦ ±â·Ï
+    // Updateì—ì„œ ë‹¤ë¥¸ ë¦¬í”„ ìƒíƒœë¡œ ì „í™˜ì„ ì›í•˜ë©´ outRequestedì— ëª©í‘œ leafë¥¼ ê¸°ë¡
     virtual void Update(KirbyStateCtx&, float dt, KIRBY_STATE& outRequested) { (void)dt; (void)outRequested; }
 
     KirbyState* AddChild(std::unique_ptr<KirbyState> ch) {
@@ -69,36 +72,48 @@ public:
 };
 
 // ===========================
-// CKirby º»Ã¼
+// CKirby ë³¸ì²´
 // ===========================
 class CKirby : public CObject {
 public:
     CKirby();
     ~CKirby() override;
 
-    // »ı¸íÁÖ±â
+    // ìƒëª…ì£¼ê¸°
     void Update() override;
     void Render(HDC dc) override;
 
-    // Ãæµ¹
+    // ì¶©ëŒ
     void OnCollisionEnter(CCollider* other) override;
     void OnCollision(CCollider* other) override;
     void OnCollisionExit(CCollider* other) override;
 
-    // ¹æÇâ
+    // ë°©í–¥
     bool IsFacingRight() const { return m_bFacingRight; }
     void SetFacingRight(bool r) { m_bFacingRight = r; }
 
-    // »óÅÂ Á¶È¸
+    // ìƒíƒœ ì¡°íšŒ
     KIRBY_STATE GetCurrentLeaf() const { return m_curLeaf; }
 
-    // ÀÔ·Â ¸Å´ÏÀú
+    // ì…ë ¥ ë§¤ë‹ˆì €
     CPlayerInputManager* GetInput() const { return m_input.get(); }
+    CKirbyMovement* GetMovement() const { return m_move.get(); }
+    CKirbyHealthSystem* GetHealth() const { return m_health.get(); }
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ·Îµù
+    // ì• ë‹ˆë©”ì´ì…˜ ë¡œë”©
     void LoadDefaultAnimations();
     void LoadAbilityAnimations(int /*abilityId*/);
 
+    void DoSlideKickRecoil() { if (m_move) m_move->SlideKickRecoil(); }
+
+    // Lives API
+    int  GetLives() const { return m_lives; }
+    void SetLives(int v) { m_lives = v; }
+    void AddLife(int v = 1) { m_lives += v; }
+    void DecLife(int v = 1) { m_lives -= v; }
+
+    // ë¦¬ìŠ¤í° ì‹œ ì´ˆê¸°í™”(HP í’€íšŒë³µ, ë¬´ì  í•´ì œ/ì´ˆê¸° ë¬´ì  ë“±)
+    void ResetForRespawn(bool briefInvincible = true);
 private:
     // HFSM
     void BuildHFSM();
@@ -108,15 +123,17 @@ private:
     static KirbyState* LCA(KirbyState* a, KirbyState* b);
     static KirbyState* FindNode(KirbyState* node, KIRBY_STATE id);
 
-    // Ãæµ¹Ã¼ À¯Æ¿
+    // ì¶©ëŒì²´ ìœ í‹¸
     void UpdateColliderSize();
     void AdjustPositionForColliderResize(const Vec2& oldScale, const Vec2& newScale);
 
 private:
-    // ÀÔ·Â
+    // ì…ë ¥
     std::unique_ptr<CPlayerInputManager> m_input;
+    std::unique_ptr<CKirbyMovement>     m_move;
+    std::unique_ptr<CKirbyHealthSystem> m_health;
 
-    // HFSM Æ®¸®
+    // HFSM íŠ¸ë¦¬
     std::unique_ptr<KirbyState> m_root;
     KirbyState* m_nodeROOT{ nullptr };
     KirbyState* m_nodeGROUNDED{ nullptr };
@@ -133,10 +150,12 @@ private:
 
     bool m_bFacingRight{ true };
 
-    // Ãæµ¹Ã¼ ±âº»/¿õÅ©¸®±â »çÀÌÁî
+    // ì¶©ëŒì²´ ê¸°ë³¸/ì›…í¬ë¦¬ê¸° ì‚¬ì´ì¦ˆ
     Vec2 m_vNormalCollider{ 56.f, 56.f };
     Vec2 m_vCrouchCollider{ 56.f, 28.f };
 
-    // »óÅÂ ¾÷µ¥ÀÌÆ® ÄÁÅØ½ºÆ®
+    // ìƒíƒœ ì—…ë°ì´íŠ¸ ì»¨í…ìŠ¤íŠ¸
     KirbyStateCtx m_ctx;
+
+    int  m_lives{ 2 };
 };

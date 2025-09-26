@@ -18,14 +18,11 @@ using std::make_pair;
 
 
 #include <unordered_map>
-using std::unordered_map;
 
 #include <algorithm>
-using std::max;
 
 #include <cwctype> 
 
-#include <limits>
 #include <functional>
 
 #include <cmath>

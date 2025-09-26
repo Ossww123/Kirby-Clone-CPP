@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define SINGLE(type) public:\
 						 static type* GetInst()\

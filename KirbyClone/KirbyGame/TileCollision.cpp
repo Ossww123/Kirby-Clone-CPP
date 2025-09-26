@@ -1,4 +1,4 @@
-#include "gamePCH.h"
+ï»¿#include "gamePCH.h"
 #include "TileCollision.h"
 #include "CObject.h"
 #include "CTile.h"
@@ -6,14 +6,14 @@
 #include "CRigidBody.h"
 
 static inline bool IsTileSolid(const CObject& tileObj) {
-    // ±×·ìÀ¸·Î ±¸ºĞ (±ÇÀå)
+    // ê·¸ë£¹ìœ¼ë¡œ êµ¬ë¶„ (ê¶Œì¥)
     return tileObj.GetGroup() == GROUP_TYPE::TILE;
-    // ÇÊ¿äÇÏ¸é OBJECT_TYPE·Î ¼¼ºÎ Å¸ÀÔ ºĞ±â Ãß°¡
+    // í•„ìš”í•˜ë©´ OBJECT_TYPEë¡œ ì„¸ë¶€ íƒ€ì… ë¶„ê¸° ì¶”ê°€
 }
 
 static inline TileKind GetTileKind(const CObject& tileObj) {
-    // ÇÁ·ÎÁ§Æ® ±ÔÄ¢¿¡ ¸Â°Ô È®Àå
-    // ¿¹: Æ¯Á¤ OBJECT_TYPE ¹üÀ§´Â OneWay
+    // í”„ë¡œì íŠ¸ ê·œì¹™ì— ë§ê²Œ í™•ì¥
+    // ì˜ˆ: íŠ¹ì • OBJECT_TYPE ë²”ìœ„ëŠ” OneWay
     // if (tileObj.GetType() == OBJECT_TYPE::TILE_ONEWAY) return TileKind::OneWay;
     return TileKind::Solid;
 }
@@ -35,7 +35,7 @@ bool TileCollision::ResolveAgainstTile(CObject& actor, CObject& tileObj,
     Vec2 tPos = ColliderPos(tileObj);
     Vec2 tSz = ColliderSize(tileObj);
 
-    // ¹İÆø/¹İ³ôÀÌ
+    // ë°˜í­/ë°˜ë†’ì´
     const float aHalfX = aSz.x * 0.5f;
     const float aHalfY = aSz.y * 0.5f;
     const float tHalfX = tSz.x * 0.5f;
@@ -47,46 +47,46 @@ bool TileCollision::ResolveAgainstTile(CObject& actor, CObject& tileObj,
     const float overlapY = (aHalfY + tHalfY) - fabsf(dy);
 
     if (overlapX <= 0.f || overlapY <= 0.f)
-        return false; // °ãÄ¡Áö ¾ÊÀ½
+        return false; // ê²¹ì¹˜ì§€ ì•ŠìŒ
 
-    // ¿ø¿şÀÌ: À§¿¡¼­ ³»·Á¿Ã ¶§(velocity.y <= threshold)¸¸ YÃà ¾ç¼ö ºĞ¸® Çã¿ë
+    // ì›ì›¨ì´: ìœ„ì—ì„œ ë‚´ë ¤ì˜¬ ë•Œ(velocity.y <= threshold)ë§Œ Yì¶• ì–‘ìˆ˜ ë¶„ë¦¬ í—ˆìš©
     if (kind == TileKind::OneWay) {
         CRigidBody* rb = actor.GetRigidBody();
         const float vy = rb ? rb->GetVelocity().y : 0.f;
         const bool comingDown = (vy <= opts.oneWayVelY);
-        const bool actorAbove = (aPos.y < tPos.y); // Å¸ÀÏ À§¿¡ À§Ä¡
+        const bool actorAbove = (aPos.y < tPos.y); // íƒ€ì¼ ìœ„ì— ìœ„ì¹˜
         if (!(opts.enableOneWay && comingDown && actorAbove)) {
-            return false; // ¿ø¿şÀÌ Á¶°Ç ºÒÃæÁ· ¡æ Ãæµ¹ ¹«½Ã
+            return false; // ì›ì›¨ì´ ì¡°ê±´ ë¶ˆì¶©ì¡± â†’ ì¶©ëŒ ë¬´ì‹œ
         }
     }
 
-    // ´õ ÀÛÀº ÃàÀ¸·Î ºĞ¸®
+    // ë” ì‘ì€ ì¶•ìœ¼ë¡œ ë¶„ë¦¬
     Vec2 sep{ 0.f, 0.f };
     Vec2 n{ 0.f, 0.f };
     TileContactInfo info;
 
     if (overlapX < overlapY) {
-        // ¼öÆò ºĞ¸®
-        if (dx < 0) { sep.x = -overlapX - opts.skin; n.x = -1.f; } // Å¸ÀÏÀÌ ¿À¸¥ÂÊ
-        else { sep.x = overlapX + opts.skin; n.x = 1.f; } // Å¸ÀÏÀÌ ¿ŞÂÊ
+        // ìˆ˜í‰ ë¶„ë¦¬
+        if (dx < 0) { sep.x = -overlapX - opts.skin; n.x = -1.f; } // íƒ€ì¼ì´ ì˜¤ë¥¸ìª½
+        else { sep.x = overlapX + opts.skin; n.x = 1.f; } // íƒ€ì¼ì´ ì™¼ìª½
         info.wall = true;
     }
     else {
-        // ¼öÁ÷ ºĞ¸®
+        // ìˆ˜ì§ ë¶„ë¦¬
         if (dy < 0) { sep.y = -overlapY - opts.skin; n.y = -1.f; info.ceiling = true; }
         else { sep.y = overlapY + opts.skin; n.y = 1.f; info.ground = true; }
     }
 
-    // À§Ä¡ º¸Á¤ Àû¿ë
+    // ìœ„ì¹˜ ë³´ì • ì ìš©
     actor.SetPos(Vec2{ aPos.x + sep.x, aPos.y + sep.y });
 
-    // ¼Óµµ º¸Á¤ + ground ÇÃ·¡±×
+    // ì†ë„ ë³´ì • + ground í”Œë˜ê·¸
     if (CRigidBody* rb = actor.GetRigidBody()) {
         Vec2 v = rb->GetVelocity();
         if (info.wall)    v.x = 0.f;
         if (info.ground || info.ceiling) v.y = 0.f;
         if (info.ground)  rb->SetGround(true);
-        if (info.ceiling) rb->SetGround(false); // ÃµÀå ÂïÀ¸¸é Áö¸éX
+        if (info.ceiling) rb->SetGround(false); // ì²œì¥ ì°ìœ¼ë©´ ì§€ë©´X
         rb->SetVelocity(v);
     }
 
