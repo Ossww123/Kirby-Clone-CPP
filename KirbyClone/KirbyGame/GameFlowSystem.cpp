@@ -1,7 +1,6 @@
-#include "gamePCH.h"
+ï»¿#include "gamePCH.h"
 #include "GameFlowSystem.h"
 #include "CEventMgr.h"
-#include "EventDef.h"
 
 #include "CSceneMgr.h"
 #include "CScene.h"
@@ -33,18 +32,18 @@ void GameFlowSystem::OnGameOver(const tEvent& e)
     if (kirby) {
         kirby->DecLife(1);
 
-        // ¶óÀÌÇÁ°¡ ³²¾ÆÀÖÀ¸¸é ÇöÀç ½ºÅ×ÀÌÁö ¸®½ºÆù
+        // ë¼ì´í”„ê°€ ë‚¨ì•„ìžˆìœ¼ë©´ í˜„ìž¬ ìŠ¤í…Œì´ì§€ ë¦¬ìŠ¤í°
         if (kirby->GetLives() >= 0) {
-            // ¸®½ºÆù ½ÃÁ¡¿¡ HP/¹«Àû ÃÊ±âÈ­¸¦ ÇÏµµ·Ï ¹Ì¸® ÁØºñ
+            // ë¦¬ìŠ¤í° ì‹œì ì— HP/ë¬´ì  ì´ˆê¸°í™”ë¥¼ í•˜ë„ë¡ ë¯¸ë¦¬ ì¤€ë¹„
             kirby->ResetForRespawn(/*briefInvincible=*/true);
 
-            // ¸®½ºÆù ½ºÆù ÁÂÇ¥ ÁöÁ¤(°£´Ü ±âº»°ª; ÇÊ¿äÇÏ¸é ¾À/Ã¼Å©Æ÷ÀÎÆ®¿¡¼­ ¹Þ¾Æ¿Àµµ·Ï È®Àå)
+            // ë¦¬ìŠ¤í° ìŠ¤í° ì¢Œí‘œ ì§€ì •(ê°„ë‹¨ ê¸°ë³¸ê°’; í•„ìš”í•˜ë©´ ì”¬/ì²´í¬í¬ì¸íŠ¸ì—ì„œ ë°›ì•„ì˜¤ë„ë¡ í™•ìž¥)
             SceneChangeSystem::SetNextSpawnOverride(Vec2(256.f, 384.f));
 
             CFadeEffect::GetInst()->StartFadeOut(FADE_COLOR::WHITE, 0.5f, (uintptr_t)2); // code 2: respawn
         }
         else {
-            // ¿ÏÀü °ÔÀÓ¿À¹ö ¡æ Å¸ÀÌÆ²
+            // ì™„ì „ ê²Œìž„ì˜¤ë²„ â†’ íƒ€ì´í‹€
             CFadeEffect::GetInst()->StartFadeOut(FADE_COLOR::WHITE, 1.0f, (uintptr_t)1); // code 1: title
         }
     }
@@ -54,26 +53,26 @@ void GameFlowSystem::OnFadeComplete(const tEvent& e)
 {
     const uintptr_t code = e.wParam;
     if (code == 1) {
-        // Å¸ÀÌÆ²·Î
+        // íƒ€ì´í‹€ë¡œ
         CEventMgr::GetInst()->AddEvent({ EVENT_TYPE::SCENE_CHANGE, 0, (uintptr_t)SCENE_TYPE::START });
         CFadeEffect::GetInst()->StartFadeIn(FADE_COLOR::WHITE, 0.5f, 0);
         if (auto* sc = CSceneMgr::GetInst()->GetCurScene()) sc->SetPaused(false);
     }
     else if (code == 2) {
-        // ÇöÀç ½ºÅ×ÀÌÁö ¸®½ºÆù(°°Àº Å¸ÀÔÀ¸·Î ÀçÀüÈ¯)
+        // í˜„ìž¬ ìŠ¤í…Œì´ì§€ ë¦¬ìŠ¤í°(ê°™ì€ íƒ€ìž…ìœ¼ë¡œ ìž¬ì „í™˜)
         const auto cur = CSceneMgr::GetInst()->GetCurSceneType();
         CEventMgr::GetInst()->AddEvent({ EVENT_TYPE::SCENE_CHANGE, 0, (uintptr_t)cur });
         CFadeEffect::GetInst()->StartFadeIn(FADE_COLOR::WHITE, 0.5f, 0);
         if (auto* sc = CSceneMgr::GetInst()->GetCurScene()) sc->SetPaused(false);
     }
     else if (code == 3) {
-        // ¹® ÀÌµ¿Àº DoorSystem/SceneChangeSystem¿¡¼­ À§Ä¡ ÁöÁ¤ÀÌ Ã³¸®µÊ
-        // ¿©±â¼­´Â ¾À¸¸ ¹Ù²ãÁÖ°í ÆäÀÌµå ÀÎ
-        // (¹® ÀÌº¥Æ® Ã³¸®ºÎ¿¡¼­ ÀÌ¹Ì SCENE_TYPEÀ» Á¤ÇØ¼­ º¸³¿)
-        // ¡æ Boss/¹® ½Ã½ºÅÛ Èå¸§´ë·Î µÎ±â
+        // ë¬¸ ì´ë™ì€ DoorSystem/SceneChangeSystemì—ì„œ ìœ„ì¹˜ ì§€ì •ì´ ì²˜ë¦¬ë¨
+        // ì—¬ê¸°ì„œëŠ” ì”¬ë§Œ ë°”ê¿”ì£¼ê³  íŽ˜ì´ë“œ ì¸
+        // (ë¬¸ ì´ë²¤íŠ¸ ì²˜ë¦¬ë¶€ì—ì„œ ì´ë¯¸ SCENE_TYPEì„ ì •í•´ì„œ ë³´ëƒ„)
+        // â†’ Boss/ë¬¸ ì‹œìŠ¤í…œ íë¦„ëŒ€ë¡œ ë‘ê¸°
     }
     else if (code == 4) {
-        // ½Â¸® ÈÄ Å¸ÀÌÆ²
+        // ìŠ¹ë¦¬ í›„ íƒ€ì´í‹€
         CEventMgr::GetInst()->AddEvent({ EVENT_TYPE::SCENE_CHANGE, 0, (uintptr_t)SCENE_TYPE::START });
         CFadeEffect::GetInst()->StartFadeIn(FADE_COLOR::WHITE, 0.5f, 0);
     }

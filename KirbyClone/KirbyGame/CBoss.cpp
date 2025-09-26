@@ -69,6 +69,16 @@ void CBoss::Update()
     m_lastState = GetCurrentState();
 }
 
+void CBoss::StartBossEvent() {
+    // TODO: 보스전 시작 연출이 필요해지면 구현
+}
+
+void CBoss::TakeBossDamage(int dmg) {
+    dmg = (std::max)(0, dmg);
+    m_hp = (std::max)(0, m_hp - dmg);
+    // TODO: 피격 무적/히트스톱/사운드/패턴 분기 등 필요 시 나중에 확장
+}
+
 // ===== AI/공격 스케줄링 ==============================================
 
 void CBoss::UpdateBossAI(float dt)

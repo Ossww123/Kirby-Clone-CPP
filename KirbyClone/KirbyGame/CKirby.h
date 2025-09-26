@@ -99,18 +99,20 @@ public:
     CPlayerInputManager* GetInput() const { return m_input.get(); }
     CKirbyMovement* GetMovement() const { return m_move.get(); }
     CKirbyHealthSystem* GetHealth() const { return m_health.get(); }
+    CKirbyHealthSystem* GetHealthSystem() const { return m_health.get(); }
 
     // 애니메이션 로딩
     void LoadDefaultAnimations();
     void LoadAbilityAnimations(int /*abilityId*/);
 
-    void DoSlideKickRecoil() { if (m_move) m_move->SlideKickRecoil(); }
+    void DoSlideKickRecoil();
 
     // Lives API
     int  GetLives() const { return m_lives; }
     void SetLives(int v) { m_lives = v; }
     void AddLife(int v = 1) { m_lives += v; }
     void DecLife(int v = 1) { m_lives -= v; }
+
 
     // 리스폰 시 초기화(HP 풀회복, 무적 해제/초기 무적 등)
     void ResetForRespawn(bool briefInvincible = true);

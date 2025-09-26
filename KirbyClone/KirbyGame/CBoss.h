@@ -23,6 +23,12 @@ public:
 
     void Update() override;
 
+    float GetHPRatio() const { return m_maxHp > 0 ? (float)m_hp / (float)m_maxHp : 0.f; }
+    bool  IsDefeated() const { return m_hp <= 0; }
+
+    void StartBossEvent();         // 연출/카메라 락 등은 나중에 채움
+    void TakeBossDamage(int dmg);  // DamageSystem에서 호출
+
 protected:
     // CMonster 필수 구현
     void Move() override;                      // 기본 이동(공격 중 정지)
@@ -48,6 +54,9 @@ protected:
         const std::wstring& hurt = L"DAMAGE");
 
     const BossConfig& GetBossConfig() const { return m_cfg; }
+
+    int m_hp = 64;   // 임시 기본값
+    int m_maxHp = 64;
 
 private:
     void UpdateBossAI(float dt);     // 쿨다운/공격 시작 판단

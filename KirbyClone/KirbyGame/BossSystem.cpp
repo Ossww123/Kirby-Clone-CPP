@@ -1,7 +1,6 @@
-#include "gamePCH.h"
+ï»¿#include "gamePCH.h"
 #include "BossSystem.h"
 #include "CEventMgr.h"
-#include "EventDef.h"
 
 #include "CSceneMgr.h"
 #include "CScene.h"
@@ -50,7 +49,7 @@ void BossSystem::OnBossBattleStart(const tEvent& e) {
 
     CCamera::GetInst()->StartBossMode(camLock);
 
-    // HUD: º¸½º HP fill ¾Ö´Ï ½ÃÀÛ
+    // HUD: ë³´ìŠ¤ HP fill ì• ë‹ˆ ì‹œì‘
     const auto& uiObjs = sc->GetGroupObject(GROUP_TYPE::UI);
     for (auto* o : uiObjs) if (auto* hud = dynamic_cast<CUIGameHUD*>(o)) { hud->StartBossHPFillAnimation(); break; }
 
@@ -61,6 +60,6 @@ void BossSystem::OnBossBattleStart(const tEvent& e) {
 void BossSystem::OnStageClear(const tEvent& e) {
     // e.lParam: CBoss*
     (void)e;
-    // ¿©±â¼­´Â ¿¬Ãâ Æ®¸®°Å/»ç¿îµå/Ä«¸Ş¶ó µî °øÅë¸¸ Ã³¸®ÇÏ°í,
-    // ¾À ÀüÈ¯Àº GameFlowSystem È¤Àº ´Ù¸¥ ÀÌº¥Æ®·Î ÀÌ¾î°¡µµ µÈ´Ù.
+    // ì—¬ê¸°ì„œëŠ” ì—°ì¶œ íŠ¸ë¦¬ê±°/ì‚¬ìš´ë“œ/ì¹´ë©”ë¼ ë“± ê³µí†µë§Œ ì²˜ë¦¬í•˜ê³ ,
+    // ì”¬ ì „í™˜ì€ GameFlowSystem í˜¹ì€ ë‹¤ë¥¸ ì´ë²¤íŠ¸ë¡œ ì´ì–´ê°€ë„ ëœë‹¤.
 }

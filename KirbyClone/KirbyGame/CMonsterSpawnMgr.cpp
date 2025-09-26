@@ -1,8 +1,6 @@
 #include "gamePCH.h"
 #include "CMonsterSpawnMgr.h"
-#include "CPlayer.h"
 #include "CMonster.h"
-#include "CObjectFactory.h"
 #include "CSceneMgr.h"
 #include "CScene.h"
 #include "CTimeMgr.h"
@@ -117,7 +115,7 @@ void CMonsterSpawnMgr::Update()
                 iActiveCount--;
             }
             // 몬스터가 죽었는지 확인
-            else if (spawnData.pActiveMonster && spawnData.pActiveMonster->!IsAlive())
+            else if (spawnData.pActiveMonster && !spawnData.pActiveMonster->IsAlive())
             {
                 // 죽은 몬스터는 비활성화 및 죽은 상태로 마킹
                 spawnData.bIsActive = false;
@@ -134,7 +132,7 @@ int CMonsterSpawnMgr::GetActiveMonsterCount() const
     int iCount = 0;
     for (const auto& spawnData : m_vecSpawnData)
     {
-        if (spawnData.bIsActive && spawnData.pActiveMonster && !spawnData.pActiveMonster->!IsAlive())
+        if (spawnData.bIsActive && spawnData.pActiveMonster && spawnData.pActiveMonster->IsAlive())
         {
             iCount++;
         }
@@ -192,55 +190,59 @@ void CMonsterSpawnMgr::DeactivateMonster(tMonsterSpawnData& _spawnData)
 
 CMonster* CMonsterSpawnMgr::CreateMonsterInstance(OBJECT_TYPE _eType, Vec2 _vPos, float _fDirection)
 {
-    // CObjectFactory를 통해 몬스터 생성
-    CObject* pObj = CObjectFactory::CreateObject(_eType, _vPos);
-    CMonster* pMonster = dynamic_cast<CMonster*>(pObj);
-    
-    if (pMonster)
-    {
-        // 방향 설정
-        pMonster->SetDirection((int)_fDirection);
-        
-        // 리지드바디 강제 재설정 (스테이지 씬에서 문제 해결용)
-        if (pMonster->GetRigidBody())
-        {
-            pMonster->GetRigidBody()->SetUseGravity(true);
-            pMonster->GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
-            pMonster->GetRigidBody()->SetGround(false);
-        }
-        
-        // 몬스터 타입별 초기 상태 설정
-        MONSTER_STATE eInitialState = MONSTER_STATE::IDLE;
-        switch (_eType)
-        {
-        case OBJECT_TYPE::MONSTER_BRONTO_BURT:
-            eInitialState = MONSTER_STATE::FLY;
-            break;
-        case OBJECT_TYPE::MONSTER_WADDLE_DEE:
-        case OBJECT_TYPE::MONSTER_WADDLE_DOO:
-        case OBJECT_TYPE::MONSTER_HOT_HEAD:
-            eInitialState = MONSTER_STATE::WALK;
-            break;
-        case OBJECT_TYPE::MONSTER_SPARKY:
-        case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
-        default:
-            eInitialState = MONSTER_STATE::IDLE;
-            break;
-        }
-        pMonster->ChangeState(eInitialState);
-    }
-    
-    return pMonster;
+    return nullptr;
+
+    //// CObjectFactory를 통해 몬스터 생성
+    //CObject* pObj = CObjectFactory::CreateObject(_eType, _vPos);
+    //CMonster* pMonster = dynamic_cast<CMonster*>(pObj);
+    //
+    //if (pMonster)
+    //{
+    //    // 방향 설정
+    //    pMonster->SetDirection((int)_fDirection);
+    //    
+    //    // 리지드바디 강제 재설정 (스테이지 씬에서 문제 해결용)
+    //    if (pMonster->GetRigidBody())
+    //    {
+    //        pMonster->GetRigidBody()->SetUseGravity(true);
+    //        pMonster->GetRigidBody()->SetVelocity(Vec2(0.f, 0.f));
+    //        pMonster->GetRigidBody()->SetGround(false);
+    //    }
+    //    
+    //    // 몬스터 타입별 초기 상태 설정
+    //    MONSTER_STATE eInitialState = MONSTER_STATE::IDLE;
+    //    switch (_eType)
+    //    {
+    //    case OBJECT_TYPE::MONSTER_BRONTO_BURT:
+    //        eInitialState = MONSTER_STATE::FLY;
+    //        break;
+    //    case OBJECT_TYPE::MONSTER_WADDLE_DEE:
+    //    case OBJECT_TYPE::MONSTER_WADDLE_DOO:
+    //    case OBJECT_TYPE::MONSTER_HOT_HEAD:
+    //        eInitialState = MONSTER_STATE::WALK;
+    //        break;
+    //    case OBJECT_TYPE::MONSTER_SPARKY:
+    //    case OBJECT_TYPE::MONSTER_WHISPY_WOODS:
+    //    default:
+    //        eInitialState = MONSTER_STATE::IDLE;
+    //        break;
+    //    }
+    //    pMonster->ChangeState(eInitialState);
+    //}
+    //
+    //return pMonster;
 }
 
 float CMonsterSpawnMgr::GetDistanceToPlayer(Vec2 _vPos)
 {
-    if (!m_pPlayer)
-        return 9999.f;  // 플레이어가 없으면 매우 큰 거리 반환
+    return 0.f;
 
-    Vec2 vPlayerPos = m_pPlayer->GetPos();
-    
-    // X축 거리만 고려 (Y축은 무시)
-    float fDistanceX = abs(_vPos.x - vPlayerPos.x);
-    return fDistanceX;
+    //if (!m_pPlayer)
+    //    return 9999.f;  // 플레이어가 없으면 매우 큰 거리 반환
+
+    //Vec2 vPlayerPos = m_pPlayer->GetPos();
+    //
+    //// X축 거리만 고려 (Y축은 무시)
+    //float fDistanceX = abs(_vPos.x - vPlayerPos.x);
+    //return fDistanceX;
 }

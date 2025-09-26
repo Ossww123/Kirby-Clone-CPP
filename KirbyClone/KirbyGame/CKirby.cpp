@@ -137,6 +137,10 @@ void CKirby::LoadDefaultAnimations() {
 
 void CKirby::LoadAbilityAnimations(int) {}
 
+void CKirby::DoSlideKickRecoil() {
+    if (m_move) m_move->SlideKickRecoil();
+}
+
 KirbyState* CKirby::FindNode(KirbyState* node, KIRBY_STATE id) {
     if (!node) return nullptr;
     if (node->id == id) return node;

@@ -132,90 +132,90 @@ void CProjectile::Render(HDC _dc)
 
 void CProjectile::OnCollisionEnter(CCollider* _pOther)
 {
-    CObject* pOtherObj = _pOther->GetOwner();
-    
-    // 다른 오브젝트의 그룹 타입은 씬 시스템에서 관리되므로
-    // 오브젝트 타입으로 판단
-    OBJECT_TYPE eOtherType = pOtherObj->GetType();
-    
+    //CObject* pOtherObj = _pOther->GetOwner();
+    //
+    //// 다른 오브젝트의 그룹 타입은 씬 시스템에서 관리되므로
+    //// 오브젝트 타입으로 판단
+    //OBJECT_TYPE eOtherType = pOtherObj->GetType();
+    //
 
-    // 같은 소유자와는 충돌하지 않음 (플레이어 투사체는 플레이어와 충돌 안함)
-    if ((m_eOwnerType == GROUP_TYPE::PLAYER && eOtherType == OBJECT_TYPE::PLAYER) ||
-        (m_eOwnerType == GROUP_TYPE::MONSTER && 
-         (eOtherType >= OBJECT_TYPE::MONSTER_WADDLE_DEE && eOtherType <= OBJECT_TYPE::MONSTER_WHISPY_WOODS)))
-        return;
+    //// 같은 소유자와는 충돌하지 않음 (플레이어 투사체는 플레이어와 충돌 안함)
+    //if ((m_eOwnerType == GROUP_TYPE::PLAYER && eOtherType == OBJECT_TYPE::PLAYER) ||
+    //    (m_eOwnerType == GROUP_TYPE::MONSTER && 
+    //     (eOtherType >= OBJECT_TYPE::MONSTER_WADDLE_DEE && eOtherType <= OBJECT_TYPE::MONSTER_WHISPY_WOODS)))
+    //    return;
 
-    // 타일과 충돌 시 투사체 소멸
-    if (eOtherType >= OBJECT_TYPE::TILE_GROUND && eOtherType <= OBJECT_TYPE::TILE_INVISIBLE)
-    {
-        // 투사체 히트 이벤트 발생
-        tEvent event = {};
-        event.eType = EVENT_TYPE::PROJECTILE_HIT;
-        event.wParam = (DWORD_PTR)this;
-        event.lParam = (DWORD_PTR)pOtherObj;
-        CEventMgr::GetInst()->AddEvent(event);
+    //// 타일과 충돌 시 투사체 소멸
+    //if (eOtherType >= OBJECT_TYPE::TILE_GROUND && eOtherType <= OBJECT_TYPE::TILE_INVISIBLE)
+    //{
+    //    // 투사체 히트 이벤트 발생
+    //    tEvent event = {};
+    //    event.eType = EVENT_TYPE::PROJECTILE_HIT;
+    //    event.wParam = (DWORD_PTR)this;
+    //    event.lParam = (DWORD_PTR)pOtherObj;
+    //    CEventMgr::GetInst()->AddEvent(event);
 
-        // 투사체 삭제
-        SetDead();
-        return;
-    }
+    //    // 투사체 삭제
+    //    SetDead();
+    //    return;
+    //}
 
-    // 몬스터와 충돌 시 (플레이어 투사체인 경우)
-    if (m_eOwnerType == GROUP_TYPE::PLAYER && 
-        (eOtherType >= OBJECT_TYPE::MONSTER_WADDLE_DEE && eOtherType <= OBJECT_TYPE::MONSTER_WHISPY_WOODS))
-    {
-        
-        // 몬스터에게 데미지 이벤트 발생 (투사체 위치 정보도 함께 전달)
-        tEvent event = {};
-        event.eType = EVENT_TYPE::MONSTER_DAMAGE;
-        event.wParam = (DWORD_PTR)pOtherObj;
-        event.lParam = (DWORD_PTR)this;  // 투사체 객체 전달 (위치 정보 포함)
-        CEventMgr::GetInst()->AddEvent(event);
+    //// 몬스터와 충돌 시 (플레이어 투사체인 경우)
+    //if (m_eOwnerType == GROUP_TYPE::PLAYER && 
+    //    (eOtherType >= OBJECT_TYPE::MONSTER_WADDLE_DEE && eOtherType <= OBJECT_TYPE::MONSTER_WHISPY_WOODS))
+    //{
+    //    
+    //    // 몬스터에게 데미지 이벤트 발생 (투사체 위치 정보도 함께 전달)
+    //    tEvent event = {};
+    //    event.eType = EVENT_TYPE::MONSTER_DAMAGE;
+    //    event.wParam = (DWORD_PTR)pOtherObj;
+    //    event.lParam = (DWORD_PTR)this;  // 투사체 객체 전달 (위치 정보 포함)
+    //    CEventMgr::GetInst()->AddEvent(event);
 
-        // 슬라이딩킥 투사체인 경우 플레이어 반동 이벤트 추가 생성
-        if (m_eProjectileType == PROJECTILE_TYPE::KIRBY_SLIDE_KICK)
-        {
-            tEvent recoilEvent = {};
-            recoilEvent.eType = EVENT_TYPE::PLAYER_SLIDE_KICK_RECOIL;
-            recoilEvent.wParam = (DWORD_PTR)this;  // 투사체 정보 (방향 등)
-            recoilEvent.lParam = (DWORD_PTR)pOtherObj;  // 충돌한 몬스터
-            CEventMgr::GetInst()->AddEvent(recoilEvent);
-        }
+    //    // 슬라이딩킥 투사체인 경우 플레이어 반동 이벤트 추가 생성
+    //    if (m_eProjectileType == PROJECTILE_TYPE::KIRBY_SLIDE_KICK)
+    //    {
+    //        tEvent recoilEvent = {};
+    //        recoilEvent.eType = EVENT_TYPE::PLAYER_SLIDE_KICK_RECOIL;
+    //        recoilEvent.wParam = (DWORD_PTR)this;  // 투사체 정보 (방향 등)
+    //        recoilEvent.lParam = (DWORD_PTR)pOtherObj;  // 충돌한 몬스터
+    //        CEventMgr::GetInst()->AddEvent(recoilEvent);
+    //    }
 
-        // 투사체 히트 이벤트 발생
-        tEvent hitEvent = {};
-        hitEvent.eType = EVENT_TYPE::PROJECTILE_HIT;
-        hitEvent.wParam = (DWORD_PTR)this;
-        hitEvent.lParam = (DWORD_PTR)pOtherObj;
-        CEventMgr::GetInst()->AddEvent(hitEvent);
+    //    // 투사체 히트 이벤트 발생
+    //    tEvent hitEvent = {};
+    //    hitEvent.eType = EVENT_TYPE::PROJECTILE_HIT;
+    //    hitEvent.wParam = (DWORD_PTR)this;
+    //    hitEvent.lParam = (DWORD_PTR)pOtherObj;
+    //    CEventMgr::GetInst()->AddEvent(hitEvent);
 
-        // 투사체 삭제
-        SetDead();
-        return;
-    }
+    //    // 투사체 삭제
+    //    SetDead();
+    //    return;
+    //}
 
-    // 플레이어와 충돌 시 (몬스터 투사체인 경우)
-    if (m_eOwnerType == GROUP_TYPE::MONSTER && eOtherType == OBJECT_TYPE::PLAYER)
-    {
-        // 플레이어에게 데미지 이벤트 발생
-        Vec2 knockbackDir = m_vDirection; // 투사체 방향으로 넉백
-        tEvent event = {};
-        event.eType = EVENT_TYPE::PLAYER_DAMAGE;
-        event.wParam = (DWORD_PTR)pOtherObj;
-        event.lParam = (DWORD_PTR)new Vec2(knockbackDir); // 동적 할당으로 변경
-        CEventMgr::GetInst()->AddEvent(event);
+    //// 플레이어와 충돌 시 (몬스터 투사체인 경우)
+    //if (m_eOwnerType == GROUP_TYPE::MONSTER && eOtherType == OBJECT_TYPE::PLAYER)
+    //{
+    //    // 플레이어에게 데미지 이벤트 발생
+    //    Vec2 knockbackDir = m_vDirection; // 투사체 방향으로 넉백
+    //    tEvent event = {};
+    //    event.eType = EVENT_TYPE::PLAYER_DAMAGE;
+    //    event.wParam = (DWORD_PTR)pOtherObj;
+    //    event.lParam = (DWORD_PTR)new Vec2(knockbackDir); // 동적 할당으로 변경
+    //    CEventMgr::GetInst()->AddEvent(event);
 
-        // 투사체 히트 이벤트 발생
-        tEvent hitEvent = {};
-        hitEvent.eType = EVENT_TYPE::PROJECTILE_HIT;
-        hitEvent.wParam = (DWORD_PTR)this;
-        hitEvent.lParam = (DWORD_PTR)pOtherObj;
-        CEventMgr::GetInst()->AddEvent(hitEvent);
+    //    // 투사체 히트 이벤트 발생
+    //    tEvent hitEvent = {};
+    //    hitEvent.eType = EVENT_TYPE::PROJECTILE_HIT;
+    //    hitEvent.wParam = (DWORD_PTR)this;
+    //    hitEvent.lParam = (DWORD_PTR)pOtherObj;
+    //    CEventMgr::GetInst()->AddEvent(hitEvent);
 
-        // 투사체 삭제
-        SetDead();
-        return;
-    }
+    //    // 투사체 삭제
+    //    SetDead();
+    //    return;
+    //}
 }
 
 void CProjectile::UpdateMovement()

@@ -17,6 +17,7 @@
 #include "DoorSystem.h"
 #include "DamageSystem.h"
 #include "GameFlowSystem.h"
+#include "CollisionEventSystem.h"
 #include "CFadeEffect.h"
 
 
@@ -32,6 +33,7 @@ CCore::CCore ( )
 CCore::~CCore ( )
 {
 	// 시스템 구독 해제
+	CollisionEventSystem::Shutdown();
 	GameFlowSystem::Shutdown();
 	DamageSystem::Shutdown();
 	DoorSystem::Shutdown();
@@ -82,6 +84,7 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	CEventMgr::GetInst()->init();             // (슬림: 큐 초기화만)
 
 	// ── 이벤트 수행 시스템(구독 등록) ───────────
+	CollisionEventSystem::Init();
 	SceneChangeSystem::Init();
 	BossSystem::Init();
 	DoorSystem::Init();

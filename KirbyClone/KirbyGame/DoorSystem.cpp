@@ -1,7 +1,6 @@
-#include "gamePCH.h"
+ï»¿#include "gamePCH.h"
 #include "DoorSystem.h"
 #include "CEventMgr.h"
-#include "EventDef.h"
 #include "CDoor.h"
 #include "CFadeEffect.h"
 
@@ -31,6 +30,6 @@ void DoorSystem::OnDoorEnter(const tEvent& e) {
     if (!door) return;
 
     SetNextDoorTarget(door->GetTargetScene(), door->GetTargetPosition());
-    // ÆäÀÌµå ¾Æ¿ô ¡æ ÀÌÈÄ GameFlowSystemÀÇ FADE_COMPLETE(3)¿¡¼­ ¾À ÀüÈ¯
+    // íŽ˜ì´ë“œ ì•„ì›ƒ â†’ ì´í›„ GameFlowSystemì˜ FADE_COMPLETE(3)ì—ì„œ ì”¬ ì „í™˜
     CFadeEffect::GetInst()->StartFadeOut(FADE_COLOR::WHITE, 0.5f, (uintptr_t)3);
 }

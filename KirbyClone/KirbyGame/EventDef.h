@@ -22,6 +22,10 @@ enum class EVENT_TYPE : uint32_t {
     STAGE_CLEAR,               // w: 0, l: CBoss*
     DOOR_ENTER,                // w: CDoor*, l: SCENE_TYPE
 
+    //
+    COLLISION_ENTER,
+    COLLISION_EXIT,
+
     END
 };
 

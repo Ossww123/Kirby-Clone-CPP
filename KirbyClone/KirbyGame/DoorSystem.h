@@ -1,11 +1,13 @@
-#pragma once
+ï»¿#pragma once
+
+#include "EventDef.h"
 
 class DoorSystem {
 public:
     static void Init();
     static void Shutdown();
 
-    // ´ÙÀ½ ¾À ÀüÈ¯¿¡ »ç¿ëÇÒ ¸ñÇ¥ Á¤º¸(FADE_COMPLETE(3)¿¡¼­ Á¶È¸)
+    // ë‹¤ìŒ ì”¬ ì „í™˜ì— ì‚¬ìš©í•  ëª©í‘œ ì •ë³´(FADE_COMPLETE(3)ì—ì„œ ì¡°íšŒ)
     static void SetNextDoorTarget(SCENE_TYPE scene, const Vec2& pos);
     static bool GetAndClearNextDoorTarget(SCENE_TYPE& outScene, Vec2& outPos);
 

@@ -17,30 +17,6 @@
     <Filter Include="Engine\04. Object">
       <UniqueIdentifier>{d74811f6-8381-44f2-b4bd-40e8ae7876a3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\04. Object\Player">
-      <UniqueIdentifier>{80765662-10c6-41c0-a681-b8c7203eef53}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Player\PlayerStateMachine">
-      <UniqueIdentifier>{1361a613-2af2-4ecb-a4c7-8a13a71e1c06}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Player\PlayerInhaleSystem">
-      <UniqueIdentifier>{daed4c8d-9388-449f-a8a6-08402e016498}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Player\PlayerMovement">
-      <UniqueIdentifier>{a557977a-c37a-4beb-9ed9-ebe76644acb5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Player\PlayerHealthSystem">
-      <UniqueIdentifier>{4cadd185-abb4-4e8c-9057-ba38939f3e04}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Player\PlayerCollisionSystem">
-      <UniqueIdentifier>{9df2720d-8be6-4dda-b253-766bc2d29882}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Player\PlayerInputManager">
-      <UniqueIdentifier>{11e11c7e-6f8d-453b-b11d-6c15b8484aab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\04. Object\Player\PlayerStateTransitionTable">
-      <UniqueIdentifier>{8555260d-9dee-4957-9fc4-d3fd01951093}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\04. Object\Monster">
       <UniqueIdentifier>{941e1fe6-5efa-4f97-af5e-d5ff0d782514}</UniqueIdentifier>
     </Filter>
@@ -212,6 +188,12 @@
     <Filter Include="Engine\04. Object\Door">
       <UniqueIdentifier>{34d0c97e-32eb-455c-bccf-f04963d4a126}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Kirby\PlayerInputManager">
+      <UniqueIdentifier>{11e11c7e-6f8d-453b-b11d-6c15b8484aab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\03. Manager\EventMgr\EventSystems\CollisionEventSystem">
+      <UniqueIdentifier>{cd5f6751-f5fc-4b95-af54-26e210fd82c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -293,35 +275,11 @@
     <ClInclude Include="..\KirbyGame\CObject.h">
       <Filter>Engine\04. Object</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CObjectFactory.h">
-      <Filter>Engine\08. Factory</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CPathMgr.h">
       <Filter>Engine\03. Manager\PathMgr</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayer.h">
-      <Filter>Engine\04. Object\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayerCollisionSystem.h">
-      <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayerHealthSystem.h">
-      <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayerInhaleSystem.h">
-      <Filter>Engine\04. Object\Player\PlayerInhaleSystem</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CPlayerInputManager.h">
-      <Filter>Engine\04. Object\Player\PlayerInputManager</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayerMovement.h">
-      <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayerStateMachine.h">
-      <Filter>Engine\04. Object\Player\PlayerStateMachine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CPlayerStateTransitionTable.h">
-      <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
+      <Filter>Engine\04. Object\Kirby\PlayerInputManager</Filter>
     </ClInclude>
     <ClInclude Include="..\KirbyGame\CProjectile.h">
       <Filter>Engine\04. Object\Projectile</Filter>
@@ -431,6 +389,9 @@
     <ClInclude Include="GameFlowSystem.h">
       <Filter>Engine\03. Manager\EventMgr\EventSystems\GameFlowSystem</Filter>
     </ClInclude>
+    <ClInclude Include="CollisionEventSystem.h">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\CollisionEventSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KirbyGame.rc">
@@ -513,35 +474,11 @@
     <ClCompile Include="..\KirbyGame\CObject.cpp">
       <Filter>Engine\04. Object</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CObjectFactory.cpp">
-      <Filter>Engine\08. Factory</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CPathMgr.cpp">
       <Filter>Engine\03. Manager\PathMgr</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayer.cpp">
-      <Filter>Engine\04. Object\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayerCollisionSystem.cpp">
-      <Filter>Engine\04. Object\Player\PlayerCollisionSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayerHealthSystem.cpp">
-      <Filter>Engine\04. Object\Player\PlayerHealthSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayerInhaleSystem.cpp">
-      <Filter>Engine\04. Object\Player\PlayerInhaleSystem</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CPlayerInputManager.cpp">
-      <Filter>Engine\04. Object\Player\PlayerInputManager</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayerMovement.cpp">
-      <Filter>Engine\04. Object\Player\PlayerMovement</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayerStateMachine.cpp">
-      <Filter>Engine\04. Object\Player\PlayerStateMachine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CPlayerStateTransitionTable.cpp">
-      <Filter>Engine\04. Object\Player\PlayerStateTransitionTable</Filter>
+      <Filter>Engine\04. Object\Kirby\PlayerInputManager</Filter>
     </ClCompile>
     <ClCompile Include="..\KirbyGame\CProjectile.cpp">
       <Filter>Engine\04. Object\Projectile</Filter>
@@ -644,6 +581,9 @@
     </ClCompile>
     <ClCompile Include="GameFlowSystem.cpp">
       <Filter>Engine\03. Manager\EventMgr\EventSystems\GameFlowSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionEventSystem.cpp">
+      <Filter>Engine\03. Manager\EventMgr\EventSystems\CollisionEventSystem</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

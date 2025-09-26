@@ -1,7 +1,6 @@
-#include "gamePCH.h"
+ï»¿#include "gamePCH.h"
 #include "DamageSystem.h"
 #include "CEventMgr.h"
-#include "EventDef.h"
 
 #include "CKirby.h"
 #include "CKirbyHealthSystem.h"
@@ -41,19 +40,17 @@ void DamageSystem::OnPlayerDamage(const tEvent& e) {
         Vec2 knock = pKnock ? *pKnock : Vec2(0, 0);
         hs->TakeDamage(1, knock);
     }
-    if (pKnock) delete pKnock; // ÇÁ·ÎÅäÄİ ÁØ¼ö
+    if (pKnock) delete pKnock; // í”„ë¡œí† ì½œ ì¤€ìˆ˜
 }
 
 void DamageSystem::OnPlayerRecoil(const tEvent& e) {
     (void)e;
-    // ÇÊ¿ä ½Ã ½½¶óÀÌµåÅ± ¹İµ¿ µî
+    // í•„ìš” ì‹œ ìŠ¬ë¼ì´ë“œí‚¥ ë°˜ë™ ë“±
     auto* sc = CSceneMgr::GetInst()->GetCurScene(); if (!sc) return;
     const auto& v = sc->GetGroupObject(GROUP_TYPE::PLAYER);
     if (v.empty()) return;
     if (auto* kirby = dynamic_cast<CKirby*>(v[0])) {
-        if (auto* mv = kirby->GetMovement()) {
-            mv->SlideKickRecoil(); // CKirbyMovement¿¡ ±¸Çö
-        }
+        kirby->DoSlideKickRecoil();
     }
 }
 
@@ -67,7 +64,7 @@ void DamageSystem::OnMonsterDamage(const tEvent& e) {
         int dmg = 1;
         switch (prj->GetProjectileType()) {
         case PROJECTILE_TYPE::KIRBY_SLIDE_KICK:
-        case PROJECTILE_TYPE::KIRBY_AIR_PUFF: return; // º¸½º´Â ÇÇÇØ ¾øÀ½
+        case PROJECTILE_TYPE::KIRBY_AIR_PUFF: return; // ë³´ìŠ¤ëŠ” í”¼í•´ ì—†ìŒ
         case PROJECTILE_TYPE::KIRBY_STAR: dmg = 12; break;
         default: break;
         }

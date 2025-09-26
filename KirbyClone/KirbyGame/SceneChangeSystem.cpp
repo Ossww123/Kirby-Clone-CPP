@@ -1,4 +1,4 @@
-#include "gamePCH.h"
+ï»¿#include "gamePCH.h"
 #include "SceneChangeSystem.h"
 #include "CEventMgr.h"
 #include "CSceneMgr.h"
@@ -24,7 +24,7 @@ CKirby* SceneChangeSystem::FindKirbyInScene(CScene* sc)
     const auto& pv = sc->GetGroupObject(GROUP_TYPE::PLAYER);
     if (auto* k = FindKirbyFromGroup(pv)) return k;
 
-    // È¤½Ã ´Ù¸¥ ±×·ì¿¡ Àß¸ø µé¾î°£ °æ¿ì ÀüÃ¼ °Ë»ö(¾ÈÀüÀåÄ¡)
+    // í˜¹ì‹œ ë‹¤ë¥¸ ê·¸ë£¹ì— ìž˜ëª» ë“¤ì–´ê°„ ê²½ìš° ì „ì²´ ê²€ìƒ‰(ì•ˆì „ìž¥ì¹˜)
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i) {
         const auto& gv = sc->GetGroupObject((GROUP_TYPE)i);
         if (auto* k = FindKirbyFromGroup(gv)) return k;
@@ -63,15 +63,15 @@ void SceneChangeSystem::OnSceneChange(const tEvent& e)
         }
     }
 
-    // 2) ½ÇÁ¦ ÀüÈ¯
+    // 2) ì‹¤ì œ ì „í™˜
     CSceneMgr::GetInst()->ChangeScene(next);
 
-    // 3) Attach + ½ºÆù Àû¿ë
+    // 3) Attach + ìŠ¤í° ì ìš©
     if (auto* ns = CSceneMgr::GetInst()->GetCurScene()) {
         if (s_carryKirby) {
             ns->AddObject(s_carryKirby, GROUP_TYPE::PLAYER);
 
-            // ¿ì¼±¼øÀ§: DoorSystem ½ºÆù > Respawn ¿À¹ö¶óÀÌµå > À¯Áö
+            // ìš°ì„ ìˆœìœ„: DoorSystem ìŠ¤í° > Respawn ì˜¤ë²„ë¼ì´ë“œ > ìœ ì§€
             SCENE_TYPE doorScene; Vec2 doorSpawn;
             if (DoorSystem::GetAndClearNextDoorTarget(doorScene, doorSpawn) && doorScene == next) {
                 s_carryKirby->SetPos(doorSpawn);

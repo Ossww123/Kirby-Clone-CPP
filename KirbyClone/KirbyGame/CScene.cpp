@@ -11,17 +11,17 @@ CScene::~CScene() { DeleteAllObject(); }
 
 void CScene::Update()
 {
-    if (m_bPaused) {
-        // (필요시) 플레이어/보스만 업데이트하는 특수 로직 유지 가능
-        for (auto* obj : m_arrObj[(UINT)GROUP_TYPE::PLAYER])
-            if (obj->IsAlive()) obj->Update();
-        for (auto* obj : m_arrObj[(UINT)GROUP_TYPE::MONSTER]) {
-            if (!obj->IsAlive()) continue;
-            if (auto* m = dynamic_cast<CMonster*>(obj))
-                if (m->IsBoss()) obj->Update();
-        }
-        return;
-    }
+    //if (m_bPaused) {
+    //    // (필요시) 플레이어/보스만 업데이트하는 특수 로직 유지 가능
+    //    for (auto* obj : m_arrObj[(UINT)GROUP_TYPE::PLAYER])
+    //        if (obj->IsAlive()) obj->Update();
+    //    for (auto* obj : m_arrObj[(UINT)GROUP_TYPE::MONSTER]) {
+    //        if (!obj->IsAlive()) continue;
+    //        if (auto* m = dynamic_cast<CMonster*>(obj))
+    //            if (m->IsBoss()) obj->Update();
+    //    }
+    //    return;
+    //}
 
     for (UINT i = 0; i < (UINT)GROUP_TYPE::END; ++i) {
         for (auto* obj : m_arrObj[i]) {

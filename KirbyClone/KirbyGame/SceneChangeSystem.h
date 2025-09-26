@@ -1,4 +1,5 @@
-#pragma once
+ï»¿#pragma once
+
 #include "EventDef.h"
 
 class CKirby;
@@ -9,14 +10,14 @@ public:
     static void Init();
     static void Shutdown();
 
-    // ¸®½ºÆù¿ë: ´ÙÀ½ ¾À ÀüÈ¯¿¡¼­ 1È¸ Àû¿ëµÉ ½ºÆù ÁÂÇ¥ ÁöÁ¤
+    // ë¦¬ìŠ¤í°ìš©: ë‹¤ìŒ ì”¬ ì „í™˜ì—ì„œ 1íšŒ ì ìš©ë  ìŠ¤í° ì¢Œí‘œ ì§€ì •
     static void SetNextSpawnOverride(const Vec2& pos);
 
 private:
     static size_t s_subSceneChange;
     static CKirby* s_carryKirby;
 
-    // ¿À¹ö¶óÀÌµå ÀúÀå
+    // ì˜¤ë²„ë¼ì´ë“œ ì €ì¥
     static bool s_hasSpawnOverride;
     static Vec2 s_spawnOverride;
 

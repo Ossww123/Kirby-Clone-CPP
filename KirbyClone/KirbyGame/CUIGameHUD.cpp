@@ -66,8 +66,7 @@ void CUIGameHUD::RenderUI(HDC dc, const Vec2& base)
     // 생명 & 플레이어 HP
     if (pl) {
         RenderKirbyLifeUI(dc, base + POS_LIFE_BASE);
-
-        if (auto* hs = pl->GetHealthSystem()) {
+        if (auto* hs = pl->GetHealth()) {                 // ← 일관되게 GetHealth() 사용
             RenderKirbyHealthUI(dc, base + POS_LIFE_BASE + OFF_HEALTH);
         }
     }
@@ -94,8 +93,12 @@ void CUIGameHUD::RenderKirbyLifeUI(HDC dc, const Vec2& base)
         base, SZ_KIRBY_LIFE * (float)UI_SCALE);
 
     // 생명 수 2자리
-    const int lives = CPlayerDataMgr::GetInst()->GetLives();
-    DrawNumber2(dc, lives, base + OFF_LIFE_NUM);
+    if (CKirby* pl = FindPlayer()) {
+        DrawNumber2(dc, pl->GetLives(), base + OFF_LIFE_NUM);
+    }
+    else {
+        DrawNumber2(dc, 0, base + OFF_LIFE_NUM);
+    }
 }
 
 void CUIGameHUD::RenderKirbyHealthUI(HDC dc, const Vec2& base)

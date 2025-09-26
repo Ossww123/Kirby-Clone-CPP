@@ -1,4 +1,7 @@
-#pragma once
+﻿#pragma once
+
+#include "EventDef.h"
+
 class DamageSystem {
 public:
     static void Init();

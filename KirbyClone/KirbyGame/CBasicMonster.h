@@ -74,4 +74,11 @@ protected:
     // 런타임 상태
     bool  m_bChasing{ false };
     float m_fAttackCooldownLeft{ 0.f };
+
+
+    // 임시
+public:
+    void SetDamageSourcePos(const Vec2& p) { m_lastDamageSource = p; }
+protected:
+    Vec2 m_lastDamageSource{ 0.f, 0.f };
 };
