@@ -30,6 +30,11 @@ public:
     virtual void Render(HDC _dc);
     virtual void OnDestroy() {}
 
+    // 초기화 (옵션 오버라이드)
+    virtual void Init() {}                // 기본은 아무것도 안 함
+    void InitOnce();                      // 중복 방지 래퍼
+    bool IsInitialized() const { return m_bInitialized; }
+
 protected:
     // 렌더 훅 — 파생에서 전/후 오버레이 쉽게 추가
     virtual void OnPreRender(HDC) {}
@@ -88,7 +93,7 @@ private:
 
     // 디버그 전용 (빌드/매크로에 따라 제외)
     void RenderDefaultShape(HDC _dc, const Vec2& _vRenderPos, float _fScale);
-    void RenderCollider(HDC _dc);
+    void RenderCollider(HDC _dc, float _fScale);
 
 public:
     // === 컴포넌트 접근자 === (const 오버로드 포함)
@@ -105,6 +110,7 @@ private:
     // === 기본 속성 ===
     Transform2D m_Transform{};
     bool        m_bAlive{ true };
+    bool        m_bInitialized{ false };
 
     OBJECT_TYPE m_ObjectType{ OBJECT_TYPE::END }; // 세부 식별자
     GROUP_TYPE  m_Group{ GROUP_TYPE::DEFAULT };   // 충돌/필터용 그룹

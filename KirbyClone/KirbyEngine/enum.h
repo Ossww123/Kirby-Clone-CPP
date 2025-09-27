@@ -49,8 +49,7 @@ enum class GROUP_TYPE
     MONSTER ,
     PROJ_PLAYER ,    // 플레이어 투사체
     PROJ_MONSTER ,   // 몬스터 투사체
-
-    // 새로운 그룹 타입들 추가
+    TERRAIN,
     ITEM ,           // 아이템
     TILE ,           // 타일/지형
     SPECIAL ,        // 특수 오브젝트 (문, 스위치 등)

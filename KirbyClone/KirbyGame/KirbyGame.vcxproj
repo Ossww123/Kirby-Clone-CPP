@@ -204,6 +204,9 @@
     <ClInclude Include="CMonsterFactory.h" />
     <ClInclude Include="CollisionEventSystem.h" />
     <ClInclude Include="CTexture.h" />
+    <ClInclude Include="CTileFactory.h" />
+    <ClInclude Include="CTileMap.h" />
+    <ClInclude Include="CTileSet.h" />
     <ClInclude Include="CUIElement.h" />
     <ClInclude Include="CUIGameHUD.h" />
     <ClInclude Include="DamageSystem.h" />
@@ -271,6 +274,9 @@
     <ClCompile Include="CMonsterFactory.cpp" />
     <ClCompile Include="CollisionEventSystem.cpp" />
     <ClCompile Include="CTexture.cpp" />
+    <ClCompile Include="CTileFactory.cpp" />
+    <ClCompile Include="CTileMap.cpp" />
+    <ClCompile Include="CTileSet.cpp" />
     <ClCompile Include="CUIElement.cpp" />
     <ClCompile Include="CUIGameHUD.cpp" />
     <ClCompile Include="DamageSystem.cpp" />

@@ -80,6 +80,9 @@ void CScene::AddObject(CObject* _pObj, GROUP_TYPE _eType)
     //   캐리오버 호환: 오브젝트 자신의 그룹 기록도 맞춰 둠
     //   (DetachObject가 obj->GetGroupType()를 우선 사용한다면 필수)
     _pObj->SetGroup(_eType);
+
+    // 씬에 등록되는 시점에 1회 초기화 보장
+    _pObj->InitOnce();
 }
 
 void CScene::DeleteDeadObjects()

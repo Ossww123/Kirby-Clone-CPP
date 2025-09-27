@@ -194,6 +194,18 @@
     <Filter Include="Engine\03. Manager\EventMgr\EventSystems\CollisionEventSystem">
       <UniqueIdentifier>{cd5f6751-f5fc-4b95-af54-26e210fd82c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\04. Object\Tile\TileSet">
+      <UniqueIdentifier>{7d06967e-8e85-4464-9ab8-f44b93e8d942}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\08. Factory\MonsterFactory">
+      <UniqueIdentifier>{35e2241d-c09b-4fd8-80a4-f6dadd6afbd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\08. Factory\TileFactory">
+      <UniqueIdentifier>{4ccfe49b-f40c-48df-9592-f000ff27223d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\Tile\TileMap">
+      <UniqueIdentifier>{d12ecc0d-d26b-4e53-8a77-36a0c0037328}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -338,9 +350,6 @@
     <ClInclude Include="..\KirbyGame\CWhispyWoods.h">
       <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
     </ClInclude>
-    <ClInclude Include="CMonsterFactory.h">
-      <Filter>Engine\08. Factory</Filter>
-    </ClInclude>
     <ClInclude Include="CTexture.h">
       <Filter>Engine\06. Resource\Texture</Filter>
     </ClInclude>
@@ -391,6 +400,18 @@
     </ClInclude>
     <ClInclude Include="CollisionEventSystem.h">
       <Filter>Engine\03. Manager\EventMgr\EventSystems\CollisionEventSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CTileSet.h">
+      <Filter>Engine\04. Object\Tile\TileSet</Filter>
+    </ClInclude>
+    <ClInclude Include="CMonsterFactory.h">
+      <Filter>Engine\08. Factory\MonsterFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="CTileFactory.h">
+      <Filter>Engine\08. Factory\TileFactory</Filter>
+    </ClInclude>
+    <ClInclude Include="CTileMap.h">
+      <Filter>Engine\04. Object\Tile\TileMap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -537,9 +558,6 @@
     <ClCompile Include="..\KirbyGame\CWhispyWoods.cpp">
       <Filter>Engine\04. Object\Monster\Boss\WhispyWoods</Filter>
     </ClCompile>
-    <ClCompile Include="CMonsterFactory.cpp">
-      <Filter>Engine\08. Factory</Filter>
-    </ClCompile>
     <ClCompile Include="CTexture.cpp">
       <Filter>Engine\06. Resource\Texture</Filter>
     </ClCompile>
@@ -584,6 +602,18 @@
     </ClCompile>
     <ClCompile Include="CollisionEventSystem.cpp">
       <Filter>Engine\03. Manager\EventMgr\EventSystems\CollisionEventSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CTileSet.cpp">
+      <Filter>Engine\04. Object\Tile\TileSet</Filter>
+    </ClCompile>
+    <ClCompile Include="CMonsterFactory.cpp">
+      <Filter>Engine\08. Factory\MonsterFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="CTileFactory.cpp">
+      <Filter>Engine\08. Factory\TileFactory</Filter>
+    </ClCompile>
+    <ClCompile Include="CTileMap.cpp">
+      <Filter>Engine\04. Object\Tile\TileMap</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

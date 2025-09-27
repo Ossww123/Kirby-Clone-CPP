@@ -1,5 +1,6 @@
 ﻿#include "gamePCH.h"
 #include "CSceneMgr.h"
+#include "CCollisionMgr.h"
 #include "CKeyMgr.h"
 #include "CEventMgr.h"
 
@@ -71,6 +72,8 @@ void CSceneMgr::ChangeScene(SCENE_TYPE _eNext)
 
     m_eCurSceneType = _eNext;
     m_pCurScene = m_arrScene[(UINT)_eNext];
+
+    CCollisionMgr::GetInst()->ClearCollisionPairs();
 
     if (m_pCurScene) m_pCurScene->Enter();
 }

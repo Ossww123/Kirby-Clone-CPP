@@ -41,6 +41,13 @@ void CObject::Render(HDC _dc)
     OnPostRender(_dc);
 }
 
+void CObject::InitOnce()
+{
+    if (m_bInitialized) return;
+    Init();
+    m_bInitialized = true;
+}
+
 void CObject::CreateCollider() {
     if (m_pCollider) { assert(false && "CreateCollider called twice"); return; }
     m_pCollider = std::make_unique<CCollider>();
@@ -62,21 +69,14 @@ void CObject::CreateRigidBody() {
 void CObject::RenderMain(HDC _dc, const Vec2& _vRenderPos, float _fScale)
 {
     if (m_pAnimator)
-    {
-        // 애니메이터는 Transform의 flipX를 내부에서 참조하도록(규약)
-        // 필요 시 여기서 m_pAnimator->SetFlipX(m_Transform.flipX); 등으로 동기화
         RenderWithAnimator(_dc, _fScale);
-    }
 #if defined(_DEBUG) && defined(ENABLE_DEBUG_DRAW_PRIMITIVES)
     else
-    {
-        // 실제 게임 릴리즈에서는 기본 사각형은 그리지 않음(디버그때만)
         RenderDefaultShape(_dc, _vRenderPos, _fScale);
-    }
 #endif
 
 #if defined(_DEBUG) && defined(ENABLE_DEBUG_DRAW_COLLIDER)
-    RenderCollider(_dc);
+    RenderCollider(_dc, _fScale);   // ← 변경
 #endif
 }
 
@@ -100,8 +100,8 @@ void CObject::RenderDefaultShape(HDC _dc, const Vec2& _vRenderPos, float _fScale
 }
 
 
-void CObject::RenderCollider(HDC _dc)
+void CObject::RenderCollider(HDC _dc, float _fScale)
 {
     if (m_pCollider)
-        m_pCollider->Render(_dc);
+        m_pCollider->RenderScaled(_dc, _fScale);
 }

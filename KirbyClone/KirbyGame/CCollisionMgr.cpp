@@ -31,6 +31,10 @@ void CCollisionMgr::init()
 
 void CCollisionMgr::update()
 {
+    // 프레임에 관측된 충돌쌍 기록
+    std::unordered_set<ULONGLONG> seen;
+    seen.reserve(m_mapColInfo.size() + 64);
+
     // 등록된 그룹 간의 충돌 체크
     for (UINT iRow = 0; iRow < (UINT)GROUP_TYPE::END; ++iRow)
     {
@@ -38,10 +42,16 @@ void CCollisionMgr::update()
         {
             if (m_arrCheck[iRow] & (1 << iCol))
             {
-                CollisionGroupUpdate((GROUP_TYPE)iRow, (GROUP_TYPE)iCol);
+                // CollisionGroupUpdate가 관측된 키를 반환하도록 바꾸거나,
+                // 내부에서 콜백으로 seen.insert(key) 해도 OK
+                CollisionGroupUpdate((GROUP_TYPE)iRow, (GROUP_TYPE)iCol /*, &seen */);
             }
         }
     }
+
+    // --- 선택사항: 정말로 스위핑하고 싶다면 ---
+    // for (auto it = m_mapColInfo.begin(); it != m_mapColInfo.end(); )
+    //     it = (seen.count(it->first) ? std::next(it) : m_mapColInfo.erase(it));
 }
 
 void CCollisionMgr::CheckGroup(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
@@ -74,6 +84,11 @@ void CCollisionMgr::UnCheckGroup(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
 
     // 비트 연산으로 체크 해제
     m_arrCheck[iRow] &= ~(1 << iCol);
+}
+
+void CCollisionMgr::ClearCollisionPairs()
+{
+    m_mapColInfo.clear();
 }
 
 void CCollisionMgr::CollisionGroupUpdate(GROUP_TYPE _eLeft, GROUP_TYPE _eRight)
