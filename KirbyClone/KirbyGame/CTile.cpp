@@ -106,7 +106,7 @@ void CTile::buildCollider()
     }
     case TILE_COLLISION::ONEWAY_TOP:
     {
-        const float h = std::min(m_oneWayThicknessPx, m_tileSize.y);
+        const float h = (std::min)(m_oneWayThicknessPx, m_tileSize.y);
         const float topStripCenterY = -m_tileSize.y * 0.5f + h * 0.5f; // 셀 중심 기준 상단 스트립
         // visualOffset 보정 포함
         GetCollider()->SetOffsetPos(Vec2(-m_visualOffset.x, topStripCenterY - m_visualOffset.y));

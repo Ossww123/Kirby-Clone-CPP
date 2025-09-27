@@ -49,7 +49,8 @@ enum class GROUP_TYPE
     MONSTER ,
     PROJ_PLAYER ,    // 플레이어 투사체
     PROJ_MONSTER ,   // 몬스터 투사체
-    TERRAIN,
+    TERRAIN ,
+    TRIGGER ,
     ITEM ,           // 아이템
     TILE ,           // 타일/지형
     SPECIAL ,        // 특수 오브젝트 (문, 스위치 등)
@@ -217,6 +218,7 @@ enum class OBJECT_TYPE
     TILE_BREAKABLE ,     // 부서지는 블록
     TILE_INVISIBLE ,     // 보이지 않는 벽
     TILE_TRIGGER ,       // 트리거 (보스전 시작 등)
+    TRIGGER_BOSS ,
 
     // 특수 오브젝트
     OBJECT_DOOR ,            // 문

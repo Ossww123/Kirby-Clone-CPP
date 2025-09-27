@@ -80,9 +80,6 @@
     <Filter Include="Engine\03. Manager\PathMgr">
       <UniqueIdentifier>{4227ecc2-b3b3-4115-a9ee-92a24e1f5c86}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\03. Manager\TileMgr">
-      <UniqueIdentifier>{ec3a351e-6930-4684-9675-4a3d4b5ed14f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\03. Manager\AnimationDataMgr">
       <UniqueIdentifier>{0e9a3292-22d3-452f-9d8e-611f2cd875e2}</UniqueIdentifier>
     </Filter>
@@ -205,6 +202,9 @@
     </Filter>
     <Filter Include="Engine\04. Object\Tile\TileMap">
       <UniqueIdentifier>{d12ecc0d-d26b-4e53-8a77-36a0c0037328}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\04. Object\BossTrigger">
+      <UniqueIdentifier>{3dd79405-ac51-4a1f-8411-cae3c4f6e83a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -329,9 +329,6 @@
     <ClInclude Include="..\KirbyGame\CSoundMgr.h">
       <Filter>Engine\03. Manager\SoundMgr</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CTileMgr.h">
-      <Filter>Engine\03. Manager\TileMgr</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CTimeMgr.h">
       <Filter>Engine\03. Manager\TimeMgr</Filter>
     </ClInclude>
@@ -412,6 +409,9 @@
     </ClInclude>
     <ClInclude Include="CTileMap.h">
       <Filter>Engine\04. Object\Tile\TileMap</Filter>
+    </ClInclude>
+    <ClInclude Include="CBossTrigger.h">
+      <Filter>Engine\04. Object\BossTrigger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -537,9 +537,6 @@
     <ClCompile Include="..\KirbyGame\CSoundMgr.cpp">
       <Filter>Engine\03. Manager\SoundMgr</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CTileMgr.cpp">
-      <Filter>Engine\03. Manager\TileMgr</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CTimeMgr.cpp">
       <Filter>Engine\03. Manager\TimeMgr</Filter>
     </ClCompile>
@@ -614,6 +611,9 @@
     </ClCompile>
     <ClCompile Include="CTileMap.cpp">
       <Filter>Engine\04. Object\Tile\TileMap</Filter>
+    </ClCompile>
+    <ClCompile Include="CBossTrigger.cpp">
+      <Filter>Engine\04. Object\BossTrigger</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

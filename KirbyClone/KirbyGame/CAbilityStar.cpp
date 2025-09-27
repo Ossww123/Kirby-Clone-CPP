@@ -190,8 +190,6 @@ void CAbilityStar::HandleTileCollision(CObject* _pTile)
         return;
 
     CTile* pTile = dynamic_cast<CTile*>(_pTile);
-    if (!pTile || !pTile->IsSolid())
-        return;
 
     Vec2 vMyPos = GetPos();
     Vec2 vTilePos = _pTile->GetPos();

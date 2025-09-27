@@ -9,7 +9,6 @@
 #include "CCamera.h"
 #include "CPathMgr.h"
 #include "CResMgr.h"
-#include "CTileMgr.h"
 #include "CAnimationDataMgr.h"
 #include "CSoundMgr.h"
 #include "SceneChangeSystem.h"
@@ -78,7 +77,6 @@ int CCore::init ( HWND _hWnd , POINT _ptResolution )
 	CResMgr::GetInst()->init();
 	CSoundMgr::GetInst()->init();
 	CAnimationDataMgr::GetInst()->init();
-	CTileMgr::GetInst()->init();
 
 	// ── 이벤트 버스 먼저 ───────────────────────
 	CEventMgr::GetInst()->init();             // (슬림: 큐 초기화만)

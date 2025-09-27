@@ -13,7 +13,6 @@
 #include "CCore.h"
 #include "CPathMgr.h"
 #include "CEventMgr.h"
-#include "CTileMgr.h"
 #include "CMonsterSpawnMgr.h"
 #include "CFadeEffect.h"
 #include "CSoundMgr.h"
@@ -85,7 +84,6 @@ void CScene_Stage01::Exit()
     CMonsterSpawnMgr::GetInst()->Clear();
     
     // 카메라 타겟 해제
-    CCamera::GetInst()->SetTarget(nullptr);
 
     // 모든 객체 삭제
     DeleteAllObject();
@@ -220,8 +218,6 @@ void CScene_Stage01::LoadStageLevel(const wstring& _strFileName)
         // 로드된 정보 적용
         ApplyLoadedLevelData(vPlayerSpawn, (BACKGROUND_TYPE)backgroundType);
         
-        // 카메라에 스테이지 경계 설정
-        CCamera::GetInst()->SetStageBounds(vLevelBoundsMin, vLevelBoundsMax);
 
 
 
@@ -353,7 +349,6 @@ void CScene_Stage01::CreateDefaultLevel()
     
     // 기본 스테이지 경계 설정 (레벨 데이터가 없을 때만 사용)
     Vec2 vDefaultMapSize = Vec2(4096.f, 640.f);
-    CCamera::GetInst()->SetStageBounds(Vec2(0.f, 0.f), vDefaultMapSize);
 
 
 }
