@@ -20,8 +20,12 @@ LRESULT CALLBACK WndProc ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam 
         return 1;                   // ← 깜빡임 완화 (우리가 직접 배경 채움)
 
     case WM_SIZE:
-        // 필요하면 클라이언트 크기 갱신
+    {
+        const int w = LOWORD ( lParam );
+        const int h = HIWORD ( lParam );
+        gApp.OnResize ( w , h );   // 경계 갱신
         return 0;
+    }
 
     case WM_DESTROY:
         PostQuitMessage ( 0 );
