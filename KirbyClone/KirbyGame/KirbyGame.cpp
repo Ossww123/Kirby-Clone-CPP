@@ -38,7 +38,7 @@ int WINAPI wWinMain ( HINSTANCE hInst , HINSTANCE , PWSTR , int nCmdShow )
 {
     const wchar_t* kClass = L"KirbyGameWindowClass";
     WNDCLASSW wc{};
-    wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    wc.style = CS_OWNDC;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInst;
     wc.hCursor = LoadCursor ( nullptr , IDC_ARROW );
