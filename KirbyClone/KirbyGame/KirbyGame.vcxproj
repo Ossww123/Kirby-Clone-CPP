@@ -131,12 +131,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="engine\GameApp.h" />
     <ClInclude Include="engine\Input.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="res\Resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\KirbyGame.cpp" />
+    <ClCompile Include="KirbyGame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\KirbyGame.rc" />
