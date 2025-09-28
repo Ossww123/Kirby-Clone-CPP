@@ -95,15 +95,6 @@
     <Filter Include="Engine\05. Scene\Scene_Start">
       <UniqueIdentifier>{958eeace-0160-463e-bc1f-6a387cc30f96}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\05. Scene\Scene_Stage">
-      <UniqueIdentifier>{6089f6b5-5391-4ace-be9d-320ff8d10fa7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\05. Scene\Scene_Stage\Stage01">
-      <UniqueIdentifier>{308a8ccc-0531-4602-9424-b0d1be088a03}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine\05. Scene\Scene_Stage\Stage02">
-      <UniqueIdentifier>{947b9847-b1b4-4b4e-a40b-c634c6d6f82e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\06. Resource">
       <UniqueIdentifier>{80b73b89-a976-4430-a557-f25e5bb2e4f0}</UniqueIdentifier>
     </Filter>
@@ -205,6 +196,9 @@
     </Filter>
     <Filter Include="Engine\04. Object\BossTrigger">
       <UniqueIdentifier>{3dd79405-ac51-4a1f-8411-cae3c4f6e83a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\05. Scene\StageScene">
+      <UniqueIdentifier>{6089f6b5-5391-4ace-be9d-320ff8d10fa7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -308,12 +302,6 @@
     <ClInclude Include="..\KirbyGame\CScene.h">
       <Filter>Engine\05. Scene</Filter>
     </ClInclude>
-    <ClInclude Include="..\KirbyGame\CScene_Stage01.h">
-      <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
-    </ClInclude>
-    <ClInclude Include="..\KirbyGame\CScene_Stage02.h">
-      <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
-    </ClInclude>
     <ClInclude Include="..\KirbyGame\CRigidBody.h">
       <Filter>Engine\07. Component\RigidBody</Filter>
     </ClInclude>
@@ -412,6 +400,9 @@
     </ClInclude>
     <ClInclude Include="CBossTrigger.h">
       <Filter>Engine\04. Object\BossTrigger</Filter>
+    </ClInclude>
+    <ClInclude Include="CStageScene.h">
+      <Filter>Engine\05. Scene\StageScene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -516,12 +507,6 @@
     <ClCompile Include="..\KirbyGame\CScene.cpp">
       <Filter>Engine\05. Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\KirbyGame\CScene_Stage01.cpp">
-      <Filter>Engine\05. Scene\Scene_Stage\Stage01</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KirbyGame\CScene_Stage02.cpp">
-      <Filter>Engine\05. Scene\Scene_Stage\Stage02</Filter>
-    </ClCompile>
     <ClCompile Include="..\KirbyGame\CRigidBody.cpp">
       <Filter>Engine\07. Component\RigidBody</Filter>
     </ClCompile>
@@ -614,6 +599,9 @@
     </ClCompile>
     <ClCompile Include="CBossTrigger.cpp">
       <Filter>Engine\04. Object\BossTrigger</Filter>
+    </ClCompile>
+    <ClCompile Include="CStageScene.cpp">
+      <Filter>Engine\05. Scene\StageScene</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

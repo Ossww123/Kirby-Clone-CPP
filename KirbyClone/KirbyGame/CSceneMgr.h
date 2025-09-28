@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 class CScene;
+class CStageScene;   // 
+struct StageDesc;    // 데이터 씬에 전달할 스테이지 설명자
 
 class CSceneMgr
 {
@@ -12,18 +14,21 @@ public:
     void update();
     void render(HDC _dc);
 
-    // 변경: SceneChangeSystem에서 호출할 공개 API
-    void ChangeScene(SCENE_TYPE _eNext);        // 실제 씬 전환 로직
+    // 씬 타입 전환 (Start, Tool 등)
+    void ChangeScene(SCENE_TYPE _eNext);
+
+    // 데이터로 스테이지 로드 + 전환
+    void ChangeStage(const StageDesc& desc);
 
     // === Getter ===
     CScene* GetCurScene() const { return m_pCurScene; }
     SCENE_TYPE GetCurSceneType() const { return m_eCurSceneType; }
 
 private:
-    void HandleGlobalSceneTransition();                 // 전역 키 입력 처리
+    void HandleGlobalSceneTransition();
 
 private:
-    CScene* m_arrScene[(UINT)SCENE_TYPE::END]{}; // 모든 씬 배열
-    CScene* m_pCurScene{ nullptr };               // 현재 활성화된 씬
-    SCENE_TYPE m_eCurSceneType{ SCENE_TYPE::START }; // 현재 씬 타입
+    CScene* m_arrScene[(UINT)SCENE_TYPE::END]{}; // 씬 슬롯
+    CScene* m_pCurScene{ nullptr };
+    SCENE_TYPE  m_eCurSceneType{ SCENE_TYPE::START };
 };

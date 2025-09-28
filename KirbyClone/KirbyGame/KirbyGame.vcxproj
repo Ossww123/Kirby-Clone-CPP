@@ -182,8 +182,6 @@
     <ClInclude Include="..\KirbyGame\CRigidBody.h" />
     <ClInclude Include="..\KirbyGame\CScene.h" />
     <ClInclude Include="..\KirbyGame\CSceneMgr.h" />
-    <ClInclude Include="..\KirbyGame\CScene_Stage01.h" />
-    <ClInclude Include="..\KirbyGame\CScene_Stage02.h" />
     <ClInclude Include="..\KirbyGame\CScene_Start.h" />
     <ClInclude Include="..\KirbyGame\CSound.h" />
     <ClInclude Include="..\KirbyGame\CSoundMgr.h" />
@@ -203,6 +201,7 @@
     <ClInclude Include="CKirbyMovement.h" />
     <ClInclude Include="CMonsterFactory.h" />
     <ClInclude Include="CollisionEventSystem.h" />
+    <ClInclude Include="CStageScene.h" />
     <ClInclude Include="CTexture.h" />
     <ClInclude Include="CTileFactory.h" />
     <ClInclude Include="CTileMap.h" />
@@ -253,8 +252,6 @@
     <ClCompile Include="..\KirbyGame\CRigidBody.cpp" />
     <ClCompile Include="..\KirbyGame\CScene.cpp" />
     <ClCompile Include="..\KirbyGame\CSceneMgr.cpp" />
-    <ClCompile Include="..\KirbyGame\CScene_Stage01.cpp" />
-    <ClCompile Include="..\KirbyGame\CScene_Stage02.cpp" />
     <ClCompile Include="..\KirbyGame\CScene_Start.cpp" />
     <ClCompile Include="..\KirbyGame\CSound.cpp" />
     <ClCompile Include="..\KirbyGame\CSoundMgr.cpp" />
@@ -273,6 +270,7 @@
     <ClCompile Include="CKirbyMovement.cpp" />
     <ClCompile Include="CMonsterFactory.cpp" />
     <ClCompile Include="CollisionEventSystem.cpp" />
+    <ClCompile Include="CStageScene.cpp" />
     <ClCompile Include="CTexture.cpp" />
     <ClCompile Include="CTileFactory.cpp" />
     <ClCompile Include="CTileMap.cpp" />
