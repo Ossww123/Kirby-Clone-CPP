@@ -11,8 +11,8 @@ namespace engine {
         void Update ( double fixedDt , const Input& input ) {
             for ( auto& o : m_objects ) o->Update ( fixedDt , input );
         }
-        void Render ( HDC dc ) {
-            for ( auto& o : m_objects ) o->Render ( dc );
+        void Render ( HDC dc , int ox , int oy ) {
+            for ( auto& o : m_objects ) o->Render ( dc , ox , oy );
         }
         template<class T , class...Args>
         T* Spawn ( Args&&...args ) {

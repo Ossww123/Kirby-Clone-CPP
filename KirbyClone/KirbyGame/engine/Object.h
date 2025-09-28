@@ -7,6 +7,6 @@ namespace engine {
     public:
         virtual ~Object ( ) = default;
         virtual void Update ( double fixedDt , const Input& input ) {}
-        virtual void Render ( HDC dc ) {}
+        virtual void Render ( HDC dc , int ox , int oy ) {}
     };
 } // namespace engine
