@@ -15,34 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="KirbyGame.h">
+    <ClInclude Include="res\Resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="KirbyGame.cpp">
+    <ClCompile Include="src\KirbyGame.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="KirbyGame.rc">
+    <ResourceCompile Include="res\KirbyGame.rc">
       <Filter>리소스 파일</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
+    <Image Include="res\small.ico">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="KirbyGame.ico">
+    <Image Include="res\KirbyGame.ico">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

@@ -131,20 +131,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="KirbyGame.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="targetver.h" />
+    <ClInclude Include="res\Resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="KirbyGame.cpp" />
+    <ClCompile Include="src\KirbyGame.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="KirbyGame.rc" />
+    <ResourceCompile Include="res\KirbyGame.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="KirbyGame.ico" />
-    <Image Include="small.ico" />
+    <Image Include="res\KirbyGame.ico" />
+    <Image Include="res\small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
