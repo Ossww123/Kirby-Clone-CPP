@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="engine\Input.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="res\Resource.h" />
   </ItemGroup>
