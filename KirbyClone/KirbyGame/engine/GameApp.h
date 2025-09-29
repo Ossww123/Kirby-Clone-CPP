@@ -5,6 +5,7 @@
 #include "engine/Input.h"
 #include "engine/Scene.h"
 #include "game/Player.h"
+#include "engine/Math.h"  // Player.h에 있긴하지만 명시
 
 namespace engine {
 
@@ -19,6 +20,8 @@ namespace engine {
             InitBindings ( );
 
             RECT rc; GetClientRect ( m_hWnd , &rc );
+            m_halfW = ( rc.right - rc.left ) / 2;
+            m_halfH = ( rc.bottom - rc.top ) / 2;
             m_Player = m_Scene.Spawn<game::Player> ( rc );
         }
 
@@ -29,6 +32,8 @@ namespace engine {
 
         // 리사이즈 콜백 (경계 갱신)
         void OnResize ( int w , int h ) {
+            m_halfW = w / 2; m_halfH = h / 2;
+
             if ( m_Player ) {
                 RECT rc{ 0,0,w,h };
                 m_Player->SetBounds ( rc );
@@ -82,6 +87,13 @@ namespace engine {
 
         void FixedUpdate ( double fixedDt ) {
             m_Scene.Update ( fixedDt , m_Input );
+
+            if ( m_Player ) {
+                const engine::Vec2 c = m_Player->Center ( );
+                const float k = 10.f; // 스무딩 강도
+                m_camX += ( c.x - m_camX ) * static_cast< float >( k * fixedDt );
+                m_camY += ( c.y - m_camY ) * static_cast< float >( k * fixedDt );
+            }
         }
 
         void Render ( ) {
@@ -97,18 +109,18 @@ namespace engine {
             DeleteObject ( bg );
 
             // 2) 씬 렌더 (메모리 DC에!)
-            m_Scene.Render ( m_memDC );
+            const int ox = static_cast< int >( m_camX ) - m_halfW;
+            const int oy = static_cast< int >( m_camY ) - m_halfH;
+            m_Scene.Render ( m_memDC , ox , oy );
 
             // 3) HUD 텍스트 (메모리 DC에!)
             SetBkMode ( m_memDC , TRANSPARENT );
             SetTextColor ( m_memDC , RGB ( 240 , 240 , 240 ) );
             wchar_t buf[ 256 ];
             std::swprintf ( buf , _countof ( buf ) ,
-                L"FPS:%d  dt:%.3f  MoveX:%.2f  Mouse(%d,%d) d(%d,%d) wheel:%d" ,
-                m_Time.FPS ( ) , m_Time.FixedDelta ( ) ,
-                m_Input.GetAxis ( "MoveX" ) ,
-                m_Input.MousePos ( ).x , m_Input.MousePos ( ).y ,
-                m_Input.MouseDelta ( ).x , m_Input.MouseDelta ( ).y ,
+                L"FPS:%d  dt:%.3f  Cam(%.0f,%.0f)  MoveX:%.2f  Mouse(%d,%d) d(%d,%d) wheel:%d" ,
+                m_Time.FPS ( ) , m_Time.FixedDelta ( ) , m_camX , m_camY , m_Input.GetAxis ( "MoveX" ) ,
+                m_Input.MousePos ( ).x , m_Input.MousePos ( ).y , m_Input.MouseDelta ( ).x , m_Input.MouseDelta ( ).y ,
                 m_Input.ConsumeWheel ( ) );
             TextOutW ( m_memDC , 8 , 8 , buf , lstrlenW ( buf ) );
 
@@ -164,13 +176,17 @@ namespace engine {
         Input  m_Input{};
         Scene  m_Scene{};
 
+        game::Player* m_Player{};
+
         // --- 백버퍼 ---
         HDC      m_memDC = nullptr;
         HBITMAP  m_backBMP = nullptr;
         HBITMAP  m_oldBMP = nullptr;
         int      m_bbW = 0 , m_bbH = 0;
 
-        game::Player* m_Player{};
+        // --- 카메라 ---
+        float m_camX = 0.f , m_camY = 0.f;
+        int   m_halfW = 0 , m_halfH = 0;
     };
 
 } // namespace engine

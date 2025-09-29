@@ -2,6 +2,7 @@
 #include <windows.h>
 #include "engine/Object.h"
 #include "engine/Input.h"
+#include "engine/Math.h"
 
 namespace game {
 
@@ -24,10 +25,16 @@ namespace game {
             if ( m_y > bottom ) m_y = static_cast< float >( bottom );
         }
 
-        void Render ( HDC dc ) override {
+        engine::Vec2 Center ( ) const {
+            return { m_x + m_w * 0.5f, m_y + m_h * 0.5f };
+        }
+
+        void Render ( HDC dc , int ox , int oy ) override {
             HBRUSH br = CreateSolidBrush ( RGB ( 255 , 180 , 64 ) );
             HGDIOBJ old = SelectObject ( dc , br );
-            RoundRect ( dc , ( int ) m_x , ( int ) m_y , ( int ) ( m_x + m_w ) , ( int ) ( m_y + m_h ) , 12 , 12 );
+            const int sx = static_cast< int >( m_x ) - ox;
+            const int sy = static_cast< int >( m_y ) - oy;
+            RoundRect ( dc , sx , sy , sx + static_cast< int >( m_w ) , sy + static_cast< int >( m_h ) , 12 , 12 );
             SelectObject ( dc , old );
             DeleteObject ( br );
         }

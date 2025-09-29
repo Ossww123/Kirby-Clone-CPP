@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="engine\GameApp.h" />
     <ClInclude Include="engine\Input.h" />
+    <ClInclude Include="engine\Math.h" />
     <ClInclude Include="engine\Object.h" />
     <ClInclude Include="engine\Scene.h" />
     <ClInclude Include="engine\Time.h" />

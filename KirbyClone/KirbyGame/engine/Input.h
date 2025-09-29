@@ -6,6 +6,8 @@
 #include <vector>
 #include <algorithm>
 
+// ** 나중에 필요한 키만 골라서 최적화 가능 **
+
 namespace engine {
 
     struct KeyState {
