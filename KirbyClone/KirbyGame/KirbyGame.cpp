@@ -13,11 +13,11 @@ LRESULT CALLBACK WndProc ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam 
     switch ( msg )
     {
     case WM_PAINT:
-        gApp.OnPaint ( );              // ← Render 내부에서 BeginPaint/EndPaint 사용
+        gApp.OnPaint ( );              // Render 내부에서 BeginPaint/EndPaint 사용
         return 0;
 
     case WM_ERASEBKGND:
-        return 1;                   // ← 깜빡임 완화 (우리가 직접 배경 채움)
+        return 1;                   // 깜빡임 완화
 
     case WM_SIZE:
     {

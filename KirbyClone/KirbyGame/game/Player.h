@@ -37,6 +37,13 @@ namespace game {
         void SetBounds ( RECT b ) { m_bounds = b; }
         engine::Vec2 Center ( ) const { return { m_x + m_w * 0.5f, m_y + m_h * 0.5f }; }
 
+        void GetBounds ( int& x , int& y , int& w , int& h ) const {
+            x = static_cast< int >( m_x );
+            y = static_cast< int >( m_y );
+            w = static_cast< int >( m_w );
+            h = static_cast< int >( m_h );
+        }
+
     private:
         static constexpr float SPEED = 180.f;
         float m_x = 100.f , m_y = 100.f;

@@ -7,6 +7,7 @@
 #include "game/Player.h"
 #include "engine/Camera.h"
 #include "engine/Math.h"  // Player.h에 있긴하지만 명시
+#include "engine/DebugDraw.h"
 
 namespace engine {
 
@@ -54,6 +55,10 @@ namespace engine {
         bool DoOneFrame ( ) {
             m_Time.TickFrame ( );
             m_Input.BeginFrame ( );
+            engine::debug::BeginFrame ( );
+
+            if ( m_Input.ActionPressed ( "ToggleDebug" ) )   // F1 토글
+                m_debugDrawEnabled = !m_debugDrawEnabled;
 
             if ( m_Input.ActionPressed ( "Quit" ) || m_Input.Pressed ( VK_ESCAPE ) ) {
                 PostQuitMessage ( 0 );
@@ -89,6 +94,9 @@ namespace engine {
             m_Input.BindAxis ( "MoveX" , { .positiveVK = 'D',      .negativeVK = 'A',     .scale = 1.f } );
             m_Input.BindAxis ( "MoveY" , { .positiveVK = VK_UP,    .negativeVK = VK_DOWN, .scale = 1.f } );
             m_Input.BindAxis ( "MoveY" , { .positiveVK = 'W',      .negativeVK = 'S',     .scale = 1.f } );
+
+            // 디버그
+            m_Input.BindAction ( "ToggleDebug" , VK_F1 );
         }
 
         void FixedUpdate ( double fixedDt ) {
@@ -112,24 +120,55 @@ namespace engine {
             FillRect ( m_memDC , &rc , bg );
             DeleteObject ( bg );
 
-            // 2) 씬 렌더 (메모리 DC에!)
+            // 2) 씬 렌더 (메모리 DC에)
             auto [ox , oy] = m_Cam.OffsetInt ( );
             m_Scene.Render ( m_memDC , ox , oy );
 
-            // 3) HUD 텍스트 (메모리 DC에!)
+            // 2.5) 디버그 드로우 수집
+            if ( m_debugDrawEnabled ) {
+                // (i) 그리드 (32px 간격)
+                const int GRID = 32;
+                const int wx0 = ox , wy0 = oy;
+                const int wx1 = ox + m_bbW , wy1 = oy + m_bbH;
+
+                int gxStart = ( wx0 / GRID ) * GRID;
+                int gyStart = ( wy0 / GRID ) * GRID;
+
+                for ( int x = gxStart; x <= wx1; x += GRID ) {
+                    engine::debug::WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
+                }
+                for ( int y = gyStart; y <= wy1; y += GRID ) {
+                    engine::debug::WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
+                }
+
+                // (ii) 플레이어 AABB
+                if ( m_Player ) {
+                    int px , py , pw , ph;
+                    m_Player->GetBounds ( px , py , pw , ph );
+                    engine::debug::WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
+                }
+
+                // (iii) 화면 중심 표식
+                const int cx = m_bbW / 2 , cy = m_bbH / 2;
+                engine::debug::Line ( cx - 6 , cy , cx + 6 , cy , RGB ( 200 , 200 , 80 ) );
+                engine::debug::Line ( cx , cy - 6 , cx , cy + 6 , RGB ( 200 , 200 , 80 ) );
+            }
+
+            // 3) 디버그 커맨드 플러시 (메모리 DC 대상으로)
+            engine::debug::Flush ( m_memDC );
+
+            // 4) HUD
             SetBkMode ( m_memDC , TRANSPARENT );
             SetTextColor ( m_memDC , RGB ( 240 , 240 , 240 ) );
             wchar_t buf[ 256 ];
             std::swprintf ( buf , _countof ( buf ) ,
-                L"FPS:%d  dt:%.3f  Cam(%.0f,%.0f)  Off(%d,%d)  MoveX:%.2f" ,
+                L"FPS:%d  dt:%.3f  Debug:%s" ,
                 m_Time.FPS ( ) , m_Time.FixedDelta ( ) ,
-                m_Cam.Current ( ).x , m_Cam.Current ( ).y , ox , oy ,
-                m_Input.GetAxis ( "MoveX" ) );
+                m_debugDrawEnabled ? L"ON" : L"OFF" );
             TextOutW ( m_memDC , 8 , 8 , buf , lstrlenW ( buf ) );
 
-            // 4) 한번에 화면으로 복사
+            // 5) 백버퍼 → 화면
             BitBlt ( hdc , 0 , 0 , m_bbW , m_bbH , m_memDC , 0 , 0 , SRCCOPY );
-
             EndPaint ( m_hWnd , &ps );
         }
 
@@ -187,6 +226,9 @@ namespace engine {
         HBITMAP  m_backBMP = nullptr;
         HBITMAP  m_oldBMP = nullptr;
         int      m_bbW = 0 , m_bbH = 0;
+
+        // --- 디버깅 ---
+        bool  m_debugDrawEnabled = true;
     };
 
 } // namespace engine

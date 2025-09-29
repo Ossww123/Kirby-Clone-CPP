@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h" />
+    <ClInclude Include="engine\DebugDraw.h" />
     <ClInclude Include="engine\GameApp.h" />
     <ClInclude Include="engine\Input.h" />
     <ClInclude Include="engine\Math.h" />
