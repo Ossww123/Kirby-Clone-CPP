@@ -7,32 +7,31 @@ static engine::GameApp gApp;
 
 LRESULT CALLBACK WndProc ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam )
 {
-    // (선택) gApp.OnWndMessage 전달은 그대로 유지
     gApp.OnWndMessage ( hWnd , msg , wParam , lParam );
 
     switch ( msg )
     {
-    case WM_PAINT:
-        gApp.OnPaint ( );              // Render 내부에서 BeginPaint/EndPaint 사용
-        return 0;
-
-    case WM_ERASEBKGND:
-        return 1;                   // 깜빡임 완화
-
-    case WM_SIZE:
-    {
+    case WM_SIZE: {
         const int w = LOWORD ( lParam );
         const int h = HIWORD ( lParam );
-        gApp.OnResize ( w , h );   // 경계 갱신
+        gApp.OnResize ( w , h );
         return 0;
     }
-
+    case WM_ERASEBKGND:
+        return 1; // OS 배경 지우기 방지
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        BeginPaint ( hWnd , &ps );
+        EndPaint ( hWnd , &ps );
+        return 0;
+    }
     case WM_DESTROY:
         PostQuitMessage ( 0 );
         return 0;
     }
     return DefWindowProcW ( hWnd , msg , wParam , lParam );
 }
+
 
 int WINAPI wWinMain ( HINSTANCE hInst , HINSTANCE , PWSTR , int nCmdShow )
 {

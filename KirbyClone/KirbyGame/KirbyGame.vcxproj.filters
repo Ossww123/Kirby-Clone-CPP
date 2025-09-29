@@ -45,6 +45,12 @@
     <ClInclude Include="engine\DebugDraw.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="engine\IRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\D3D11Renderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">

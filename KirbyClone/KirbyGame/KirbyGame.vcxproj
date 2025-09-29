@@ -136,9 +136,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\Camera.h" />
+    <ClInclude Include="engine\D3D11Renderer.h" />
     <ClInclude Include="engine\DebugDraw.h" />
     <ClInclude Include="engine\GameApp.h" />
     <ClInclude Include="engine\Input.h" />
+    <ClInclude Include="engine\IRenderer.h" />
     <ClInclude Include="engine\Math.h" />
     <ClInclude Include="engine\Object.h" />
     <ClInclude Include="engine\Scene.h" />
