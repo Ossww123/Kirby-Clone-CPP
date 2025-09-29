@@ -1,7 +1,9 @@
 root = true
 
 [*]
-charset = utf-8
+charset = utf-8-bom
+end_of_line = crlf
+insert_final_newline = true
 
 # Visual Studio가 C++ 설정을 사용하여 .editorconfig 파일을 생성했습니다.
 root = true

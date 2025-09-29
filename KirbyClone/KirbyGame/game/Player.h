@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <windows.h>
 #include "engine/Object.h"
 #include "engine/Input.h"
@@ -14,9 +14,9 @@ namespace game {
             const float mx = input.GetAxis ( "MoveX" );
             const float my = input.GetAxis ( "MoveY" );
             m_x += mx * SPEED * static_cast< float >( fixedDt );
-            m_y -= my * SPEED * static_cast< float >( fixedDt ); // 화면 Y는 아래로 +이므로 반전
+            m_y -= my * SPEED * static_cast< float >( fixedDt ); // 화면 Y+가 아래 → 반전
 
-            // 화면 경계 클램프
+            // 경계 클램프
             const int right = m_bounds.right - static_cast< int >( m_w );
             const int bottom = m_bounds.bottom - static_cast< int >( m_h );
             if ( m_x < m_bounds.left ) m_x = static_cast< float >( m_bounds.left );
@@ -25,24 +25,20 @@ namespace game {
             if ( m_y > bottom ) m_y = static_cast< float >( bottom );
         }
 
-        engine::Vec2 Center ( ) const {
-            return { m_x + m_w * 0.5f, m_y + m_h * 0.5f };
-        }
-
         void Render ( HDC dc , int ox , int oy ) override {
             HBRUSH br = CreateSolidBrush ( RGB ( 255 , 180 , 64 ) );
             HGDIOBJ old = SelectObject ( dc , br );
             const int sx = static_cast< int >( m_x ) - ox;
             const int sy = static_cast< int >( m_y ) - oy;
             RoundRect ( dc , sx , sy , sx + static_cast< int >( m_w ) , sy + static_cast< int >( m_h ) , 12 , 12 );
-            SelectObject ( dc , old );
-            DeleteObject ( br );
+            SelectObject ( dc , old ); DeleteObject ( br );
         }
 
         void SetBounds ( RECT b ) { m_bounds = b; }
+        engine::Vec2 Center ( ) const { return { m_x + m_w * 0.5f, m_y + m_h * 0.5f }; }
 
     private:
-        static constexpr float SPEED = 180.f; // px/s
+        static constexpr float SPEED = 180.f;
         float m_x = 100.f , m_y = 100.f;
         float m_w = 32.f , m_h = 24.f;
         RECT  m_bounds{};

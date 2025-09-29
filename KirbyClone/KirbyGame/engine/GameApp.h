@@ -1,10 +1,11 @@
-#pragma once
+﻿#pragma once
 #include <windows.h>
 #include <cwchar>
 #include "engine/Time.h"
 #include "engine/Input.h"
 #include "engine/Scene.h"
 #include "game/Player.h"
+#include "engine/Camera.h"
 #include "engine/Math.h"  // Player.h에 있긴하지만 명시
 
 namespace engine {
@@ -20,9 +21,15 @@ namespace engine {
             InitBindings ( );
 
             RECT rc; GetClientRect ( m_hWnd , &rc );
-            m_halfW = ( rc.right - rc.left ) / 2;
-            m_halfH = ( rc.bottom - rc.top ) / 2;
             m_Player = m_Scene.Spawn<game::Player> ( rc );
+
+            const int w = rc.right - rc.left , h = rc.bottom - rc.top;
+            m_Cam.SetScreenSize ( w , h );
+            m_Cam.SetWorldRect ( 0.f , 0.f , 3000.f , 1600.f ); // 데모용 월드 크기
+            m_Cam.SetSmoothSpeed ( 10.f );
+            m_Cam.SetPixelSnap ( true );
+            m_Cam.SetLookAt ( m_Player->Center ( ) );
+            m_Cam.SnapImmediate ( );
         }
 
         // 윈도우 메시지 전달(휠/포커스 등)
@@ -32,12 +39,11 @@ namespace engine {
 
         // 리사이즈 콜백 (경계 갱신)
         void OnResize ( int w , int h ) {
-            m_halfW = w / 2; m_halfH = h / 2;
-
             if ( m_Player ) {
                 RECT rc{ 0,0,w,h };
                 m_Player->SetBounds ( rc );
             }
+            m_Cam.SetScreenSize ( w , h );
             EnsureBackBuffer ( );
         }
 
@@ -89,11 +95,9 @@ namespace engine {
             m_Scene.Update ( fixedDt , m_Input );
 
             if ( m_Player ) {
-                const engine::Vec2 c = m_Player->Center ( );
-                const float k = 10.f; // 스무딩 강도
-                m_camX += ( c.x - m_camX ) * static_cast< float >( k * fixedDt );
-                m_camY += ( c.y - m_camY ) * static_cast< float >( k * fixedDt );
+                m_Cam.SetLookAt ( m_Player->Center ( ) );
             }
+            m_Cam.Update ( fixedDt );
         }
 
         void Render ( ) {
@@ -109,8 +113,7 @@ namespace engine {
             DeleteObject ( bg );
 
             // 2) 씬 렌더 (메모리 DC에!)
-            const int ox = static_cast< int >( m_camX ) - m_halfW;
-            const int oy = static_cast< int >( m_camY ) - m_halfH;
+            auto [ox , oy] = m_Cam.OffsetInt ( );
             m_Scene.Render ( m_memDC , ox , oy );
 
             // 3) HUD 텍스트 (메모리 DC에!)
@@ -118,10 +121,10 @@ namespace engine {
             SetTextColor ( m_memDC , RGB ( 240 , 240 , 240 ) );
             wchar_t buf[ 256 ];
             std::swprintf ( buf , _countof ( buf ) ,
-                L"FPS:%d  dt:%.3f  Cam(%.0f,%.0f)  MoveX:%.2f  Mouse(%d,%d) d(%d,%d) wheel:%d" ,
-                m_Time.FPS ( ) , m_Time.FixedDelta ( ) , m_camX , m_camY , m_Input.GetAxis ( "MoveX" ) ,
-                m_Input.MousePos ( ).x , m_Input.MousePos ( ).y , m_Input.MouseDelta ( ).x , m_Input.MouseDelta ( ).y ,
-                m_Input.ConsumeWheel ( ) );
+                L"FPS:%d  dt:%.3f  Cam(%.0f,%.0f)  Off(%d,%d)  MoveX:%.2f" ,
+                m_Time.FPS ( ) , m_Time.FixedDelta ( ) ,
+                m_Cam.Current ( ).x , m_Cam.Current ( ).y , ox , oy ,
+                m_Input.GetAxis ( "MoveX" ) );
             TextOutW ( m_memDC , 8 , 8 , buf , lstrlenW ( buf ) );
 
             // 4) 한번에 화면으로 복사
@@ -175,6 +178,7 @@ namespace engine {
         Time   m_Time{};
         Input  m_Input{};
         Scene  m_Scene{};
+        Camera m_Cam{};
 
         game::Player* m_Player{};
 
@@ -183,10 +187,6 @@ namespace engine {
         HBITMAP  m_backBMP = nullptr;
         HBITMAP  m_oldBMP = nullptr;
         int      m_bbW = 0 , m_bbH = 0;
-
-        // --- 카메라 ---
-        float m_camX = 0.f , m_camY = 0.f;
-        int   m_halfW = 0 , m_halfH = 0;
     };
 
 } // namespace engine
