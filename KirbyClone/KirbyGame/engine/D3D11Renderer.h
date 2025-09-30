@@ -78,6 +78,9 @@ namespace engine {
 
             if ( !CreateBackbufferRTV ( ) ) return false;
             SetViewport ( width , height );
+
+            m_width = width; m_height = height;
+
             return true;
         }
 
@@ -89,6 +92,8 @@ namespace engine {
             m_swapChain->ResizeBuffers ( 0 , width , height , DXGI_FORMAT_UNKNOWN , 0 );
             CreateBackbufferRTV ( );
             SetViewport ( width , height );
+
+            m_width = width; m_height = height;
         }
 
         void BeginFrame ( Color clear ) override {
@@ -100,6 +105,11 @@ namespace engine {
         void EndFrame ( ) override {
             m_swapChain->Present ( m_vsync ? 1 : 0 , 0 );
         }
+
+        ID3D11Device* Device ( )  const { return m_device.Get ( ); }
+        ID3D11DeviceContext* Context ( ) const { return m_context.Get ( ); }
+        int Width ( )  const { return m_width; }
+        int Height ( ) const { return m_height; }
 
     private:
         bool CreateBackbufferRTV ( ) {
@@ -131,6 +141,8 @@ namespace engine {
     private:
         HWND m_hWnd = nullptr;
         bool m_vsync = false;
+
+        int m_width = 0 , m_height = 0;
 
         Microsoft::WRL::ComPtr<ID3D11Device>        m_device;
         Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_context;
