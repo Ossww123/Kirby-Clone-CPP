@@ -2,7 +2,6 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <d3d11.h>
 #include <dxgi.h>
@@ -27,6 +26,8 @@ namespace engine {
 #if defined(_DEBUG)
             flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
+            flags |= D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
             static D3D_FEATURE_LEVEL levels[ ] = {
                 D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0,
                 D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0
@@ -64,7 +65,7 @@ namespace engine {
             desc.BufferCount = 2;
             desc.BufferDesc.Width = width;
             desc.BufferDesc.Height = height;
-            desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
             desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
             desc.OutputWindow = m_hWnd;
             desc.SampleDesc.Count = 1;
@@ -108,6 +109,7 @@ namespace engine {
 
         ID3D11Device* Device ( )  const { return m_device.Get ( ); }
         ID3D11DeviceContext* Context ( ) const { return m_context.Get ( ); }
+        IDXGISwapChain* SwapChain ( ) const { return m_swapChain.Get ( ); }
         int Width ( )  const { return m_width; }
         int Height ( ) const { return m_height; }
 

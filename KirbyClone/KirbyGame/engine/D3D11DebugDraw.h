@@ -125,7 +125,7 @@ float4 main(float4 pos:SV_Position, float4 col:COLOR) : SV_Target { return col; 
 
             UINT flags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
 #if defined(_DEBUG)
-            flags |= D3DCompileFlags ( D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION );
+            flags |= ( D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION );
 #endif
 
             Microsoft::WRL::ComPtr<ID3DBlob> vsb , psb , err;

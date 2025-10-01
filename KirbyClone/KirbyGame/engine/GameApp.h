@@ -12,6 +12,7 @@
 #include "engine/D3D11Renderer.h"
 #include "engine/D3D11Sprite.h"
 #include "engine/D3D11DebugDraw.h"
+#include "engine/DWriteText.h"
 #include "game/Player.h"
 
 
@@ -89,7 +90,11 @@ namespace engine {
                 if ( m_Player ) m_Player->SetSize ( ( float ) m_PlayerTex.width , ( float ) m_PlayerTex.height );
             }
 
-            auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+            m_TextHUD = std::make_unique<engine::DWriteTextHUD> ( );
+            if ( !m_TextHUD->Initialize ( d3d->SwapChain ( ) ) ) {
+                // 실패해도 치명적이진 않지만, 로그 남기고 넘어가도 OK
+            }
+
             m_Debug = std::make_unique<engine::D3D11DebugDraw> ( );
             m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
         }
@@ -110,7 +115,7 @@ namespace engine {
             if ( m_Renderer ) m_Renderer->Resize ( w , h );
             if ( m_Sprites )  m_Sprites->OnResize ( w , h );
             if ( m_Debug ) m_Debug->OnResize ( w , h );
-
+            if ( m_TextHUD ) m_TextHUD->RecreateTarget ( );
         }
 
         // 루프 1 프레임
@@ -222,10 +227,23 @@ namespace engine {
                 m_Debug->Flush ( );
             }
 
+            // DirectWrite HUD (FPS/좌표 등)
+            if ( m_TextHUD ) {
+                m_TextHUD->Begin ( );
+
+                wchar_t buf[ 256 ];
+                auto [ox , oy] = m_Cam.OffsetInt ( );
+                std::swprintf ( buf , _countof ( buf ) ,
+                    L"FPS:%d  dt:%.3f  Cam(%.0f,%.0f)  Off(%d,%d)" ,
+                    m_Time.FPS ( ) , m_Time.FixedDelta ( ) ,
+                    m_Cam.Current ( ).x , m_Cam.Current ( ).y , ox , oy );
+
+                m_TextHUD->DrawTextLine ( buf , 8.0f , 8.0f , D2D1::ColorF ( 0.95f , 0.95f , 0.95f , 1 ) );
+                m_TextHUD->End ( );
+            }
+
             m_Renderer->EndFrame ( );
         }
-
-
 
     private:
         HWND   m_hWnd{};
@@ -236,6 +254,7 @@ namespace engine {
         std::unique_ptr<IRenderer>            m_Renderer;
         std::unique_ptr<D3D11SpriteRenderer>  m_Sprites;
         std::unique_ptr<engine::D3D11DebugDraw> m_Debug;
+        std::unique_ptr<engine::DWriteTextHUD> m_TextHUD;
         Tex2D                                  m_PlayerTex{};
 
         Camera          m_Cam{};
