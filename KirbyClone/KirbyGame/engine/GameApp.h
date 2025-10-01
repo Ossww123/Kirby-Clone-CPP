@@ -7,10 +7,12 @@
 #include "engine/Scene.h"
 #include "engine/Math.h"
 #include "engine/Camera.h"
+#include "engine/Anim.h"
 #include "engine/IRenderer.h"
 #include "engine/D3D11Renderer.h"
 #include "engine/D3D11Sprite.h"
 #include "game/Player.h"
+
 
 namespace engine {
 
@@ -63,6 +65,27 @@ namespace engine {
             // 실행 디렉터리 기준 경로 (VS의 작업 디렉터리를 프로젝트 루트로 맞추는 것을 권장)
             if ( !LoadTextureWIC ( d3d->Device ( ) , L"assets/player.png" , &m_PlayerTex ) ) {
                 // TODO: 플레이스홀더 생성이나 오류 로그를 원하면 여기에 처리
+            }
+
+            // 텍스처 로드 후 (성공 시)
+            if ( m_PlayerTex.srv ) {
+                // 1) Idle: 전체 이미지 1프레임
+                RECT full{ 0, 0, m_PlayerTex.width, m_PlayerTex.height };
+                engine::AnimClip idle{};
+                idle.frames.push_back ( { full, 0.2f } );
+                idle.loop = true;
+                m_Anim.AddClip ( "Idle" , std::move ( idle ) );
+
+                // 2) Walk: 시트가 있다면 행 기반 프레임(예: 32x32 셀, 6프레임, 12fps)
+                // → 실제 시트에 맞춰 값만 바꿔주면 됨.
+                // engine::AnimClip walk = engine::Animator::MakeRowClip(0, 0, 32, 32, 6, 12.f, true);
+                // m_Anim.AddClip("Walk", std::move(walk));
+
+                // 일단 Idle로 시작
+                m_Anim.Play ( "Idle" , true );
+
+                // 크기 맞추기(원본 비율 유지)
+                if ( m_Player ) m_Player->SetSize ( ( float ) m_PlayerTex.width , ( float ) m_PlayerTex.height );
             }
 
         }
@@ -125,34 +148,44 @@ namespace engine {
         void FixedUpdate ( double fixedDt ) {
             m_Scene.Update ( fixedDt , m_Input );
 
-            if ( m_Player ) {
-                m_Cam.SetLookAt ( m_Player->Center ( ) );
+            // 이동 판단 (입력 기준; 플레이어 내부보다 여기서 간단히 판단)
+            const float mx = m_Input.GetAxis ( "MoveX" );
+            const float my = m_Input.GetAxis ( "MoveY" );
+            m_isMoving = ( std::fabs ( mx ) > 0.05f ) || ( std::fabs ( my ) > 0.05f );
+
+            // 클립 전환 (Walk 클립이 없으면 Idle 유지)
+            if ( m_isMoving && m_Anim.CurrentName ( ) != "Walk" ) {
+                if ( !m_Anim.Play ( "Walk" , false ) ) m_Anim.Play ( "Idle" , false );
             }
+            else if ( !m_isMoving && m_Anim.CurrentName ( ) != "Idle" ) {
+                m_Anim.Play ( "Idle" , false );
+            }
+
+            m_Anim.Update ( fixedDt );
+
+            if ( m_Player ) m_Cam.SetLookAt ( m_Player->Center ( ) );
             m_Cam.Update ( fixedDt );
         }
 
+
         void RenderFrame ( ) {
-            // 배경 클리어
             m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
 
-            // 플레이어 스프라이트 그리기
             if ( m_Player && m_PlayerTex.srv && m_Sprites ) {
                 auto [ox , oy] = m_Cam.OffsetInt ( );
+                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
 
-                int px , py , pw , ph;
-                m_Player->GetBounds ( px , py , pw , ph );
+                const float x = float ( px - ox ) , y = float ( py - oy );
+                const float w = float ( pw ) , h = float ( ph );
 
-                const float x = static_cast< float >( px - ox );
-                const float y = static_cast< float >( py - oy );
-                const float w = static_cast< float >( pw );
-                const float h = static_cast< float >( ph );
-
-                float tint[ 4 ] = { 1, 1, 1, 1 }; // 필요시 색 틴트 적용
-                m_Sprites->Draw ( m_PlayerTex , x , y , w , h , /*srcPixels=*/nullptr , /*tint=*/tint );
+                RECT src = m_Anim.CurrentSrc ( );
+                float tint[ 4 ] = { 1,1,1,1 };
+                m_Sprites->Draw ( m_PlayerTex , x , y , w , h , &src , tint );
             }
 
             m_Renderer->EndFrame ( );
         }
+
 
     private:
         HWND   m_hWnd{};
@@ -166,8 +199,10 @@ namespace engine {
 
         Camera          m_Cam{};
         game::Player* m_Player{};
+        engine::Animator m_Anim{};
 
         bool m_comInitialized = false; // CoInitializeEx 성공 여부
+        bool m_isMoving = false;
     };
 
 } // namespace engine

@@ -44,6 +44,8 @@ namespace game {
             h = static_cast< int >( m_h );
         }
 
+        void SetSize ( float w , float h ) { m_w = w; m_h = h; }
+
     private:
         static constexpr float SPEED = 180.f;
         float m_x = 100.f , m_y = 100.f;
