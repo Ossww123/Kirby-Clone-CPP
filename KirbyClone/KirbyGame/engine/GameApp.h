@@ -8,11 +8,12 @@
 #include "engine/Scene.h"
 #include "engine/Math.h"
 #include "engine/Camera.h"
+#include "engine/Texture.h"
+#include "engine/TextureLoader.h"
 #include "engine/Anim.h"
 #include "engine/Collision.h"
 #include "engine/IRenderer.h"
 #include "engine/D3D11Renderer.h"
-#include "engine/D3D11Sprite.h"
 #include "engine/D3D11DebugDraw.h"
 #include "engine/DWriteText.h"
 #include "engine/D3D11SpriteBatch.h"
@@ -69,8 +70,6 @@ namespace engine {
             auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
             m_Batch = std::make_unique<engine::D3D11SpriteBatch> ( );
             m_Batch->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
-            m_Sprites = std::make_unique<D3D11SpriteRenderer> ( );
-            m_Sprites->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
 
             // WIC 초기화 + 텍스처 로드
             HRESULT cohr = CoInitializeEx ( nullptr , COINIT_MULTITHREADED );
@@ -128,7 +127,6 @@ namespace engine {
             m_Cam.SetScreenSize ( w , h );
 
             if ( m_Renderer ) m_Renderer->Resize ( w , h );
-            if ( m_Sprites )  m_Sprites->OnResize ( w , h );
             if ( m_Debug ) m_Debug->OnResize ( w , h );
             if ( m_TextHUD ) m_TextHUD->RecreateTarget ( );
             if ( m_Batch ) m_Batch->OnResize ( w , h );
@@ -187,7 +185,7 @@ namespace engine {
             m_Vel.x = ax * moveSpeed;
 
             if ( m_Grounded && ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) ) ) {
-                m_Vel.y = -380.f;
+                m_Vel.y = -700.f;
                 m_Grounded = false;
             }
 
@@ -299,7 +297,6 @@ namespace engine {
         std::unique_ptr<engine::D3D11DebugDraw> m_Debug;
         std::unique_ptr<engine::DWriteTextHUD> m_TextHUD;
         std::unique_ptr<engine::D3D11SpriteBatch> m_Batch;
-        std::unique_ptr<D3D11SpriteRenderer>  m_Sprites; // 미사용
         Tex2D                                  m_PlayerTex{};
 
         Camera          m_Cam{};

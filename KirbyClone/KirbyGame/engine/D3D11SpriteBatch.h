@@ -9,9 +9,9 @@
 #include <cstdint>
 #include <cstring>
 
-namespace engine {
+#include "engine/Texture.h"
 
-    struct Tex2D; // forward (engine/D3D11Sprite.h의 Tex2D와 동일 타입 가정)
+namespace engine {
 
     /* 내부용: 누적 커맨드 */
     struct SBCommand {

@@ -69,9 +69,18 @@
     <ClInclude Include="engine\Collision.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="engine\Texture.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\TextureLoader.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\D3D11TextureLoader.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

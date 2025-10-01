@@ -150,11 +150,14 @@
     <ClInclude Include="engine\Math.h" />
     <ClInclude Include="engine\Object.h" />
     <ClInclude Include="engine\Scene.h" />
+    <ClInclude Include="engine\Texture.h" />
+    <ClInclude Include="engine\TextureLoader.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="res\Resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\D3D11TextureLoader.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
   </ItemGroup>
   <ItemGroup>

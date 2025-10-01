@@ -10,15 +10,13 @@
 #include <vector>
 #include <cstdint>
 #include <stdexcept>
+
+#include "engine/Texture.h"
+
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "windowscodecs.lib")
 
 namespace engine {
-
-    struct Tex2D {
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
-        int width = 0 , height = 0;
-    };
 
     // --- WIC 텍스처 로더 (PNG/JPG 등) ---
     inline bool LoadTextureWIC ( ID3D11Device* dev , const wchar_t* path , Tex2D* outTex ) {
