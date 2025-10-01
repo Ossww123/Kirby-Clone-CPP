@@ -152,6 +152,8 @@
     <ClInclude Include="engine\Scene.h" />
     <ClInclude Include="engine\Texture.h" />
     <ClInclude Include="engine\TextureLoader.h" />
+    <ClInclude Include="engine\TileMap.h" />
+    <ClInclude Include="engine\TileSet.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="res\Resource.h" />
@@ -159,6 +161,8 @@
   <ItemGroup>
     <ClCompile Include="engine\Collision.cpp" />
     <ClCompile Include="engine\D3D11TextureLoader.cpp" />
+    <ClCompile Include="engine\TileMap.cpp" />
+    <ClCompile Include="engine\TileSet.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
   </ItemGroup>
   <ItemGroup>

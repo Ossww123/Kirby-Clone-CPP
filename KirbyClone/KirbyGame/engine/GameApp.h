@@ -11,6 +11,8 @@
 #include "engine/Texture.h"
 #include "engine/TextureLoader.h"
 #include "engine/Anim.h"
+#include "engine/TileSet.h"
+#include "engine/TileMap.h"
 #include "engine/Collision.h"
 #include "engine/IRenderer.h"
 #include "engine/D3D11Renderer.h"
@@ -31,13 +33,14 @@ namespace engine {
             }
         }
 
-        void Init ( HWND hWnd ) {
+        void Init ( HWND hWnd )
+        {
             m_hWnd = hWnd;
             m_Time.Init ( );
             m_Input.Init ( hWnd );
             InitBindings ( );
 
-            // 클라이언트 크기
+            // 창 크기
             RECT rc; GetClientRect ( m_hWnd , &rc );
             const int w = rc.right - rc.left;
             const int h = rc.bottom - rc.top;
@@ -45,72 +48,65 @@ namespace engine {
             // 씬/플레이어
             m_Player = m_Scene.Spawn<game::Player> ( rc );
 
-            // 카메라 설정
+            // 카메라
             m_Cam.SetScreenSize ( w , h );
-            m_Cam.SetWorldRect ( 0.f , 0.f , 3000.f , 1600.f ); // 데모용 월드 크기
+            m_Cam.SetWorldRect ( 0.f , 0.f , 3000.f , 1600.f );
             m_Cam.SetSmoothSpeed ( 10.f );
             m_Cam.SetPixelSnap ( true );
             m_Cam.SetLookAt ( m_Player->Center ( ) );
             m_Cam.SnapImmediate ( );
 
-            // 간단한 바닥/벽 배치
-            m_Collision.AddStaticBox ( -2000 , 500 , 6000 , 60 ); // (x,y,w,h)로 바뀜
-            m_Collision.AddStaticBox ( 300 , 360 , 300 , 20 );
-            m_Collision.AddStaticBox ( 800 , 440 , 400 , 20 );
-            m_Collision.AddStaticBox ( -100 , 300 , 20 , 220 );
-
-            // D3D11 렌더러 생성
+            // D3D11 렌더러
             m_Renderer = std::make_unique<D3D11Renderer> ( );
             if ( !m_Renderer->Initialize ( hWnd , w , h , /*vsync=*/false ) ) {
                 PostQuitMessage ( -1 );
                 return;
             }
-
-            // 스프라이트 렌더러 초기화
             auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+
+            // SpriteBatch
             m_Batch = std::make_unique<engine::D3D11SpriteBatch> ( );
             m_Batch->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
 
-            // WIC 초기화 + 텍스처 로드
+            // 텍스처/WIC 로드 (COM 초기화)
             HRESULT cohr = CoInitializeEx ( nullptr , COINIT_MULTITHREADED );
-            if ( SUCCEEDED ( cohr ) ) m_comInitialized = true; // 이미 초기화되어 있으면 S_FALSE
-            // 실행 디렉터리 기준 경로 (VS의 작업 디렉터리를 프로젝트 루트로 맞추는 것을 권장)
+            if ( SUCCEEDED ( cohr ) ) m_comInitialized = true;
+
+            // 플레이어 텍스처
             if ( !LoadTextureWIC ( d3d->Device ( ) , L"assets/player.png" , &m_PlayerTex ) ) {
-                // TODO: 플레이스홀더 생성이나 오류 로그를 원하면 여기에 처리
+                // 필요 시 플레이스홀더 생성
+                // CreateSolidTexture1x1(d3d->Device(), 0xFFFFFFFFu, &m_PlayerTex);
             }
-
-            // 텍스처 로드 후 (성공 시)
             if ( m_PlayerTex.srv ) {
-                const int texW = m_PlayerTex.width;
-                const int texH = m_PlayerTex.height;
-
-                // (A) 단일 이미지일 때: Idle 한 프레임
-                RECT full{ 0, 0, texW, texH };
-                engine::AnimClip idle{};
-                idle.frames.push_back ( { full, 0.2f } );
-                idle.loop = true;
+                const int texW = m_PlayerTex.width , texH = m_PlayerTex.height;
+                RECT full{ 0,0,texW,texH };
+                engine::AnimClip idle{}; idle.frames.push_back ( { full, 0.2f } ); idle.loop = true;
                 m_Anim.AddClip ( "Idle" , std::move ( idle ) );
-
-                // (B) 시트가 있을 때
-                // 예: 가로 6프레임, 한 칸 32x32, 12fps
-                // const int cellW = 32, cellH = 32, count = 6; const float fps = 12.f;
-                // engine::AnimClip walk = engine::Animator::MakeRowClip(0, 0, cellW, cellH, count, fps, true);
-                // m_Anim.AddClip("Walk", std::move(walk));
-                // m_Player->SetSize((float)cellW, (float)cellH); // 비율 유지하려면 프레임 크기로 맞추기
-
-                // 시트가 아직 없으면 원본 크기로
-                m_Player->SetSize ( ( float ) texW , ( float ) texH );
-
                 m_Anim.Play ( "Idle" , true );
+                m_Player->SetSize ( ( float ) texW , ( float ) texH );
             }
 
+            // 텍스트 HUD / 디버그 드로우
             m_TextHUD = std::make_unique<engine::DWriteTextHUD> ( );
-            if ( !m_TextHUD->Initialize ( d3d->SwapChain ( ) ) ) {
-                // 실패해도 치명적이진 않지만, 로그 남기고 넘어가도 OK
-            }
-
+            m_TextHUD->Initialize ( d3d->SwapChain ( ) );
             m_Debug = std::make_unique<engine::D3D11DebugDraw> ( );
             m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
+
+            // --- 타일셋/타일맵 ---
+            // 아틀라스 로드(예: 32x32 타일)
+            m_Tiles.LoadAtlas ( d3d->Device ( ) , L"assets/tiles.png" , 32 , 32 );
+
+            // id=1을 SOLID 타일로 정의(아틀라스 첫 칸 가정)
+            engine::TileDef solid{};
+            solid.solid = true;
+            solid.src = RECT{ 0, 0, 32, 32 };
+            m_Tiles.Define ( 1 , solid );
+
+            // CSV 로드 후 콜라이더 병합/등록
+            if ( m_Map.LoadCSV ( L"assets/stage01.csv" ) ) {
+                m_Collision.Clear ( );
+                m_Map.BuildSolidColliders ( m_Collision , m_Tiles );
+            }
         }
 
         // 메시지 전달 (휠/포커스 등)
@@ -224,45 +220,55 @@ namespace engine {
 
 
 
-        void RenderFrame ( ) {
+        void RenderFrame ( )
+        {
             m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
 
+            auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
             auto [ox , oy] = m_Cam.OffsetInt ( );
 
-            if ( m_Batch && m_PlayerTex.srv && m_Player ) {
+            // --- SpriteBatch ---
+            if ( m_Batch ) {
                 m_Batch->Begin ( );
 
-                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                const float x = float ( px - ox ) , y = float ( py - oy );
-                const float w = float ( pw ) , h = float ( ph );
+                // 1) 타일맵 (가시 영역만)
+                m_Map.Render ( *m_Batch , m_Tiles , ox , oy , d3d->Width ( ) , d3d->Height ( ) );
 
-                RECT src = m_Anim.CurrentSrc ( );
-                const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
-                m_Batch->Draw ( m_PlayerTex , x , y , w , h , hasSrc ? &src : nullptr , 0xFFFFFFFF );
+                // 2) 플레이어
+                if ( m_PlayerTex.srv && m_Player ) {
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    const float x = float ( px - ox ) , y = float ( py - oy );
+                    const float w = float ( pw ) , h = float ( ph );
+                    RECT src = m_Anim.CurrentSrc ( );
+                    const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
+                    m_Batch->Draw ( m_PlayerTex , x , y , w , h , hasSrc ? &src : nullptr , 0xFFFFFFFF );
+                }
 
                 m_Batch->End ( );
             }
 
-            // --- D3D DebugDraw (라인/박스) ---
+            // --- 디버그 드로우 ---
             if ( m_debugDrawEnabled && m_Debug ) {
-                auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
                 const int GRID = 32;
                 const int wx0 = ox , wy0 = oy , wx1 = ox + d3d->Width ( ) , wy1 = oy + d3d->Height ( );
                 int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
-
                 for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
                 for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
 
+                // 타일에서 병합된 SOLID 콜라이더
                 m_Collision.DebugDraw ( *m_Debug , ox , oy , RGB ( 255 , 60 , 60 ) );
 
-                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
+                // 널 가드 추가
+                if ( m_Player ) {
+                    int px , py , pw , ph;
+                    m_Player->GetBounds ( px , py , pw , ph );
+                    m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
+                }
 
                 m_Debug->Flush ( );
             }
 
-
-            // --- DirectWrite HUD ---
+            // --- HUD ---
             if ( m_TextHUD ) {
                 m_TextHUD->Begin ( );
                 wchar_t buf[ 128 ];
@@ -280,6 +286,8 @@ namespace engine {
         Time   m_Time{};
         Input  m_Input{};
         Scene  m_Scene{};
+        TileSet m_Tiles{};
+        TileMap m_Map{};
 
         std::unique_ptr<IRenderer>            m_Renderer;
         std::unique_ptr<engine::D3D11DebugDraw> m_Debug;
