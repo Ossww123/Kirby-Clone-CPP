@@ -54,10 +54,10 @@ namespace engine {
             m_Cam.SnapImmediate ( );
 
             // 간단한 바닥/벽 배치
-            m_StaticSolids.push_back ( RECT{ -2000, 500,  4000, 560 } ); // 바닥(두꺼운 플랫폼)
-            m_StaticSolids.push_back ( RECT{ 300,  360,   600, 380 } ); // 발판
-            m_StaticSolids.push_back ( RECT{ 800,  440,  1200, 460 } ); // 발판
-            m_StaticSolids.push_back ( RECT{ -100,  300,  -80,  520 } );  // 왼쪽 기둥(벽)
+            m_Collision.AddStaticBox ( -2000 , 500 , 6000 , 60 ); // (x,y,w,h)로 바뀜
+            m_Collision.AddStaticBox ( 300 , 360 , 300 , 20 );
+            m_Collision.AddStaticBox ( 800 , 440 , 400 , 20 );
+            m_Collision.AddStaticBox ( -100 , 300 , 20 , 220 );
 
             // D3D11 렌더러 생성
             m_Renderer = std::make_unique<D3D11Renderer> ( );
@@ -200,17 +200,9 @@ namespace engine {
             RECT aabb{ ( int ) nx, ( int ) ny, ( int ) ( nx + pw ), ( int ) ( ny + ph ) };
 
             // 충돌 해결(부호 수정 포함)
-            m_Grounded = false;
-            for ( const RECT& s : m_StaticSolids ) {
-                if ( !engine::coll::Overlap ( aabb , s ) ) continue;
-                POINT mtv = engine::coll::ResolveMTV ( aabb , s );
-                aabb.left += mtv.x; aabb.right += mtv.x;
-                aabb.top += mtv.y; aabb.bottom += mtv.y;
-
-                if ( mtv.y < 0 ) { m_Grounded = true; m_Vel.y = 0.f; }
-                else if ( mtv.y > 0 ) { m_Vel.y = 0.f; }
-                if ( mtv.x != 0 ) m_Vel.x = 0.f;
-            }
+            engine::physics::CollisionReport rep{};
+            m_Collision.MoveAndCollide ( aabb , m_Vel , &rep );
+            m_Grounded = rep.grounded;
 
             // 위치 반영
             m_Player->SetPosition ( ( float ) aabb.left , ( float ) aabb.top );
@@ -261,11 +253,7 @@ namespace engine {
                 for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
                 for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
 
-                for ( const RECT& s : m_StaticSolids ) {
-                    m_Debug->WorldRect ( s.left , s.top ,
-                                       s.right - s.left , s.bottom - s.top ,
-                                       ox , oy , RGB ( 255 , 60 , 60 ) );
-                }
+                m_Collision.DebugDraw ( *m_Debug , ox , oy , RGB ( 255 , 60 , 60 ) );
 
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
                 m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
@@ -303,8 +291,8 @@ namespace engine {
         game::Player* m_Player{};
         engine::Animator m_Anim{};
 
-        std::vector<RECT> m_StaticSolids;   // 정적 충돌(바닥/벽)
-        POINTF m_Vel{ 0.f, 0.f };           // 플레이어 속도 (px/s)
+        engine::physics::CollisionSystem m_Collision;
+        engine::Vec2 m_Vel{ 0.f, 0.f };           // 플레이어 속도 (px/s)
         bool   m_Grounded = false;          // 지면 접촉 상태
 
         bool m_comInitialized = false; // CoInitializeEx 성공 여부

@@ -157,6 +157,7 @@
     <ClInclude Include="res\Resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\Collision.cpp" />
     <ClCompile Include="engine\D3D11TextureLoader.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
   </ItemGroup>
