@@ -115,18 +115,35 @@ namespace engine {
         }
 
         // 리사이즈 반영
-        void OnResize ( int w , int h ) {
+        void OnResize ( int w , int h )
+        {
+            // 최소화 등으로 (0,0) 들어오는 프레임 방지
+            if ( w <= 0 || h <= 0 ) return;
+
+            // 플레이어 경계(화면 클램프 용) 갱신
             if ( m_Player ) {
-                RECT rc{ 0,0,w,h };
+                RECT rc{ 0, 0, w, h };
                 m_Player->SetBounds ( rc );
             }
-            m_Cam.SetScreenSize ( w , h );
 
+            // 카메라 화면 크기 갱신 (+ 픽셀 스냅 유지 시 즉시 스냅 한 번)
+            m_Cam.SetScreenSize ( w , h );
+            m_Cam.SnapImmediate ( );
+
+            // 스왑체인/RTV 리사이즈
             if ( m_Renderer ) m_Renderer->Resize ( w , h );
-            if ( m_Debug ) m_Debug->OnResize ( w , h );
-            if ( m_TextHUD ) m_TextHUD->RecreateTarget ( );
+
+            // 배치/디버그 드로우 뷰포트 갱신
             if ( m_Batch ) m_Batch->OnResize ( w , h );
+            if ( m_Debug ) m_Debug->OnResize ( w , h );
+
+            // DirectWrite 대상 재생성(스왑체인 백버퍼가 바뀌었으므로)
+            if ( m_TextHUD ) m_TextHUD->RecreateTarget ( );
+
+            // 충돌 콜라이더는 월드좌표라 리사이즈 시 재생성 필요 없음
+            // (타일맵/월드 크기를 바꾸는 게 아니라면 그대로 유지)
         }
+
 
         // 루프 1 프레임
         bool DoOneFrame ( ) {
@@ -282,30 +299,38 @@ namespace engine {
 
 
     private:
+        // --- 윈도우/코어 ---
         HWND   m_hWnd{};
         Time   m_Time{};
         Input  m_Input{};
         Scene  m_Scene{};
-        TileSet m_Tiles{};
-        TileMap m_Map{};
 
-        std::unique_ptr<IRenderer>            m_Renderer;
-        std::unique_ptr<engine::D3D11DebugDraw> m_Debug;
-        std::unique_ptr<engine::DWriteTextHUD> m_TextHUD;
-        std::unique_ptr<engine::D3D11SpriteBatch> m_Batch;
-        Tex2D                                  m_PlayerTex{};
+        // --- 렌더링 ---
+        std::unique_ptr<IRenderer>               m_Renderer;       // D3D11Renderer
+        std::unique_ptr<engine::D3D11SpriteBatch> m_Batch;         // 스프라이트 일괄 렌더
+        std::unique_ptr<engine::D3D11DebugDraw>   m_Debug;         // 라인/박스 디버그 드로우
+        std::unique_ptr<engine::DWriteTextHUD>    m_TextHUD;       // DirectWrite HUD
+        Tex2D                                     m_PlayerTex{};   // 플레이어 텍스처
 
-        Camera          m_Cam{};
-        game::Player* m_Player{};
+        // --- 월드/카메라/애니 ---
+        Camera           m_Cam{};
         engine::Animator m_Anim{};
+        game::Player* m_Player{ nullptr };
 
-        engine::physics::CollisionSystem m_Collision;
-        engine::Vec2 m_Vel{ 0.f, 0.f };           // 플레이어 속도 (px/s)
-        bool   m_Grounded = false;          // 지면 접촉 상태
+        // --- 타일/충돌 ---
+        engine::TileSet                     m_Tiles{};
+        engine::TileMap                     m_Map{};
+        engine::physics::CollisionSystem    m_Collision{};
 
-        bool m_comInitialized = false; // CoInitializeEx 성공 여부
+        // --- 물리 상태 ---
+        engine::Vec2 m_Vel{ 0.f, 0.f };   // px/s
+        bool         m_Grounded = false;
+
+        // --- 기타 ---
+        bool m_comInitialized = false;  // CoInitializeEx 성공 여부
         bool m_isMoving = false;
         bool m_debugDrawEnabled = true;
+
     };
 
 } // namespace engine
