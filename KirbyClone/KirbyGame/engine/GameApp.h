@@ -11,6 +11,7 @@
 #include "engine/IRenderer.h"
 #include "engine/D3D11Renderer.h"
 #include "engine/D3D11Sprite.h"
+#include "engine/D3D11DebugDraw.h"
 #include "game/Player.h"
 
 
@@ -88,6 +89,9 @@ namespace engine {
                 if ( m_Player ) m_Player->SetSize ( ( float ) m_PlayerTex.width , ( float ) m_PlayerTex.height );
             }
 
+            auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+            m_Debug = std::make_unique<engine::D3D11DebugDraw> ( );
+            m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
         }
 
         // 메시지 전달 (휠/포커스 등)
@@ -105,6 +109,8 @@ namespace engine {
 
             if ( m_Renderer ) m_Renderer->Resize ( w , h );
             if ( m_Sprites )  m_Sprites->OnResize ( w , h );
+            if ( m_Debug ) m_Debug->OnResize ( w , h );
+
         }
 
         // 루프 1 프레임
@@ -116,6 +122,10 @@ namespace engine {
                 PostQuitMessage ( 0 );
                 return false;
             }
+
+            if ( m_Input.ActionPressed ( "ToggleDebug" ) )
+                m_debugDrawEnabled = !m_debugDrawEnabled;
+            if ( m_Debug ) m_Debug->BeginFrame ( );
 
             // 고정 업데이트 (스파이럴 방지)
             int steps = 0;
@@ -137,6 +147,8 @@ namespace engine {
             m_Input.BindAction ( "Jump" , VK_SPACE );
             m_Input.BindAction ( "Attack" , 'J' );
             m_Input.BindAction ( "Dash" , 'K' );
+
+            m_Input.BindAction ( "ToggleDebug" , VK_F1 );
 
             // 축
             m_Input.BindAxis ( "MoveX" , { .positiveVK = VK_RIGHT, .negativeVK = VK_LEFT, .scale = 1.f } );
@@ -171,20 +183,48 @@ namespace engine {
         void RenderFrame ( ) {
             m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
 
+            // 1) 스프라이트
             if ( m_Player && m_PlayerTex.srv && m_Sprites ) {
                 auto [ox , oy] = m_Cam.OffsetInt ( );
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                m_Sprites->Draw ( m_PlayerTex , float ( px - ox ) , float ( py - oy ) , float ( pw ) , float ( ph ) , nullptr , nullptr );
+            }
 
-                const float x = float ( px - ox ) , y = float ( py - oy );
-                const float w = float ( pw ) , h = float ( ph );
+            // 2) 디버그 드로우 (GPU)
+            if ( m_debugDrawEnabled && m_Debug ) {
+                auto [ox , oy] = m_Cam.OffsetInt ( );
 
-                RECT src = m_Anim.CurrentSrc ( );
-                float tint[ 4 ] = { 1,1,1,1 };
-                m_Sprites->Draw ( m_PlayerTex , x , y , w , h , &src , tint );
+                // 그리드(32px)
+                const int GRID = 32;
+                const int wx0 = ox , wy0 = oy;
+                const int wx1 = ox + static_cast< int >( static_cast< D3D11Renderer* >( m_Renderer.get ( ) )->Width ( ) );
+                const int wy1 = oy + static_cast< int >( static_cast< D3D11Renderer* >( m_Renderer.get ( ) )->Height ( ) );
+
+                int gx = ( wx0 / GRID ) * GRID;
+                int gy = ( wy0 / GRID ) * GRID;
+                for ( int x = gx; x <= wx1; x += GRID )
+                    m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
+                for ( int y = gy; y <= wy1; y += GRID )
+                    m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
+
+                // 플레이어 AABB
+                if ( m_Player ) {
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
+                }
+
+                // 화면 중앙 십자
+                auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+                const int cx = d3d->Width ( ) / 2 , cy = d3d->Height ( ) / 2;
+                m_Debug->Line ( cx - 6 , cy , cx + 6 , cy , RGB ( 200 , 200 , 80 ) );
+                m_Debug->Line ( cx , cy - 6 , cx , cy + 6 , RGB ( 200 , 200 , 80 ) );
+
+                m_Debug->Flush ( );
             }
 
             m_Renderer->EndFrame ( );
         }
+
 
 
     private:
@@ -195,6 +235,7 @@ namespace engine {
 
         std::unique_ptr<IRenderer>            m_Renderer;
         std::unique_ptr<D3D11SpriteRenderer>  m_Sprites;
+        std::unique_ptr<engine::D3D11DebugDraw> m_Debug;
         Tex2D                                  m_PlayerTex{};
 
         Camera          m_Cam{};
@@ -203,6 +244,7 @@ namespace engine {
 
         bool m_comInitialized = false; // CoInitializeEx 성공 여부
         bool m_isMoving = false;
+        bool m_debugDrawEnabled = true;
     };
 
 } // namespace engine
