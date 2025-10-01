@@ -2,12 +2,14 @@
 #include <windows.h>
 #include <memory>
 #include <cwchar>
+#include <vector>
 #include "engine/Time.h"
 #include "engine/Input.h"
 #include "engine/Scene.h"
 #include "engine/Math.h"
 #include "engine/Camera.h"
 #include "engine/Anim.h"
+#include "engine/Collision.h"
 #include "engine/IRenderer.h"
 #include "engine/D3D11Renderer.h"
 #include "engine/D3D11Sprite.h"
@@ -50,6 +52,12 @@ namespace engine {
             m_Cam.SetLookAt ( m_Player->Center ( ) );
             m_Cam.SnapImmediate ( );
 
+            // 간단한 바닥/벽 배치
+            m_StaticSolids.push_back ( RECT{ -2000, 500,  4000, 560 } ); // 바닥(두꺼운 플랫폼)
+            m_StaticSolids.push_back ( RECT{ 300,  360,   600, 380 } ); // 발판
+            m_StaticSolids.push_back ( RECT{ 800,  440,  1200, 460 } ); // 발판
+            m_StaticSolids.push_back ( RECT{ -100,  300,  -80,  520 } );  // 왼쪽 기둥(벽)
+
             // D3D11 렌더러 생성
             m_Renderer = std::make_unique<D3D11Renderer> ( );
             if ( !m_Renderer->Initialize ( hWnd , w , h , /*vsync=*/false ) ) {
@@ -74,23 +82,27 @@ namespace engine {
 
             // 텍스처 로드 후 (성공 시)
             if ( m_PlayerTex.srv ) {
-                // 1) Idle: 전체 이미지 1프레임
-                RECT full{ 0, 0, m_PlayerTex.width, m_PlayerTex.height };
+                const int texW = m_PlayerTex.width;
+                const int texH = m_PlayerTex.height;
+
+                // (A) 단일 이미지일 때: Idle 한 프레임
+                RECT full{ 0, 0, texW, texH };
                 engine::AnimClip idle{};
                 idle.frames.push_back ( { full, 0.2f } );
                 idle.loop = true;
                 m_Anim.AddClip ( "Idle" , std::move ( idle ) );
 
-                // 2) Walk: 시트가 있다면 행 기반 프레임(예: 32x32 셀, 6프레임, 12fps)
-                // → 실제 시트에 맞춰 값만 바꿔주면 됨.
-                // engine::AnimClip walk = engine::Animator::MakeRowClip(0, 0, 32, 32, 6, 12.f, true);
+                // (B) 시트가 있을 때
+                // 예: 가로 6프레임, 한 칸 32x32, 12fps
+                // const int cellW = 32, cellH = 32, count = 6; const float fps = 12.f;
+                // engine::AnimClip walk = engine::Animator::MakeRowClip(0, 0, cellW, cellH, count, fps, true);
                 // m_Anim.AddClip("Walk", std::move(walk));
+                // m_Player->SetSize((float)cellW, (float)cellH); // 비율 유지하려면 프레임 크기로 맞추기
 
-                // 일단 Idle로 시작
+                // 시트가 아직 없으면 원본 크기로
+                m_Player->SetSize ( ( float ) texW , ( float ) texH );
+
                 m_Anim.Play ( "Idle" , true );
-
-                // 크기 맞추기(원본 비율 유지)
-                if ( m_Player ) m_Player->SetSize ( ( float ) m_PlayerTex.width , ( float ) m_PlayerTex.height );
             }
 
             m_TextHUD = std::make_unique<engine::DWriteTextHUD> ( );
@@ -169,24 +181,57 @@ namespace engine {
         void FixedUpdate ( double fixedDt ) {
             m_Scene.Update ( fixedDt , m_Input );
 
-            // 이동 판단 (입력 기준; 플레이어 내부보다 여기서 간단히 판단)
-            const float mx = m_Input.GetAxis ( "MoveX" );
-            const float my = m_Input.GetAxis ( "MoveY" );
-            m_isMoving = ( std::fabs ( mx ) > 0.05f ) || ( std::fabs ( my ) > 0.05f );
+            // 입력 → 속도
+            const float ax = m_Input.GetAxis ( "MoveX" );
+            const float moveSpeed = 180.f;
+            m_Vel.x = ax * moveSpeed;
 
-            // 클립 전환 (Walk 클립이 없으면 Idle 유지)
-            if ( m_isMoving && m_Anim.CurrentName ( ) != "Walk" ) {
+            if ( m_Grounded && ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) ) ) {
+                m_Vel.y = -380.f;
+                m_Grounded = false;
+            }
+
+            // 중력
+            const float g = 1200.f;
+            m_Vel.y += g * static_cast< float >( fixedDt );
+
+            // 적분
+            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+            float nx = static_cast< float >( px ) + m_Vel.x * static_cast< float >( fixedDt );
+            float ny = static_cast< float >( py ) + m_Vel.y * static_cast< float >( fixedDt );
+            RECT aabb{ ( int ) nx, ( int ) ny, ( int ) ( nx + pw ), ( int ) ( ny + ph ) };
+
+            // 충돌 해결(부호 수정 포함)
+            m_Grounded = false;
+            for ( const RECT& s : m_StaticSolids ) {
+                if ( !engine::coll::Overlap ( aabb , s ) ) continue;
+                POINT mtv = engine::coll::ResolveMTV ( aabb , s );
+                aabb.left += mtv.x; aabb.right += mtv.x;
+                aabb.top += mtv.y; aabb.bottom += mtv.y;
+
+                if ( mtv.y < 0 ) { m_Grounded = true; m_Vel.y = 0.f; }
+                else if ( mtv.y > 0 ) { m_Vel.y = 0.f; }
+                if ( mtv.x != 0 ) m_Vel.x = 0.f;
+            }
+
+            // 위치 반영
+            m_Player->SetPosition ( ( float ) aabb.left , ( float ) aabb.top );
+
+            // 애니메이터 (Idle/Walk)
+            m_isMoving = ( std::fabs ( ax ) > 0.05f ) || ( std::fabs ( m_Input.GetAxis ( "MoveY" ) ) > 0.05f );
+            if ( m_isMoving ) {
                 if ( !m_Anim.Play ( "Walk" , false ) ) m_Anim.Play ( "Idle" , false );
             }
-            else if ( !m_isMoving && m_Anim.CurrentName ( ) != "Idle" ) {
+            else {
                 m_Anim.Play ( "Idle" , false );
             }
-
             m_Anim.Update ( fixedDt );
 
+            // 카메라
             if ( m_Player ) m_Cam.SetLookAt ( m_Player->Center ( ) );
             m_Cam.Update ( fixedDt );
         }
+
 
 
         void RenderFrame ( ) {
@@ -194,27 +239,18 @@ namespace engine {
 
             auto [ox , oy] = m_Cam.OffsetInt ( );
 
-            // --- SpriteBatch Begin ---
-            if ( m_Batch && m_PlayerTex.srv ) {
+            if ( m_Batch && m_PlayerTex.srv && m_Player ) {
                 m_Batch->Begin ( );
 
-                // 플레이어 1장
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                const float x = float ( px - ox );
-                const float y = float ( py - oy );
-                const float w = float ( pw );
-                const float h = float ( ph );
+                const float x = float ( px - ox ) , y = float ( py - oy );
+                const float w = float ( pw ) , h = float ( ph );
 
-                // srcRect가 있다면 전달(애니메이터 연동시)
-                // RECT src = m_Anim.CurrentSrc();
-                // m_Batch->Draw(m_PlayerTex, x, y, w, h, &src);
+                RECT src = m_Anim.CurrentSrc ( );
+                const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
+                m_Batch->Draw ( m_PlayerTex , x , y , w , h , hasSrc ? &src : nullptr , 0xFFFFFFFF );
 
-                m_Batch->Draw ( m_PlayerTex , x , y , w , h , /*src*/nullptr , /*tint*/0xFFFFFFFF );
-
-                // (예시) 같은 텍스처로 수십 장도 여기서 연속 Draw
-                // for (...) m_Batch->Draw(...);
-
-                m_Batch->End ( ); // 텍스처별로 묶어 한 번에 드로우
+                m_Batch->End ( );
             }
 
             // --- D3D DebugDraw (라인/박스) ---
@@ -223,12 +259,22 @@ namespace engine {
                 const int GRID = 32;
                 const int wx0 = ox , wy0 = oy , wx1 = ox + d3d->Width ( ) , wy1 = oy + d3d->Height ( );
                 int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
+
                 for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
                 for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
+
+                for ( const RECT& s : m_StaticSolids ) {
+                    m_Debug->WorldRect ( s.left , s.top ,
+                                       s.right - s.left , s.bottom - s.top ,
+                                       ox , oy , RGB ( 255 , 60 , 60 ) );
+                }
+
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
                 m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
+
                 m_Debug->Flush ( );
             }
+
 
             // --- DirectWrite HUD ---
             if ( m_TextHUD ) {
@@ -259,6 +305,10 @@ namespace engine {
         Camera          m_Cam{};
         game::Player* m_Player{};
         engine::Animator m_Anim{};
+
+        std::vector<RECT> m_StaticSolids;   // 정적 충돌(바닥/벽)
+        POINTF m_Vel{ 0.f, 0.f };           // 플레이어 속도 (px/s)
+        bool   m_Grounded = false;          // 지면 접촉 상태
 
         bool m_comInitialized = false; // CoInitializeEx 성공 여부
         bool m_isMoving = false;

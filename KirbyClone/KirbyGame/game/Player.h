@@ -45,6 +45,7 @@ namespace game {
         }
 
         void SetSize ( float w , float h ) { m_w = w; m_h = h; }
+        void SetPosition ( float x , float y ) { m_x = x; m_y = y; }
 
     private:
         static constexpr float SPEED = 180.f;
