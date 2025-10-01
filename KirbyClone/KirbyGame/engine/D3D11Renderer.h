@@ -4,6 +4,7 @@
 #endif
 #include <Windows.h>
 #include <d3d11.h>
+#include <dxgi1_2.h>
 #include <dxgi.h>
 #include <wrl/client.h>
 #include "engine/IRenderer.h"
@@ -17,18 +18,17 @@ namespace engine {
     public:
         ~D3D11Renderer ( ) override { Cleanup ( ); }
 
-        bool Initialize ( void* hwnd , int width , int height , bool vsync ) override {
+        bool Initialize ( void* hwnd , int width , int height , bool vsync ) override
+        {
             m_hWnd = static_cast< HWND >( hwnd );
             m_vsync = vsync;
 
-            // 1) Device/Context
-            UINT flags = 0;
+            // 1) D3D11 Device/Context (BGRA 지원 + 디버그 레이어(있을 때만))
+            UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #if defined(_DEBUG)
             flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-            flags |= D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-
-            static D3D_FEATURE_LEVEL levels[ ] = {
+            static const D3D_FEATURE_LEVEL levels[ ] = {
                 D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0,
                 D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0
             };
@@ -40,9 +40,11 @@ namespace engine {
                 m_device.GetAddressOf ( ) , &got , m_context.GetAddressOf ( )
             );
 #if defined(_DEBUG)
-            if ( FAILED ( hr ) ) { // 디버그 레이어 미설치 환경 대비 재시도
+            if ( FAILED ( hr ) ) {
+                // 디버그 레이어 미설치 환경 대비 재시도
+                flags &= ~D3D11_CREATE_DEVICE_DEBUG;
                 hr = D3D11CreateDevice (
-                    nullptr , D3D_DRIVER_TYPE_HARDWARE , nullptr , 0 ,
+                    nullptr , D3D_DRIVER_TYPE_HARDWARE , nullptr , flags ,
                     levels , _countof ( levels ) ,
                     D3D11_SDK_VERSION ,
                     m_device.GetAddressOf ( ) , &got , m_context.GetAddressOf ( )
@@ -51,37 +53,43 @@ namespace engine {
 #endif
             if ( FAILED ( hr ) ) return false;
 
-            // 2) SwapChain
-            Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
-            m_device.As ( &dxgiDevice );
-
+            // 2) DXGI Factory2 얻기
+            Microsoft::WRL::ComPtr<IDXGIDevice>  dxgiDevice;
             Microsoft::WRL::ComPtr<IDXGIAdapter> adapter;
-            dxgiDevice->GetAdapter ( adapter.GetAddressOf ( ) );
+            Microsoft::WRL::ComPtr<IDXGIFactory2> factory2;
+            m_device.As ( &dxgiDevice );
+            dxgiDevice->GetAdapter ( &adapter );
+            adapter->GetParent ( __uuidof( IDXGIFactory2 ) , &factory2 );
 
-            Microsoft::WRL::ComPtr<IDXGIFactory> factory;
-            adapter->GetParent ( __uuidof( IDXGIFactory ) , &factory );
+            // 3) Flip-Model 스왑체인 생성 (FLIP_DISCARD)
+            DXGI_SWAP_CHAIN_DESC1 scd{};
+            scd.Width = width;
+            scd.Height = height;
+            scd.Format = DXGI_FORMAT_B8G8R8A8_UNORM;          // D2D/DirectWrite 인터옵 고려
+            scd.SampleDesc.Count = 1;
+            scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            scd.BufferCount = 2;
+            scd.Scaling = DXGI_SCALING_STRETCH;
+            scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+            scd.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+            scd.Flags = 0; // 필요 시 ALLOW_TEARING 플래그 추가 가능
 
-            DXGI_SWAP_CHAIN_DESC desc{};
-            desc.BufferCount = 2;
-            desc.BufferDesc.Width = width;
-            desc.BufferDesc.Height = height;
-            desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-            desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            desc.OutputWindow = m_hWnd;
-            desc.SampleDesc.Count = 1;
-            desc.Windowed = TRUE;
-            desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // (간단한 설정)
-            if ( FAILED ( factory->CreateSwapChain ( m_device.Get ( ) , &desc , m_swapChain.ReleaseAndGetAddressOf ( ) ) ) )
-                return false;
+            Microsoft::WRL::ComPtr<IDXGISwapChain1> sc1;
+            hr = factory2->CreateSwapChainForHwnd (
+                m_device.Get ( ) , m_hWnd , &scd , nullptr , nullptr , &sc1
+            );
+            if ( FAILED ( hr ) ) return false;
 
-            // Alt+Enter 기본 동작 끄기(선택)
-            factory->MakeWindowAssociation ( m_hWnd , DXGI_MWA_NO_ALT_ENTER );
+            sc1.As ( &m_swapChain );
 
+            // Alt+Enter 기본 전체화면 전환 비활성
+            factory2->MakeWindowAssociation ( m_hWnd , DXGI_MWA_NO_ALT_ENTER );
+
+            // 4) RTV/뷰포트 설정
             if ( !CreateBackbufferRTV ( ) ) return false;
             SetViewport ( width , height );
 
             m_width = width; m_height = height;
-
             return true;
         }
 

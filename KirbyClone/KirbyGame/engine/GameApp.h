@@ -13,6 +13,7 @@
 #include "engine/D3D11Sprite.h"
 #include "engine/D3D11DebugDraw.h"
 #include "engine/DWriteText.h"
+#include "engine/D3D11SpriteBatch.h"
 #include "game/Player.h"
 
 
@@ -58,6 +59,8 @@ namespace engine {
 
             // 스프라이트 렌더러 초기화
             auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+            m_Batch = std::make_unique<engine::D3D11SpriteBatch> ( );
+            m_Batch->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
             m_Sprites = std::make_unique<D3D11SpriteRenderer> ( );
             m_Sprites->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
 
@@ -116,6 +119,7 @@ namespace engine {
             if ( m_Sprites )  m_Sprites->OnResize ( w , h );
             if ( m_Debug ) m_Debug->OnResize ( w , h );
             if ( m_TextHUD ) m_TextHUD->RecreateTarget ( );
+            if ( m_Batch ) m_Batch->OnResize ( w , h );
         }
 
         // 루프 1 프레임
@@ -188,62 +192,56 @@ namespace engine {
         void RenderFrame ( ) {
             m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
 
-            // 1) 스프라이트
-            if ( m_Player && m_PlayerTex.srv && m_Sprites ) {
-                auto [ox , oy] = m_Cam.OffsetInt ( );
+            auto [ox , oy] = m_Cam.OffsetInt ( );
+
+            // --- SpriteBatch Begin ---
+            if ( m_Batch && m_PlayerTex.srv ) {
+                m_Batch->Begin ( );
+
+                // 플레이어 1장
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                m_Sprites->Draw ( m_PlayerTex , float ( px - ox ) , float ( py - oy ) , float ( pw ) , float ( ph ) , nullptr , nullptr );
+                const float x = float ( px - ox );
+                const float y = float ( py - oy );
+                const float w = float ( pw );
+                const float h = float ( ph );
+
+                // srcRect가 있다면 전달(애니메이터 연동시)
+                // RECT src = m_Anim.CurrentSrc();
+                // m_Batch->Draw(m_PlayerTex, x, y, w, h, &src);
+
+                m_Batch->Draw ( m_PlayerTex , x , y , w , h , /*src*/nullptr , /*tint*/0xFFFFFFFF );
+
+                // (예시) 같은 텍스처로 수십 장도 여기서 연속 Draw
+                // for (...) m_Batch->Draw(...);
+
+                m_Batch->End ( ); // 텍스처별로 묶어 한 번에 드로우
             }
 
-            // 2) 디버그 드로우 (GPU)
+            // --- D3D DebugDraw (라인/박스) ---
             if ( m_debugDrawEnabled && m_Debug ) {
-                auto [ox , oy] = m_Cam.OffsetInt ( );
-
-                // 그리드(32px)
-                const int GRID = 32;
-                const int wx0 = ox , wy0 = oy;
-                const int wx1 = ox + static_cast< int >( static_cast< D3D11Renderer* >( m_Renderer.get ( ) )->Width ( ) );
-                const int wy1 = oy + static_cast< int >( static_cast< D3D11Renderer* >( m_Renderer.get ( ) )->Height ( ) );
-
-                int gx = ( wx0 / GRID ) * GRID;
-                int gy = ( wy0 / GRID ) * GRID;
-                for ( int x = gx; x <= wx1; x += GRID )
-                    m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
-                for ( int y = gy; y <= wy1; y += GRID )
-                    m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
-
-                // 플레이어 AABB
-                if ( m_Player ) {
-                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
-                }
-
-                // 화면 중앙 십자
                 auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
-                const int cx = d3d->Width ( ) / 2 , cy = d3d->Height ( ) / 2;
-                m_Debug->Line ( cx - 6 , cy , cx + 6 , cy , RGB ( 200 , 200 , 80 ) );
-                m_Debug->Line ( cx , cy - 6 , cx , cy + 6 , RGB ( 200 , 200 , 80 ) );
-
+                const int GRID = 32;
+                const int wx0 = ox , wy0 = oy , wx1 = ox + d3d->Width ( ) , wy1 = oy + d3d->Height ( );
+                int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
+                for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
+                for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
+                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
                 m_Debug->Flush ( );
             }
 
-            // DirectWrite HUD (FPS/좌표 등)
+            // --- DirectWrite HUD ---
             if ( m_TextHUD ) {
                 m_TextHUD->Begin ( );
-
-                wchar_t buf[ 256 ];
-                auto [ox , oy] = m_Cam.OffsetInt ( );
-                std::swprintf ( buf , _countof ( buf ) ,
-                    L"FPS:%d  dt:%.3f  Cam(%.0f,%.0f)  Off(%d,%d)" ,
-                    m_Time.FPS ( ) , m_Time.FixedDelta ( ) ,
-                    m_Cam.Current ( ).x , m_Cam.Current ( ).y , ox , oy );
-
-                m_TextHUD->DrawTextLine ( buf , 8.0f , 8.0f , D2D1::ColorF ( 0.95f , 0.95f , 0.95f , 1 ) );
+                wchar_t buf[ 128 ];
+                std::swprintf ( buf , _countof ( buf ) , L"FPS:%d  dt:%.3f" , m_Time.FPS ( ) , m_Time.FixedDelta ( ) );
+                m_TextHUD->DrawTextLine ( buf , 8.f , 8.f );
                 m_TextHUD->End ( );
             }
 
             m_Renderer->EndFrame ( );
         }
+
 
     private:
         HWND   m_hWnd{};
@@ -252,9 +250,10 @@ namespace engine {
         Scene  m_Scene{};
 
         std::unique_ptr<IRenderer>            m_Renderer;
-        std::unique_ptr<D3D11SpriteRenderer>  m_Sprites;
         std::unique_ptr<engine::D3D11DebugDraw> m_Debug;
         std::unique_ptr<engine::DWriteTextHUD> m_TextHUD;
+        std::unique_ptr<engine::D3D11SpriteBatch> m_Batch;
+        std::unique_ptr<D3D11SpriteRenderer>  m_Sprites; // 미사용
         Tex2D                                  m_PlayerTex{};
 
         Camera          m_Cam{};

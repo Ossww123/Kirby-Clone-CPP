@@ -63,6 +63,9 @@
     <ClInclude Include="engine\DWriteText.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="engine\D3D11SpriteBatch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
