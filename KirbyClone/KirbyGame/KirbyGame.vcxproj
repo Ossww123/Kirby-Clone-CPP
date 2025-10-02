@@ -149,6 +149,7 @@
     <ClInclude Include="engine\IRenderer.h" />
     <ClInclude Include="engine\Math.h" />
     <ClInclude Include="engine\Object.h" />
+    <ClInclude Include="engine\PhysicsBody.h" />
     <ClInclude Include="engine\Scene.h" />
     <ClInclude Include="engine\Texture.h" />
     <ClInclude Include="engine\TextureLoader.h" />
@@ -161,6 +162,7 @@
   <ItemGroup>
     <ClCompile Include="engine\Collision.cpp" />
     <ClCompile Include="engine\D3D11TextureLoader.cpp" />
+    <ClCompile Include="engine\PhysicsBody.cpp" />
     <ClCompile Include="engine\TileMap.cpp" />
     <ClCompile Include="engine\TileSet.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
