@@ -162,6 +162,7 @@
   <ItemGroup>
     <ClCompile Include="engine\Collision.cpp" />
     <ClCompile Include="engine\D3D11TextureLoader.cpp" />
+    <ClCompile Include="engine\GameApp.cpp" />
     <ClCompile Include="engine\PhysicsBody.cpp" />
     <ClCompile Include="engine\TileMap.cpp" />
     <ClCompile Include="engine\TileSet.cpp" />
