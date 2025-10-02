@@ -45,14 +45,19 @@ namespace engine::physics {
         void AddStaticBox ( const RECT& r );
         void AddStaticBox ( int x , int y , int w , int h );
 
-        void MoveAndCollide ( RECT& aabb , engine::Vec2& vel , CollisionReport* out = nullptr ) const;
+        void AddOneWayBox ( int x , int y , int w , int h ) { RECT r{ x,y,x + w,y + h }; m_oneway.push_back ( r ); }
+
+        void MoveAndCollide ( RECT& aabb , engine::Vec2& vel , CollisionReport* out = nullptr ,
+                        bool ignoreOneWay = false , int prevBottom = INT32_MIN ) const;
 
         void DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy , COLORREF color ) const;
 
         const std::vector<RECT>& Statics ( ) const { return m_static; }
+        const std::vector<RECT>& OneWays ( ) const { return m_oneway; }
 
     private:
         std::vector<RECT> m_static;
+        std::vector<RECT> m_oneway;
     };
 
 } // namespace engine::physics

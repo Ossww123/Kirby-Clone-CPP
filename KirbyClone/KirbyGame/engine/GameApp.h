@@ -50,7 +50,6 @@ namespace engine {
 
             // 카메라
             m_Cam.SetScreenSize ( w , h );
-            m_Cam.SetWorldRect ( 0.f , 0.f , 3000.f , 1600.f );
             m_Cam.SetSmoothSpeed ( 10.f );
             m_Cam.SetPixelSnap ( true );
             m_Cam.SetLookAt ( m_Player->Center ( ) );
@@ -93,19 +92,24 @@ namespace engine {
             m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
 
             // --- 타일셋/타일맵 ---
-            // 아틀라스 로드(예: 32x32 타일)
             m_Tiles.LoadAtlas ( d3d->Device ( ) , L"assets/tiles.png" , 32 , 32 );
 
-            // id=1을 SOLID 타일로 정의(아틀라스 첫 칸 가정)
-            engine::TileDef solid{};
-            solid.solid = true;
-            solid.src = RECT{ 0, 0, 32, 32 };
+            // 예시 정의 (id=1: SOLID)
+            engine::TileDef solid{}; solid.solid = true; solid.src = RECT{ 0,0,32,32 };
             m_Tiles.Define ( 1 , solid );
 
-            // CSV 로드 후 콜라이더 병합/등록
+            engine::TileDef oneway{}; oneway.oneway = true; oneway.src = RECT{ 32, 0, 64, 32 };
+            m_Tiles.Define ( 2 , oneway );
+
+            // CSV 로드
             if ( m_Map.LoadCSV ( L"assets/stage01.csv" ) ) {
                 m_Collision.Clear ( );
                 m_Map.BuildSolidColliders ( m_Collision , m_Tiles );
+
+                // 카메라 월드 사각형 자동 설정
+                const int worldW = m_Map.W ( ) * m_Tiles.TileW ( );
+                const int worldH = m_Map.H ( ) * m_Tiles.TileH ( );
+                m_Cam.SetWorldRect ( 0.f , 0.f , ( float ) worldW , ( float ) worldH );
             }
         }
 
@@ -190,32 +194,70 @@ namespace engine {
         }
 
         void FixedUpdate ( double fixedDt ) {
+            // 타이머 감소
+            m_coyoteTimer = std::max ( 0.f , m_coyoteTimer - ( float ) fixedDt );
+            m_jumpBufferTimer = std::max ( 0.f , m_jumpBufferTimer - ( float ) fixedDt );
+
+            // 점프 입력 버퍼링
+            if ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) )
+                m_jumpBufferTimer = 0.10f; // 100ms 버퍼
+
+            // 착지하면 코요테 리필
+            if ( m_Grounded ) m_coyoteTimer = 0.08f; // 80ms
+
             m_Scene.Update ( fixedDt , m_Input );
 
-            // 입력 → 속도
+            // --- 입력/속도 ---
             const float ax = m_Input.GetAxis ( "MoveX" );
+            const float ay = m_Input.GetAxis ( "MoveY" ); // ↓가 -1, ↑가 +1 (바인딩 상)
             const float moveSpeed = 180.f;
             m_Vel.x = ax * moveSpeed;
 
-            if ( m_Grounded && ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) ) ) {
-                m_Vel.y = -700.f;
+            // ↓+점프 드롭: 짧은 시간 원웨이 무시
+            if ( m_Grounded && ay < -0.5f && ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) ) ) {
+                m_dropThroughTimer = 0.20f;
+                m_Grounded = false; // 바로 낙하 시작
+            }
+
+            // 점프 트리거 (버퍼 + 코요테)
+            const bool canJump = ( m_Grounded || m_coyoteTimer > 0.f );
+            if ( canJump && m_jumpBufferTimer > 0.f ) {
+                m_Vel.y = -700.f;      // 점프 초기 속도
                 m_Grounded = false;
+                m_coyoteTimer = 0.f;
+                m_jumpBufferTimer = 0.f;
             }
 
             // 중력
             const float g = 1200.f;
-            m_Vel.y += g * static_cast< float >( fixedDt );
+            m_Vel.y += g * ( float ) fixedDt;
+
+            // 홀드 점프(일찍 떼면 더 빨리 낙하)
+            const bool jumpHeld = m_Input.Down ( VK_SPACE ) || m_Input.ActionDown ( "Jump" );
+            if ( !jumpHeld && m_Vel.y < 0.f ) {
+                // 키를 뗀 상태에서 상승 중이면 추가 중력(짧은 점프)
+                const float extra = g * 1.8f; // 튜닝값
+                m_Vel.y += extra * ( float ) fixedDt;
+            }
 
             // 적분
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            float nx = static_cast< float >( px ) + m_Vel.x * static_cast< float >( fixedDt );
-            float ny = static_cast< float >( py ) + m_Vel.y * static_cast< float >( fixedDt );
+            const int prevBottom = py + ph; // ★ oneway 판정용
+            float nx = ( float ) px + m_Vel.x * ( float ) fixedDt;
+            float ny = ( float ) py + m_Vel.y * ( float ) fixedDt;
             RECT aabb{ ( int ) nx, ( int ) ny, ( int ) ( nx + pw ), ( int ) ( ny + ph ) };
 
-            // 충돌 해결(부호 수정 포함)
+            // 충돌 (원웨이 무시 여부 전달)
             engine::physics::CollisionReport rep{};
-            m_Collision.MoveAndCollide ( aabb , m_Vel , &rep );
+            const bool ignoreOneWay = ( m_dropThroughTimer > 0.f );
+            m_Collision.MoveAndCollide ( aabb , m_Vel , &rep , ignoreOneWay , prevBottom );
             m_Grounded = rep.grounded;
+
+            // 드롭 타이머 감소
+            if ( m_dropThroughTimer > 0.f ) {
+                m_dropThroughTimer -= static_cast< float >( fixedDt );
+                if ( m_dropThroughTimer < 0.f ) m_dropThroughTimer = 0.f;
+            }
 
             // 위치 반영
             m_Player->SetPosition ( ( float ) aabb.left , ( float ) aabb.top );
@@ -325,6 +367,11 @@ namespace engine {
         // --- 물리 상태 ---
         engine::Vec2 m_Vel{ 0.f, 0.f };   // px/s
         bool         m_Grounded = false;
+
+        // --- 물리/점프 보강 ---
+        float m_coyoteTimer = 0.f;
+        float m_jumpBufferTimer = 0.f;
+        float m_dropThroughTimer = 0.f;
 
         // --- 기타 ---
         bool m_comInitialized = false;  // CoInitializeEx 성공 여부
