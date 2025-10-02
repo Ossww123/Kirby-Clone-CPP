@@ -194,76 +194,100 @@ namespace engine {
         }
 
         void FixedUpdate ( double fixedDt ) {
-            // 타이머 감소
-            m_coyoteTimer = std::max ( 0.f , m_coyoteTimer - ( float ) fixedDt );
-            m_jumpBufferTimer = std::max ( 0.f , m_jumpBufferTimer - ( float ) fixedDt );
+            if ( !m_Player ) return;
 
-            // 점프 입력 버퍼링
+            const float dt = static_cast< float >( fixedDt );
+
+            const float axisX = m_Input.GetAxis ( "MoveX" );     // -1 .. +1
+            m_Player->Body ( ).SetDesiredRunAxis ( axisX );
+
+            // ----------------------------------------
+            // 0) 타이머 감소
+            // ----------------------------------------
+            m_coyoteTimer = std::max ( 0.f , m_coyoteTimer - dt );
+            m_jumpBufferTimer = std::max ( 0.f , m_jumpBufferTimer - dt );
+            m_dropThroughTimer = std::max ( 0.f , m_dropThroughTimer - dt );
+
+            // ----------------------------------------
+            // 1) 입력 수집 (Player는 MoveX를 PhysicsBody로 전달만 함)
+            // ----------------------------------------
+            const float axisY = m_Input.GetAxis ( "MoveY" ); // ↓ = -1, ↑ = +1 가정
+
+            // 점프 입력 버퍼링 (키/액션 둘 다 허용)
             if ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) )
-                m_jumpBufferTimer = 0.10f; // 100ms 버퍼
+                m_jumpBufferTimer = m_bufferMs;
 
-            // 착지하면 코요테 리필
-            if ( m_Grounded ) m_coyoteTimer = 0.08f; // 80ms
+            // ↓+점프 드롭 (접지 상태에서만)
+            if ( m_Player->Body ( ).Grounded ( ) && axisY < -0.5f &&
+                ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) ) )
+                m_dropThroughTimer = m_dropMs;
 
-            m_Scene.Update ( fixedDt , m_Input );
+            // ----------------------------------------
+            // 2) 가속/마찰/중력만 갱신 (위치는 아직 X)
+            // ----------------------------------------
+            m_Player->Body ( ).AdvanceKinematics ( fixedDt );
 
-            // --- 입력/속도 ---
-            const float ax = m_Input.GetAxis ( "MoveX" );
-            const float ay = m_Input.GetAxis ( "MoveY" ); // ↓가 -1, ↑가 +1 (바인딩 상)
-            const float moveSpeed = 180.f;
-            m_Vel.x = ax * moveSpeed;
+            // 코요테 타임 갱신(지면에 있으면 리필)
+            if ( m_Player->Body ( ).Grounded ( ) )
+                m_coyoteTimer = m_coyoteMs;
 
-            // ↓+점프 드롭: 짧은 시간 원웨이 무시
-            if ( m_Grounded && ay < -0.5f && ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) ) ) {
-                m_dropThroughTimer = 0.20f;
-                m_Grounded = false; // 바로 낙하 시작
-            }
-
-            // 점프 트리거 (버퍼 + 코요테)
-            const bool canJump = ( m_Grounded || m_coyoteTimer > 0.f );
-            if ( canJump && m_jumpBufferTimer > 0.f ) {
-                m_Vel.y = -700.f;      // 점프 초기 속도
-                m_Grounded = false;
+            // 점프 트리거 (버퍼 + 코요테 허용)
+            if ( ( m_Player->Body ( ).Grounded ( ) || m_coyoteTimer > 0.f ) && m_jumpBufferTimer > 0.f ) {
+                m_Player->Body ( ).Jump ( m_jumpSpeed );
                 m_coyoteTimer = 0.f;
                 m_jumpBufferTimer = 0.f;
             }
 
-            // 중력
-            const float g = 1200.f;
-            m_Vel.y += g * ( float ) fixedDt;
+            // ----------------------------------------
+            // 3) 제안 AABB 계산 (충돌 검사용)
+            // ----------------------------------------
+            int prevBottom = 0;
+            RECT aabb = m_Player->Body ( ).ProposeAABB ( fixedDt , &prevBottom );
+            engine::Vec2 v = m_Player->Body ( ).Velocity ( );
 
-            // 홀드 점프(일찍 떼면 더 빨리 낙하)
-            const bool jumpHeld = m_Input.Down ( VK_SPACE ) || m_Input.ActionDown ( "Jump" );
-            if ( !jumpHeld && m_Vel.y < 0.f ) {
-                // 키를 뗀 상태에서 상승 중이면 추가 중력(짧은 점프)
-                const float extra = g * 1.8f; // 튜닝값
-                m_Vel.y += extra * ( float ) fixedDt;
-            }
-
-            // 적분
-            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            const int prevBottom = py + ph; // ★ oneway 판정용
-            float nx = ( float ) px + m_Vel.x * ( float ) fixedDt;
-            float ny = ( float ) py + m_Vel.y * ( float ) fixedDt;
-            RECT aabb{ ( int ) nx, ( int ) ny, ( int ) ( nx + pw ), ( int ) ( ny + ph ) };
-
-            // 충돌 (원웨이 무시 여부 전달)
+            // ----------------------------------------
+            // 4) 충돌 해결 (원웨이 무시 여부 포함)
+            // ----------------------------------------
             engine::physics::CollisionReport rep{};
             const bool ignoreOneWay = ( m_dropThroughTimer > 0.f );
-            m_Collision.MoveAndCollide ( aabb , m_Vel , &rep , ignoreOneWay , prevBottom );
-            m_Grounded = rep.grounded;
 
-            // 드롭 타이머 감소
-            if ( m_dropThroughTimer > 0.f ) {
-                m_dropThroughTimer -= static_cast< float >( fixedDt );
-                if ( m_dropThroughTimer < 0.f ) m_dropThroughTimer = 0.f;
+            // MoveAndCollide는: (AABB& inout, Vel& inout, rep*, ignoreOneWay, prevBottom)
+            m_Collision.MoveAndCollide ( aabb , v , &rep , ignoreOneWay , prevBottom );
+
+            // ----------------------------------------
+            // 5) 결과 반영
+            // ----------------------------------------
+            m_Player->Body ( ).ApplyCollisionResult ( aabb , v , rep.grounded );
+
+            // ----------------------------------------
+            // 6) 홀드 점프(저점프): 상승 중 버튼을 떼면 추가 감쇠
+            // ----------------------------------------
+            const bool jumpHeld = m_Input.ActionDown ( "Jump" ) || m_Input.Down ( VK_SPACE );
+            if ( !jumpHeld && m_Player->Body ( ).Velocity ( ).y < 0.f ) {
+                engine::Vec2 vv = m_Player->Body ( ).Velocity ( );
+                vv.y += ( m_Player->Body ( ).Params ( ).gravity * 1.8f ) * dt; // 튜닝값
+                m_Player->Body ( ).SetVelocity ( vv );
             }
 
-            // 위치 반영
-            m_Player->SetPosition ( ( float ) aabb.left , ( float ) aabb.top );
+            // ----------------------------------------
+            // 7) Player 렌더 캐시 싱크 (선택: Center/GetBounds 사용하면 생략 가능)
+            // ----------------------------------------
+            int bx , by , bw , bh;
+            m_Player->Body ( ).GetBounds ( bx , by , bw , bh );
+            m_Player->SetPosition ( static_cast< float >( bx ) , static_cast< float >( by ) );
+            m_Player->SetSize ( static_cast< float >( bw ) , static_cast< float >( bh ) );
+
+            // ----------------------------------------
+            // 8) (선택) 카메라 추적/클램프
+            //    - 네 Camera API에 맞춰서 호출해줘.
+            //    - 예: auto c = m_Player->Center(); m_Cam.SetLookAt(c.x, c.y);
+            //    - 월드 경계는 타일맵 로드 시 SetWorldRect(...)로 이미 설정했다고 가정.
+            // ----------------------------------------
+            // auto c = m_Player->Center();
+            // m_Cam.SetLookAt(c.x, c.y);
 
             // 애니메이터 (Idle/Walk)
-            m_isMoving = ( std::fabs ( ax ) > 0.05f ) || ( std::fabs ( m_Input.GetAxis ( "MoveY" ) ) > 0.05f );
+            m_isMoving = ( std::fabs ( axisX ) > 0.05f ) || ( std::fabs ( m_Input.GetAxis ( "MoveY" ) ) > 0.05f );
             if ( m_isMoving ) {
                 if ( !m_Anim.Play ( "Walk" , false ) ) m_Anim.Play ( "Idle" , false );
             }
@@ -372,6 +396,12 @@ namespace engine {
         float m_coyoteTimer = 0.f;
         float m_jumpBufferTimer = 0.f;
         float m_dropThroughTimer = 0.f;
+
+        // 점프 파라미터(튜닝값)
+        float m_jumpSpeed = 700.f;     // 초기 상승 속도
+        float m_coyoteMs = 0.08f;     // 코요테
+        float m_bufferMs = 0.10f;     // 버퍼
+        float m_dropMs = 0.20f;     // ↓+점프 드롭 유지 시간
 
         // --- 기타 ---
         bool m_comInitialized = false;  // CoInitializeEx 성공 여부

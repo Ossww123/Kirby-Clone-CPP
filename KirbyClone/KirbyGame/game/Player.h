@@ -21,20 +21,17 @@ namespace game {
         //  AdvanceKinematics → ProposeAABB → MoveAndCollide → ApplyCollisionResult 로 전환)
         void Update ( double fixedDt , const engine::Input& input ) override
         {
-            // 입력을 물리로 전달
-            const float axisX = input.GetAxis ( "MoveX" );  // -1..+1
+            // 1) 입력만 넘김 (적분/충돌은 바깥에서)
+            const float axisX = input.GetAxis ( "MoveX" );
             m_body.SetDesiredRunAxis ( axisX );
 
-            // 속도만 갱신
-            m_body.AdvanceKinematics ( fixedDt );
+            // 점프/HFSM 등은 바깥(GameApp)에서 body.Jump(...) 호출
 
-            // 임시: 충돌 없이 적분 + 경계 클램프
-            m_body.IntegrateAndClampNoCollision ( fixedDt );
-
-            // 로컬 캐시(렌더용) 갱신
+            // 렌더 캐시에선 바디 위치만 읽어둬도 됨 (여긴 생략 가능)
             int bx , by , bw , bh; m_body.GetBounds ( bx , by , bw , bh );
             m_x = ( float ) bx; m_y = ( float ) by; m_w = ( float ) bw; m_h = ( float ) bh;
         }
+
 
         void Render ( HDC dc , int ox , int oy ) override
         {
