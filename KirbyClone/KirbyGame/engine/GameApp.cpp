@@ -90,21 +90,22 @@ namespace engine {
         m_Debug = std::make_unique<engine::D3D11DebugDraw> ( );
         m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
 
-        // --- 타일셋/타일맵 로드 ---
-        m_Tiles.LoadAtlas ( d3d->Device ( ) , L"assets/tiles.png" , 32 , 32 );
+        // 타일셋 로드 + 타일 정의 + 맵 로드
+        m_World.LoadTileset ( d3d->Device ( ) , L"assets/tiles.png" , 32 , 32 );
 
+        // 예시 타일 정의
         engine::TileDef solid{};  solid.solid = true;  solid.src = RECT{ 0,0,32,32 };
-        engine::TileDef oneway{}; oneway.oneway = true; oneway.src = RECT{ 32,0,64,32 };
-        m_Tiles.Define ( 1 , solid );
-        m_Tiles.Define ( 2 , oneway );
+        engine::TileDef oneway{}; oneway.oneway = true;  oneway.src = RECT{ 32,0,64,32 };
+        m_World.DefineTile ( 1 , solid );
+        m_World.DefineTile ( 2 , oneway );
 
-        if ( m_Map.LoadCSV ( L"assets/stage01.csv" ) ) {
-            m_Collision.Clear ( );
-            m_Map.BuildSolidColliders ( m_Collision , m_Tiles );
+        // 맵 로드 + 콜라이더
+        if ( m_World.LoadMapCSV ( L"assets/stage01.csv" ) ) {
+            m_World.RebuildColliders ( );
 
-            const int worldW = m_Map.W ( ) * m_Tiles.TileW ( );
-            const int worldH = m_Map.H ( ) * m_Tiles.TileH ( );
-            m_Cam.SetWorldRect ( 0.f , 0.f , ( float ) worldW , ( float ) worldH );
+            // 카메라 월드 사각형 자동 설정
+            RECT wr = m_World.WorldRectPx ( );
+            m_Cam.SetWorldRect ( ( float ) wr.left , ( float ) wr.top , ( float ) wr.right , ( float ) wr.bottom );
         }
 
         // 이 렌더/충돌 자원들을 RenderFrame에서 접근하기 위해 lambdas로 캡쳐하거나
@@ -233,7 +234,7 @@ namespace engine {
         // 4) 충돌 해결(원웨이 포함)
         engine::physics::CollisionReport rep{};
         const bool ignoreOneWay = ( m_dropThroughTimer > 0.f );
-        m_Collision.MoveAndCollide ( aabb , v , &rep , ignoreOneWay , prevBottom );
+        m_World.Collision ( ).MoveAndCollide ( aabb , v , &rep , ignoreOneWay , prevBottom );
 
         // 5) 결과 반영
         m_Player->Body ( ).ApplyCollisionResult ( aabb , v , rep.grounded );
@@ -268,7 +269,10 @@ namespace engine {
     void GameApp::RenderFrame ( )
     {
         auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
-        m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
+
+        // BeginFrame은 Color 타입을 받도록 수정
+        Color clear{ 0.09f, 0.11f, 0.125f, 1.0f };
+        m_Renderer->BeginFrame ( clear );
 
         auto [ox , oy] = m_Cam.OffsetInt ( );
 
@@ -276,10 +280,10 @@ namespace engine {
         if ( m_Batch ) {
             m_Batch->Begin ( );
 
-            // 타일맵 (가시 영역만) — 파일 정적 map/tiles에 접근
-            m_Map.Render ( *m_Batch , m_Tiles , ox , oy , d3d->Width ( ) , d3d->Height ( ) );
+            // 1) 타일맵 (가시 영역만)
+            m_World.RenderVisible ( *m_Batch , ox , oy , d3d->Width ( ) , d3d->Height ( ) );
 
-            // 플레이어
+            // 2) 플레이어
             if ( m_PlayerTex.srv && m_Player ) {
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
                 const float x = float ( px - ox ) , y = float ( py - oy );
@@ -301,11 +305,10 @@ namespace engine {
             for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
 
             // 병합된 SOLID 콜라이더
-            m_Collision.DebugDraw ( *m_Debug , ox , oy , RGB ( 255 , 60 , 60 ) );
+            m_World.Collision ( ).DebugDraw ( *m_Debug , ox , oy , RGB ( 255 , 60 , 60 ) );
 
             if ( m_Player ) {
-                int px , py , pw , ph;
-                m_Player->GetBounds ( px , py , pw , ph );
+                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
                 m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
             }
 
@@ -323,5 +326,6 @@ namespace engine {
 
         m_Renderer->EndFrame ( );
     }
+
 
 } // namespace engine

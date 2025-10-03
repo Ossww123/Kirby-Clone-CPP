@@ -157,16 +157,21 @@
     <ClInclude Include="engine\TileSet.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="game\Player.h" />
+    <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="res\Resource.h" />
+    <ClInclude Include="engine\WorldSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Collision.cpp" />
+    <ClCompile Include="engine\D3D11SpriteBatch.cpp" />
     <ClCompile Include="engine\D3D11TextureLoader.cpp" />
     <ClCompile Include="engine\GameApp.cpp" />
     <ClCompile Include="engine\PhysicsBody.cpp" />
     <ClCompile Include="engine\TileMap.cpp" />
     <ClCompile Include="engine\TileSet.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
+    <ClCompile Include="engine\WorldSystem.cpp" />
+    <ClCompile Include="engine\RenderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\KirbyGame.rc" />

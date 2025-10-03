@@ -15,13 +15,12 @@
 #include "engine/Anim.h"
 #include "engine/Texture.h"
 
-// === 타일/충돌 ===
-#include "engine/TileSet.h"
-#include "engine/TileMap.h"
-#include "engine/Collision.h"
+// === 월드 ===
+#include "engine/WorldSystem.h"
 
 // === 렌더러 & 유틸 ===
 #include "engine/IRenderer.h"
+#include "engine/RenderSystem.h"
 #include "engine/D3D11Renderer.h"
 #include "engine/D3D11DebugDraw.h"
 #include "engine/DWriteText.h"
@@ -60,16 +59,15 @@ namespace engine {
         std::unique_ptr<D3D11DebugDraw>     m_Debug;     // 라인/박스 디버그 드로우
         std::unique_ptr<DWriteTextHUD>      m_TextHUD;   // DirectWrite HUD
         Tex2D                               m_PlayerTex{};   // 플레이어 텍스처
+        RenderSystem m_Render{};
 
         // --- 월드/카메라/애니 ---
         Camera     m_Cam{};
         Animator   m_Anim{};
         game::Player* m_Player{ nullptr };
 
-        // --- 타일/충돌 ---
-        TileSet                      m_Tiles{};
-        TileMap                      m_Map{};
-        physics::CollisionSystem     m_Collision{};
+        // --- 월드 ---
+        WorldSystem m_World{};
 
         // --- 물리 상태(필요 시 사용) ---
         Vec2  m_Vel{ 0.f, 0.f };

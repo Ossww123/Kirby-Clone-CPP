@@ -6,7 +6,6 @@
 #include <wrl/client.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <wincodec.h>
 #include <vector>
 #include <cstdint>
 #include <stdexcept>
@@ -14,7 +13,6 @@
 #include "engine/Texture.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
-#pragma comment(lib, "windowscodecs.lib")
 
 namespace engine {
     // --- Sprite 렌더러(사각형 1개 단위 드로우) ---
