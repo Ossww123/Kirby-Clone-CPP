@@ -28,6 +28,7 @@
 
 // === 게임 오브젝트 ===
 #include "game/Player.h"
+#include "game/PlayerFSM.h"
 
 namespace engine {
 
@@ -61,10 +62,10 @@ namespace engine {
         Tex2D                               m_PlayerTex{};   // 플레이어 텍스처
         RenderSystem m_Render{};
 
-        // --- 월드/카메라/애니 ---
+        // --- 카메라/플레이어 ---
         Camera     m_Cam{};
-        Animator   m_Anim{};
         game::Player* m_Player{ nullptr };
+        game::PlayerFSM m_PlayerFSM;
 
         // --- 월드 ---
         WorldSystem m_World{};

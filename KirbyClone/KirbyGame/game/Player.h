@@ -1,66 +1,64 @@
 ﻿#pragma once
 #include <windows.h>
 #include "engine/Object.h"
-#include "engine/Input.h"
 #include "engine/Math.h"
 #include "engine/PhysicsBody.h"
+#include "engine/Anim.h"
+#include "engine/Texture.h"
 
 namespace game {
 
     class Player final : public engine::Object {
     public:
-        explicit Player ( RECT playBounds )
+        // 초기 위치/크기를 바로 지정(기본값 유지)
+        explicit Player ( RECT playBounds ,
+                        float x = 100.f , float y = 100.f ,
+                        float w = 32.f , float h = 24.f )
             : m_body ( playBounds )
         {
-            m_body.SetSize ( m_w , m_h );
-            m_body.SetPosition ( m_x , m_y );
+            m_body.SetSize ( w , h );
+            m_body.SetPosition ( x , y );
         }
 
-        // 지금 단계: 충돌 시스템 없이도 동작하도록 내부 적분+클램프 호출
-        // (나중에 CollisionSystem 연동 시, IntegrateAndClampNoCollision 대신
-        //  AdvanceKinematics → ProposeAABB → MoveAndCollide → ApplyCollisionResult 로 전환)
-        void Update ( double fixedDt , const engine::Input& input ) override
-        {
-            // 1) 입력만 넘김 (적분/충돌은 바깥에서)
-            const float axisX = input.GetAxis ( "MoveX" );
-            m_body.SetDesiredRunAxis ( axisX );
+        // FSM이 입력/물리/충돌을 모두 처리하므로 여기서는 아무 것도 안 함
+        void Update ( double /*fixedDt*/ , const engine::Input& /*input*/ ) override { /* FSM이 처리 */ }
 
-            // 점프/HFSM 등은 바깥(GameApp)에서 body.Jump(...) 호출
-
-            // 렌더 캐시에선 바디 위치만 읽어둬도 됨 (여긴 생략 가능)
+        void Render ( HDC dc , int ox , int oy ) override {
+            // 디버그용 GDI 도형 (유지)
             int bx , by , bw , bh; m_body.GetBounds ( bx , by , bw , bh );
-            m_x = ( float ) bx; m_y = ( float ) by; m_w = ( float ) bw; m_h = ( float ) bh;
-        }
-
-
-        void Render ( HDC dc , int ox , int oy ) override
-        {
+            const int sx = bx - ox , sy = by - oy;
             HBRUSH br = CreateSolidBrush ( RGB ( 255 , 180 , 64 ) );
             HGDIOBJ old = SelectObject ( dc , br );
-            const int sx = static_cast< int >( m_x ) - ox;
-            const int sy = static_cast< int >( m_y ) - oy;
-            RoundRect ( dc , sx , sy , sx + static_cast< int >( m_w ) , sy + static_cast< int >( m_h ) , 12 , 12 );
+            RoundRect ( dc , sx , sy , sx + bw , sy + bh , 12 , 12 );
             SelectObject ( dc , old ); DeleteObject ( br );
         }
 
-        // 외부에서 월드/크기 조정 시 PhysicsBody와 동기화
+        // 외부에서 월드/크기 조정 시 PhysicsBody에 위임
         void SetBounds ( RECT b ) { m_body.SetBounds ( b ); }
-        void SetSize ( float w , float h ) { m_w = w; m_h = h; m_body.SetSize ( w , h ); }
-        void SetPosition ( float x , float y ) { m_x = x; m_y = y; m_body.SetPosition ( x , y ); }
+        void SetSize ( float w , float h ) { m_body.SetSize ( w , h ); }
+        void SetPosition ( float x , float y ) { m_body.SetPosition ( x , y ); }
 
-        engine::Vec2 Center ( ) const { return { m_x + m_w * 0.5f, m_y + m_h * 0.5f }; }
+        engine::Vec2 Center ( ) const {
+            int x , y , w , h; m_body.GetBounds ( x , y , w , h );
+            return { x + w * 0.5f, y + h * 0.5f };
+        }
         void GetBounds ( int& x , int& y , int& w , int& h ) const { m_body.GetBounds ( x , y , w , h ); }
 
-        // 충돌 연동용(필요 시 노출)
-        engine::PhysicsBody& Body ( ) { return m_body; }
-        const engine::PhysicsBody& Body ( ) const { return m_body; }
+        // 충돌/물리 접근
+        engine::PhysicsBody&        Body ( ) { return m_body; }
+        const engine::PhysicsBody&  Body ( ) const { return m_body; }
+
+        // 애니메이션 / 텍스처
+        engine::Animator*           Animator ( ) { return &m_anim; }
+        const engine::Animator*     Animator ( ) const { return &m_anim; }
+
+        void                        SetTexture ( const engine::Tex2D& t ) { m_tex = t; }
+        const engine::Tex2D&        Texture ( ) const { return m_tex; }
 
     private:
-        // 렌더를 위해 약간의 캐시만 유지(소스 호환)
-        float m_x = 100.f , m_y = 100.f;
-        float m_w = 32.f , m_h = 24.f;
-
         engine::PhysicsBody m_body;
+        engine::Animator    m_anim{};
+        engine::Tex2D       m_tex{};
     };
 
 } // namespace game

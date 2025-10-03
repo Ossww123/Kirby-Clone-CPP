@@ -46,6 +46,9 @@ namespace engine {
 
         // 씬/플레이어
         m_Player = m_Scene.Spawn<game::Player> ( rc );
+        m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) ,
+                         /*anim*/ m_Player->Animator ( ) ,     // FSM이 Player의 Animator를 제어
+                         { .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f } );
 
         // 카메라
         m_Cam.SetScreenSize ( w , h );
@@ -75,15 +78,36 @@ namespace engine {
             // 필요 시 플레이스홀더 생성 가능
             // CreateSolidTexture1x1(d3d->Device(), 0xFFFFFFFFu, &m_PlayerTex);
         }
-        if ( m_PlayerTex.srv ) {
-            const int texW = m_PlayerTex.width , texH = m_PlayerTex.height;
-            RECT full{ 0,0,texW,texH };
-            engine::AnimClip idle{}; idle.frames.push_back ( { full, 0.2f } ); idle.loop = true;
-            m_Anim.AddClip ( "Idle" , std::move ( idle ) );
-            m_Anim.Play ( "Idle" , true );
-            m_Player->SetSize ( ( float ) texW , ( float ) texH );
-        }
 
+        if ( m_PlayerTex.srv ) {
+            // 텍스처 → Player
+            m_Player->SetTexture ( m_PlayerTex );
+            // 스프라이트 실제 크기
+            m_Player->SetSize ( 32.f , 32.f );
+            
+            // 좌상단 (sx,sy)에서 가로로 count개를 자르는 스트립 생성 헬퍼
+            auto makeStrip = [ & ] ( int sx , int sy , int fw , int fh , int count , float dur , bool loop )->engine::AnimClip {
+                engine::AnimClip c; c.loop = loop;
+                for ( int i = 0; i < count; ++i ) {
+                    c.frames.push_back ( { RECT{ sx + i * fw, sy, sx + ( i + 1 ) * fw, sy + fh }, dur } );
+                }
+                return c;
+            };
+            
+            // ===== 시트 레이아웃 (픽셀) : 셀 32x32 =====
+            // IDLE: (8, 8)부터 2개
+            m_Player->Animator ( )->AddClip ( "Idle" , makeStrip ( 8 , 8 , 32 , 32 , 2 , 0.20f , /*loop=*/true ) );
+            // WALK: (8, 72)부터 6개
+            m_Player->Animator ( )->AddClip ( "Walk" , makeStrip ( 8 , 72 , 32 , 32 , 6 , 0.10f , /*loop=*/true ) );
+            // JUMP: (8, 136)부터 1개
+            m_Player->Animator ( )->AddClip ( "Jump" , makeStrip ( 8 , 136 , 32 , 32 , 1 , 0.12f , /*loop=*/false ) );
+            // FALL: (40, 136)부터 6개  (40→72→104→…)
+            m_Player->Animator ( )->AddClip ( "Fall" , makeStrip ( 40 , 136 , 32 , 32 , 6 , 0.12f , /*loop=*/true ) );
+            
+            // 시작 클립
+            m_Player->Animator ( )->Play ( "Idle" , /*restartIfSame=*/true );
+        }
+            
         // 텍스트 HUD / 디버그 드로우
         m_TextHUD = std::make_unique<engine::DWriteTextHUD> ( );
         m_TextHUD->Initialize ( d3d->SwapChain ( ) );
@@ -189,82 +213,17 @@ namespace engine {
     {
         if ( !m_Player ) return;
 
-        const float dt = static_cast< float >( fixedDt );
+        // ⇩ 한 줄로 교체
+        m_PlayerFSM.Step ( fixedDt , m_Input );
 
-        // 가로 입력 → PhysicsBody에 전달
-        const float axisX = m_Input.GetAxis ( "MoveX" );
-        m_Player->Body ( ).SetDesiredRunAxis ( axisX );
+        // (선택) 외부 애니메이터를 아직 쓰고 있다면, 프레임 진행만 남겨도 됨
+        // m_Anim.Update(fixedDt);
 
-        // 0) 타이머 감소
-        m_coyoteTimer = std::max ( 0.f , m_coyoteTimer - dt );
-        m_jumpBufferTimer = std::max ( 0.f , m_jumpBufferTimer - dt );
-        m_dropThroughTimer = std::max ( 0.f , m_dropThroughTimer - dt );
-
-        // 1) 입력 수집
-        const float axisY = m_Input.GetAxis ( "MoveY" );
-
-        // 점프 입력 버퍼링
-        if ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) )
-            m_jumpBufferTimer = m_bufferMs;
-
-        // ↓+점프 드롭
-        if ( m_Player->Body ( ).Grounded ( ) && axisY < -0.5f &&
-            ( m_Input.ActionPressed ( "Jump" ) || m_Input.Pressed ( VK_SPACE ) ) )
-            m_dropThroughTimer = m_dropMs;
-
-        // 2) 가속/마찰/중력만 갱신
-        m_Player->Body ( ).AdvanceKinematics ( fixedDt );
-
-        // 코요테 리필
-        if ( m_Player->Body ( ).Grounded ( ) )
-            m_coyoteTimer = m_coyoteMs;
-
-        // 점프 트리거
-        if ( ( m_Player->Body ( ).Grounded ( ) || m_coyoteTimer > 0.f ) && m_jumpBufferTimer > 0.f ) {
-            m_Player->Body ( ).Jump ( m_jumpSpeed );
-            m_coyoteTimer = 0.f;
-            m_jumpBufferTimer = 0.f;
-        }
-
-        // 3) 제안 AABB
-        int prevBottom = 0;
-        RECT aabb = m_Player->Body ( ).ProposeAABB ( fixedDt , &prevBottom );
-        engine::Vec2 v = m_Player->Body ( ).Velocity ( );
-
-        // 4) 충돌 해결(원웨이 포함)
-        engine::physics::CollisionReport rep{};
-        const bool ignoreOneWay = ( m_dropThroughTimer > 0.f );
-        m_World.Collision ( ).MoveAndCollide ( aabb , v , &rep , ignoreOneWay , prevBottom );
-
-        // 5) 결과 반영
-        m_Player->Body ( ).ApplyCollisionResult ( aabb , v , rep.grounded );
-
-        // 6) 홀드-점프(저점프): 상승 중 버튼을 떼면 추가 감쇠
-        const bool jumpHeld = m_Input.ActionDown ( "Jump" ) || m_Input.Down ( VK_SPACE );
-        if ( !jumpHeld && m_Player->Body ( ).Velocity ( ).y < 0.f ) {
-            engine::Vec2 vv = m_Player->Body ( ).Velocity ( );
-            vv.y += ( m_Player->Body ( ).Params ( ).gravity * 1.8f ) * dt;
-            m_Player->Body ( ).SetVelocity ( vv );
-        }
-
-        // 7) Player 렌더 캐시 싱크
-        int bx , by , bw , bh; m_Player->Body ( ).GetBounds ( bx , by , bw , bh );
-        m_Player->SetPosition ( ( float ) bx , ( float ) by );
-        m_Player->SetSize ( ( float ) bw , ( float ) bh );
-
-        // 8) 애니메이터/카메라
-        m_isMoving = ( std::fabs ( axisX ) > 0.05f ) || ( std::fabs ( m_Input.GetAxis ( "MoveY" ) ) > 0.05f );
-        if ( m_isMoving ) {
-            if ( !m_Anim.Play ( "Walk" , false ) ) m_Anim.Play ( "Idle" , false );
-        }
-        else {
-            m_Anim.Play ( "Idle" , false );
-        }
-        m_Anim.Update ( fixedDt );
-
-        if ( m_Player ) m_Cam.SetLookAt ( m_Player->Center ( ) );
+        // 카메라만 유지
+        m_Cam.SetLookAt ( m_Player->Center ( ) );
         m_Cam.Update ( fixedDt );
     }
+
 
     void GameApp::RenderFrame ( )
     {
@@ -284,13 +243,17 @@ namespace engine {
             m_World.RenderVisible ( *m_Batch , ox , oy , d3d->Width ( ) , d3d->Height ( ) );
 
             // 2) 플레이어
-            if ( m_PlayerTex.srv && m_Player ) {
-                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                const float x = float ( px - ox ) , y = float ( py - oy );
-                const float w = float ( pw ) , h = float ( ph );
-                RECT src = m_Anim.CurrentSrc ( );
-                const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
-                m_Batch->Draw ( m_PlayerTex , x , y , w , h , hasSrc ? &src : nullptr , 0xFFFFFFFF );
+            if ( m_Player ) {
+                const auto& tex = m_Player->Texture ( );
+                if ( tex.srv ) {
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    const float x = float ( px - ox ) , y = float ( py - oy );
+                    const float w = float ( pw ) , h = float ( ph );
+
+                    RECT src = m_Player->Animator ( )->CurrentSrc ( );
+                    const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
+                    m_Batch->Draw ( tex , x , y , w , h , hasSrc ? &src : nullptr , 0xFFFFFFFF );
+                }
             }
 
             m_Batch->End ( );
@@ -321,9 +284,13 @@ namespace engine {
             wchar_t buf[ 128 ];
             std::swprintf ( buf , _countof ( buf ) , L"FPS:%d  dt:%.3f" , m_Time.FPS ( ) , m_Time.FixedDelta ( ) );
             m_TextHUD->DrawTextLine ( buf , 8.f , 8.f );
+
+            wchar_t st[ 64 ];
+            std::swprintf ( st , _countof ( st ) , L"STATE: %S" , m_PlayerFSM.StateName ( ) );
+            m_TextHUD->DrawTextLine ( st , 8.f , 28.f );
+
             m_TextHUD->End ( );
         }
-
         m_Renderer->EndFrame ( );
     }
 
