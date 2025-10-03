@@ -37,7 +37,7 @@ namespace engine {
         m_hWnd = hWnd;
         m_Time.Init ( );
         m_Input.Init ( hWnd );
-        InitBindings ( );
+        InitBindings ( );           // 키 매핑
 
         // 창 크기
         RECT rc; GetClientRect ( m_hWnd , &rc );

@@ -14,7 +14,7 @@ namespace engine {
         void Render ( HDC dc , int ox , int oy ) {
             for ( auto& o : m_objects ) o->Render ( dc , ox , oy );
         }
-        template<class T , class...Args>
+        template<class T , class ...Args>
         T* Spawn ( Args&&...args ) {
             auto ptr = std::make_unique<T> ( std::forward<Args> ( args )... );
             T* raw = ptr.get ( );
