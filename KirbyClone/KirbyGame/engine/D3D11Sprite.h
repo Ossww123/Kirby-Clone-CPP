@@ -17,65 +17,6 @@
 #pragma comment(lib, "windowscodecs.lib")
 
 namespace engine {
-
-    // --- WIC 텍스처 로더 (PNG/JPG 등) ---
-    inline bool LoadTextureWIC ( ID3D11Device* dev , const wchar_t* path , Tex2D* outTex ) {
-        Microsoft::WRL::ComPtr<IWICImagingFactory> factory;
-        HRESULT hr = CoCreateInstance ( CLSID_WICImagingFactory , nullptr , CLSCTX_INPROC_SERVER ,
-                                      IID_PPV_ARGS ( &factory ) );
-        if ( FAILED ( hr ) ) return false;
-
-        Microsoft::WRL::ComPtr<IWICBitmapDecoder> decoder;
-        hr = factory->CreateDecoderFromFilename ( path , nullptr , GENERIC_READ ,
-                                                WICDecodeMetadataCacheOnDemand , &decoder );
-        if ( FAILED ( hr ) ) return false;
-
-        Microsoft::WRL::ComPtr<IWICBitmapFrameDecode> frame;
-        decoder->GetFrame ( 0 , &frame );
-
-        // 32bpp RGBA로 변환
-        Microsoft::WRL::ComPtr<IWICFormatConverter> conv;
-        factory->CreateFormatConverter ( &conv );
-        conv->Initialize ( frame.Get ( ) , GUID_WICPixelFormat32bppRGBA , WICBitmapDitherTypeNone ,
-                         nullptr , 0.0 , WICBitmapPaletteTypeCustom );
-
-        UINT w = 0 , h = 0;
-        conv->GetSize ( &w , &h );
-        std::vector<uint8_t> pixels ( w * h * 4 );
-        const UINT stride = w * 4;
-        conv->CopyPixels ( nullptr , stride , ( UINT ) pixels.size ( ) , pixels.data ( ) );
-
-        // D3D11 텍스처 + SRV 생성
-        D3D11_TEXTURE2D_DESC td{};
-        td.Width = w; td.Height = h; td.MipLevels = 1; td.ArraySize = 1;
-        td.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        td.SampleDesc.Count = 1;
-        td.Usage = D3D11_USAGE_IMMUTABLE;
-        td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-
-        D3D11_SUBRESOURCE_DATA srd{};
-        srd.pSysMem = pixels.data ( );
-        srd.SysMemPitch = stride;
-
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> tex;
-        hr = dev->CreateTexture2D ( &td , &srd , &tex );
-        if ( FAILED ( hr ) ) return false;
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC sd{};
-        sd.Format = td.Format;
-        sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        sd.Texture2D.MostDetailedMip = 0;
-        sd.Texture2D.MipLevels = 1;
-
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
-        hr = dev->CreateShaderResourceView ( tex.Get ( ) , &sd , &srv );
-        if ( FAILED ( hr ) ) return false;
-
-        outTex->srv = srv;
-        outTex->width = ( int ) w; outTex->height = ( int ) h;
-        return true;
-    }
-
     // --- Sprite 렌더러(사각형 1개 단위 드로우) ---
     class D3D11SpriteRenderer {
     public:
