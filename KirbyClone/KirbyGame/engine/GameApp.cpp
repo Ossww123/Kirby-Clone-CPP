@@ -292,9 +292,11 @@ namespace engine {
 
             wchar_t line[ 256 ];
             std::swprintf ( line , _countof ( line ) ,
-                          L"VEL: (%.1f, %.1f)  grounded(raw:%d / stable:%d)  onewayIgnore:%d" ,
-                          dbg.vx , dbg.vy , dbg.groundedRaw ? 1 : 0 , dbg.groundedStable ? 1 : 0 ,
-                          dbg.ignoreOneWay ? 1 : 0 );
+                            L"VEL: (%+07.1f, %+07.1f)  grounded(raw:%d / stable:%d)  onewayIgnore:%d" ,
+                            dbg.vx , dbg.vy ,
+                            dbg.groundedRaw ? 1 : 0 ,
+                            dbg.groundedStable ? 1 : 0 ,
+                            dbg.ignoreOneWay ? 1 : 0 );
             m_TextHUD->DrawTextLine ( line , 8.f , 48.f );
 
             std::swprintf ( line , _countof ( line ) ,

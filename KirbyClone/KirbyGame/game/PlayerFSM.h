@@ -67,6 +67,7 @@ namespace game {
             m_coyoteT = std::max ( 0.f , m_coyoteT - dt );
             m_bufferT = std::max ( 0.f , m_bufferT - dt );
             m_dropT = std::max ( 0.f , m_dropT - dt );
+            m_groundHoldT = std::max ( 0.f , m_groundHoldT - dt );
 
             // --- 입력 축/액션 수집 ---
             const float ax = input.GetAxis ( "MoveX" );
@@ -103,6 +104,9 @@ namespace game {
             m_col->MoveAndCollide ( aabb , v , &rep , ignoreOneWay , prevBottom );
             m_body->ApplyCollisionResult ( aabb , v , rep.grounded );
 
+            // 히스테리시스(30ms): 순간 끊김 완화
+            if ( rep.grounded ) m_groundHoldT = 0.033f;
+
             // 상승 중 점프 키 떼면 저점프 감쇠
             if ( !jumpHeld && m_body->Velocity ( ).y < 0.f ) {
                 auto vv = m_body->Velocity ( );
@@ -111,16 +115,18 @@ namespace game {
             }
 
             // --- 상태별 입력/전이 ---
+            const bool groundedStable = ( m_body->Grounded ( ) || m_groundHoldT > 0.f );
+
             switch ( m_state ) {
             case PState::Idle:
-                m_body->SetDesiredRunAxis ( 0.f );          // 기본은 멈춤
-                if ( !m_body->Grounded ( ) ) changeState ( PState::Fall );
+                m_body->SetDesiredRunAxis ( 0.f );
+                if ( !groundedStable ) changeState ( PState::Fall );
                 else if ( std::fabs ( ax ) > 0.1f ) changeState ( PState::Walk );
                 break;
 
             case PState::Walk:
-                m_body->SetDesiredRunAxis ( ax );           // 걷기 중에만 축 적용
-                if ( !m_body->Grounded ( ) )      changeState ( PState::Fall );
+                m_body->SetDesiredRunAxis ( ax );
+                if ( !groundedStable )      changeState ( PState::Fall );
                 else if ( std::fabs ( ax ) <= 0.1f ) changeState ( PState::Idle );
                 break;
 
@@ -131,25 +137,23 @@ namespace game {
 
             case PState::Fall:
                 m_body->SetDesiredRunAxis ( ax );
-                if ( m_body->Grounded ( ) ) changeState ( std::fabs ( ax ) > 0.1f ? PState::Walk : PState::Idle );
+                if ( groundedStable ) changeState ( std::fabs ( ax ) > 0.1f ? PState::Walk : PState::Idle );
                 break;
             }
 
             // ---- 디버그 스냅샷 ----
-            m_dbg.state = m_state;
-            m_dbg.groundedRaw = rep.grounded;
-            // 히스테리시스(30ms): 순간 끊김 완화
-            if ( rep.grounded ) m_groundHoldT = 0.03f;
-            m_dbg.groundedStable = rep.grounded || ( m_groundHoldT > 0.f );
-            m_dbg.ignoreOneWay = ignoreOneWay;
-            m_dbg.coyoteT = m_coyoteT;
-            m_dbg.bufferT = m_bufferT;
-            m_dbg.dropT = m_dropT;
-            m_dbg.groundHoldT = m_groundHoldT;
+            m_dbg.state             = m_state;
+            m_dbg.groundedRaw       = rep.grounded;
+            m_dbg.groundedStable    = rep.grounded || ( m_groundHoldT > 0.f );
+            m_dbg.ignoreOneWay      = ignoreOneWay;
+            m_dbg.coyoteT           = m_coyoteT;
+            m_dbg.bufferT           = m_bufferT;
+            m_dbg.dropT             = m_dropT;
+            m_dbg.groundHoldT       = m_groundHoldT;
             const auto vel = m_body->Velocity ( );
-            m_dbg.vx = vel.x; m_dbg.vy = vel.y;
-            m_dbg.lastAABB = aabb;
-            m_dbg.prevBottom = prevBottom;
+            m_dbg.vx                = vel.x; m_dbg.vy = vel.y;
+            m_dbg.lastAABB          = aabb;
+            m_dbg.prevBottom        = prevBottom;
         }
 
         PState State ( ) const { return m_state; }

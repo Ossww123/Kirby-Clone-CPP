@@ -54,19 +54,16 @@ namespace engine {
         if ( m_y > bottom ) { m_y = static_cast< float >( bottom );         m_vel.y = 0.f; m_grounded = true; }
     }
 
-    RECT PhysicsBody::ProposeAABB ( double fixedDt , int* outPrevBottom ) const
-    {
-        const float dt = static_cast< float >( fixedDt );
-        const int px = static_cast< int >( m_x );
-        const int py = static_cast< int >( m_y );
-        const int pw = static_cast< int >( m_w );
-        const int ph = static_cast< int >( m_h );
-        if ( outPrevBottom ) *outPrevBottom = py + ph;
-
+    RECT PhysicsBody::ProposeAABB ( double fixedDt , int* outPrevBottom ) const {
+        const float dt = ( float ) fixedDt;
+        if ( outPrevBottom ) *outPrevBottom = ( int ) std::floor ( m_y + m_h ); // ★
         const float nx = m_x + m_vel.x * dt;
         const float ny = m_y + m_vel.y * dt;
-        RECT aabb{ ( int ) nx, ( int ) ny, ( int ) ( nx + pw ), ( int ) ( ny + ph ) };
-        return aabb;
+        const int l = ( int ) std::floor ( nx );
+        const int t = ( int ) std::floor ( ny );
+        const int w = ( int ) std::round ( m_w );
+        const int h = ( int ) std::round ( m_h );
+        return RECT{ l, t, l + w, t + h };
     }
 
     void PhysicsBody::ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter , bool grounded )

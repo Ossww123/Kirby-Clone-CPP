@@ -41,11 +41,35 @@ namespace engine::physics {
                 if ( prevBottom > r.top )                               continue;
                 if ( !( aabb.right > r.left && aabb.left < r.right ) )  continue; // 수평 오버랩 확인
 
-                // 박스가 r.top을 가로질러 내려갔다면 클램프
+                // (A) 정상 교차 클램프
                 if ( aabb.bottom > r.top && aabb.top < r.top ) {
-                    const int dy = r.top - aabb.bottom; // 음수 또는 0
+                    const int dy = r.top - aabb.bottom;
                     aabb.top += dy; aabb.bottom += dy;
                     vel.y = 0.f; rep.hitY = true; rep.grounded = true;
+                }
+                // (B) 근접 스냅 (≤ 1px)
+                else {
+                    const int SNAP_EPS = 1;
+                    const bool nearTop = ( aabb.bottom <= r.top ) && ( r.top - aabb.bottom <= SNAP_EPS );
+                    if ( nearTop ) {
+                        const int dy = r.top - aabb.bottom;
+                        aabb.top += dy; aabb.bottom += dy;
+                        vel.y = 0.f; rep.hitY = true; rep.grounded = true;
+                    }
+                }
+            }
+        }
+
+        if ( !rep.grounded && vel.y >= 0.f ) {
+            const int SNAP_EPS = 1;
+            for ( const RECT& s : m_static ) {
+                const bool overlapX = ( aabb.right > s.left && aabb.left < s.right );
+                const bool nearTop = ( aabb.bottom <= s.top ) && ( s.top - aabb.bottom <= SNAP_EPS );
+                if ( overlapX && nearTop ) {
+                    const int dy = s.top - aabb.bottom;
+                    aabb.top += dy; aabb.bottom += dy;
+                    vel.y = 0.f; rep.hitY = true; rep.grounded = true;
+                    break;
                 }
             }
         }
