@@ -10,7 +10,6 @@ namespace engine {
 
     class WorldSystem {
     public:
-        // 파일 기반 간편 로딩
         bool Load ( ID3D11Device* dev ,
                   const std::wstring& tilesPng ,
                   const std::wstring& csv ,
@@ -42,9 +41,9 @@ namespace engine {
         void DefineTile ( int id , const TileDef& def ) { m_tiles.Define ( id , def ); }
 
     private:
-        TileSet  m_tiles{};
-        TileMap  m_map{};
-        physics::CollisionSystem m_collision{};
+        TileSet                     m_tiles{};
+        TileMap                     m_map{};
+        physics::CollisionSystem    m_collision{};
     };
 
 } // namespace engine

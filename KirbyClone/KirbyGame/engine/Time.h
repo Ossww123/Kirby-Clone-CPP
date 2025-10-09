@@ -31,7 +31,9 @@ namespace engine {
             }
         }
 
-        bool ShouldFixedUpdate ( ) const { return m_accumulator >= FIXED_DT; }
+        bool ShouldFixedUpdate ( ) const {
+            return m_accumulator >= FIXED_DT; 
+        }
         void ConsumeFixedStep ( ) { m_accumulator -= FIXED_DT; }
 
         // getters

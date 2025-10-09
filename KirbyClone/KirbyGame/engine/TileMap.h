@@ -7,7 +7,7 @@
 
 namespace engine {
 
-    class D3D11SpriteBatch; // 전방선언 (구현은 .cpp에서 include)
+    class D3D11SpriteBatch;
 
     class TileMap {
     public:

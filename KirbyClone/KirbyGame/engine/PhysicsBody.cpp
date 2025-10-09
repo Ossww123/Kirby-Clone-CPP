@@ -9,7 +9,7 @@ namespace engine {
     {
         const float dt = static_cast< float >( fixedDt );
 
-        // 1) 가로 가속/감속
+        // 1) x축 - 가속/감속
         float target = m_useDirectTarget ? m_directTargetX : ( m_axisX * m_p.maxSpeedRun );
         m_useDirectTarget = false; // 1프레임만 유효
 
@@ -28,7 +28,7 @@ namespace engine {
             else             m_vel.x = std::min ( 0.f , m_vel.x + s );
         }
 
-        // 2) 중력 + 종단속도
+        // 2) y축 - 중력 + 종단속도
         m_vel.y += m_p.gravity * dt;
         if ( m_vel.y > m_p.termVel ) m_vel.y = m_p.termVel;
     }

@@ -6,13 +6,13 @@
 namespace engine {
 
     struct PhysicsParams {
-        float accelRun = 3200.f;
-        float decelRun = 4000.f;
-        float maxSpeedRun = 220.f;
-        float frictionGround = 500.f;
-        float frictionAir = 80.f;
-        float gravity = 1200.f;
-        float termVel = 1050.f; // +Y 하강 종단속도
+        float accelRun          = 3200.f;  // 가속도
+        float decelRun          = 4000.f;  // 감속도
+        float maxSpeedRun       = 220.f;   // 최대 달리기 속도
+        float frictionGround    = 500.f;   // 마찰 감속도
+        float frictionAir       = 80.f;    // 공중 마찰 감속도 (좌우)
+        float gravity           = 1200.f;  // 중력 가속도
+        float termVel           = 1050.f;  // +Y 하강 종단속도
     };
 
     class PhysicsBody {
@@ -27,8 +27,7 @@ namespace engine {
         void SetGrounded ( bool g ) { m_grounded = g; if ( g && m_vel.y > 0 ) m_vel.y = 0.f; }
 
         // ---- 입력(수평 이동 의도)
-        // axisX: -1..+1 권장. (targetSpeedX 를 직접 넣고 싶으면 SetDesiredRunSpeedX 사용)
-        void SetDesiredRunAxis ( float axisX ) { m_axisX = std::clamp ( axisX , -1.f , 1.f ); }
+        void SetDesiredRunAxis ( float axisX ) { m_axisX = std::clamp ( axisX , -1.f , 1.f ); } // axisX: -1..+1 권장.
         void SetDesiredRunSpeedX ( float targetSpeed ) { m_axisX = 0.f; m_directTargetX = targetSpeed; m_useDirectTarget = true; }
 
         // ---- 물리 스텝(속도만 갱신; 위치는 안 옮김 → 충돌과 조합하기 좋게)
@@ -77,9 +76,9 @@ namespace engine {
         RECT  m_bounds{};
 
         // 입력/목표
-        float  m_axisX = 0.f;
-        float  m_directTargetX = 0.f;
-        bool   m_useDirectTarget = false;
+        float m_axisX = 0.f;
+        float m_directTargetX = 0.f;
+        bool  m_useDirectTarget = false;
     };
 
 } // namespace engine

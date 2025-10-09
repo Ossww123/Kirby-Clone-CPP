@@ -118,8 +118,8 @@ namespace engine {
         m_World.LoadTileset ( d3d->Device ( ) , L"assets/tiles.png" , 32 , 32 );
 
         // 예시 타일 정의
-        engine::TileDef solid{};  solid.solid = true;  solid.src = RECT{ 0,0,32,32 };
-        engine::TileDef oneway{}; oneway.oneway = true;  oneway.src = RECT{ 32,0,64,32 };
+        engine::TileDef solid{};  solid.solid   = true; solid.src  = RECT{ 0, 0, 32, 32 };
+        engine::TileDef oneway{}; oneway.oneway = true; oneway.src = RECT{ 32, 0, 64, 32 };
         m_World.DefineTile ( 1 , solid );
         m_World.DefineTile ( 2 , oneway );
 
@@ -213,11 +213,7 @@ namespace engine {
     {
         if ( !m_Player ) return;
 
-        // ⇩ 한 줄로 교체
         m_PlayerFSM.Step ( fixedDt , m_Input );
-
-        // (선택) 외부 애니메이터를 아직 쓰고 있다면, 프레임 진행만 남겨도 됨
-        // m_Anim.Update(fixedDt);
 
         // 카메라만 유지
         m_Cam.SetLookAt ( m_Player->Center ( ) );
@@ -281,6 +277,8 @@ namespace engine {
         // --- HUD ---
         if ( m_TextHUD ) {
             m_TextHUD->Begin ( );
+
+            // 기존: FPS/STATE
             wchar_t buf[ 128 ];
             std::swprintf ( buf , _countof ( buf ) , L"FPS:%d  dt:%.3f" , m_Time.FPS ( ) , m_Time.FixedDelta ( ) );
             m_TextHUD->DrawTextLine ( buf , 8.f , 8.f );
@@ -289,8 +287,46 @@ namespace engine {
             std::swprintf ( st , _countof ( st ) , L"STATE: %S" , m_PlayerFSM.StateName ( ) );
             m_TextHUD->DrawTextLine ( st , 8.f , 28.f );
 
+            // 추가: FSM 디버그 스냅샷
+            auto dbg = m_PlayerFSM.GetDebug ( );
+
+            wchar_t line[ 256 ];
+            std::swprintf ( line , _countof ( line ) ,
+                          L"VEL: (%.1f, %.1f)  grounded(raw:%d / stable:%d)  onewayIgnore:%d" ,
+                          dbg.vx , dbg.vy , dbg.groundedRaw ? 1 : 0 , dbg.groundedStable ? 1 : 0 ,
+                          dbg.ignoreOneWay ? 1 : 0 );
+            m_TextHUD->DrawTextLine ( line , 8.f , 48.f );
+
+            std::swprintf ( line , _countof ( line ) ,
+                          L"Timers  coyote:%.3f  buffer:%.3f  drop:%.3f  groundHold:%.3f" ,
+                          dbg.coyoteT , dbg.bufferT , dbg.dropT , dbg.groundHoldT );
+            m_TextHUD->DrawTextLine ( line , 8.f , 68.f );
+
+            std::swprintf ( line , _countof ( line ) ,
+                          L"AABB L:%d T:%d R:%d B:%d   prevBottom:%d" ,
+                          dbg.lastAABB.left , dbg.lastAABB.top , dbg.lastAABB.right , dbg.lastAABB.bottom , dbg.prevBottom );
+            m_TextHUD->DrawTextLine ( line , 8.f , 88.f );
+
+            // 발밑 타일 좌표(타일 32px 가정)
+            if ( m_Player ) {
+                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                const int footX = px + pw / 2;
+                const int footY = py + ph;         // 발바닥 y
+                const int tileSize = 32;
+                const int tx = footX / tileSize;
+                const int ty = footY / tileSize;
+                std::swprintf ( line , _countof ( line ) ,
+                              L"Foot: (%d, %d)  Tile: (%d, %d)" , footX , footY , tx , ty );
+                m_TextHUD->DrawTextLine ( line , 8.f , 108.f );
+            }
+
+            // 카메라/오프셋 확인
+            wchar_t cam[128]; std::swprintf(cam, _countof(cam), L"Cam LookAt: (%.1f, %.1f)", m_Cam.GetLookAt().x, m_Cam.GetLookAt().y);
+            m_TextHUD->DrawTextLine(cam, 8.f, 128.f);
+
             m_TextHUD->End ( );
         }
+
         m_Renderer->EndFrame ( );
     }
 

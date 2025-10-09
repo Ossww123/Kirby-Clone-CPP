@@ -10,7 +10,7 @@ namespace game {
 
     class Player final : public engine::Object {
     public:
-        // 초기 위치/크기를 바로 지정(기본값 유지)
+        // 초기 위치/크기를 바로 지정
         explicit Player ( RECT playBounds ,
                         float x = 100.f , float y = 100.f ,
                         float w = 32.f , float h = 24.f )
@@ -23,15 +23,7 @@ namespace game {
         // FSM이 입력/물리/충돌을 모두 처리하므로 여기서는 아무 것도 안 함
         void Update ( double /*fixedDt*/ , const engine::Input& /*input*/ ) override { /* FSM이 처리 */ }
 
-        void Render ( HDC dc , int ox , int oy ) override {
-            // 디버그용 GDI 도형 (유지)
-            int bx , by , bw , bh; m_body.GetBounds ( bx , by , bw , bh );
-            const int sx = bx - ox , sy = by - oy;
-            HBRUSH br = CreateSolidBrush ( RGB ( 255 , 180 , 64 ) );
-            HGDIOBJ old = SelectObject ( dc , br );
-            RoundRect ( dc , sx , sy , sx + bw , sy + bh , 12 , 12 );
-            SelectObject ( dc , old ); DeleteObject ( br );
-        }
+        void Render ( HDC dc , int ox , int oy ) override {}
 
         // 외부에서 월드/크기 조정 시 PhysicsBody에 위임
         void SetBounds ( RECT b ) { m_body.SetBounds ( b ); }

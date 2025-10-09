@@ -11,7 +11,7 @@ namespace game {
 
     enum class PState { Idle , Walk , Jump , Fall };
 
-    // 작은 헬퍼: 상태명 문자열
+    // 헬퍼: 상태명 문자열
     inline const char* ToString ( PState s ) {
         switch ( s ) {
         case PState::Idle: return "Idle";
@@ -31,6 +31,17 @@ namespace game {
             float bufferMs = 0.10f;
             float dropMs = 0.20f;
             float shortHopMul = 0.45f;   // 저점프 감쇠(상승중 키 뗄 때)
+        };
+
+        struct DebugInfo {
+            PState state{ PState::Idle };
+            bool groundedRaw{ false };
+            bool groundedStable{ false };
+            bool ignoreOneWay{ false };
+            float coyoteT{ 0.f } , bufferT{ 0.f } , dropT{ 0.f } , groundHoldT{ 0.f };
+            float vx{ 0.f } , vy{ 0.f };
+            RECT  lastAABB{ 0,0,0,0 };
+            int   prevBottom{ 0 };
         };
 
         void Init ( engine::PhysicsBody* body ,
@@ -88,7 +99,7 @@ namespace game {
             engine::Vec2 v = m_body->Velocity ( );
 
             engine::physics::CollisionReport rep{};
-            const bool ignoreOneWay = ( m_dropT > 0.f );
+            const bool ignoreOneWay = ( m_dropT > 0.f ) || ( v.y < 0.f );
             m_col->MoveAndCollide ( aabb , v , &rep , ignoreOneWay , prevBottom );
             m_body->ApplyCollisionResult ( aabb , v , rep.grounded );
 
@@ -123,10 +134,27 @@ namespace game {
                 if ( m_body->Grounded ( ) ) changeState ( std::fabs ( ax ) > 0.1f ? PState::Walk : PState::Idle );
                 break;
             }
+
+            // ---- 디버그 스냅샷 ----
+            m_dbg.state = m_state;
+            m_dbg.groundedRaw = rep.grounded;
+            // 히스테리시스(30ms): 순간 끊김 완화
+            if ( rep.grounded ) m_groundHoldT = 0.03f;
+            m_dbg.groundedStable = rep.grounded || ( m_groundHoldT > 0.f );
+            m_dbg.ignoreOneWay = ignoreOneWay;
+            m_dbg.coyoteT = m_coyoteT;
+            m_dbg.bufferT = m_bufferT;
+            m_dbg.dropT = m_dropT;
+            m_dbg.groundHoldT = m_groundHoldT;
+            const auto vel = m_body->Velocity ( );
+            m_dbg.vx = vel.x; m_dbg.vy = vel.y;
+            m_dbg.lastAABB = aabb;
+            m_dbg.prevBottom = prevBottom;
         }
 
         PState State ( ) const { return m_state; }
         const char* StateName ( ) const { return ToString ( m_state ); }
+        DebugInfo GetDebug ( ) const { return m_dbg; }
 
     private:
         void changeState ( PState s ) {
@@ -152,6 +180,8 @@ namespace game {
         float m_coyoteT{ 0.f };
         float m_bufferT{ 0.f };
         float m_dropT{ 0.f };
+        float m_groundHoldT{ 0.f };   // grounded 히스테리시스
+        DebugInfo m_dbg{};
     };
 
 } // namespace game

@@ -8,12 +8,13 @@ namespace engine { class D3D11DebugDraw; }
 
 namespace engine::physics {
 
-    // AABB 유틸
+    // AABB
     inline bool Overlap ( const RECT& a , const RECT& b ) {
         return !( a.right <= b.left || a.left >= b.right ||
                  a.bottom <= b.top || a.top >= b.bottom );
     }
 
+    // MTV : 밀어내는 거리
     inline POINT ResolveMTV ( const RECT& a , const RECT& b ) {
         int leftPen = b.right - a.left;
         int rightPen = a.right - b.left;
@@ -45,7 +46,8 @@ namespace engine::physics {
         void AddStaticBox ( const RECT& r );
         void AddStaticBox ( int x , int y , int w , int h );
 
-        void AddOneWayBox ( int x , int y , int w , int h ) { RECT r{ x,y,x + w,y + h }; m_oneway.push_back ( r ); }
+        void AddOneWayBox ( const RECT& r );
+        void AddOneWayBox ( int x , int y , int w , int h );
 
         void MoveAndCollide ( RECT& aabb , engine::Vec2& vel , CollisionReport* out = nullptr ,
                         bool ignoreOneWay = false , int prevBottom = INT32_MIN ) const;

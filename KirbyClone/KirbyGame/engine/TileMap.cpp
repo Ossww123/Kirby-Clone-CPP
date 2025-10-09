@@ -57,7 +57,6 @@ namespace engine {
     {
         struct R { int x , y , w , h; };
 
-        // --- 기존 SOLID 병합 로직 (그대로) ---
         std::vector<R> prev , next , out;
         prev.reserve ( 256 ); next.reserve ( 256 ); out.reserve ( 256 );
 
@@ -66,28 +65,49 @@ namespace engine {
             int id = At ( x , y );
             if ( const auto* def = tiles.Get ( id ) ) return def->solid;
             return false;
-            };
+        };
 
         for ( int y = 0; y < m_h; ++y ) {
             std::vector<R> cur; cur.reserve ( 128 );
             int runStart = -1;
+
+            // 수평 병합
             for ( int x = 0; x <= m_w; ++x ) {
                 bool solid = ( x < m_w ) ? isSolid ( x , y ) : false;
-                if ( solid ) { if ( runStart < 0 ) runStart = x; }
-                else if ( runStart >= 0 ) { cur.push_back ( { runStart,y,x - runStart,1 } ); runStart = -1; }
+                if ( solid ) {
+                    if ( runStart < 0 ) runStart = x; 
+                }
+                else if ( runStart >= 0 ) {
+                    cur.push_back ( { runStart, y, x - runStart, 1 } ); 
+                    runStart = -1; 
+                }
             }
+
             next.clear ( );
             std::vector<char> used ( cur.size ( ) , 0 );
+
+            // 수직 병합
             for ( const auto& a : prev ) {
                 bool merged = false;
                 for ( size_t j = 0; j < cur.size ( ); ++j ) {
                     if ( used[ j ] ) continue;
                     const auto& b = cur[ j ];
-                    if ( a.x == b.x && a.w == b.w ) { R ext = a; ext.h = a.h + 1; next.push_back ( ext ); used[ j ] = 1; merged = true; break; }
+                    if ( a.x == b.x && a.w == b.w ) {
+                        R ext = a;
+                        ext.h = a.h + 1;
+                        next.push_back ( ext );
+                        used[ j ] = 1;
+                        merged = true;
+                        break;
+                    }
                 }
-                if ( !merged ) out.push_back ( a );
+                if ( !merged ) out.push_back ( a );  // 병합 불가 → 완성
             }
-            for ( size_t j = 0; j < cur.size ( ); ++j ) if ( !used[ j ] ) next.push_back ( cur[ j ] );
+
+            for ( size_t j = 0; j < cur.size ( ); ++j ) {
+                if ( !used[ j ] ) 
+                    next.push_back ( cur[ j ] );
+            }
             prev.swap ( next );
         }
         out.insert ( out.end ( ) , prev.begin ( ) , prev.end ( ) );
