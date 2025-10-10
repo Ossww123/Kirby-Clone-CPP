@@ -23,10 +23,16 @@ namespace engine {
         bool Play ( const std::string& name , bool reset = true ) {
             auto it = m_clips.find ( name );
             if ( it == m_clips.end ( ) ) return false;
-            if ( &it->second != m_cur ) {
-                m_cur = &it->second;
+
+            const AnimClip* next = &it->second;
+
+            if ( next != m_cur ) {
+                m_cur = next;
                 m_curName = name;
-                if ( reset ) { m_idx = 0; m_t = 0.f; }
+                m_idx = 0; m_t = 0.f;
+            }
+            else if ( reset ) {
+                m_idx = 0; m_t = 0.f;
             }
             return true;
         }

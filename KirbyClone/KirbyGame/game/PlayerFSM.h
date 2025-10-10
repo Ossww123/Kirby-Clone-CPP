@@ -1,8 +1,7 @@
 ﻿#pragma once
 #include <string>
-#include <cmath>
+#include <memory>
 #include "engine/Input.h"
-#include "engine/Time.h"
 #include "engine/PhysicsBody.h"
 #include "engine/Collision.h"
 #include "engine/Anim.h"
@@ -11,7 +10,6 @@ namespace game {
 
     enum class PState { Idle , Walk , Jump , Fall };
 
-    // 헬퍼: 상태명 문자열
     inline const char* ToString ( PState s ) {
         switch ( s ) {
         case PState::Idle: return "Idle";
@@ -22,7 +20,6 @@ namespace game {
         }
     }
 
-    // Kirby 미니 FSM: GameApp에서 player Body/Collision을 넘겨 받아 Step만 호출
     class PlayerFSM {
     public:
         struct Cfg {
@@ -30,7 +27,10 @@ namespace game {
             float coyoteMs = 0.08f;
             float bufferMs = 0.10f;
             float dropMs = 0.20f;
-            float shortHopMul = 0.45f;   // 저점프 감쇠(상승중 키 뗄 때)
+            float shortHopMul = 0.45f;
+            float groundHoldMs = 0.033f; // 접지 히스테리시스
+            float jumpLockMs = 0.03f;  // 점프 직후 전이 잠금
+            int   maxTransitionsPerStep = 3; // 한 스텝에서 허용할 최대 전이 수(무한루프 방지)
         };
 
         struct DebugInfo {
@@ -44,147 +44,107 @@ namespace game {
             int   prevBottom{ 0 };
         };
 
+        // --- 외부 인터페이스 ---
         void Init ( engine::PhysicsBody* body ,
                   const engine::physics::CollisionSystem* worldCol ,
                   engine::Animator* anim = nullptr ,
-                  const Cfg& cfg = {} )
-        {
-            m_body = body;
-            m_col = worldCol;
-            m_anim = anim;
-            m_cfg = cfg;
-            m_state = PState::Idle;
-            if ( m_anim ) m_anim->Play ( "Idle" , true );
-        }
+                  const Cfg& cfg = {} );
 
-        // 고정 틱에서 호출
-        void Step ( double fixedDt , const engine::Input& input )
-        {
-            if ( !m_body || !m_col ) return;
-            const float dt = static_cast< float >( fixedDt );
+        void Step ( double fixedDt , const engine::Input& input );
 
-            // --- 타이머 감소 ---
-            m_coyoteT = std::max ( 0.f , m_coyoteT - dt );
-            m_bufferT = std::max ( 0.f , m_bufferT - dt );
-            m_dropT = std::max ( 0.f , m_dropT - dt );
-            m_groundHoldT = std::max ( 0.f , m_groundHoldT - dt );
-
-            // --- 입력 축/액션 수집 ---
-            const float ax = input.GetAxis ( "MoveX" );
-            const float ay = input.GetAxis ( "MoveY" );
-            const bool  jumpPressed = input.ActionPressed ( "Jump" ) || input.Pressed ( VK_SPACE );
-            const bool  jumpHeld = input.ActionDown ( "Jump" ) || input.Down ( VK_SPACE );
-
-            // 버퍼: 점프 눌린 순간 저장
-            if ( jumpPressed ) m_bufferT = m_cfg.bufferMs;
-            // 드롭스루: 지상 + ↓ + 점프
-            if ( m_body->Grounded ( ) && ay < -0.5f && jumpPressed ) m_dropT = m_cfg.dropMs;
-
-            // --- 가속/중력(입력 반영은 상태별로) ---
-            m_body->AdvanceKinematics ( fixedDt );
-
-            // 코요테 리필
-            if ( m_body->Grounded ( ) ) m_coyoteT = m_cfg.coyoteMs;
-
-            // 버퍼된 점프 처리(지상 또는 코요테 중)
-            if ( ( m_body->Grounded ( ) || m_coyoteT > 0.f ) && m_bufferT > 0.f ) {
-                m_body->Jump ( m_cfg.jumpSpeed );
-                m_coyoteT = 0.f;
-                m_bufferT = 0.f;
-                changeState ( PState::Jump );
-            }
-
-            // --- 충돌 처리(원웨이 무시 여부 포함) ---
-            int prevBottom = 0;
-            RECT aabb = m_body->ProposeAABB ( fixedDt , &prevBottom );
-            engine::Vec2 v = m_body->Velocity ( );
-
-            engine::physics::CollisionReport rep{};
-            const bool ignoreOneWay = ( m_dropT > 0.f ) || ( v.y < 0.f );
-            m_col->MoveAndCollide ( aabb , v , &rep , ignoreOneWay , prevBottom );
-            m_body->ApplyCollisionResult ( aabb , v , rep.grounded );
-
-            // 히스테리시스(30ms): 순간 끊김 완화
-            if ( rep.grounded ) m_groundHoldT = 0.033f;
-
-            // 상승 중 점프 키 떼면 저점프 감쇠
-            if ( !jumpHeld && m_body->Velocity ( ).y < 0.f ) {
-                auto vv = m_body->Velocity ( );
-                vv.y *= m_cfg.shortHopMul;
-                m_body->SetVelocity ( vv );
-            }
-
-            // --- 상태별 입력/전이 ---
-            const bool groundedStable = ( m_body->Grounded ( ) || m_groundHoldT > 0.f );
-
-            switch ( m_state ) {
-            case PState::Idle:
-                m_body->SetDesiredRunAxis ( 0.f );
-                if ( !groundedStable ) changeState ( PState::Fall );
-                else if ( std::fabs ( ax ) > 0.1f ) changeState ( PState::Walk );
-                break;
-
-            case PState::Walk:
-                m_body->SetDesiredRunAxis ( ax );
-                if ( !groundedStable )      changeState ( PState::Fall );
-                else if ( std::fabs ( ax ) <= 0.1f ) changeState ( PState::Idle );
-                break;
-
-            case PState::Jump:
-                m_body->SetDesiredRunAxis ( ax );
-                if ( m_body->Velocity ( ).y >= 0.f ) changeState ( PState::Fall );
-                break;
-
-            case PState::Fall:
-                m_body->SetDesiredRunAxis ( ax );
-                if ( groundedStable ) changeState ( std::fabs ( ax ) > 0.1f ? PState::Walk : PState::Idle );
-                break;
-            }
-
-            // ---- 디버그 스냅샷 ----
-            m_dbg.state             = m_state;
-            m_dbg.groundedRaw       = rep.grounded;
-            m_dbg.groundedStable    = rep.grounded || ( m_groundHoldT > 0.f );
-            m_dbg.ignoreOneWay      = ignoreOneWay;
-            m_dbg.coyoteT           = m_coyoteT;
-            m_dbg.bufferT           = m_bufferT;
-            m_dbg.dropT             = m_dropT;
-            m_dbg.groundHoldT       = m_groundHoldT;
-            const auto vel = m_body->Velocity ( );
-            m_dbg.vx                = vel.x; m_dbg.vy = vel.y;
-            m_dbg.lastAABB          = aabb;
-            m_dbg.prevBottom        = prevBottom;
-        }
-
-        PState State ( ) const { return m_state; }
+        PState GetState ( ) const { return m_state; }
         const char* StateName ( ) const { return ToString ( m_state ); }
         DebugInfo GetDebug ( ) const { return m_dbg; }
 
     private:
-        void changeState ( PState s ) {
-            if ( m_state == s ) return;
-            m_state = s;
-            if ( !m_anim ) return;
-            switch ( s ) {
-            case PState::Idle: m_anim->Play ( "Idle" , false ); break;
-            case PState::Walk: m_anim->Play ( "Walk" , false ); break;
-            case PState::Jump: m_anim->Play ( "Jump" , true ); break;
-            case PState::Fall: m_anim->Play ( "Fall" , false ); break;
+        // ===== HFSM 내부 지원 구조 =====
+        struct Ctx {
+            // refs
+            engine::PhysicsBody* body{};
+            const engine::physics::CollisionSystem* col{};
+            engine::Animator* anim{};
+            Cfg cfg{};
+
+            // 입력/시간
+            float dt{ 0.f };
+            float ax{ 0.f } , ay{ 0.f };
+            bool  jumpPressed{ false } , jumpHeld{ false };
+
+            // 물리/충돌 스냅샷
+            RECT aabb{ 0,0,0,0 };
+            int  prevBottom{ 0 };
+            engine::Vec2 vel{ 0.f,0.f };
+            engine::physics::CollisionReport rep{};
+
+            // 원웨이 무시 여부
+            bool ignoreOneWay{ false };
+        };
+
+        struct State {
+            virtual ~State ( ) = default;
+            virtual void OnEnter ( Ctx& ) {}
+            virtual void OnExit ( ) {}
+            virtual void Update ( Ctx& , PlayerFSM& ) = 0;
+            static void Play ( engine::Animator* a , const char* name , bool reset = false ) {
+                if ( a ) a->Play ( name , reset );
             }
-        }
+        };
 
+        // 슈퍼 상태
+        struct Grounded : State {
+            void Update ( Ctx& c , PlayerFSM& fsm ) override;
+        };
+        struct Airborne : State {
+            void Update ( Ctx& c , PlayerFSM& fsm ) override;
+        };
+
+        // 리프 상태
+        struct Idle : Grounded {
+            void OnEnter ( Ctx& c ) override { Play ( c.anim , "Idle" , true ); }
+            void Update ( Ctx& c , PlayerFSM& fsm ) override;
+        };
+        struct Walk : Grounded {
+            void OnEnter ( Ctx& c ) override { Play ( c.anim , "Walk" , true ); }
+            void Update ( Ctx& c , PlayerFSM& fsm ) override;
+        };
+        struct Jump : Airborne {
+            void OnEnter ( Ctx& c ) override { Play ( c.anim , "Jump" , true ); }
+            void Update ( Ctx& c , PlayerFSM& fsm ) override;
+        };
+        struct Fall : Airborne {
+            void OnEnter ( Ctx& c ) override { Play ( c.anim , "Fall" , true ); }
+            void Update ( Ctx& c , PlayerFSM& fsm ) override;
+        };
+
+        // ===== 전이 관리(중앙집중) =====
+        void RequestChange ( std::unique_ptr<State> ns , PState tag ); // 상태 내부/시스템에서 호출
+        void ApplyPending ( Ctx& c );                                 // Step 루프에서만 호출
+        bool CanTransition ( PState from , PState to , const Ctx& c ) const;
+
+        // ===== 공통 시스템 스텝 =====
+        void IntegrateAndCollide ( double fixedDt , const engine::Input& input , Ctx& c );
+
+    private:
         // refs
-        engine::PhysicsBody* m_body = nullptr;
-        const engine::physics::CollisionSystem* m_col = nullptr;
-        engine::Animator* m_anim = nullptr;
+        engine::PhysicsBody* m_body{};
+        const engine::physics::CollisionSystem* m_col{};
+        engine::Animator* m_anim{};
 
-        // cfg/state
-        Cfg   m_cfg{};
+        // config/state
+        Cfg m_cfg{};
         PState m_state{ PState::Idle };
-        float m_coyoteT{ 0.f };
-        float m_bufferT{ 0.f };
-        float m_dropT{ 0.f };
-        float m_groundHoldT{ 0.f };   // grounded 히스테리시스
+        std::unique_ptr<State> m_cur;
+
+        // pending transition
+        std::unique_ptr<State> m_pending;
+        PState m_pendingTag{ PState::Idle };
+
+        // flow control
+        bool  m_needEnter{ false };
+        int   m_transitionBudget{ 0 };
+        float m_jumpLockT{ 0.f };
+
+        // debug
         DebugInfo m_dbg{};
     };
 

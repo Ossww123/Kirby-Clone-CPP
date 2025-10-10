@@ -215,6 +215,11 @@ namespace engine {
 
         m_PlayerFSM.Step ( fixedDt , m_Input );
 
+
+        // 애니메이터 틱
+        if ( m_Player && m_Player->Animator ( ) )
+            m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
+
         // 카메라만 유지
         m_Cam.SetLookAt ( m_Player->Center ( ) );
         m_Cam.Update ( fixedDt );

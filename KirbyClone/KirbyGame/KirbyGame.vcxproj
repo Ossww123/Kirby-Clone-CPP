@@ -170,6 +170,7 @@
     <ClCompile Include="engine\PhysicsBody.cpp" />
     <ClCompile Include="engine\TileMap.cpp" />
     <ClCompile Include="engine\TileSet.cpp" />
+    <ClCompile Include="game\PlayerFSM.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
     <ClCompile Include="engine\WorldSystem.cpp" />
     <ClCompile Include="engine\RenderSystem.cpp" />
