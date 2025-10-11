@@ -45,11 +45,19 @@ namespace game {
         m_dbg.groundHoldT = std::max ( 0.f , m_dbg.groundHoldT - c.dt );
         m_jumpLockT = std::max ( 0.f , m_jumpLockT - c.dt );
 
+        // 체력/i-frames
+        m_health.Tick ( c.dt );
+
         // 드롭스루 시작: 지상 + 아래 + 점프
         if ( m_body->Grounded ( ) && c.ay < -0.5f && c.jumpPressed ) m_dbg.dropT = m_cfg.dropMs;
 
         // ---- 물리/충돌 (한 번만) ----
         IntegrateAndCollide ( fixedDt , input , c );
+
+        // 사망 체크: hp 0이면 Dead로
+        if ( !m_health.Alive ( ) && m_state != PState::Dead ) {
+            RequestChange ( std::make_unique<Dead> ( ) , PState::Dead );
+        }
 
         // ---- 전이 처리 루프(중앙) ----
         m_transitionBudget = std::max ( 1 , m_cfg.maxTransitionsPerStep );
@@ -77,6 +85,31 @@ namespace game {
         m_dbg.vy = c.vel.y;
         m_dbg.lastAABB = c.aabb;
         m_dbg.prevBottom = c.prevBottom;
+        m_dbg.hp = m_health.hp; m_dbg.iFrameT = m_health.iFrameT;
+    }
+
+    bool PlayerFSM::ApplyDamage ( const Damage& d )
+    {
+        if ( m_state == PState::Dead ) return false;
+        // 이미 무적이면 무시
+        if ( !m_health.Apply ( d.amount ) ) return false;
+
+        // 넉백 적용
+        m_pendingKB = d.knockback;
+        // 클램프
+        const float k = m_cfg.hurtKnockbackClamp;
+        m_pendingKB.x = std::clamp ( m_pendingKB.x , -k , k );
+        m_pendingKB.y = std::clamp ( m_pendingKB.y , -k , k );
+
+        // 즉시 속도 세팅
+        if ( m_body ) m_body->SetVelocity ( m_pendingKB );
+
+        // 경직 시간
+        m_damagedT = m_cfg.damagedStun;
+
+        // 상태 전이
+        RequestChange ( std::make_unique<Damaged> ( ) , PState::Damaged );
+        return true;
     }
 
     // ====== 공통 시스템 스텝 ======
@@ -127,11 +160,7 @@ namespace game {
     void PlayerFSM::ApplyPending ( Ctx& c )
     {
         if ( !m_pending ) return;
-        if ( !CanTransition ( m_state , m_pendingTag , c ) ) {
-            // 금지된 전이는 폐기
-            m_pending.reset ( );
-            return;
-        }
+        if ( !CanTransition ( m_state , m_pendingTag , c ) ) { m_pending.reset ( ); return; }
         if ( m_cur ) m_cur->OnExit ( );
         m_cur = std::move ( m_pending );
         m_state = m_pendingTag;
@@ -141,6 +170,8 @@ namespace game {
     bool PlayerFSM::CanTransition ( PState from , PState to , const Ctx& c ) const
     {
         if ( from == to ) return false; // 중복 전이 방지
+        if ( from == PState::Dead ) return false; // 사망 후 고정
+        if ( to == PState::Dead ) return true;
 
         // 점프 락: Jump -> (Idle/Walk) 금지
         if ( from == PState::Jump && ( to == PState::Idle || to == PState::Walk ) && m_jumpLockT > 0.f )
@@ -149,6 +180,9 @@ namespace game {
         // 상승 → 하강 전환 규칙: Jump -> Fall 은 vy >= 0 일 때만
         if ( from == PState::Jump && to == PState::Fall && c.body->Velocity ( ).y < 0.f )
             return false;
+
+        // Damaged에서 너무 빠른 해제 방지: 경직 시간 남으면 유지
+        if ( from == PState::Damaged && m_damagedT > 0.f && ( to == PState::Idle || to == PState::Walk ) ) return false;
 
         // 필요 시 더 많은 규칙을 여기에 추가 (무적, 원웨이, 대시 등)
         return true;
@@ -180,21 +214,15 @@ namespace game {
     void PlayerFSM::Idle::Update ( Ctx& c , PlayerFSM& fsm )
     {
         c.body->SetDesiredRunAxis ( 0.f );
-
         const bool stable = c.body->Grounded ( ) || ( fsm.m_dbg.groundHoldT > 0.f );
-        if ( !stable ) {
-            fsm.RequestChange ( std::make_unique<Fall> ( ) , PState::Fall );
-            return;
-        }
-        if ( std::fabs ( c.ax ) > 0.1f )
-            fsm.RequestChange ( std::make_unique<Walk> ( ) , PState::Walk );
+        if ( !stable ) { fsm.RequestChange ( std::make_unique<Fall> ( ) , PState::Fall ); return; }
+        if ( std::fabs ( c.ax ) > 0.1f ) fsm.RequestChange ( std::make_unique<Walk> ( ) , PState::Walk );
     }
 
     void PlayerFSM::Walk::Update ( Ctx& c , PlayerFSM& fsm )
     {
         Grounded::Update ( c , fsm ); // 지면 이탈 감시
-        if ( std::fabs ( c.ax ) <= 0.1f )
-            fsm.RequestChange ( std::make_unique<Idle> ( ) , PState::Idle );
+        if ( std::fabs ( c.ax ) <= 0.1f ) fsm.RequestChange ( std::make_unique<Idle> ( ) , PState::Idle );
     }
 
     void PlayerFSM::Jump::Update ( Ctx& c , PlayerFSM& fsm )
@@ -210,14 +238,43 @@ namespace game {
             return;
         }
 
-        // 락이 끝났고, 공중 공통 로직(착지)을 허용
-        Airborne::Update ( c , fsm );
+        const bool stable = c.body->Grounded ( ) || ( fsm.m_dbg.groundHoldT > 0.f );
+        if ( stable ) {
+            if ( std::fabs ( c.ax ) > 0.1f ) fsm.RequestChange ( std::make_unique<Walk> ( ) , PState::Walk );
+            else                        fsm.RequestChange ( std::make_unique<Idle> ( ) , PState::Idle );
+        }
     }
 
     void PlayerFSM::Fall::Update ( Ctx& c , PlayerFSM& fsm )
     {
         // 공통 착지 처리
         Airborne::Update ( c , fsm );
+    }
+
+    void PlayerFSM::Damaged::Update ( Ctx& c , PlayerFSM& fsm )
+    {
+        // 경직 중에는 입력 무시, 수평 드리프트만 감속
+        c.body->SetDesiredRunAxis ( 0.f );
+
+        // 경직 타이머 감소
+        fsm.m_damagedT = std::max ( 0.f , fsm.m_damagedT - c.dt );
+
+        // 경직이 끝났다면 공통 공중/착지 로직으로 복귀
+        if ( fsm.m_damagedT <= 0.f ) {
+            // 하강 전환 시 Fall, 착지 시 지상 상태
+            if ( c.body->Velocity ( ).y >= 0.f ) {
+                fsm.RequestChange ( std::make_unique<Fall> ( ) , PState::Fall );
+                return;
+            }
+            Airborne::Update ( c , fsm );
+        }
+    }
+
+    void PlayerFSM::Dead::Update ( Ctx& c , PlayerFSM& fsm )
+    {
+        // 입력 무시, 천천히 멈추게
+        c.body->SetDesiredRunAxis ( 0.f );
+        // 착지해도 상태 유지 (리스폰 시스템 붙일 때까지 고정)
     }
 
 } // namespace game

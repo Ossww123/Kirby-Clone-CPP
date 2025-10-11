@@ -22,6 +22,7 @@
 #include "engine/DWriteText.h"
 #include "engine/D3D11SpriteBatch.h"
 #include "game/Player.h"
+#include "game/Damage.h"
 
 namespace engine {
     GameApp::~GameApp ( )
@@ -235,6 +236,26 @@ namespace engine {
         // 몬스터 업데이트
         for ( auto& m : m_Monsters ) if ( m ) m->Update ( fixedDt , m_Input );
 
+        // 접촉 데미지 체크
+        int px , py , pw , ph;
+        m_Player->GetBounds ( px , py , pw , ph );
+        RECT pr{ px, py, px + pw, py + ph };
+
+        for ( auto& m : m_Monsters ) if ( m ) {
+            int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+            RECT mr{ mx, my, mx + mw, my + mh };
+            if ( engine::physics::Overlap ( pr , mr ) ) {
+                // 몬스터 기준으로 넉백 방향 계산
+                const float pcx = px + pw * 0.5f;
+                const float mcx = mx + mw * 0.5f;
+                const float dir = ( pcx < mcx ) ? -1.f : 1.f; // 플레이어가 왼쪽이면 왼쪽으로 튕김
+                game::Damage dmg;
+                dmg.amount = 1;
+                dmg.knockback = engine::Vec2{ dir * 260.f, -320.f }; // 튜닝 가능
+                m_PlayerFSM.ApplyDamage ( dmg );
+            }
+        }
+
         // 애니메이터 (플레이어)
         if ( m_Player && m_Player->Animator ( ) )
             m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
@@ -359,6 +380,10 @@ namespace engine {
             wchar_t mons[ 64 ];
             std::swprintf ( mons , _countof ( mons ) , L"Monsters: %zu" , m_Monsters.size ( ) );
             m_TextHUD->DrawTextLine ( mons , 8.f , 148.f );
+
+            wchar_t hpLine[ 64 ];
+            std::swprintf ( hpLine , _countof ( hpLine ) , L"HP: %d" , m_PlayerFSM.GetDebug ( ).hp );
+            m_TextHUD->DrawTextLine ( hpLine , 8.f , 168.f );
 
             m_TextHUD->End ( );
         }
