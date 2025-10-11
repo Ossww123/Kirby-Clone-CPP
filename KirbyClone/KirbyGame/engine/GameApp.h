@@ -29,6 +29,7 @@
 // === 게임 오브젝트 ===
 #include "game/Player.h"
 #include "game/PlayerFSM.h"
+#include "game/MonsterFactory.h"
 
 namespace engine {
 
@@ -62,10 +63,11 @@ namespace engine {
         Tex2D                               m_PlayerTex{};   // 플레이어 텍스처
         RenderSystem m_Render{};
 
-        // --- 카메라/플레이어 ---
+        // --- 카메라/플레이어/몬스터 ---
         Camera     m_Cam{};
         game::Player* m_Player{ nullptr };
         game::PlayerFSM m_PlayerFSM;
+        std::vector<std::unique_ptr<game::Monster>> m_Monsters;
 
         // --- 월드 ---
         WorldSystem m_World{};

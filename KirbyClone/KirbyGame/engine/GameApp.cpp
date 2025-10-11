@@ -130,6 +130,23 @@ namespace engine {
             // 카메라 월드 사각형 자동 설정
             RECT wr = m_World.WorldRectPx ( );
             m_Cam.SetWorldRect ( ( float ) wr.left , ( float ) wr.top , ( float ) wr.right , ( float ) wr.bottom );
+
+            // === 몬스터 팩토리 등록 + 웨이들디 스폰 ===
+            game::MonsterFactory::RegisterDefaults ( ); // 한 번만
+
+            // (임시) 플레이어 근처에 2마리 생성
+            m_Monsters.push_back (
+                game::MonsterFactory::Create (
+                    game::MonsterType::WaddleDee , wr , &m_World.Collision ( ) ,
+                    game::SpawnSpec{ .x = 200.f, .y = 180.f, .dir = -1 }
+                )
+            );
+            m_Monsters.push_back (
+                game::MonsterFactory::Create (
+                    game::MonsterType::WaddleDee , wr , &m_World.Collision ( ) ,
+                    game::SpawnSpec{ .x = 360.f, .y = 180.f, .dir = +1 }
+                )
+            );
         }
 
         // 이 렌더/충돌 자원들을 RenderFrame에서 접근하기 위해 lambdas로 캡쳐하거나
@@ -215,12 +232,14 @@ namespace engine {
 
         m_PlayerFSM.Step ( fixedDt , m_Input );
 
+        // 몬스터 업데이트
+        for ( auto& m : m_Monsters ) if ( m ) m->Update ( fixedDt , m_Input );
 
-        // 애니메이터 틱
+        // 애니메이터 (플레이어)
         if ( m_Player && m_Player->Animator ( ) )
             m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
 
-        // 카메라만 유지
+        // 카메라
         m_Cam.SetLookAt ( m_Player->Center ( ) );
         m_Cam.Update ( fixedDt );
     }
@@ -274,6 +293,12 @@ namespace engine {
             if ( m_Player ) {
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
                 m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
+            }
+
+            // 웨이들디(및 모든 몬스터) 박스
+            for ( auto& m : m_Monsters ) if ( m ) {
+                int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+                m_Debug->WorldRect ( mx , my , mw , mh , ox , oy , RGB ( 240 , 120 , 60 ) ); // 주황
             }
 
             m_Debug->Flush ( );
@@ -330,6 +355,10 @@ namespace engine {
             // 카메라/오프셋 확인
             wchar_t cam[128]; std::swprintf(cam, _countof(cam), L"Cam LookAt: (%.1f, %.1f)", m_Cam.GetLookAt().x, m_Cam.GetLookAt().y);
             m_TextHUD->DrawTextLine(cam, 8.f, 128.f);
+
+            wchar_t mons[ 64 ];
+            std::swprintf ( mons , _countof ( mons ) , L"Monsters: %zu" , m_Monsters.size ( ) );
+            m_TextHUD->DrawTextLine ( mons , 8.f , 148.f );
 
             m_TextHUD->End ( );
         }

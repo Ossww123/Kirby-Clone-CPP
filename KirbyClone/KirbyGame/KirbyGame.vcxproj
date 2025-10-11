@@ -156,9 +156,12 @@
     <ClInclude Include="engine\TileMap.h" />
     <ClInclude Include="engine\TileSet.h" />
     <ClInclude Include="engine\Time.h" />
+    <ClInclude Include="game\Monster.h" />
+    <ClInclude Include="game\MonsterFactory.h" />
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="game\PlayerFSM.h" />
+    <ClInclude Include="game\WaddleDee.h" />
     <ClInclude Include="res\Resource.h" />
     <ClInclude Include="engine\WorldSystem.h" />
   </ItemGroup>
@@ -171,6 +174,7 @@
     <ClCompile Include="engine\TileMap.cpp" />
     <ClCompile Include="engine\TileSet.cpp" />
     <ClCompile Include="game\PlayerFSM.cpp" />
+    <ClCompile Include="game\WaddleDee.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
     <ClCompile Include="engine\WorldSystem.cpp" />
     <ClCompile Include="engine\RenderSystem.cpp" />
