@@ -1,4 +1,5 @@
 ﻿#include "engine/PhysicsBody.h"
+#include "engine/Collision.h"
 #include <cmath>
 
 namespace engine {
@@ -54,13 +55,18 @@ namespace engine {
         if ( m_y > bottom ) { m_y = static_cast< float >( bottom );         m_vel.y = 0.f; m_grounded = true; }
     }
 
-    RECT PhysicsBody::ProposeAABB ( double fixedDt , int* outPrevBottom ) const {
+    RECT PhysicsBody::ProposeAABB ( double fixedDt , int* outPrevBottom , float* outNX , float* outNY ) const {
         const float dt = ( float ) fixedDt;
-        if ( outPrevBottom ) *outPrevBottom = ( int ) std::floor ( m_y + m_h ); // ★
+        if ( outPrevBottom ) *outPrevBottom = ( int ) std::floor ( m_y + m_h );
+
         const float nx = m_x + m_vel.x * dt;
         const float ny = m_y + m_vel.y * dt;
-        const int l = ( int ) std::floor ( nx );
-        const int t = ( int ) std::floor ( ny );
+        if ( outNX ) *outNX = nx;
+        if ( outNY ) *outNY = ny;
+
+        // 충돌용 정수 AABB (좌표는 대칭 절삭, 크기는 round)
+        const int l = ( int ) nx;
+        const int t = ( int ) ny;
         const int w = ( int ) std::round ( m_w );
         const int h = ( int ) std::round ( m_h );
         return RECT{ l, t, l + w, t + h };
@@ -72,6 +78,19 @@ namespace engine {
         m_y = static_cast< float >( aabbAfter.top );
         m_vel = velAfter;
         m_grounded = grounded;
+        if ( m_grounded && m_vel.y > 0.f ) m_vel.y = 0.f;
+    }
+
+    void PhysicsBody::ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter ,
+                                       const physics::CollisionReport& rep ,
+                                       float proposedX , float proposedY )
+    {
+        // 충돌 있는 축만 정수 스냅, 없으면 예측 float 유지
+        m_x = rep.hitX ? ( float ) aabbAfter.left : proposedX;
+        m_y = ( rep.grounded || rep.hitY ) ? ( float ) aabbAfter.top : proposedY;
+
+        m_vel = velAfter;
+        m_grounded = rep.grounded;
         if ( m_grounded && m_vel.y > 0.f ) m_vel.y = 0.f;
     }
 

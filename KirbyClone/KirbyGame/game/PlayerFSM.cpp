@@ -100,11 +100,12 @@ namespace game {
         }
 
         // 충돌
-        c.aabb = c.body->ProposeAABB ( fixedDt , &c.prevBottom );
+        float nx = 0.f , ny = 0.f;
+        c.aabb = c.body->ProposeAABB ( fixedDt , &c.prevBottom , &nx , &ny );
         c.vel = c.body->Velocity ( );
         c.ignoreOneWay = ( m_dbg.dropT > 0.f ) || ( c.vel.y < 0.f );
         c.col->MoveAndCollide ( c.aabb , c.vel , &c.rep , c.ignoreOneWay , c.prevBottom );
-        c.body->ApplyCollisionResult ( c.aabb , c.vel , c.rep.grounded );
+        c.body->ApplyCollisionResult ( c.aabb , c.vel , c.rep , nx , ny );
 
         // 지면 히스테리시스
         if ( c.rep.grounded ) m_dbg.groundHoldT = m_cfg.groundHoldMs;

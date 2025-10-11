@@ -5,6 +5,7 @@
 #include "engine/PhysicsBody.h"
 #include "engine/Collision.h"
 #include "engine/Anim.h"
+#include "engine/Math.h"
 
 namespace game {
 
@@ -22,7 +23,7 @@ namespace game {
 
         virtual ~Monster ( ) = default;
 
-        // 필수: 프레임 갱신(물리/충돌은 공통, AI는 파생에서 결정)
+        // 프레임 갱신 (물리/충돌은 공통, AI는 파생에서 결정)
         void Update ( double fixedDt , const engine::Input& input ) override {
             // 1) 파생 AI로 이동 의도 계산
             TickAI ( fixedDt , input );
@@ -56,23 +57,22 @@ namespace game {
 
         // 공통 물리/충돌(플레이어와 동일한 흐름)
         void StepPhysics ( double fixedDt ) {
-            using namespace engine::physics;
-
             // 1) 가속/중력
             m_body.AdvanceKinematics ( fixedDt );
 
             // 2) 충돌 예측/적용
-            int prevBottom = 0;
-            RECT aabb = m_body.ProposeAABB ( fixedDt , &prevBottom );
+            int prevBottom = 0; float nx = 0.f , ny = 0.f;
+            RECT aabb = m_body.ProposeAABB ( fixedDt , &prevBottom , &nx , &ny );
+
             engine::Vec2 vel = m_body.Velocity ( );
-            m_ignoreOneWay = ( m_cfg.ignoreOneWayUpward && vel.y < 0.f ); // 상승 중엔 원웨이 무시 옵션
+            m_ignoreOneWay = ( m_cfg.ignoreOneWayUpward && vel.y < 0.f );
+
             m_col->MoveAndCollide ( aabb , vel , &m_rep , m_ignoreOneWay , prevBottom );
-            m_body.ApplyCollisionResult ( aabb , vel , m_rep.grounded );
+            m_body.ApplyCollisionResult ( aabb , vel , m_rep , nx , ny );
         }
 
         // 바닥 가장자리 감지(앞쪽 2px, 아래 2px 프로브)
         bool HasGroundAhead ( int dir ) const {
-            using namespace engine::physics;
             int x , y , w , h; m_body.GetBounds ( x , y , w , h );
             const int probeW = 2;
             RECT probe{
@@ -82,8 +82,8 @@ namespace game {
                 y + h + 3
             };
             // 정지/원웨이 모두 검사
-            for ( const RECT& s : m_col->Statics ( ) ) if ( Overlap ( probe , s ) ) return true;
-            for ( const RECT& o : m_col->OneWays ( ) ) if ( Overlap ( probe , o ) ) return true;
+            for ( const RECT& s : m_col->Statics ( ) ) if ( engine::physics::Overlap ( probe , s ) ) return true;
+            for ( const RECT& o : m_col->OneWays ( ) ) if ( engine::physics::Overlap ( probe , o ) ) return true;
             return false;
         }
 

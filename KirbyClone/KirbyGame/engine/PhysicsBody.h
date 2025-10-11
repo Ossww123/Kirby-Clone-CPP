@@ -3,6 +3,8 @@
 #include <algorithm>
 #include "engine/Math.h"
 
+namespace engine { namespace physics { struct CollisionReport; } }
+
 namespace engine {
 
     struct PhysicsParams {
@@ -38,10 +40,15 @@ namespace engine {
 
         // ---- 충돌 시스템 연동 경로
         // 1) 현재 상태에서 dt 후의 "제안 AABB" 계산 (충돌 검사에 사용)
-        RECT ProposeAABB ( double fixedDt , int* outPrevBottom = nullptr ) const;
+        RECT ProposeAABB ( double fixedDt , int* outPrevBottom ,
+                     float* outNX = nullptr , float* outNY = nullptr ) const;
 
         // 2) 충돌 시스템 결과를 바디에 반영
         void ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter , bool grounded );
+        // 축별 스냅용 오버로드 (충돌 없는 축은 float 유지)
+        void ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter ,
+                              const physics::CollisionReport& rep ,
+                              float proposedX , float proposedY );
 
         // ---- 쿼리
         void GetBounds ( int& x , int& y , int& w , int& h ) const {

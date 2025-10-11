@@ -141,12 +141,12 @@ namespace engine {
                     game::SpawnSpec{ .x = 200.f, .y = 180.f, .dir = -1 }
                 )
             );
-            m_Monsters.push_back (
+            /*m_Monsters.push_back (
                 game::MonsterFactory::Create (
                     game::MonsterType::WaddleDee , wr , &m_World.Collision ( ) ,
                     game::SpawnSpec{ .x = 360.f, .y = 180.f, .dir = +1 }
                 )
-            );
+            );*/
         }
 
         // 이 렌더/충돌 자원들을 RenderFrame에서 접근하기 위해 lambdas로 캡쳐하거나
