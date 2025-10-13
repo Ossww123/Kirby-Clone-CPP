@@ -288,16 +288,29 @@ namespace engine {
             }
         }
 
-        // ── (선택) 몬스터 피격 판정: 일단 투사체만 제거 ──
-        for ( auto& p : m_Projectiles ) if ( p && p->Alive ( ) && p->Owner ( ) == game::ProjOwner::Player ) {
-            int px , py , pw , ph; p->GetBounds ( px , py , pw , ph );
-            RECT pr{ px,py,px + pw,py + ph };
-            for ( auto& m : m_Monsters ) if ( m ) {
-                int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-                RECT mr{ mx,my,mx + mw,my + mh };
-                if ( engine::physics::Overlap ( pr , mr ) ) {
-                    p->Kill ( ); // ← 다음 단계에서 몬스터 데미지로 확장
-                    break;
+        // ── 몬스터 피격 판정 ──
+        for ( auto& p : m_Projectiles ) {
+            if ( p && p->Alive ( ) && p->Owner ( ) == game::ProjOwner::Player )
+            {
+                int px , py , pw , ph; p->GetBounds ( px , py , pw , ph );
+                RECT pr{ px, py, px + pw, py + ph };
+
+                for ( auto& m : m_Monsters ) {
+                    if ( m && m->Alive ( ) )
+                    {
+                        int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+                        RECT mr{ mx, my, mx + mw, my + mh };
+                        if ( engine::physics::Overlap ( pr , mr ) ) {
+                            // 명중!
+                            const float dir = ( px < mx ) ? -1.f : +1.f;
+                            game::Damage dmg;
+                            dmg.amount = 1;
+                            dmg.knockback = engine::Vec2{ dir * 300.f, -200.f };
+                            m->OnHit ( dmg );
+                            p->Kill ( ); // 투사체 소멸
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -370,15 +383,17 @@ namespace engine {
             }
 
             // 몬스터
-            for ( auto& m : m_Monsters ) if ( m ) {
-                int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-                m_Debug->WorldRect ( mx , my , mw , mh , ox , oy , RGB ( 240 , 120 , 60 ) );
-            }
+            for ( auto& m : m_Monsters )
+                if ( m && m->Alive ( ) )
+                    m->RenderDebug ( m_Debug.get ( ) , ox , oy );
+
             // 투사체
-            for ( auto& p : m_Projectiles ) if ( p && p->Alive ( ) ) {
-                int x , y , w , h; p->GetBounds ( x , y , w , h );
-                m_Debug->WorldRect ( x , y , w , h , ox , oy , RGB ( 255 , 230 , 90 ) );
-            }
+            for ( auto& p : m_Projectiles )
+                if ( p && p->Alive ( ) ) {
+                    int x , y , w , h; p->GetBounds ( x , y , w , h );
+                    m_Debug->WorldRect ( x , y , w , h , ox , oy , RGB ( 255 , 230 , 90 ) );
+                }
+
             m_Debug->Flush ( );
         }
 

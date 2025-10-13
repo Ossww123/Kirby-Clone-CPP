@@ -6,6 +6,8 @@
 #include "engine/Collision.h"
 #include "engine/Anim.h"
 #include "engine/Math.h"
+#include "engine/D3D11DebugDraw.h"
+#include "game/Damage.h"
 
 namespace game {
 
@@ -14,17 +16,24 @@ namespace game {
         struct Cfg {
             engine::PhysicsParams phys;
             bool ignoreOneWayUpward = true; // 공중 상승 중 원웨이 무시(보통 몬스터는 무시 안 함)
+            int  maxHp = 2;               // 기본 체력
+            float iFrameMs = 0.3f;        // 피격 후 무적 시간
         };
 
         Monster ( const RECT& worldBounds ,
                 const engine::physics::CollisionSystem* col ,
                 const Cfg& cfg = {} )
-            : m_body ( worldBounds , cfg.phys ) , m_col ( col ) , m_cfg ( cfg ) {}
+            : m_body ( worldBounds , cfg.phys ) , m_col ( col ) , m_cfg ( cfg )
+        {
+            m_health.Reset ( cfg.maxHp , cfg.iFrameMs );
+        }
 
         virtual ~Monster ( ) = default;
 
         // 프레임 갱신 (물리/충돌은 공통, AI는 파생에서 결정)
         void Update ( double fixedDt , const engine::Input& input ) override {
+            if ( !m_alive ) return;
+
             // 1) 파생 AI로 이동 의도 계산
             TickAI ( fixedDt , input );
 
@@ -33,6 +42,38 @@ namespace game {
 
             // 3) 애니메이션
             m_anim.Update ( fixedDt );
+
+
+            // 4) 무적 타이머 감소
+            m_health.Tick ( static_cast< float >( fixedDt ) );
+        }
+
+        void RenderDebug ( engine::D3D11DebugDraw* dbg , int ox , int oy ) const {
+            if ( !m_alive ) return;
+            int x , y , w , h; m_body.GetBounds ( x , y , w , h );
+            dbg->WorldRect ( x , y , w , h , ox , oy , RGB ( 240 , 120 , 60 ) );
+            // 체력 표시선(디버그)
+            if ( m_health.hp < m_health.maxHp ) {
+                const int len = ( int ) ( ( float ) m_health.hp / m_health.maxHp * w );
+                dbg->WorldLine ( x , y - 2 , x + len , y - 2 , ox , oy , RGB ( 255 , 60 , 60 ) );
+            }
+        }
+
+        bool Alive ( ) const { return m_alive; }
+        void Kill ( ) { m_alive = false; }
+
+        // 피격 처리 (Projectile 등에서 호출)
+        virtual void OnHit ( const Damage& d ) {
+            if ( !m_alive ) return;
+            if ( !m_health.Apply ( d.amount ) ) return; // 무적 or 사망 시 이미 처리됨
+            // 넉백 (기본은 단순 적용)
+            engine::Vec2 v = m_body.Velocity ( );
+            v.x += d.knockback.x * 0.5f;
+            v.y += d.knockback.y * 0.5f;
+            m_body.SetVelocity ( v );
+            if ( m_health.hp <= 0 ) {
+                m_alive = false;
+            }
         }
 
         // 추후 스프라이트로 교체
@@ -85,10 +126,11 @@ namespace game {
         const engine::physics::CollisionSystem* m_col{};
         engine::Animator m_anim;
 
-        // 마지막 충돌 결과(벽 충돌/접지 등)
-        engine::physics::CollisionReport m_rep{}; // Collision.h에 정의되어 있음
+        engine::physics::CollisionReport m_rep{};
         bool m_ignoreOneWay = false;
 
+        Health m_health{};
+        bool m_alive = true;
         Cfg m_cfg{};
     };
 
