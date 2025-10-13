@@ -35,15 +35,8 @@ namespace game {
             m_anim.Update ( fixedDt );
         }
 
-        // 디버그 렌더(사각형) - 추후 스프라이트로 교체
-        void Render ( HDC dc , int ox , int oy ) override {
-            int x , y , w , h; m_body.GetBounds ( x , y , w , h );
-            RECT r{ x + ox, y + oy, x + ox + w, y + oy + h };
-            HBRUSH br = CreateSolidBrush ( RGB ( 240 , 120 , 60 ) ); // WaddleDee 느낌의 주황
-            HBRUSH old = ( HBRUSH ) SelectObject ( dc , br );
-            Rectangle ( dc , r.left , r.top , r.right , r.bottom );
-            SelectObject ( dc , old ); DeleteObject ( br );
-        }
+        // 추후 스프라이트로 교체
+        void Render ( HDC , int , int ) override {}
 
         // --- 공용 유틸 ---
         void SetPosition ( float x , float y ) { m_body.SetPosition ( x , y ); }

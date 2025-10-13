@@ -162,6 +162,7 @@
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="game\PlayerFSM.h" />
+    <ClInclude Include="game\Projectile.h" />
     <ClInclude Include="game\WaddleDee.h" />
     <ClInclude Include="res\Resource.h" />
     <ClInclude Include="engine\WorldSystem.h" />

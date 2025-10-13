@@ -23,6 +23,7 @@
 #include "engine/D3D11SpriteBatch.h"
 #include "game/Player.h"
 #include "game/Damage.h"
+#include "game/Projectile.h"
 
 namespace engine {
     GameApp::~GameApp ( )
@@ -233,8 +234,39 @@ namespace engine {
 
         m_PlayerFSM.Step ( fixedDt , m_Input );
 
+        // 바라보는 방향 추적: 속도/입력 기준
+        if ( std::fabs ( m_Input.GetAxis ( "MoveX" ) ) > 0.1f )
+            m_facing = ( m_Input.GetAxis ( "MoveX" ) >= 0.f ) ? +1 : -1;
+        else {
+            // 입력이 없다면, 실제 속도로 추정
+            const auto dbg = m_PlayerFSM.GetDebug ( );
+            if ( std::fabs ( dbg.vx ) > 1.f ) m_facing = ( dbg.vx >= 0.f ) ? +1 : -1;
+        }
+
+        // ── 발사 입력(J) ──
+        if ( m_Input.ActionPressed ( "Attack" ) ) {
+            // 플레이어 중앙에서 발사
+            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+            engine::Vec2 start{ ( float ) ( px + pw / 2 ), ( float ) ( py + ph / 2 ) };
+
+            // 방향에 따라 속도
+            game::Projectile::Cfg pcfg;
+            pcfg.width = 8; pcfg.height = 8; pcfg.speed = 520.f;
+
+            // 월드 경계
+            RECT wr = m_World.WorldRectPx ( );
+
+            auto proj = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
+            engine::Vec2 vel{ ( float ) m_facing * pcfg.speed, 0.f };
+            proj->Fire ( start , vel );
+            m_Projectiles.push_back ( std::move ( proj ) );
+        }
+
         // 몬스터 업데이트
         for ( auto& m : m_Monsters ) if ( m ) m->Update ( fixedDt , m_Input );
+
+        // ── 투사체 업데이트 ──
+        for ( auto& p : m_Projectiles ) if ( p ) p->Update ( fixedDt , m_Input );
 
         // 접촉 데미지 체크
         int px , py , pw , ph;
@@ -255,6 +287,27 @@ namespace engine {
                 m_PlayerFSM.ApplyDamage ( dmg );
             }
         }
+
+        // ── (선택) 몬스터 피격 판정: 일단 투사체만 제거 ──
+        for ( auto& p : m_Projectiles ) if ( p && p->Alive ( ) && p->Owner ( ) == game::ProjOwner::Player ) {
+            int px , py , pw , ph; p->GetBounds ( px , py , pw , ph );
+            RECT pr{ px,py,px + pw,py + ph };
+            for ( auto& m : m_Monsters ) if ( m ) {
+                int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+                RECT mr{ mx,my,mx + mw,my + mh };
+                if ( engine::physics::Overlap ( pr , mr ) ) {
+                    p->Kill ( ); // ← 다음 단계에서 몬스터 데미지로 확장
+                    break;
+                }
+            }
+        }
+
+        // ── 죽은 투사체 정리 ──
+        m_Projectiles.erase (
+            std::remove_if ( m_Projectiles.begin ( ) , m_Projectiles.end ( ) ,
+                [ ] ( const std::unique_ptr<game::Projectile>& p ) { return !p || !p->Alive ( ); } ) ,
+            m_Projectiles.end ( )
+        );
 
         // 애니메이터 (플레이어)
         if ( m_Player && m_Player->Animator ( ) )
@@ -316,12 +369,16 @@ namespace engine {
                 m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
             }
 
-            // 웨이들디(및 모든 몬스터) 박스
+            // 몬스터
             for ( auto& m : m_Monsters ) if ( m ) {
                 int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-                m_Debug->WorldRect ( mx , my , mw , mh , ox , oy , RGB ( 240 , 120 , 60 ) ); // 주황
+                m_Debug->WorldRect ( mx , my , mw , mh , ox , oy , RGB ( 240 , 120 , 60 ) );
             }
-
+            // 투사체
+            for ( auto& p : m_Projectiles ) if ( p && p->Alive ( ) ) {
+                int x , y , w , h; p->GetBounds ( x , y , w , h );
+                m_Debug->WorldRect ( x , y , w , h , ox , oy , RGB ( 255 , 230 , 90 ) );
+            }
             m_Debug->Flush ( );
         }
 

@@ -30,6 +30,7 @@
 #include "game/Player.h"
 #include "game/PlayerFSM.h"
 #include "game/MonsterFactory.h"
+#include "game/Projectile.h"
 
 namespace engine {
 
@@ -63,11 +64,12 @@ namespace engine {
         Tex2D                               m_PlayerTex{};   // 플레이어 텍스처
         RenderSystem m_Render{};
 
-        // --- 카메라/플레이어/몬스터 ---
+        // --- 카메라/플레이어/몬스터/투사체 ---
         Camera     m_Cam{};
         game::Player* m_Player{ nullptr };
         game::PlayerFSM m_PlayerFSM;
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
+        std::vector<std::unique_ptr<game::Projectile>> m_Projectiles;
 
         // --- 월드 ---
         WorldSystem m_World{};
@@ -91,6 +93,7 @@ namespace engine {
         bool m_comInitialized = false;  // CoInitializeEx 성공 여부
         bool m_isMoving = false;
         bool m_debugDrawEnabled = true;
+        int m_facing = 1;
     };
 
 } // namespace engine
