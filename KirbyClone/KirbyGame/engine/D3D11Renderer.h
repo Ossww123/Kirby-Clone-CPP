@@ -112,19 +112,13 @@ namespace engine {
         // 윈도우 크기 변경 시 호출
         void Resize ( int width , int height ) override {
             if ( !m_swapChain ) return;
-
-            // 렌더 타겟 바인딩 해제 (리사이즈 전 필수)
             m_context->OMSetRenderTargets ( 0 , nullptr , nullptr );
-            m_rtv.Reset ( );        // RTV 해제
-            m_backBuffer.Reset ( ); // 백버퍼 해제
+            m_rtv.Reset ( ); m_backBuffer.Reset ( );
 
-            // 스왑체인 버퍼 크기 조정 (0 = 기존 설정 유지)
+            // 요청값 전달 (실제 생성 크기는 CreateBackbufferRTV에서 재확인)
             m_swapChain->ResizeBuffers ( 0 , width , height , DXGI_FORMAT_UNKNOWN , 0 );
 
-            CreateBackbufferRTV ( );  // 새 크기로 RTV 재생성
-            SetViewport ( width , height );  // 뷰포트 재설정
-
-            m_width = width; m_height = height;
+            CreateBackbufferRTV ( ); // 내부에서 m_width/m_height 갱신 + SetViewport 호출
         }
 
         // 프레임 시작: 화면 클리어
@@ -152,13 +146,19 @@ namespace engine {
     private:
         // 백버퍼에서 렌더 타겟 뷰(RTV) 생성
         bool CreateBackbufferRTV ( ) {
-            // 스왑체인의 0번 버퍼(백버퍼)를 Texture2D로 획득
-            if ( FAILED ( m_swapChain->GetBuffer ( 0 , __uuidof( ID3D11Texture2D ) , &m_backBuffer ) ) )
-                return false;
+            Microsoft::WRL::ComPtr<ID3D11Texture2D> bb;
+            if ( FAILED ( m_swapChain->GetBuffer ( 0 , __uuidof( ID3D11Texture2D ) , &bb ) ) ) return false;
+            if ( FAILED ( m_device->CreateRenderTargetView ( bb.Get ( ) , nullptr , &m_rtv ) ) ) return false;
 
-            // 백버퍼로부터 렌더 타겟 뷰 생성
-            if ( FAILED ( m_device->CreateRenderTargetView ( m_backBuffer.Get ( ) , nullptr , &m_rtv ) ) )
-                return false;
+            // 실제 백버퍼 크기 반영
+            D3D11_TEXTURE2D_DESC desc{};
+            bb->GetDesc ( &desc );
+            m_width = static_cast< int >( desc.Width );
+            m_height = static_cast< int >( desc.Height );
+
+            // 여기서 바로 뷰포트도 동일 크기로 맞춤
+            SetViewport ( m_width , m_height );
+            m_backBuffer = std::move ( bb );
             return true;
         }
 

@@ -189,26 +189,34 @@ namespace engine {
     {
         if ( w <= 0 || h <= 0 ) return;
 
-        // 플레이어 경계(화면 클램프 용) 갱신
-        if ( m_Player ) {
-            RECT rc{ 0,0,w,h };
-            m_Player->SetBounds ( rc );
-        }
-
-        // 카메라 화면 크기 갱신
-        m_Cam.SetScreenSize ( w , h );
-        m_Cam.SnapImmediate ( );
-
-        // 스왑체인/RTV 리사이즈
+        // 1) 먼저 스왑체인/RTV 리사이즈
         if ( m_Renderer ) m_Renderer->Resize ( w , h );
 
-        // 배치/디버그 뷰포트 갱신
-        if ( m_Batch ) m_Batch->OnResize ( w , h );
-        if ( m_Debug ) m_Debug->OnResize ( w , h );
+        // 2) 실제 백버퍼 크기 기준으로 '하나의 진실' 확보
+        auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
+        const int sw = d3d ? d3d->Width ( ) : w;
+        const int sh = d3d ? d3d->Height ( ) : h;
+        if ( sw <= 0 || sh <= 0 ) return;
 
-        // DirectWrite 대상 재생성
-        if ( m_TextHUD ) m_TextHUD->RecreateTarget ( );
+        // 3) RenderSystem(프로젝션) 갱신
+        m_Render.OnResize ( sw , sh );
+
+        // 4) 카메라 화면 크기 갱신(오프셋/halfW,halfH 일치)
+        m_Cam.SetScreenSize ( sw , sh );
+        m_Cam.SnapImmediate ( );
+
+        // 5) (선택) 배치/디버그가 별도라면 같은 값으로
+        if ( m_Batch ) m_Batch->OnResize ( sw , sh );
+        if ( m_Debug ) m_Debug->OnResize ( sw , sh );
+        // if ( m_TextHUD ) m_TextHUD->RecreateTarget ( ); // (선택) 텍스트 HUD 타깃 재생성
+
+        // 6) 플레이어의 화면 클램프 경계를 '화면 크기'로 둔다면 역시 sw,sh 사용
+        if ( m_Player ) {
+            RECT rc{ 0, 0, sw, sh };
+            m_Player->SetBounds ( rc );
+        }
     }
+
 
     bool GameApp::DoOneFrame ( )
     {
@@ -381,6 +389,8 @@ namespace engine {
     void GameApp::RenderFrame ( )
     {
         auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+        const int sw = d3d ? d3d->Width ( ) : 0;
+        const int sh = d3d ? d3d->Height ( ) : 0;
 
         // BeginFrame은 Color 타입을 받도록 수정
         Color clear{ 0.09f, 0.11f, 0.125f, 1.0f };
@@ -393,7 +403,7 @@ namespace engine {
             m_Batch->Begin ( );
 
             // 1) 타일맵 (가시 영역만)
-            m_World.RenderVisible ( *m_Batch , ox , oy , d3d->Width ( ) , d3d->Height ( ) );
+            m_World.RenderVisible ( *m_Batch , ox , oy , sw , sh );
 
             // 2) 플레이어
             if ( m_Player ) {
@@ -415,7 +425,7 @@ namespace engine {
         // --- 디버그 드로우 ---
         if ( m_debugDrawEnabled && m_Debug ) {
             const int GRID = 32;
-            const int wx0 = ox , wy0 = oy , wx1 = ox + d3d->Width ( ) , wy1 = oy + d3d->Height ( );
+            const int wx0 = ox , wy0 = oy , wx1 = ox + sw , wy1 = oy + sh;
             int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
             for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
             for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
