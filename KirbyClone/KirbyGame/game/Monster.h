@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <memory>
 #include <string>
+#include <functional>
 #include "engine/Object.h"
 #include "engine/PhysicsBody.h"
 #include "engine/Collision.h"
@@ -10,9 +11,16 @@
 #include "game/Damage.h"
 
 namespace game {
+    enum class ProjOwner;
 
     class Monster : public engine::Object {
     public:
+        // 콜백 타입
+        using SpawnProjectileFn = std::function<void ( const engine::Vec2& pos ,
+                                                     const engine::Vec2& vel ,
+                                                     ProjOwner owner )>;
+        using QueryTargetPosFn = std::function<engine::Vec2 ( )>; // 예: 플레이어 센터
+
         struct Cfg {
             engine::PhysicsParams phys;
             bool ignoreOneWayUpward = true; // 공중 상승 중 원웨이 무시(보통 몬스터는 무시 안 함)
@@ -85,6 +93,10 @@ namespace game {
         bool Grounded ( ) const { return m_body.Grounded ( ); }
         void GetBounds ( int& x , int& y , int& w , int& h ) const { m_body.GetBounds ( x , y , w , h ); }
 
+        // 콜백 설정자
+        void SetProjectileSpawner ( SpawnProjectileFn fn ) { m_spawnProj = std::move ( fn ); }
+        void SetTargetQuery ( QueryTargetPosFn fn ) { m_queryTarget = std::move ( fn ); }
+
     protected:
         // 파생이 오버라이드: 이 프레임의 이동 의도/상태 결정(예: m_body.SetDesiredRunAxis(..))
         virtual void TickAI ( double fixedDt , const engine::Input& input ) = 0;
@@ -132,6 +144,9 @@ namespace game {
         Health m_health{};
         bool m_alive = true;
         Cfg m_cfg{};
+
+        SpawnProjectileFn m_spawnProj;  
+        QueryTargetPosFn  m_queryTarget;
     };
 
 } // namespace game

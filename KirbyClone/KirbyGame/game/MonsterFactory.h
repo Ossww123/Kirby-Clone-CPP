@@ -3,11 +3,14 @@
 #include <unordered_map>
 #include <functional>
 #include "game/Monster.h"
+
+// --- 몬스터 ---
 #include "game/WaddleDee.h"
+#include "game/WaddleDoo.h"
 
 namespace game {
 
-    enum class MonsterType { WaddleDee /*, WaddleDoo, HotHead, Sparky, ... */ };
+    enum class MonsterType { WaddleDee , WaddleDoo /*, HotHead, Sparky, ... */ };
 
     struct SpawnSpec {
         MonsterType type;
@@ -51,6 +54,24 @@ namespace game {
                         cfg.base.ignoreOneWayUpward = false; // 웨이들디는 원웨이 위로 못 올라감
 
                         return std::make_unique<WaddleDee> ( b , col , cfg );
+                } );
+
+            Register ( MonsterType::WaddleDoo ,
+                [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
+                    WaddleDoo::CfgDoo cfg;
+                    // 물리는 거의 정지형
+                    cfg.base.phys.accelRun = 0.f;
+                    cfg.base.phys.decelRun = 0.f;
+                    cfg.base.phys.maxSpeedRun = 0.f;
+                    cfg.base.phys.gravity = 1200.f; cfg.base.phys.termVel = 1050.f;
+                    cfg.base.ignoreOneWayUpward = false;
+                    cfg.base.maxHp = 3; cfg.base.iFrameMs = 0.25f;
+
+                    cfg.firePeriod = 1.2f;
+                    cfg.bulletSpeed = 420.f;
+                    cfg.wakeRange = 360.f;
+
+                    return std::make_unique<WaddleDoo> ( b , col , cfg );
                 } );
         }
 

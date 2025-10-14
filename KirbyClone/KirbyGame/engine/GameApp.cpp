@@ -149,6 +149,31 @@ namespace engine {
                     game::SpawnSpec{ .x = 360.f, .y = 180.f, .dir = +1 }
                 )
             );*/
+
+            // 스폰 (예시 좌표 조정)
+            auto md = game::MonsterFactory::Create (
+                game::MonsterType::WaddleDoo , m_World.WorldRectPx ( ) , &m_World.Collision ( ) ,
+                game::SpawnSpec{ .type = game::MonsterType::WaddleDoo, .x = 520.f, .y = 180.f, .dir = +1 }
+            );
+            if ( md ) {
+                // 투사체 스폰 콜백: Projectiles 컨테이너에 추가
+                RECT wr = m_World.WorldRectPx ( );
+                md->SetProjectileSpawner ( [ this , wr ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
+                    auto cfg = game::Projectile::Cfg{};
+                    cfg.width = 8; cfg.height = 8; cfg.speed = std::sqrt ( vel.x * vel.x + vel.y * vel.y );
+                    auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , owner , cfg );
+                    p->Fire ( pos , vel );
+                    m_Projectiles.push_back ( std::move ( p ) );
+                } );
+
+                // 타겟 쿼리 콜백: 플레이어 센터 반환
+                md->SetTargetQuery ( [ this ] ( ) {
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    return engine::Vec2{ ( float ) ( px + pw * 0.5f ), ( float ) ( py + ph * 0.5f ) };
+                } );
+
+                m_Monsters.push_back ( std::move ( md ) );
+            }
         }
 
         // 이 렌더/충돌 자원들을 RenderFrame에서 접근하기 위해 lambdas로 캡쳐하거나
@@ -315,6 +340,27 @@ namespace engine {
             }
         }
 
+        // === Enemy Projectile vs Player ===
+        for ( auto& p : m_Projectiles )
+            if ( p && p->Alive ( ) && p->Owner ( ) == game::ProjOwner::Enemy )
+            {
+                int bx , by , bw , bh; p->GetBounds ( bx , by , bw , bh );
+                RECT br{ bx,by,bx + bw,by + bh };
+
+                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                RECT pr{ px,py,px + pw,py + ph };
+
+                if ( engine::physics::Overlap ( br , pr ) ) {
+                    const float dir = ( ( px + pw * 0.5f ) < ( bx + bw * 0.5f ) ) ? -1.f : +1.f;
+                    game::Damage dmg;
+                    dmg.amount = 1;
+                    dmg.knockback = engine::Vec2{ dir * 260.f, -320.f };
+                    m_PlayerFSM.ApplyDamage ( dmg );
+                    p->Kill ( );
+                }
+            }
+
+
         // ── 죽은 투사체 정리 ──
         m_Projectiles.erase (
             std::remove_if ( m_Projectiles.begin ( ) , m_Projectiles.end ( ) ,
@@ -391,7 +437,8 @@ namespace engine {
             for ( auto& p : m_Projectiles )
                 if ( p && p->Alive ( ) ) {
                     int x , y , w , h; p->GetBounds ( x , y , w , h );
-                    m_Debug->WorldRect ( x , y , w , h , ox , oy , RGB ( 255 , 230 , 90 ) );
+                    const auto color = ( p->Owner ( ) == game::ProjOwner::Player ) ? RGB ( 255 , 230 , 90 ) : RGB ( 120 , 200 , 255 );
+                    m_Debug->WorldRect ( x , y , w , h , ox , oy , color );
                 }
 
             m_Debug->Flush ( );

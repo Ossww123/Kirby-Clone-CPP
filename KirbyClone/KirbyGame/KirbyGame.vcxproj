@@ -164,6 +164,7 @@
     <ClInclude Include="game\PlayerFSM.h" />
     <ClInclude Include="game\Projectile.h" />
     <ClInclude Include="game\WaddleDee.h" />
+    <ClInclude Include="game\WaddleDoo.h" />
     <ClInclude Include="res\Resource.h" />
     <ClInclude Include="engine\WorldSystem.h" />
   </ItemGroup>
@@ -177,6 +178,7 @@
     <ClCompile Include="engine\TileSet.cpp" />
     <ClCompile Include="game\PlayerFSM.cpp" />
     <ClCompile Include="game\WaddleDee.cpp" />
+    <ClCompile Include="game\WaddleDoo.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
     <ClCompile Include="engine\WorldSystem.cpp" />
     <ClCompile Include="engine\RenderSystem.cpp" />
