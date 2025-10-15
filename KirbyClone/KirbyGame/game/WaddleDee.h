@@ -5,7 +5,7 @@ namespace game {
 
     class WaddleDee : public Monster {
     public:
-        struct DeeCfg {
+        struct Config {
             Monster::Cfg base{};
             int   dir = 1;       // +1: 오른쪽, -1: 왼쪽
             bool  turnOnHitX = true; // 벽 충돌 시 방향 전환
@@ -14,7 +14,7 @@ namespace game {
 
         WaddleDee ( const RECT& worldBounds ,
                   const engine::physics::CollisionSystem* col ,
-                  const DeeCfg& cfg = {} )
+                  const Config& cfg = {} )
             : Monster ( worldBounds , col , cfg.base ) , m_dir ( cfg.dir ) ,
             m_turnOnHitX ( cfg.turnOnHitX ) , m_turnAtEdge ( cfg.turnAtEdge )
         {

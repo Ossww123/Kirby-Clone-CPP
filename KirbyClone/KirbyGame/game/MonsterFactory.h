@@ -41,7 +41,7 @@ namespace game {
             // --- WaddleDee 기본 등록 ---
             Register ( MonsterType::WaddleDee ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                        WaddleDee::DeeCfg cfg;
+                        WaddleDee::Config cfg;
                         cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
                         // 몬스터 물리 튜닝(걷기 전용으로 살짝 완만하게)
                         cfg.base.phys.accelRun = 1400.f;
@@ -58,21 +58,33 @@ namespace game {
 
             Register ( MonsterType::WaddleDoo ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                    WaddleDoo::CfgDoo cfg;
-                    // 물리는 거의 정지형
-                    cfg.base.phys.accelRun = 0.f;
-                    cfg.base.phys.decelRun = 0.f;
-                    cfg.base.phys.maxSpeedRun = 0.f;
-                    cfg.base.phys.gravity = 1200.f; cfg.base.phys.termVel = 1050.f;
-                    cfg.base.ignoreOneWayUpward = false;
-                    cfg.base.maxHp = 3; cfg.base.iFrameMs = 0.25f;
+                                WaddleDoo::Config cfg;
 
-                    cfg.firePeriod = 1.2f;
-                    cfg.bulletSpeed = 420.f;
-                    cfg.wakeRange = 360.f;
+                                // --- 이동(걷기 가능) ---
+                                cfg.base.phys.accelRun = 1400.f;
+                                cfg.base.phys.decelRun = 1600.f;
+                                cfg.base.phys.maxSpeedRun = 65.f;   // Dee(약 70)보다 살짝 느리게
+                                cfg.base.phys.frictionGround = 500.f;
+                                cfg.base.phys.frictionAir = 80.f;
+                                cfg.base.phys.gravity = 1200.f;
+                                cfg.base.phys.termVel = 1050.f;
+                                cfg.base.ignoreOneWayUpward = false;
 
-                    return std::make_unique<WaddleDoo> ( b , col , cfg );
+                                // --- 이동 공통 키(Dee와 동일) ---
+                                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
+                                cfg.turnOnHitX = true;
+                                cfg.turnAtEdge = true;
+
+                                // --- 공격 ---
+                                cfg.wakeRange = 360.f;
+                                cfg.windupMs = 0.35f;
+                                cfg.firePeriod = 1.20f;
+                                cfg.bulletSpeed = 420.f;
+                                cfg.stopDuringWindup = true;
+
+                                return std::make_unique<WaddleDoo> ( b , col , cfg );
                 } );
+
         }
 
     private:
