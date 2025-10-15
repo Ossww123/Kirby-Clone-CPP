@@ -9,6 +9,7 @@
 #include "engine/Input.h"
 #include "engine/Scene.h"
 #include "engine/Math.h"
+#include "engine/StringConv.h"
 #include "engine/Camera.h"
 #include "engine/Texture.h"
 #include "engine/TextureLoader.h"
@@ -28,6 +29,7 @@
 #include "game/MonsterFactory.h"
 #include "game/WaddleDee.h"
 #include "game/WaddleDoo.h"
+
 
 namespace engine {
     GameApp::~GameApp ( )
@@ -130,60 +132,18 @@ namespace engine {
         m_World.DefineTile ( 2 , oneway );
 
         // 맵 로드 + 콜라이더
-        if ( m_World.LoadMapCSV ( L"assets/stage01.csv" ) ) {
+        if ( m_World.LoadMapCSV ( L"assets/stage01/tilemap.csv" ) ) {
             m_World.RebuildColliders ( );
 
             // 카메라 월드 사각형 자동 설정
             RECT wr = m_World.WorldRectPx ( );
             m_Cam.SetWorldRect ( ( float ) wr.left , ( float ) wr.top , ( float ) wr.right , ( float ) wr.bottom );
 
-            // === 몬스터 팩토리 등록 + 웨이들디 스폰 ===
+            // === 몬스터 팩토리 등록 + 스폰 ===
             game::MonsterFactory::RegisterDefaults ( ); // 한 번만
 
             LoadStageFromCSV ( "assets/stage01" );
-
-            // (임시) 플레이어 근처에 2마리 생성
-            //m_Monsters.push_back (
-            //    game::MonsterFactory::Create (
-            //        game::MonsterType::WaddleDee , wr , &m_World.Collision ( ) ,
-            //        game::SpawnSpec{ .x = 200.f, .y = 180.f, .dir = -1 }
-            //    )
-            //);
-            ///*m_Monsters.push_back (
-            //    game::MonsterFactory::Create (
-            //        game::MonsterType::WaddleDee , wr , &m_World.Collision ( ) ,
-            //        game::SpawnSpec{ .x = 360.f, .y = 180.f, .dir = +1 }
-            //    )
-            //);*/
-
-            //// 스폰 (예시 좌표 조정)
-            //auto md = game::MonsterFactory::Create (
-            //    game::MonsterType::WaddleDoo , m_World.WorldRectPx ( ) , &m_World.Collision ( ) ,
-            //    game::SpawnSpec{ .type = game::MonsterType::WaddleDoo, .x = 520.f, .y = 180.f, .dir = +1 }
-            //);
-            //if ( md ) {
-            //    // 투사체 스폰 콜백: Projectiles 컨테이너에 추가
-            //    RECT wr = m_World.WorldRectPx ( );
-            //    md->SetProjectileSpawner ( [ this , wr ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
-            //        auto cfg = game::Projectile::Cfg{};
-            //        cfg.width = 8; cfg.height = 8; cfg.speed = std::sqrt ( vel.x * vel.x + vel.y * vel.y );
-            //        auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , owner , cfg );
-            //        p->Fire ( pos , vel );
-            //        m_Projectiles.push_back ( std::move ( p ) );
-            //    } );
-
-            //    // 타겟 쿼리 콜백: 플레이어 센터 반환
-            //    md->SetTargetQuery ( [ this ] ( ) {
-            //        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            //        return engine::Vec2{ ( float ) ( px + pw * 0.5f ), ( float ) ( py + ph * 0.5f ) };
-            //    } );
-
-            //    m_Monsters.push_back ( std::move ( md ) );
-            //}
         }
-
-        // 이 렌더/충돌 자원들을 RenderFrame에서 접근하기 위해 lambdas로 캡쳐하거나
-        // 파일정적/싱글톤으로 간단히 유지합니다. 여기서는 파일정적 사용.
     }
 
     LRESULT GameApp::OnWndMessage ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam )
@@ -253,68 +213,84 @@ namespace engine {
 
     bool GameApp::LoadStageFromCSV ( const char* folder )
     {
-        // 1) 플레이어 시작 위치
-        std::string pfile = std::string ( folder ) + "/player_start.csv";
-        game::PlayerStartCSV ps;
-        if ( game::LoadPlayerStartCSV ( pfile.c_str ( ) , ps ) && m_Player ) {
+        // 1) 타일셋 + 타일맵 (엔진)
+        const std::string base ( folder );
+        const std::wstring tilesPng = ToWide ( base + "/tileset.png" );
+        const std::wstring mapCsv = ToWide ( base + "/tilemap.csv" );
+
+        auto * d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
+        m_World.LoadTileset ( d3d->Device ( ) , tilesPng , /*tileW*/32 , /*tileH*/32 );
+        m_World.LoadMapCSV ( mapCsv );
+
+        // (선택) 타일 속성 적용 → 콜라이더 재구성
+        std::vector<game::TileDefCSV> tdefs;
+        if ( game::LoadTileDefsCSV ( ( std::string ( folder ) + "/tiledefs.csv" ).c_str ( ) , tdefs ) && !tdefs.empty ( ) ) {
+            for ( auto& r : tdefs ) {
+                engine::TileDef d{}; d.solid = ( r.solid != 0 ); d.oneway = ( r.oneway != 0 );
+                m_World.DefineTile ( r.id , d );
+            }
+            m_World.RebuildColliders ( );
+        }
+
+        // 2) 플레이어 시작
+        game::PlayerStartCSV ps{};
+        if ( game::LoadPlayerStartCSV ( ( std::string ( folder ) + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
             m_Player->SetPosition ( ps.x , ps.y );
-            // (선택) 카메라 바로 스냅
+            m_Cam.SetWorldRect ( m_World.WorldRectPx ( ) );
             m_Cam.SetLookAt ( { ps.x, ps.y } );
             m_Cam.SnapImmediate ( );
         }
 
-        // 2) 몬스터 스폰
-        std::string mfile = std::string ( folder ) + "/monsters.csv";
-        std::vector<game::MonsterCSV> rows;
-        if ( game::LoadMonstersCSV ( mfile.c_str ( ) , rows ) ) {
+        // 3) 몬스터 스폰
+        std::vector<game::MonsterCSV> mons;
+        if ( game::LoadMonstersCSV ( ( std::string ( folder ) + "/monsters.csv" ).c_str ( ) , mons ) ) {
             RECT wr = m_World.WorldRectPx ( );
-            for ( const auto& r : rows ) {
-                std::unique_ptr<game::Monster> mon;
-                std::string t = r.type; for ( auto& c : t ) c = ( char ) tolower ( c );
-                if ( t == "waddledee" ) {
-                    game::WaddleDee::Config cfg;
-                    cfg.dir = r.dir;
-                    if ( r.turnOnHitX >= 0 ) cfg.turnOnHitX = ( r.turnOnHitX != 0 );
-                    if ( r.turnAtEdge >= 0 ) cfg.turnAtEdge = ( r.turnAtEdge != 0 );
-                    mon = std::make_unique<game::WaddleDee> ( wr , &m_World.Collision ( ) , cfg );
-                }
-                else
-                    if ( t == "waddledoo" ) {
-                    game::WaddleDoo::Config cfg;
-                    cfg.dir = r.dir;
-                    if ( r.turnOnHitX >= 0 )       cfg.turnOnHitX = ( r.turnOnHitX != 0 );
-                    if ( r.turnAtEdge >= 0 )       cfg.turnAtEdge = ( r.turnAtEdge != 0 );
-                    if ( r.wakeRange >= 0.f )     cfg.wakeRange = r.wakeRange;
-                    if ( r.windupMs >= 0.f )     cfg.windupMs = r.windupMs;
-                    if ( r.firePeriod >= 0.f )     cfg.firePeriod = r.firePeriod;
-                    if ( r.bulletSpeed >= 0.f )     cfg.bulletSpeed = r.bulletSpeed;
-                    if ( r.stopDuringWindup >= 0 )   cfg.stopDuringWindup = ( r.stopDuringWindup != 0 );
-                    mon = std::make_unique<game::WaddleDoo> ( wr , &m_World.Collision ( ) , cfg );
-                }
-                    else {
-                    continue; // 알 수 없는 타입
-                }
-                    // 위치 세팅
-                    if ( mon ) mon->SetPosition ( r.x , r.y );
-
-                // 콜백 연결 (공통)
-                mon->SetProjectileSpawner ( [ this ] ( const engine::Vec2& pos ,
-                    const engine::Vec2& vel ,
-                    game::ProjOwner owner ) {
-                        game::Projectile::Cfg pcfg; pcfg.width = 8; pcfg.height = 8;
-                        auto p = std::make_unique<game::Projectile> ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) , owner , pcfg );
-                        p->Fire ( pos , vel );
-                        m_Projectiles.push_back ( std::move ( p ) );
-                } );
-                mon->SetTargetQuery ( [ this ] ( ) {
-                    return m_Player ? m_Player->Center ( ) : engine::Vec2{};
-                } );
-
-                m_Monsters.push_back ( std::move ( mon ) );
-            }
+            for ( auto& r : mons ) SpawnMonsterFromRow ( wr , r );
         }
         return true;
     }
+
+    void GameApp::SpawnMonsterFromRow ( const RECT& wr , const game::MonsterCSV& r )
+    {
+        std::unique_ptr<game::Monster> mon;
+        std::string t = r.type; for ( auto& c : t ) c = ( char ) tolower ( c );
+
+        if ( t == "waddledee" ) {
+            game::WaddleDee::Config cfg;
+            cfg.dir = r.dir;
+            if ( r.turnOnHitX >= 0 ) cfg.turnOnHitX = ( r.turnOnHitX != 0 );
+            if ( r.turnAtEdge >= 0 ) cfg.turnAtEdge = ( r.turnAtEdge != 0 );
+            mon = std::make_unique<game::WaddleDee> ( wr , &m_World.Collision ( ) , cfg );
+        }
+        else if ( t == "waddledoo" ) {
+            game::WaddleDoo::Config cfg;
+            cfg.dir = r.dir;
+            if ( r.turnOnHitX >= 0 )       cfg.turnOnHitX = ( r.turnOnHitX != 0 );
+            if ( r.turnAtEdge >= 0 )       cfg.turnAtEdge = ( r.turnAtEdge != 0 );
+            if ( r.wakeRange >= 0 )        cfg.wakeRange = r.wakeRange;
+            if ( r.windupMs >= 0 )         cfg.windupMs = r.windupMs;
+            if ( r.firePeriod >= 0 )       cfg.firePeriod = r.firePeriod;
+            if ( r.bulletSpeed >= 0 )      cfg.bulletSpeed = r.bulletSpeed;
+            if ( r.stopDuringWindup >= 0 ) cfg.stopDuringWindup = ( r.stopDuringWindup != 0 );
+            mon = std::make_unique<game::WaddleDoo> ( wr , &m_World.Collision ( ) , cfg );
+        }
+        else return; // 알 수 없는 타입
+
+        // 위치
+        mon->SetPosition ( r.x , r.y );
+
+        // 콜백(공통)
+        mon->SetProjectileSpawner ( [ this ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
+            game::Projectile::Cfg pcfg; pcfg.width = 8; pcfg.height = 8;
+            auto p = std::make_unique<game::Projectile> ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) , owner , pcfg );
+            p->Fire ( pos , vel );
+            m_Projectiles.push_back ( std::move ( p ) );
+        } );
+        mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
+
+        m_Monsters.push_back ( std::move ( mon ) );
+    }
+
 
     void GameApp::InitBindings ( )
     {

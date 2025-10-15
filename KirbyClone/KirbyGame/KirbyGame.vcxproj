@@ -151,6 +151,7 @@
     <ClInclude Include="engine\Object.h" />
     <ClInclude Include="engine\PhysicsBody.h" />
     <ClInclude Include="engine\Scene.h" />
+    <ClInclude Include="engine\StringConv.h" />
     <ClInclude Include="engine\Texture.h" />
     <ClInclude Include="engine\TextureLoader.h" />
     <ClInclude Include="engine\TileMap.h" />

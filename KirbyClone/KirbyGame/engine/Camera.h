@@ -17,6 +17,10 @@ namespace engine {
         void SetWorldRect ( float l , float t , float r , float b ) {
             m_worldL = l; m_worldT = t; m_worldR = r; m_worldB = b;
         }
+        void SetWorldRect ( RECT r ) {
+            m_worldL = static_cast<float>(r.left); m_worldT = static_cast< float >( r.top);
+            m_worldR = static_cast< float >( r.right); m_worldB = static_cast< float >( r.bottom);
+        }
 
         void SetSmoothSpeed ( float k ) { m_smoothSpeed = k; }   
         void SetPixelSnap ( bool on ) { m_pixelSnap = on; }

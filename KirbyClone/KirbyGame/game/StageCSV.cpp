@@ -88,4 +88,25 @@ namespace game {
         return true;
     }
 
+    bool LoadTileDefsCSV ( const char* path , std::vector<TileDefCSV>& out ) {
+        std::ifstream f ( path ); if ( !f ) return false;
+        std::string line; if ( !std::getline ( f , line ) ) return false;
+        auto hdr = splitCSV ( line );
+        int iId = findIdx ( hdr , "id" );
+        int iS = findIdx ( hdr , "solid" );
+        int iO = findIdx ( hdr , "oneway" );
+        if ( iId < 0 || ( iS < 0 && iO < 0 ) ) return false;
+
+        while ( std::getline ( f , line ) ) {
+            line.erase ( std::remove_if ( line.begin ( ) , line.end ( ) , [ ] ( unsigned char c ) {return c == '\r'; } ) , line.end ( ) );
+            if ( line.empty ( ) || line[ 0 ] == '#' || line[ 0 ] == ';' ) continue;
+            auto row = splitCSV ( line );
+            TileDefCSV r{};
+            r.id = ( iId < ( int ) row.size ( ) ) ? to<int> ( row[ iId ] , 0 ) : 0;
+            r.solid = ( iS < ( int ) row.size ( ) ) ? to<int> ( row[ iS ] , 0 ) : 0;
+            r.oneway = ( iO < ( int ) row.size ( ) ) ? to<int> ( row[ iO ] , 0 ) : 0;
+            out.push_back ( r );
+        }
+        return true;
+    }
 } // namespace game

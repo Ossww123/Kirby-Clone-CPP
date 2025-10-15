@@ -17,6 +17,13 @@ namespace engine {
         while ( std::getline ( fin , line ) ) {
             if ( line.empty ( ) ) continue;
 
+            // 주석/공백 라인 스킵 (# 또는 ;)
+            std::wstring trimmed = line;
+            auto notsp = [ ] ( wchar_t c ) { return c != L' ' && c != L'\t' && c != L'\r'; };
+            auto it = std::find_if ( trimmed.begin ( ) , trimmed.end ( ) , notsp );
+            if ( it == trimmed.end ( ) ) continue;
+            if ( *it == L'#' || *it == L';' ) continue;
+
             std::wstringstream ss ( line );
             std::wstring cell;
             std::vector<int> row;

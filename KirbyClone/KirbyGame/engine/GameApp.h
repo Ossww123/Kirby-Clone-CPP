@@ -32,6 +32,8 @@
 #include "game/MonsterFactory.h"
 #include "game/Projectile.h"
 
+namespace game { struct MonsterCSV; }
+
 namespace engine {
 
     class GameApp {
@@ -44,6 +46,7 @@ namespace engine {
         void OnResize ( int w , int h );
         bool DoOneFrame ( );
         bool LoadStageFromCSV ( const char* folder );
+        void SpawnMonsterFromRow ( const RECT& worldRect , const game::MonsterCSV& r );
 
     private:
         void InitBindings ( );
