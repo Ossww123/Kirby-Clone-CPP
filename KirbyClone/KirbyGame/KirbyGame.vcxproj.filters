@@ -111,6 +111,9 @@
     <ClInclude Include="game\WaddleDoo.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\StageCSV.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -150,6 +153,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\WaddleDoo.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\StageCSV.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

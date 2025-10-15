@@ -43,6 +43,7 @@ namespace engine {
         LRESULT OnWndMessage ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam );
         void OnResize ( int w , int h );
         bool DoOneFrame ( );
+        bool LoadStageFromCSV ( const char* folder );
 
     private:
         void InitBindings ( );
