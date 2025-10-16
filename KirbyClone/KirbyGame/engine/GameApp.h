@@ -54,6 +54,8 @@ namespace engine {
         void InitBindings ( );
         void FixedUpdate ( double fixedDt ); // 물리/충돌/점프 오케스트레이션
         void RenderFrame ( );               // 타일/플레이어/HUD/디버그 렌더
+        void RenderDebug ( int ox , int oy , int sw , int sh );
+        void RenderHUD ( );
 
     private:
         // --- 윈도우/코어 ---

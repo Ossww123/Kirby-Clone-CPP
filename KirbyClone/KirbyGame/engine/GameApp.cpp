@@ -198,13 +198,12 @@ namespace engine {
             m_debugDrawEnabled = !m_debugDrawEnabled;
         if ( m_Debug ) m_Debug->BeginFrame ( );
 
-        // 고정 업데이트 (스파이럴 방지)
-        int steps = 0;
-        constexpr int MAX_STEPS = 5;
-        while ( m_Time.ShouldFixedUpdate ( ) && steps < MAX_STEPS ) {
+        // 누적치 자체를 캡
+        m_Time.CapAccumulator ( 5 );
+
+        while ( m_Time.ShouldFixedUpdate ( ) ) {
             FixedUpdate ( m_Time.FixedDelta ( ) );
             m_Time.ConsumeFixedStep ( );
-            ++steps;
         }
 
         RenderFrame ( );
@@ -502,6 +501,16 @@ namespace engine {
         }
 
         // --- 디버그 드로우 ---
+        if ( m_debugDrawEnabled ) RenderDebug ( ox , oy , sw , sh );
+
+        // --- HUD ---
+        RenderHUD ( );
+
+        m_Renderer->EndFrame ( );
+    }
+
+    void GameApp::RenderDebug ( int ox , int oy , int sw , int sh )
+    {
         if ( m_debugDrawEnabled && m_Debug ) {
             const int GRID = 32;
             const int wx0 = ox , wy0 = oy , wx1 = ox + sw , wy1 = oy + sh;
@@ -532,71 +541,70 @@ namespace engine {
 
             m_Debug->Flush ( );
         }
+    }
 
-        // --- HUD ---
-        if ( m_TextHUD ) {
-            m_TextHUD->Begin ( );
+    void GameApp::RenderHUD ( )
+    {
+        if ( !m_TextHUD ) return;
+        m_TextHUD->Begin ( );
 
-            // 기존: FPS/STATE
-            wchar_t buf[ 128 ];
-            std::swprintf ( buf , _countof ( buf ) , L"FPS:%d  dt:%.3f" , m_Time.FPS ( ) , m_Time.FixedDelta ( ) );
-            m_TextHUD->DrawTextLine ( buf , 8.f , 8.f );
+        // 기존: FPS/STATE
+        wchar_t buf[ 128 ];
+        std::swprintf ( buf , _countof ( buf ) , L"FPS:%d  dt:%.3f" , m_Time.FPS ( ) , m_Time.FixedDelta ( ) );
+        m_TextHUD->DrawTextLine ( buf , 8.f , 8.f );
 
-            wchar_t st[ 64 ];
-            std::swprintf ( st , _countof ( st ) , L"STATE: %S" , m_PlayerFSM.StateName ( ) );
-            m_TextHUD->DrawTextLine ( st , 8.f , 28.f );
+        wchar_t st[ 64 ];
+        std::swprintf ( st , _countof ( st ) , L"STATE: %S" , m_PlayerFSM.StateName ( ) );
+        m_TextHUD->DrawTextLine ( st , 8.f , 28.f );
 
-            // 추가: FSM 디버그 스냅샷
-            auto dbg = m_PlayerFSM.GetDebug ( );
+        // 추가: FSM 디버그 스냅샷
+        auto dbg = m_PlayerFSM.GetDebug ( );
 
-            wchar_t line[ 256 ];
+        wchar_t line[ 256 ];
+        std::swprintf ( line , _countof ( line ) ,
+                        L"VEL: (%+07.1f, %+07.1f)  grounded(raw:%d / stable:%d)  onewayIgnore:%d" ,
+                        dbg.vx , dbg.vy ,
+                        dbg.groundedRaw ? 1 : 0 ,
+                        dbg.groundedStable ? 1 : 0 ,
+                        dbg.ignoreOneWay ? 1 : 0 );
+        m_TextHUD->DrawTextLine ( line , 8.f , 48.f );
+
+        std::swprintf ( line , _countof ( line ) ,
+                      L"Timers  coyote:%.3f  buffer:%.3f  drop:%.3f  groundHold:%.3f" ,
+                      dbg.coyoteT , dbg.bufferT , dbg.dropT , dbg.groundHoldT );
+        m_TextHUD->DrawTextLine ( line , 8.f , 68.f );
+
+        std::swprintf ( line , _countof ( line ) ,
+                      L"AABB L:%d T:%d R:%d B:%d   prevBottom:%d" ,
+                      dbg.lastAABB.left , dbg.lastAABB.top , dbg.lastAABB.right , dbg.lastAABB.bottom , dbg.prevBottom );
+        m_TextHUD->DrawTextLine ( line , 8.f , 88.f );
+
+        // 발밑 타일 좌표(타일 32px 가정)
+        if ( m_Player ) {
+            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+            const int footX = px + pw / 2;
+            const int footY = py + ph;         // 발바닥 y
+            const int tileSize = 32;
+            const int tx = footX / tileSize;
+            const int ty = footY / tileSize;
             std::swprintf ( line , _countof ( line ) ,
-                            L"VEL: (%+07.1f, %+07.1f)  grounded(raw:%d / stable:%d)  onewayIgnore:%d" ,
-                            dbg.vx , dbg.vy ,
-                            dbg.groundedRaw ? 1 : 0 ,
-                            dbg.groundedStable ? 1 : 0 ,
-                            dbg.ignoreOneWay ? 1 : 0 );
-            m_TextHUD->DrawTextLine ( line , 8.f , 48.f );
-
-            std::swprintf ( line , _countof ( line ) ,
-                          L"Timers  coyote:%.3f  buffer:%.3f  drop:%.3f  groundHold:%.3f" ,
-                          dbg.coyoteT , dbg.bufferT , dbg.dropT , dbg.groundHoldT );
-            m_TextHUD->DrawTextLine ( line , 8.f , 68.f );
-
-            std::swprintf ( line , _countof ( line ) ,
-                          L"AABB L:%d T:%d R:%d B:%d   prevBottom:%d" ,
-                          dbg.lastAABB.left , dbg.lastAABB.top , dbg.lastAABB.right , dbg.lastAABB.bottom , dbg.prevBottom );
-            m_TextHUD->DrawTextLine ( line , 8.f , 88.f );
-
-            // 발밑 타일 좌표(타일 32px 가정)
-            if ( m_Player ) {
-                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                const int footX = px + pw / 2;
-                const int footY = py + ph;         // 발바닥 y
-                const int tileSize = 32;
-                const int tx = footX / tileSize;
-                const int ty = footY / tileSize;
-                std::swprintf ( line , _countof ( line ) ,
-                              L"Foot: (%d, %d)  Tile: (%d, %d)" , footX , footY , tx , ty );
-                m_TextHUD->DrawTextLine ( line , 8.f , 108.f );
-            }
-
-            // 카메라/오프셋 확인
-            wchar_t cam[128]; std::swprintf(cam, _countof(cam), L"Cam LookAt: (%.1f, %.1f)", m_Cam.GetLookAt().x, m_Cam.GetLookAt().y);
-            m_TextHUD->DrawTextLine(cam, 8.f, 128.f);
-
-            wchar_t mons[ 64 ];
-            std::swprintf ( mons , _countof ( mons ) , L"Monsters: %zu" , m_Monsters.size ( ) );
-            m_TextHUD->DrawTextLine ( mons , 8.f , 148.f );
-
-            wchar_t hpLine[ 64 ];
-            std::swprintf ( hpLine , _countof ( hpLine ) , L"HP: %d" , m_PlayerFSM.GetDebug ( ).hp );
-            m_TextHUD->DrawTextLine ( hpLine , 8.f , 168.f );
-
-            m_TextHUD->End ( );
+                          L"Foot: (%d, %d)  Tile: (%d, %d)" , footX , footY , tx , ty );
+            m_TextHUD->DrawTextLine ( line , 8.f , 108.f );
         }
 
-        m_Renderer->EndFrame ( );
+        // 카메라/오프셋 확인
+        wchar_t cam[ 128 ]; std::swprintf ( cam , _countof ( cam ) , L"Cam LookAt: (%.1f, %.1f)" , m_Cam.GetLookAt ( ).x , m_Cam.GetLookAt ( ).y );
+        m_TextHUD->DrawTextLine ( cam , 8.f , 128.f );
+
+        wchar_t mons[ 64 ];
+        std::swprintf ( mons , _countof ( mons ) , L"Monsters: %zu" , m_Monsters.size ( ) );
+        m_TextHUD->DrawTextLine ( mons , 8.f , 148.f );
+
+        wchar_t hpLine[ 64 ];
+        std::swprintf ( hpLine , _countof ( hpLine ) , L"HP: %d" , m_PlayerFSM.GetDebug ( ).hp );
+        m_TextHUD->DrawTextLine ( hpLine , 8.f , 168.f );
+
+        m_TextHUD->End ( );
     }
 
 

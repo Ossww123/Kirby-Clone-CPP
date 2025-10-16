@@ -36,6 +36,12 @@ namespace engine {
         }
         void ConsumeFixedStep ( ) { m_accumulator -= FIXED_DT; }
 
+        // 프레임별 누적치를 최대 N스텝 만큼만 보존(스파이럴 컷)
+        void CapAccumulator ( int maxSteps = 5 ) {
+            const double cap = FIXED_DT * maxSteps;
+            if ( m_accumulator > cap ) m_accumulator = cap;
+        }
+
         // getters
         double DeltaTime ( )     const { return m_frameDT; } // 가변 렌더용
         double FixedDelta ( )    const { return FIXED_DT; }  // 고정 업데이트용
