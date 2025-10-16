@@ -3,6 +3,7 @@
 #include <memory>
 #include <cwchar>
 #include <vector>
+#include <string>
 
 // === 엔진 코어 ===
 #include "engine/Time.h"
@@ -46,6 +47,7 @@ namespace engine {
         void OnResize ( int w , int h );
         bool DoOneFrame ( );
         bool LoadStageFromCSV ( const char* folder );
+        bool ReloadStage ( );
         void SpawnMonsterFromRow ( const RECT& worldRect , const game::MonsterCSV& r );
 
     private:
@@ -98,6 +100,10 @@ namespace engine {
         bool m_isMoving = false;
         bool m_debugDrawEnabled = true;
         int m_facing = 1;
+
+        // -- 라로드 관련 ---
+        std::string m_stageFolder{ "assets/stage01" };
+        double      m_reloadCooldown = 0.0;
     };
 
 } // namespace engine

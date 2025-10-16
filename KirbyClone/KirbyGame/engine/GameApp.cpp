@@ -213,8 +213,15 @@ namespace engine {
 
     bool GameApp::LoadStageFromCSV ( const char* folder )
     {
+        // 0) 런타임 오브젝트 정리(핫리로드 시 기존 것 제거)
+        m_Projectiles.clear ( );
+        m_Monsters.clear ( );
+
         // 1) 타일셋 + 타일맵 (엔진)
-        const std::string base ( folder );
+        // 스테이지 폴더 기억 (핫리로드에서 사용)
+        if ( folder && *folder ) m_stageFolder = folder;
+        const std::string base = m_stageFolder;
+
         const std::wstring tilesPng = ToWide ( base + "/tileset.png" );
         const std::wstring mapCsv = ToWide ( base + "/tilemap.csv" );
 
@@ -224,17 +231,21 @@ namespace engine {
 
         // (선택) 타일 속성 적용 → 콜라이더 재구성
         std::vector<game::TileDefCSV> tdefs;
-        if ( game::LoadTileDefsCSV ( ( std::string ( folder ) + "/tiledefs.csv" ).c_str ( ) , tdefs ) && !tdefs.empty ( ) ) {
+        if ( game::LoadTileDefsCSV ( ( base + "/tiledefs.csv" ).c_str ( ) , tdefs ) && !tdefs.empty ( ) ) {
             for ( auto& r : tdefs ) {
                 engine::TileDef d{}; d.solid = ( r.solid != 0 ); d.oneway = ( r.oneway != 0 );
                 m_World.DefineTile ( r.id , d );
             }
             m_World.RebuildColliders ( );
         }
+        else {
+            // defs가 없어도 최소한 콜라이더는 갱신
+            m_World.RebuildColliders ( );
+        }
 
         // 2) 플레이어 시작
         game::PlayerStartCSV ps{};
-        if ( game::LoadPlayerStartCSV ( ( std::string ( folder ) + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
+        if ( game::LoadPlayerStartCSV ( ( base + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
             m_Player->SetPosition ( ps.x , ps.y );
             m_Cam.SetWorldRect ( m_World.WorldRectPx ( ) );
             m_Cam.SetLookAt ( { ps.x, ps.y } );
@@ -243,11 +254,22 @@ namespace engine {
 
         // 3) 몬스터 스폰
         std::vector<game::MonsterCSV> mons;
-        if ( game::LoadMonstersCSV ( ( std::string ( folder ) + "/monsters.csv" ).c_str ( ) , mons ) ) {
+        if ( game::LoadMonstersCSV ( ( base + "/monsters.csv" ).c_str ( ) , mons ) ) {
             RECT wr = m_World.WorldRectPx ( );
             for ( auto& r : mons ) SpawnMonsterFromRow ( wr , r );
         }
         return true;
+    }
+
+    bool GameApp::ReloadStage ( ) {
+        // 디바운스: 너무 자주 호출 방지 (m_reloadCooldown은 FixedUpdate에서 감소)
+        if ( m_reloadCooldown > 0.0 ) return false;
+        const bool ok = LoadStageFromCSV ( m_stageFolder.c_str ( ) );
+        if ( ok ) {
+            m_reloadCooldown = 0.25; // 0.25초 쿨다운
+            OutputDebugStringA ( "[HotReload] Stage reloaded.\n" );    
+        }
+         return ok;
     }
 
     void GameApp::SpawnMonsterFromRow ( const RECT& wr , const game::MonsterCSV& r )
@@ -310,6 +332,16 @@ namespace engine {
 
     void GameApp::FixedUpdate ( double fixedDt )
     {
+        // 쿨다운 감소
+        if ( m_reloadCooldown > 0.0 ) m_reloadCooldown -= fixedDt;
+        
+        // F5 핫리로드 (Pressed = 이번 프레임에 막 눌림)
+        if ( m_Input.Pressed ( VK_F5 ) ) {
+            ReloadStage ( );
+            // 안전: 재로드 직후에는 조기 리턴해 다음 틱에서 정상 루프
+            return;
+        }
+
         if ( !m_Player ) return;
 
         m_PlayerFSM.Step ( fixedDt , m_Input );
