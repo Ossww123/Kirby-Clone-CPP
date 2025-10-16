@@ -77,11 +77,11 @@ namespace engine::physics {
         if ( out ) *out = rep;
     }
 
-    void CollisionSystem::DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy , COLORREF color ) const
-    {
-        for ( const RECT& r : m_static ) {
-            dbg.WorldRect ( r.left , r.top , r.right - r.left , r.bottom - r.top , ox , oy , color );
-        }
+    void CollisionSystem::DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy , COLORREF solid , COLORREF oneway ) const {
+        for ( const RECT& r : m_static )
+            dbg.WorldRect ( r.left , r.top , r.right - r.left , r.bottom - r.top , ox , oy , solid );
+        for ( const RECT& r : m_oneway )
+            dbg.WorldRect ( r.left , r.top , r.right - r.left , r.bottom - r.top , ox , oy , oneway );
     }
 
 } // namespace engine::physics

@@ -52,7 +52,7 @@ namespace engine::physics {
         void MoveAndCollide ( RECT& aabb , engine::Vec2& vel , CollisionReport* out = nullptr ,
                         bool ignoreOneWay = false , int prevBottom = INT32_MIN ) const;
 
-        void DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy , COLORREF color ) const;
+        void DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy , COLORREF solidColor , COLORREF onewayColor ) const;
 
         const std::vector<RECT>& Statics ( ) const { return m_static; }
         const std::vector<RECT>& OneWays ( ) const { return m_oneway; }

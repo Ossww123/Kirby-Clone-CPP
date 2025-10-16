@@ -519,7 +519,7 @@ namespace engine {
             for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
 
             // 병합된 SOLID 콜라이더
-            m_World.Collision ( ).DebugDraw ( *m_Debug , ox , oy , RGB ( 255 , 60 , 60 ) );
+            m_World.Collision ( ).DebugDraw ( *m_Debug , ox , oy , RGB ( 255 , 60 , 60 ) , RGB ( 255 , 200 , 0 ) );
 
             if ( m_Player ) {
                 int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
