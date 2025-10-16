@@ -1,8 +1,12 @@
 ﻿#pragma once
 
+struct ID3D11Device;
+struct ID3D11DeviceContext;
+
 namespace engine {
 
     struct Color { float r , g , b , a; };
+    struct BackbufferSize { int w , h; };
 
     class IRenderer {
     public:
@@ -13,6 +17,9 @@ namespace engine {
 
         virtual void BeginFrame ( Color clear ) = 0;
         virtual void EndFrame ( ) = 0;
+
+        virtual BackbufferSize GetBackbufferSize ( ) const = 0;
+        virtual bool GetD3D11Handles ( ID3D11Device** dev , ID3D11DeviceContext** ctx ) { return false; }
     };
 
 } // namespace engine

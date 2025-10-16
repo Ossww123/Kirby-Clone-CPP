@@ -185,6 +185,13 @@ namespace engine {
             m_device.Reset ( );     // 디바이스 해제
         }
 
+        BackbufferSize GetBackbufferSize ( ) const override { return { m_width, m_height }; }
+        bool GetD3D11Handles ( ID3D11Device** dev , ID3D11DeviceContext** ctx ) override {
+            if ( dev ) *dev = m_device.Get ( );
+            if ( ctx ) *ctx = m_context.Get ( );
+            return true;
+        }
+
     private:
         HWND m_hWnd = nullptr;  // 윈도우 핸들
         bool m_vsync = false;   // 수직 동기화 여부

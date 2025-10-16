@@ -3,22 +3,22 @@
 
 namespace engine {
 
-    bool RenderSystem::Init ( IRenderer* renderer )
-    {
+    bool RenderSystem::Init ( IRenderer* renderer ) {
         m_renderer = renderer;
-        auto* d3d = dynamic_cast< D3D11Renderer* >( renderer );
-        if ( !d3d ) return false;
+
+        ID3D11Device* dev = nullptr;
+        ID3D11DeviceContext* ctx = nullptr;
+        if ( !m_renderer->GetD3D11Handles ( &dev , &ctx ) ) return false;
+
+        auto sz = m_renderer->GetBackbufferSize ( );
 
         m_batch = std::make_unique<D3D11SpriteBatch> ( );
-        if ( !m_batch->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) ) )
-            return false;
+        if ( !m_batch->Initialize ( dev , ctx , sz.w , sz.h ) ) return false;
 
         m_dbg = std::make_unique<D3D11DebugDraw> ( );
-        if ( !m_dbg->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) ) )
-            return false;
+        if ( !m_dbg->Initialize ( dev , ctx , sz.w , sz.h ) ) return false;
 
-        m_curBlend = 0xFF;
-        m_curSampler = 0xFF;
+        m_curBlend = 0xFF; m_curSampler = 0xFF;
         return true;
     }
 
@@ -110,18 +110,7 @@ namespace engine {
         m_batch->Draw ( tex , sx , sy , sw , sh , src , rgba , rotation , originX , originY );
     }
 
-    int RenderSystem::BackbufferWidth ( ) const
-    {
-        if ( auto* d3d = dynamic_cast< const D3D11Renderer* >( m_renderer ) )
-            return d3d->Width ( );
-        return 0;
-    }
-
-    int RenderSystem::BackbufferHeight ( ) const
-    {
-        if ( auto* d3d = dynamic_cast< const D3D11Renderer* >( m_renderer ) )
-            return d3d->Height ( );
-        return 0;
-    }
+    int RenderSystem::BackbufferWidth ( )  const { return m_renderer->GetBackbufferSize ( ).w; }
+    int RenderSystem::BackbufferHeight ( ) const { return m_renderer->GetBackbufferSize ( ).h; }
 
 } // namespace engine
