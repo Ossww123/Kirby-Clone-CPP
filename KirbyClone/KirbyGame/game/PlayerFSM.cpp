@@ -332,6 +332,8 @@ namespace game {
         float axis = c.ax * ( c.mod.lockRunAxis ? 0.f : c.mod.runAxisMul );
         c.body->SetDesiredRunAxis ( axis );
 
+        if ( f.m_jumpLockT > 0.f ) return;
+
         // 공중에서 Z 다시 누르면 Inflated
         if ( c.jumpPressed ) { f.RequestMove ( std::make_unique<M_Inflated> ( ) , MState::Inflated ); return; }
 
