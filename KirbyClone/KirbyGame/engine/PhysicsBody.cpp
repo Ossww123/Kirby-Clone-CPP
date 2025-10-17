@@ -4,7 +4,7 @@
 
 namespace engine {
 
-    static inline float sgn ( float x ) { return ( x > 0.f ) - ( x < 0.f ); }
+    // static inline float sgn ( float x ) { return ( x > 0.f ) - ( x < 0.f ); }
 
     void PhysicsBody::AdvanceKinematics ( double fixedDt )
     {

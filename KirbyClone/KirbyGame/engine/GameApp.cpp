@@ -317,9 +317,9 @@ namespace engine {
     {
         // 액션
         m_Input.BindAction ( "Quit" , VK_F10 );
-        m_Input.BindAction ( "Jump" , VK_SPACE );
-        m_Input.BindAction ( "Attack" , 'J' );
-        m_Input.BindAction ( "Dash" , 'K' );
+        m_Input.BindAction ( "Jump" , 'Z' );
+        m_Input.BindAction ( "Attack" , 'X' );
+        m_Input.BindAction ( "Interact" , VK_UP );
         m_Input.BindAction ( "ToggleDebug" , VK_F1 );
 
         // 축
@@ -345,32 +345,72 @@ namespace engine {
 
         m_PlayerFSM.Step ( fixedDt , m_Input );
 
-        // 바라보는 방향 추적: 속도/입력 기준
-        if ( std::fabs ( m_Input.GetAxis ( "MoveX" ) ) > 0.1f )
-            m_facing = ( m_Input.GetAxis ( "MoveX" ) >= 0.f ) ? +1 : -1;
-        else {
-            // 입력이 없다면, 실제 속도로 추정
-            const auto dbg = m_PlayerFSM.GetDebug ( );
-            if ( std::fabs ( dbg.vx ) > 1.f ) m_facing = ( dbg.vx >= 0.f ) ? +1 : -1;
-        }
+        // ── PlayerFSM 이벤트 처리 ──
+        {
+            std::vector<game::PlayerEvent> evs;
+            m_PlayerFSM.DrainEvents ( evs );
 
-        // ── 발사 입력(J) ──
-        if ( m_Input.ActionPressed ( "Attack" ) ) {
-            // 플레이어 중앙에서 발사
-            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            engine::Vec2 start{ ( float ) ( px + pw / 2 ), ( float ) ( py + ph / 2 ) };
+            // 입(발사 위치)와 바라보는 방향
+            auto facing = m_PlayerFSM.Facing ( );
+            int px , py , pw , ph;
+            m_Player->GetBounds ( px , py , pw , ph );
+            auto mouthPos = [ & ] ( int w = 8 , int h = 8 ) {
+                // 입 위치를 대충 중앙-약간 앞쪽으로
+                float x = ( facing > 0 ) ? float ( px + pw ) : float ( px ) - float ( w );
+                float y = float ( py + ph * 0.5f - h * 0.5f );
+                return engine::Vec2{ x, y };
+                };
 
-            // 방향에 따라 속도
-            game::Projectile::Cfg pcfg;
-            pcfg.width = 8; pcfg.height = 8; pcfg.speed = 520.f;
+            // Projectile 스폰 헬퍼(별/공기포)
+            auto spawnPlayerProj = [ & ] ( float speed ) {
+                game::Projectile::Cfg pcfg;
+                pcfg.width = 8; pcfg.height = 8; pcfg.speed = speed;
+                RECT wr = m_World.WorldRectPx ( );
+                auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
+                engine::Vec2 pos = mouthPos ( pcfg.width , pcfg.height );
+                engine::Vec2 vel = { float ( facing ) * speed, 0.f };
+                p->Fire ( pos , vel );
+                m_Projectiles.push_back ( std::move ( p ) );
+                };
 
-            // 월드 경계
-            RECT wr = m_World.WorldRectPx ( );
+            // Inhale 처리(간단 버전: 범위에 겹치는 첫 몬스터를 빨아들임)
+            auto tryCaptureInhale = [ & ] ( const RECT& r , int f ) {
+                for ( auto it = m_Monsters.begin ( ); it != m_Monsters.end ( ); ++it ) {
+                    auto& m = *it;
+                    if ( !m || !m->Alive ( ) ) continue;
+                    int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+                    RECT mr{ mx, my, mx + mw, my + mh };
+                    if ( engine::physics::Overlap ( r , mr ) ) {
+                        // 어떤 능력 주는지 간단 매핑 (원하면 더 추가)
+                        game::Ability gift = game::Ability::None;
+                        if ( dynamic_cast< game::WaddleDoo* >( m.get ( ) ) ) gift = game::Ability::Beam;
+                        // 제거 + FSM에 알림
+                        m_Monsters.erase ( it );
+                        m_PlayerFSM.OnMouthCatch ( gift );
+                        return;
+                    }
+                }
+                };
 
-            auto proj = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
-            engine::Vec2 vel{ ( float ) m_facing * pcfg.speed, 0.f };
-            proj->Fire ( start , vel );
-            m_Projectiles.push_back ( std::move ( proj ) );
+            for ( auto& e : evs ) {
+                switch ( e.type ) {
+                case game::PlayerEvent::InhaleVolume:
+                    tryCaptureInhale ( e.rect , e.facing );
+                    break;
+                case game::PlayerEvent::SpitStar:
+                    spawnPlayerProj ( 620.f );  // 별 탄속
+                    break;
+                case game::PlayerEvent::AirPuffShot:
+                    spawnPlayerProj ( 420.f );  // 공기포 탄속
+                    break;
+                case game::PlayerEvent::SwallowAbility:
+                    // 필요 시 SFX/HUD 연출만
+                    break;
+                case game::PlayerEvent::AbilityGained:
+                    // HUD 아이콘 갱신 등(원하면 구현)
+                    break;
+                }
+            }
         }
 
         // 몬스터 업데이트
@@ -554,7 +594,7 @@ namespace engine {
         m_TextHUD->DrawTextLine ( buf , 8.f , 8.f );
 
         wchar_t st[ 64 ];
-        std::swprintf ( st , _countof ( st ) , L"STATE: %S" , m_PlayerFSM.StateName ( ) );
+        std::swprintf ( st , _countof ( st ) , L"STATE: %S" , m_PlayerFSM.MoveStateName ( ) );
         m_TextHUD->DrawTextLine ( st , 8.f , 28.f );
 
         // 추가: FSM 디버그 스냅샷

@@ -58,13 +58,13 @@ namespace engine {
         void RenderHUD ( );
 
     private:
-        // --- 윈도우/코어 ---
+        // --- Window/Core ---
         HWND   m_hWnd{};
         Time   m_Time{};
         Input  m_Input{};
         Scene  m_Scene{};
 
-        // --- 렌더링 ---
+        // --- Rendering ---
         std::unique_ptr<IRenderer>          m_Renderer;  // D3D11Renderer
         std::unique_ptr<D3D11SpriteBatch>   m_Batch;     // 스프라이트 일괄 렌더
         std::unique_ptr<D3D11DebugDraw>     m_Debug;     // 라인/박스 디버그 드로우
@@ -72,38 +72,21 @@ namespace engine {
         Tex2D                               m_PlayerTex{};   // 플레이어 텍스처
         RenderSystem m_Render{};
 
-        // --- 카메라/플레이어/몬스터/투사체 ---
+        // --- Camera/Player/Monster/Projectile ---
         Camera     m_Cam{};
         game::Player* m_Player{ nullptr };
         game::PlayerFSM m_PlayerFSM;
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
         std::vector<std::unique_ptr<game::Projectile>> m_Projectiles;
 
-        // --- 월드 ---
+        // --- World ---
         WorldSystem m_World{};
 
-        // --- 물리 상태(필요 시 사용) ---
-        Vec2  m_Vel{ 0.f, 0.f };
-        bool  m_Grounded = false;
-
-        // --- 점프/물리 튜닝 타이머 ---
-        float m_coyoteTimer = 0.f;
-        float m_jumpBufferTimer = 0.f;
-        float m_dropThroughTimer = 0.f;
-
-        // --- 점프 파라미터(튜닝값) ---
-        float m_jumpSpeed = 700.f;   // 초기 상승 속도
-        float m_coyoteMs = 0.08f;   // 코요테
-        float m_bufferMs = 0.10f;   // 버퍼
-        float m_dropMs = 0.20f;   // ↓+점프 드롭 유지 시간
-
-        // --- 기타 ---
+        // --- ect ---
         bool m_comInitialized = false;  // CoInitializeEx 성공 여부
-        bool m_isMoving = false;
         bool m_debugDrawEnabled = true;
-        int m_facing = 1;
 
-        // -- 라로드 관련 ---
+        // -- Reload ---
         std::string m_stageFolder{ "assets/stage01" };
         double      m_reloadCooldown = 0.0;
     };

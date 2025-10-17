@@ -1,12 +1,24 @@
 ﻿#include "game/PlayerFSM.h"
-#include <algorithm>
 #include <cmath>
+#include <algorithm>
+
 using namespace engine;
 using namespace engine::physics;
 
 namespace game {
 
-    // ====== 외부 인터페이스 ======
+    // ====== 튜닝 상수 ======
+    namespace {
+        constexpr float TAP_WINDOW = 0.28f;  // 달리기 더블탭 허용 시간
+        constexpr float RUN_TOGGLE_AX = 0.1f;  // 축 데드존
+        constexpr float SLIDE_TIME = 0.22f;  // 슬라이딩킥 지속
+        constexpr float SLIDE_VX = 280.f;  // 슬라이딩킥 초기 수평속도
+        constexpr float FLAP_VY = -240.f; // 날개짓(Inflated 상태에서 Z) 상승속도
+        constexpr float FLOAT_EXIT_VY = 60.f;  // Z 떼면 이 속도 이상 하강일 때 Inflated 종료
+        inline float Abs ( float x ) { return x < 0.f ? -x : x; }
+    }
+
+    // ====== Public API ======
     void PlayerFSM::Init ( PhysicsBody* body ,
                          const CollisionSystem* worldCol ,
                          Animator* anim ,
@@ -14,12 +26,16 @@ namespace game {
     {
         m_body = body; m_col = worldCol; m_anim = anim; m_cfg = cfg;
 
-        // 초기 상태를 즉시 세팅
-        m_cur = std::make_unique<Idle> ( );
-        m_state = PState::Idle;
-        m_needEnter = true;
+        m_health.Reset ( m_cfg.maxHp , m_cfg.iFrameMs );
+
+        m_move = std::make_unique<M_Idle> ( );    m_mState = MState::Idle;    m_mNeedEnter = true;
+        m_action = std::make_unique<A_Neutral> ( ); m_aState = AState::Neutral; m_aNeedEnter = true;
+        m_overlay = std::make_unique<Z_None> ( );    m_zState = ZState::None;    m_zNeedEnter = true;
 
         if ( m_anim ) m_anim->Play ( "Idle" , true );
+
+        m_dbg.hp = m_health.hp; m_dbg.iFrameT = m_health.iFrameT;
+        m_dbg.mState = m_mState; m_dbg.aState = m_aState; m_dbg.zState = m_zState;
     }
 
     void PlayerFSM::Step ( double fixedDt , const Input& input )
@@ -30,109 +46,151 @@ namespace game {
         c.body = m_body; c.col = m_col; c.anim = m_anim; c.cfg = m_cfg;
         c.dt = static_cast< float >( fixedDt );
 
-        // ---- 입력/타이머 ----
+        // --- 입력 ---
         c.ax = input.GetAxis ( "MoveX" );
         c.ay = input.GetAxis ( "MoveY" );
-        c.jumpPressed = input.ActionPressed ( "Jump" ) || input.Pressed ( VK_SPACE );
-        c.jumpHeld = input.ActionDown ( "Jump" ) || input.Down ( VK_SPACE );
+        c.jumpPressed = input.ActionPressed ( "Jump" );   // Z
+        c.jumpHeld = input.ActionDown ( "Jump" );
+        c.attackPressed = input.ActionPressed ( "Attack" );                                 // X (탭)
+        c.attackHeld = input.ActionDown ( "Attack" );                                    // X (홀드)
+        c.abilityPressed = input.ActionPressed ( "Ability" );                                // 사용 안 함(선택)
+        c.interactPressed = input.ActionPressed ( "Interact" );                             // 위(문 입장 신호)
 
-        // 타이머 갱신
+        // 방향키 '탭' 이벤트(달리기 더블탭 감지)
+        const bool leftPressed = input.Pressed ( VK_LEFT );
+        const bool rightPressed = input.Pressed ( VK_RIGHT );
+        m_tapT = std::max ( 0.f , m_tapT - c.dt );
+        auto onTap = [ & ] ( int dir , bool pressed ) {
+            if ( !pressed ) return;
+            // 지상에서 같은 방향을 TAP_WINDOW 내에 두 번 누르면 Run 예약
+            if ( m_lastTapDir == dir && m_tapT > 0.f &&
+                ( m_body->Grounded ( ) || m_dbg.groundHoldT > 0.f ) )
+                m_runQueued = true;
+            m_lastTapDir = dir;
+            m_tapT = TAP_WINDOW;
+            };
+        onTap ( -1 , leftPressed );
+        onTap ( +1 , rightPressed );
+
+        // --- 타이머/체력 ---
         if ( c.jumpPressed ) m_dbg.bufferT = m_cfg.bufferMs;
         else               m_dbg.bufferT = std::max ( 0.f , m_dbg.bufferT - c.dt );
-
         m_dbg.coyoteT = std::max ( 0.f , m_dbg.coyoteT - c.dt );
         m_dbg.dropT = std::max ( 0.f , m_dbg.dropT - c.dt );
         m_dbg.groundHoldT = std::max ( 0.f , m_dbg.groundHoldT - c.dt );
         m_jumpLockT = std::max ( 0.f , m_jumpLockT - c.dt );
-
-        // 체력/i-frames
+        m_spitLockT = std::max ( 0.f , m_spitLockT - c.dt );
+        m_slideT = std::max ( 0.f , m_slideT - c.dt );
         m_health.Tick ( c.dt );
 
-        // 드롭스루 시작: 지상 + 아래 + 점프
-        if ( m_body->Grounded ( ) && c.ay < -0.5f && c.jumpPressed ) m_dbg.dropT = m_cfg.dropMs;
+        // 드롭스루: 지상 + 아래 + 점프
+        if ( m_body->Grounded ( ) && c.ay < -0.5f && c.jumpPressed )
+            m_dbg.dropT = m_cfg.dropMs;
 
-        // ---- 물리/충돌 (한 번만) ----
+        // 물리/충돌 1회
         IntegrateAndCollide ( fixedDt , input , c );
 
-        // 사망 체크: hp 0이면 Dead로
-        if ( !m_health.Alive ( ) && m_state != PState::Dead ) {
-            RequestChange ( std::make_unique<Dead> ( ) , PState::Dead );
-        }
+        // 바라보는 방향
+        UpdateFacing ( c );
 
-        // ---- 전이 처리 루프(중앙) ----
+        // ===== Overlay (최우선) =====
         m_transitionBudget = std::max ( 1 , m_cfg.maxTransitionsPerStep );
         while ( m_transitionBudget-- > 0 ) {
-
-            // 1) 보류 전이가 있으면 먼저 적용 (이전 상태 Update가 이를 되돌리는 걸 방지)
-            if ( m_pending ) { ApplyPending ( c ); continue; }
-
-            // 2) 새 상태 첫 진입 훅
-            if ( m_needEnter && m_cur ) { m_cur->OnEnter ( c ); m_needEnter = false; }
-
-            // 3) 상태 업데이트(여기서 RequestChange 가능)
-            if ( m_cur ) m_cur->Update ( c , *this );
-
-            // 4) 더 이상 보류 전이가 없다면 루프 종료
-            if ( !m_pending ) break;
+            if ( m_zPending ) { ApplyPendingOver ( c ); continue; }
+            if ( m_zNeedEnter && m_overlay ) { m_overlay->OnEnter ( c ); m_zNeedEnter = false; }
+            if ( m_overlay ) m_overlay->Update ( c , *this );
+            if ( !m_zPending ) break;
         }
 
-        // ---- 디버그 스냅샷 ----
-        m_dbg.state = m_state;
+        // Overlay 게이트
+        if ( m_zState == ZState::Dead || m_zState == ZState::DoorEnter ||
+            m_zState == ZState::Dance || m_zState == ZState::GameOver ) {
+            c.mod.lockRunAxis = true; c.mod.runAxisMul = 0.f;
+            if ( m_aState != AState::Neutral ) RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+        }
+        else if ( m_zState == ZState::Damaged ) {
+            c.mod.lockRunAxis = true;
+            if ( m_aState != AState::Neutral ) RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+        }
+
+        // ===== Action (이벤트/모디파이어 생산) =====
+        m_transitionBudget = std::max ( 1 , m_cfg.maxTransitionsPerStep );
+        while ( m_transitionBudget-- > 0 ) {
+            if ( m_aPending ) { ApplyPendingAct ( c ); continue; }
+            if ( m_aNeedEnter && m_action ) { m_action->OnEnter ( c ); m_aNeedEnter = false; }
+            if ( m_action ) m_action->Update ( c , *this );
+            if ( !m_aPending ) break;
+        }
+
+        // ===== Movement (모디파이어 소비) =====
+        m_transitionBudget = std::max ( 1 , m_cfg.maxTransitionsPerStep );
+        while ( m_transitionBudget-- > 0 ) {
+            if ( m_mPending ) { ApplyPendingMove ( c ); continue; }
+            if ( m_mNeedEnter && m_move ) { m_move->OnEnter ( c ); m_mNeedEnter = false; }
+            if ( m_move ) m_move->Update ( c , *this );
+            if ( !m_mPending ) break;
+        }
+
+        // 디버그 스냅샷
+        m_dbg.mState = m_mState; m_dbg.aState = m_aState; m_dbg.zState = m_zState;
         m_dbg.groundedRaw = c.rep.grounded;
         m_dbg.groundedStable = c.rep.grounded || ( m_dbg.groundHoldT > 0.f );
         m_dbg.ignoreOneWay = c.ignoreOneWay;
-        m_dbg.vx = c.vel.x;
-        m_dbg.vy = c.vel.y;
-        m_dbg.lastAABB = c.aabb;
-        m_dbg.prevBottom = c.prevBottom;
+        m_dbg.vx = c.vel.x; m_dbg.vy = c.vel.y;
+        m_dbg.lastAABB = c.aabb; m_dbg.prevBottom = c.prevBottom;
         m_dbg.hp = m_health.hp; m_dbg.iFrameT = m_health.iFrameT;
+        m_dbg.facing = m_facing; m_dbg.mouthFull = m_mouthFull; m_dbg.ability = m_ability;
+        m_dbg.inhaleT = m_inhaleT; m_dbg.spitLockT = m_spitLockT;
     }
 
     bool PlayerFSM::ApplyDamage ( const Damage& d )
     {
-        if ( m_state == PState::Dead ) return false;
-        // 이미 무적이면 무시
-        if ( !m_health.Apply ( d.amount ) ) return false;
+        if ( m_zState == ZState::Dead || m_zState == ZState::GameOver ) return false;
 
-        // 넉백 적용
-        m_pendingKB = d.knockback;
-        // 클램프
+        bool applied = d.ignoreIFrames
+            ? ( m_health.hp = std::max ( 0 , m_health.hp - std::max ( 0 , d.amount ) ) , m_health.iFrameT = m_cfg.iFrameMs , true )
+            : m_health.Apply ( d.amount );
+
+        if ( !applied ) return false;
+
+        auto kb = d.knockback;
         const float k = m_cfg.hurtKnockbackClamp;
-        m_pendingKB.x = std::clamp ( m_pendingKB.x , -k , k );
-        m_pendingKB.y = std::clamp ( m_pendingKB.y , -k , k );
+        kb.x = std::clamp ( kb.x , -k , k );
+        kb.y = std::clamp ( kb.y , -k , k );
+        if ( d.additiveImpulse ) { auto v = m_body->Velocity ( ); m_body->SetVelocity ( v + kb ); }
+        else { m_body->SetVelocity ( kb ); }
 
-        // 즉시 속도 세팅
-        if ( m_body ) m_body->SetVelocity ( m_pendingKB );
+        // 머금기/능력 정리
+        if ( m_mouthFull ) { m_mouthFull = false; m_caughtGift = Ability::None; }
+        // (원하면 여기서 능력 드랍 이벤트 생성)
+        // if (m_ability!=Ability::None) { ...; m_ability=Ability::None; }
 
-        // 경직 시간
+        // 경직
         m_damagedT = m_cfg.damagedStun;
-
-        // 상태 전이
-        RequestChange ( std::make_unique<Damaged> ( ) , PState::Damaged );
+        RequestOver ( std::make_unique<Z_Damaged> ( ) , ZState::Damaged );
         return true;
     }
 
-    // ====== 공통 시스템 스텝 ======
+    void PlayerFSM::OnMouthCatch ( Ability gift )
+    {
+        m_mouthFull = true;
+        m_caughtGift = gift;
+    }
+
+    // ====== 공통 시스템 ======
     void PlayerFSM::IntegrateAndCollide ( double fixedDt , const Input& , Ctx& c )
     {
-        // 가속/중력 적분
         c.body->AdvanceKinematics ( fixedDt );
 
-        // 코요테: 지상일 때 리필
         if ( c.body->Grounded ( ) ) m_dbg.coyoteT = m_cfg.coyoteMs;
 
-        // 버퍼 점프 처리(지상/코요테 중)
         if ( ( c.body->Grounded ( ) || m_dbg.coyoteT > 0.f ) && m_dbg.bufferT > 0.f ) {
             c.body->Jump ( m_cfg.jumpSpeed );
             m_jumpLockT = m_cfg.jumpLockMs;
-            m_dbg.coyoteT = 0.f;
-            m_dbg.bufferT = 0.f;
-
-            // 전이는 즉시 적용하지 않고 '요청'만 한다
-            RequestChange ( std::make_unique<Jump> ( ) , PState::Jump );
+            m_dbg.coyoteT = 0.f; m_dbg.bufferT = 0.f;
+            RequestMove ( std::make_unique<M_Jump> ( ) , MState::Jump );
         }
 
-        // 충돌
         float nx = 0.f , ny = 0.f;
         c.aabb = c.body->ProposeAABB ( fixedDt , &c.prevBottom , &nx , &ny );
         c.vel = c.body->Velocity ( );
@@ -140,141 +198,303 @@ namespace game {
         c.col->MoveAndCollide ( c.aabb , c.vel , &c.rep , c.ignoreOneWay , c.prevBottom );
         c.body->ApplyCollisionResult ( c.aabb , c.vel , c.rep , nx , ny );
 
-        // 지면 히스테리시스
         if ( c.rep.grounded ) m_dbg.groundHoldT = m_cfg.groundHoldMs;
 
-        // 저점프: 상승 중 점프키 떼면 감쇠
         if ( !c.jumpHeld && c.body->Velocity ( ).y < 0.f ) {
             auto v = c.body->Velocity ( ); v.y *= m_cfg.shortHopMul; c.body->SetVelocity ( v );
         }
     }
 
-    // ====== 전이 관리 ======
-    void PlayerFSM::RequestChange ( std::unique_ptr<State> ns , PState tag )
+    void PlayerFSM::UpdateFacing ( const Ctx& c )
     {
-        // 마지막 요청만 유지 (필요 시 우선순위 큐로 확장 가능)
-        m_pending = std::move ( ns );
-        m_pendingTag = tag;
+        if ( Abs ( c.ax ) > 0.1f ) m_facing = ( c.ax >= 0.f ) ? +1 : -1;
+        else { const auto v = c.body->Velocity ( ); if ( Abs ( v.x ) > 1.f ) m_facing = ( v.x >= 0.f ) ? +1 : -1; }
     }
 
-    void PlayerFSM::ApplyPending ( Ctx& c )
+    RECT PlayerFSM::MakeInhaleBox ( const Ctx& c ) const
     {
-        if ( !m_pending ) return;
-        if ( !CanTransition ( m_state , m_pendingTag , c ) ) { m_pending.reset ( ); return; }
-        if ( m_cur ) m_cur->OnExit ( );
-        m_cur = std::move ( m_pending );
-        m_state = m_pendingTag;
-        m_needEnter = true;
+        RECT aabb = c.aabb; const float W = 120.f , H = 80.f , yOff = -10.f;
+        const int cx = ( aabb.left + aabb.right ) / 2;
+        const int cy = ( aabb.top + aabb.bottom ) / 2 + static_cast< int >( yOff );
+        RECT r{}; if ( m_facing > 0 ) { r.left = cx; r.right = cx + ( int ) W; }
+        else { r.left = cx - ( int ) W; r.right = cx; }
+        r.top = cy - ( int ) ( H * 0.5f ); r.bottom = cy + ( int ) ( H * 0.5f ); return r;
     }
 
-    bool PlayerFSM::CanTransition ( PState from , PState to , const Ctx& c ) const
+    // ====== Movement ======
+    void PlayerFSM::M_Grounded::Update ( Ctx& c , PlayerFSM& f )
     {
-        if ( from == to ) return false; // 중복 전이 방지
-        if ( from == PState::Dead ) return false; // 사망 후 고정
-        if ( to == PState::Dead ) return true;
+        float axis = c.ax * ( c.mod.lockRunAxis ? 0.f : c.mod.runAxisMul );
+        c.body->SetDesiredRunAxis ( axis );
 
-        // 점프 락: Jump -> (Idle/Walk) 금지
-        if ( from == PState::Jump && ( to == PState::Idle || to == PState::Walk ) && m_jumpLockT > 0.f )
-            return false;
+        // 공통: 지면 이탈 감시
+        const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
+        if ( !stable ) { f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall ); return; }
 
-        // 상승 → 하강 전환 규칙: Jump -> Fall 은 vy >= 0 일 때만
-        if ( from == PState::Jump && to == PState::Fall && c.body->Velocity ( ).y < 0.f )
-            return false;
-
-        // Damaged에서 너무 빠른 해제 방지: 경직 시간 남으면 유지
-        if ( from == PState::Damaged && m_damagedT > 0.f && ( to == PState::Idle || to == PState::Walk ) ) return false;
-
-        // 필요 시 더 많은 규칙을 여기에 추가 (무적, 원웨이, 대시 등)
-        return true;
-    }
-
-    // ====== 슈퍼 상태 구현 ======
-    void PlayerFSM::Grounded::Update ( Ctx& c , PlayerFSM& fsm )
-    {
-        c.body->SetDesiredRunAxis ( c.ax );
-
-        // 안정 접지(히스테리시스 포함) 해제 → Fall
-        const bool stable = c.body->Grounded ( ) || ( fsm.m_dbg.groundHoldT > 0.f );
-        if ( !stable ) fsm.RequestChange ( std::make_unique<Fall> ( ) , PState::Fall );
-    }
-
-    void PlayerFSM::Airborne::Update ( Ctx& c , PlayerFSM& fsm )
-    {
-        c.body->SetDesiredRunAxis ( c.ax );
-
-        // 점프 락 중에는 지상 전이를 막고 싶다면 CanTransition이 알아서 거른다.
-        const bool stable = c.body->Grounded ( ) || ( fsm.m_dbg.groundHoldT > 0.f );
-        if ( stable ) {
-            if ( std::fabs ( c.ax ) > 0.1f ) fsm.RequestChange ( std::make_unique<Walk> ( ) , PState::Walk );
-            else                        fsm.RequestChange ( std::make_unique<Idle> ( ) , PState::Idle );
+        // 웅크리기: 아래 입력이면 Crouch으로
+        if ( c.ay < -0.5f ) {
+            if ( f.m_mState != MState::Crouch && f.m_mState != MState::Slide )
+                f.RequestMove ( std::make_unique<M_Crouch> ( ) , MState::Crouch );
         }
     }
 
-    // ====== 리프 상태 구현 ======
-    void PlayerFSM::Idle::Update ( Ctx& c , PlayerFSM& fsm )
+    void PlayerFSM::M_Airborne::Update ( Ctx& c , PlayerFSM& f )
+    {
+        float axis = c.ax * ( c.mod.lockRunAxis ? 0.f : c.mod.runAxisMul );
+        c.body->SetDesiredRunAxis ( axis );
+
+        // 공중에서 Z(점프) 눌러 공기 머금기 시작
+        if ( ( f.m_mState == MState::Jump || f.m_mState == MState::Fall ) && c.jumpPressed ) {
+            f.RequestMove ( std::make_unique<M_Inflated> ( ) , MState::Inflated );
+        }
+
+        const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
+        if ( stable ) {
+            if ( Abs ( c.ax ) > RUN_TOGGLE_AX ) f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk );
+            else                           f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+        }
+    }
+
+    void PlayerFSM::M_Idle::OnEnter ( Ctx& c ) { Play ( c.anim , "Idle" , true ); }
+    void PlayerFSM::M_Idle::Update ( Ctx& c , PlayerFSM& f )
     {
         c.body->SetDesiredRunAxis ( 0.f );
-        const bool stable = c.body->Grounded ( ) || ( fsm.m_dbg.groundHoldT > 0.f );
-        if ( !stable ) { fsm.RequestChange ( std::make_unique<Fall> ( ) , PState::Fall ); return; }
-        if ( std::fabs ( c.ax ) > 0.1f ) fsm.RequestChange ( std::make_unique<Walk> ( ) , PState::Walk );
+        const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
+        if ( !stable ) { f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall ); return; }
+
+        if ( c.ay < -0.5f ) { f.RequestMove ( std::make_unique<M_Crouch> ( ) , MState::Crouch ); return; }
+        if ( Abs ( c.ax ) > RUN_TOGGLE_AX ) f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk );
     }
 
-    void PlayerFSM::Walk::Update ( Ctx& c , PlayerFSM& fsm )
+    void PlayerFSM::M_Walk::OnEnter ( Ctx& c ) { Play ( c.anim , "Walk" , true ); }
+    void PlayerFSM::M_Walk::Update ( Ctx& c , PlayerFSM& f )
     {
-        Grounded::Update ( c , fsm ); // 지면 이탈 감시
-        if ( std::fabs ( c.ax ) <= 0.1f ) fsm.RequestChange ( std::make_unique<Idle> ( ) , PState::Idle );
+        M_Grounded::Update ( c , f );
+        if ( f.m_mState != MState::Walk ) return; // 위에서 전이됐으면 조기 종료
+
+        if ( Abs ( c.ax ) <= RUN_TOGGLE_AX ) { f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle ); return; }
+
+        // 더블탭으로 Run 전이
+        if ( f.m_runQueued ) {
+            f.m_runQueued = false;
+            f.RequestMove ( std::make_unique<M_Run> ( ) , MState::Run );
+            return;
+        }
     }
 
-    void PlayerFSM::Jump::Update ( Ctx& c , PlayerFSM& fsm )
+    void PlayerFSM::M_Run::OnEnter ( Ctx& c ) { Play ( c.anim , "Run" , true ); }
+    void PlayerFSM::M_Run::Update ( Ctx& c , PlayerFSM& f )
     {
-        c.body->SetDesiredRunAxis ( c.ax );
+        M_Grounded::Update ( c , f );
+        if ( f.m_mState != MState::Run ) return;
 
-        // 점프 락 동안은 Jump 유지
-        if ( fsm.m_jumpLockT > 0.f ) return;
+        // 입력 약화/해제 시 Walk로
+        if ( Abs ( c.ax ) < 0.75f ) { f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk ); return; }
+        // 아래 입력이면 바로 Crouch(원작 느낌에 맞게 Run->슬라이드 진입은 Crouch 후 Z/X)
+        if ( c.ay < -0.5f ) { f.RequestMove ( std::make_unique<M_Crouch> ( ) , MState::Crouch ); return; }
+    }
 
-        // 상승→하강 전환되면 Fall 시도 (실제 적용은 중앙 CanTransition이 승인 시)
-        if ( c.body->Velocity ( ).y >= 0.f ) {
-            fsm.RequestChange ( std::make_unique<Fall> ( ) , PState::Fall );
+    void PlayerFSM::M_Crouch::OnEnter ( Ctx& c ) { Play ( c.anim , "Crouch" , true ); }
+    void PlayerFSM::M_Crouch::Update ( Ctx& c , PlayerFSM& f )
+    {
+        c.body->SetDesiredRunAxis ( 0.f );
+
+        // Z 또는 X 누르면 슬라이딩킥
+        if ( c.jumpPressed || c.attackPressed ) {
+            f.m_slideT = SLIDE_TIME;
+            // 초기 수평속도 부여
+            auto v = c.body->Velocity ( ); v.x = ( float ) f.m_facing * SLIDE_VX;
+            c.body->SetVelocity ( v );
+            f.RequestMove ( std::make_unique<M_Slide> ( ) , MState::Slide );
             return;
         }
 
-        const bool stable = c.body->Grounded ( ) || ( fsm.m_dbg.groundHoldT > 0.f );
+        // 아래 떼면 Idle 복귀
+        if ( c.ay >= -0.5f ) { f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle ); }
+    }
+
+    void PlayerFSM::M_Slide::OnEnter ( Ctx& c ) { Play ( c.anim , "Slide" , true ); }
+    void PlayerFSM::M_Slide::Update ( Ctx& c , PlayerFSM& f )
+    {
+        // 슬라이드 중에는 입력 무시, 관성 유지
+        c.body->SetDesiredRunAxis ( ( float ) f.m_facing );
+
+        if ( f.m_slideT <= 0.f ) {
+            // 종료: 아래 계속이면 Crouch, 아니면 Idle
+            if ( c.ay < -0.5f ) f.RequestMove ( std::make_unique<M_Crouch> ( ) , MState::Crouch );
+            else               f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+        }
+    }
+
+    void PlayerFSM::M_Jump::OnEnter ( Ctx& c ) { Play ( c.anim , "Jump" , true ); }
+    void PlayerFSM::M_Jump::Update ( Ctx& c , PlayerFSM& f )
+    {
+        float axis = c.ax * ( c.mod.lockRunAxis ? 0.f : c.mod.runAxisMul );
+        c.body->SetDesiredRunAxis ( axis );
+
+        // 공중에서 Z 다시 누르면 Inflated
+        if ( c.jumpPressed ) { f.RequestMove ( std::make_unique<M_Inflated> ( ) , MState::Inflated ); return; }
+
+        if ( f.m_jumpLockT > 0.f ) return;
+        if ( c.body->Velocity ( ).y >= 0.f ) { f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall ); return; }
+
+        const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
         if ( stable ) {
-            if ( std::fabs ( c.ax ) > 0.1f ) fsm.RequestChange ( std::make_unique<Walk> ( ) , PState::Walk );
-            else                        fsm.RequestChange ( std::make_unique<Idle> ( ) , PState::Idle );
+            if ( Abs ( c.ax ) > RUN_TOGGLE_AX ) f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk );
+            else                           f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
         }
     }
 
-    void PlayerFSM::Fall::Update ( Ctx& c , PlayerFSM& fsm )
+    void PlayerFSM::M_Fall::OnEnter ( Ctx& c ) { Play ( c.anim , "Fall" , true ); }
+    void PlayerFSM::M_Fall::Update ( Ctx& c , PlayerFSM& f )
     {
-        // 공통 착지 처리
-        Airborne::Update ( c , fsm );
+        M_Airborne::Update ( c , f );
     }
 
-    void PlayerFSM::Damaged::Update ( Ctx& c , PlayerFSM& fsm )
+    void PlayerFSM::M_Inflated::OnEnter ( Ctx& c ) { Play ( c.anim , "Inflate" , true ); }
+    void PlayerFSM::M_Inflated::Update ( Ctx& c , PlayerFSM& f )
     {
-        // 경직 중에는 입력 무시, 수평 드리프트만 감속
-        c.body->SetDesiredRunAxis ( 0.f );
+        // 날개짓: Z 탭마다 상승
+        if ( c.jumpPressed ) {
+            auto v = c.body->Velocity ( ); v.y = FLAP_VY; c.body->SetVelocity ( v );
+        }
 
-        // 경직 타이머 감소
-        fsm.m_damagedT = std::max ( 0.f , fsm.m_damagedT - c.dt );
+        // X(Attack)는 공기포: Action 쪽에서 A_AirPuff로 처리되도록 A_Neutral가 우선권을 가짐
+        // 여기서는 유지/이탈만 관리
+        if ( !c.jumpHeld && c.body->Velocity ( ).y > FLOAT_EXIT_VY ) {
+            f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall );
+            return;
+        }
 
-        // 경직이 끝났다면 공통 공중/착지 로직으로 복귀
-        if ( fsm.m_damagedT <= 0.f ) {
-            // 하강 전환 시 Fall, 착지 시 지상 상태
-            if ( c.body->Velocity ( ).y >= 0.f ) {
-                fsm.RequestChange ( std::make_unique<Fall> ( ) , PState::Fall );
-                return;
-            }
-            Airborne::Update ( c , fsm );
+        // 지면 닿으면 종료
+        const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
+        if ( stable ) f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+    }
+
+    // ====== Action ======
+    void PlayerFSM::A_Neutral::Update ( Ctx& c , PlayerFSM& f )
+    {
+        // 우선순위: (1) 머금은 물체 뱉기 (2) 공기포 (Inflated) (3) 카피능력 공격 (4) 빨아들이기
+        if ( f.m_mouthFull && c.attackPressed ) { f.RequestAct ( std::make_unique<A_SpitObject> ( ) , AState::SpitObject ); return; }
+        if ( f.m_mState == MState::Inflated && c.attackPressed ) { f.RequestAct ( std::make_unique<A_AirPuff> ( ) , AState::AirPuff ); return; }
+        if ( f.m_ability != Ability::None && c.attackPressed ) { f.RequestAct ( std::make_unique<A_AbilityAtk> ( ) , AState::AbilityAtk ); return; }
+        if ( !f.m_mouthFull && c.attackHeld ) { f.RequestAct ( std::make_unique<A_Inhale> ( ) , AState::Inhale ); return; }
+    }
+
+    void PlayerFSM::A_Inhale::OnEnter ( Ctx& c ) { Play ( c.anim , "Inhale" , true ); }
+    void PlayerFSM::A_Inhale::Update ( Ctx& c , PlayerFSM& f )
+    {
+        c.mod.runAxisMul = 0.5f;
+        if ( f.m_inhaleT <= 0.f ) f.m_inhaleT = 0.55f;
+        f.m_inhaleT = std::max ( 0.f , f.m_inhaleT - c.dt );
+
+        PlayerEvent ev{ PlayerEvent::InhaleVolume }; ev.rect = f.MakeInhaleBox ( c ); ev.facing = f.m_facing; f.m_events.push_back ( ev );
+
+        if ( f.m_mouthFull ) { f.RequestAct ( std::make_unique<A_MouthFull> ( ) , AState::MouthFull ); return; }
+        if ( !c.attackHeld || f.m_inhaleT <= 0.f ) { f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral ); }
+    }
+
+    void PlayerFSM::A_MouthFull::OnEnter ( Ctx& c ) { Play ( c.anim , "MouthFullIdle" , true ); }
+    void PlayerFSM::A_MouthFull::Update ( Ctx& c , PlayerFSM& f )
+    {
+        if ( !f.m_mouthFull ) { f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral ); return; }
+
+        // X: 뱉기
+        if ( c.attackPressed ) { f.RequestAct ( std::make_unique<A_SpitObject> ( ) , AState::SpitObject ); return; }
+
+        // 아래키로 삼키기(카피)
+        if ( c.ay < -0.5f ) {
+            PlayerEvent e1{ PlayerEvent::SwallowAbility }; e1.ability = f.m_caughtGift; f.m_events.push_back ( e1 );
+            f.m_ability = f.m_caughtGift; f.m_caughtGift = Ability::None;
+            f.m_mouthFull = false;
+            PlayerEvent e2{ PlayerEvent::AbilityGained }; e2.ability = f.m_ability; f.m_events.push_back ( e2 );
+            f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+            return;
         }
     }
 
-    void PlayerFSM::Dead::Update ( Ctx& c , PlayerFSM& fsm )
+    void PlayerFSM::A_SpitObject::OnEnter ( Ctx& c ) { Play ( c.anim , "Spit" , true ); }
+    void PlayerFSM::A_SpitObject::Update ( Ctx& c , PlayerFSM& f )
     {
-        // 입력 무시, 천천히 멈추게
-        c.body->SetDesiredRunAxis ( 0.f );
-        // 착지해도 상태 유지 (리스폰 시스템 붙일 때까지 고정)
+        if ( f.m_spitLockT <= 0.f ) {
+            PlayerEvent ev{ PlayerEvent::SpitStar }; ev.facing = f.m_facing; f.m_events.push_back ( ev );
+            f.m_spitLockT = 0.18f;
+            f.m_mouthFull = false; f.m_caughtGift = Ability::None;
+        }
+        c.mod.lockRunAxis = true;
+        if ( f.m_spitLockT <= 0.f ) f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+    }
+
+    void PlayerFSM::A_AirPuff::OnEnter ( Ctx& c ) { Play ( c.anim , "AirPuff" , true ); }
+    void PlayerFSM::A_AirPuff::Update ( Ctx& c , PlayerFSM& f )
+    {
+        if ( f.m_spitLockT <= 0.f ) {
+            PlayerEvent ev{ PlayerEvent::AirPuffShot }; ev.facing = f.m_facing; f.m_events.push_back ( ev );
+            f.m_spitLockT = 0.14f;
+        }
+        c.mod.lockRunAxis = true;
+        if ( f.m_spitLockT <= 0.f ) f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+    }
+
+    void PlayerFSM::A_AbilityAtk::OnEnter ( Ctx& c ) { Play ( c.anim , "AbilityAtk" , true ); }
+    void PlayerFSM::A_AbilityAtk::Update ( Ctx& c , PlayerFSM& f )
+    {
+        // TODO: Fire/Spark/Beam 별 구현
+        f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+    }
+
+    // ====== Overlay ======
+    void PlayerFSM::Z_None::Update ( Ctx& , PlayerFSM& ) {}
+
+    void PlayerFSM::Z_Damaged::OnEnter ( Ctx& c ) { Play ( c.anim , "Hurt" , true ); }
+    void PlayerFSM::Z_Damaged::Update ( Ctx& c , PlayerFSM& f )
+    {
+        c.mod.lockRunAxis = true;
+        f.m_damagedT = std::max ( 0.f , f.m_damagedT - c.dt );
+        if ( f.m_damagedT <= 0.f ) f.RequestOver ( std::make_unique<Z_None> ( ) , ZState::None );
+    }
+
+    void PlayerFSM::Z_Dead::OnEnter ( Ctx& c ) { Play ( c.anim , "Death" , true ); }
+    void PlayerFSM::Z_Dead::Update ( Ctx& c , PlayerFSM& ) { c.mod.lockRunAxis = true; }
+
+    void PlayerFSM::Z_DoorEnter::OnEnter ( Ctx& c ) { Play ( c.anim , "DoorEnter" , true ); }
+    void PlayerFSM::Z_DoorEnter::Update ( Ctx& c , PlayerFSM& ) {}
+
+    void PlayerFSM::Z_Dance::OnEnter ( Ctx& c ) { Play ( c.anim , "Dance" , true ); }
+    void PlayerFSM::Z_Dance::Update ( Ctx& c , PlayerFSM& ) {}
+
+    void PlayerFSM::Z_GameOver::OnEnter ( Ctx& c ) { Play ( c.anim , "GameOver" , true ); }
+    void PlayerFSM::Z_GameOver::Update ( Ctx& c , PlayerFSM& ) {}
+
+    // ====== 전이 & 가드 ======
+    void PlayerFSM::RequestMove ( std::unique_ptr<MBase> ns , MState tag ) { m_mPending = std::move ( ns ); m_mPendingTag = tag; }
+    void PlayerFSM::RequestAct ( std::unique_ptr<ABase> ns , AState tag ) { m_aPending = std::move ( ns ); m_aPendingTag = tag; }
+    void PlayerFSM::RequestOver ( std::unique_ptr<ZBase> ns , ZState tag ) { m_zPending = std::move ( ns ); m_zPendingTag = tag; }
+
+    void PlayerFSM::ApplyPendingMove ( Ctx& ) { if ( !m_mPending ) return; if ( !CanMove ( m_mState , m_mPendingTag , {} ) ) { m_mPending.reset ( ); return; } if ( m_move ) m_move->OnExit ( ); m_move = std::move ( m_mPending ); m_mState = m_mPendingTag; m_mNeedEnter = true; }
+    void PlayerFSM::ApplyPendingAct ( Ctx& ) { if ( !m_aPending ) return; if ( !CanAct ( m_aState , m_aPendingTag , {} ) ) { m_aPending.reset ( ); return; } if ( m_action ) m_action->OnExit ( ); m_action = std::move ( m_aPending ); m_aState = m_aPendingTag; m_aNeedEnter = true; }
+    void PlayerFSM::ApplyPendingOver ( Ctx& ) { if ( !m_zPending ) return; if ( !CanOver ( m_zState , m_zPendingTag , {} ) ) { m_zPending.reset ( ); return; } if ( m_overlay ) m_overlay->OnExit ( ); m_overlay = std::move ( m_zPending ); m_zState = m_zPendingTag; m_zNeedEnter = true; }
+
+    bool PlayerFSM::CanMove ( MState from , MState to , const Ctx& c ) const
+    {
+        if ( from == to ) return false;
+        if ( m_zState == ZState::Dead || m_zState == ZState::GameOver ) return false;
+        if ( from == MState::Jump && ( to == MState::Idle || to == MState::Walk || to == MState::Run ) && m_jumpLockT > 0.f ) return false;
+        if ( from == MState::Jump && to == MState::Fall && m_body && m_body->Velocity ( ).y < 0.f ) return false;
+        return true;
+    }
+    bool PlayerFSM::CanAct ( AState from , AState to , const Ctx& ) const
+    {
+        if ( from == to ) return false;
+        if ( m_zState != ZState::None ) return false;
+        if ( m_aState == AState::SpitObject && m_spitLockT > 0.f ) return false;
+        return true;
+    }
+    bool PlayerFSM::CanOver ( ZState from , ZState to , const Ctx& ) const
+    {
+        if ( from == to ) return false;
+        if ( from == ZState::Dead && to != ZState::GameOver ) return false;
+        return true;
     }
 
 } // namespace game
