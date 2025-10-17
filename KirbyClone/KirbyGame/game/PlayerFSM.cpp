@@ -42,6 +42,9 @@ namespace game {
     {
         if ( !m_body || !m_col ) return;
 
+        m_dbg.inhaleActive = false;
+        m_dbg.inhaleRect = RECT{ 0,0,0,0 };
+
         Ctx c;
         c.body = m_body; c.col = m_col; c.anim = m_anim; c.cfg = m_cfg;
         c.dt = static_cast< float >( fixedDt );
@@ -392,6 +395,9 @@ namespace game {
         f.m_inhaleT = std::max ( 0.f , f.m_inhaleT - c.dt );
 
         PlayerEvent ev{ PlayerEvent::InhaleVolume }; ev.rect = f.MakeInhaleBox ( c ); ev.facing = f.m_facing; f.m_events.push_back ( ev );
+
+        f.m_dbg.inhaleActive = true;
+        f.m_dbg.inhaleRect = ev.rect;
 
         if ( f.m_mouthFull ) { f.RequestAct ( std::make_unique<A_MouthFull> ( ) , AState::MouthFull ); return; }
         if ( !c.attackHeld || f.m_inhaleT <= 0.f ) { f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral ); }

@@ -579,6 +579,21 @@ namespace engine {
                     m_Debug->WorldRect ( x , y , w , h , ox , oy , color );
                 }
 
+            // Inhale 디버그 박스
+            auto dbg = m_PlayerFSM.GetDebug ( );
+            if ( dbg.inhaleActive ) {
+                const RECT r = dbg.inhaleRect;
+                const int w = r.right - r.left;
+                const int h = r.bottom - r.top;
+                // 연한 하늘색 박스(외곽)
+                m_Debug->WorldRect ( r.left , r.top , w , h , ox , oy , RGB ( 120 , 200 , 255 ) );
+                // 중앙 가이드 라인(선택)
+                const int cx = ( r.left + r.right ) / 2;
+                const int cy = ( r.top + r.bottom ) / 2;
+                m_Debug->WorldLine ( cx , r.top , cx , r.bottom , ox , oy , RGB ( 120 , 200 , 255 ) );
+                m_Debug->WorldLine ( r.left , cy , r.right , cy , ox , oy , RGB ( 120 , 200 , 255 ) );
+            }
+
             m_Debug->Flush ( );
         }
     }
