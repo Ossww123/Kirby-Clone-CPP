@@ -356,21 +356,22 @@ namespace game {
     void PlayerFSM::M_Inflated::OnEnter ( Ctx& c ) { Play ( c.anim , "Inflate" , true ); }
     void PlayerFSM::M_Inflated::Update ( Ctx& c , PlayerFSM& f )
     {
-        // 날개짓: Z 탭마다 상승
+        // 좌우 이동은 입력대로(원하면 감속을 주고 싶으면 runAxisMul 조정)
+        float axis = c.ax * ( c.mod.lockRunAxis ? 0.f : c.mod.runAxisMul );
+        c.body->SetDesiredRunAxis ( axis );
+
+        // 날개짓(Z 탭): 즉시 약간 상승
         if ( c.jumpPressed ) {
-            auto v = c.body->Velocity ( ); v.y = FLAP_VY; c.body->SetVelocity ( v );
+            auto v = c.body->Velocity ( );
+            v.y = -240.f;                    // 필요 시 튜닝
+            if ( v.y > -240.f ) v.y = -240.f;  // 최소 상승 보장
+            c.body->SetVelocity ( v );
         }
 
-        // X(Attack)는 공기포: Action 쪽에서 A_AirPuff로 처리되도록 A_Neutral가 우선권을 가짐
-        // 여기서는 유지/이탈만 관리
-        if ( !c.jumpHeld && c.body->Velocity ( ).y > FLOAT_EXIT_VY ) {
-            f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall );
-            return;
-        }
-
-        // 지면 닿으면 종료
-        const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
-        if ( stable ) f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+        // 소프트 폴: 낙하 속도 상한(천천히 내려오게)
+        auto v = c.body->Velocity ( );
+        const float MAX_FALL_VY = 80.f;      // 필요 시 튜닝
+        if ( v.y > MAX_FALL_VY ) { v.y = MAX_FALL_VY; c.body->SetVelocity ( v ); }
     }
 
     // ====== Action ======
@@ -430,11 +431,22 @@ namespace game {
     void PlayerFSM::A_AirPuff::OnEnter ( Ctx& c ) { Play ( c.anim , "AirPuff" , true ); }
     void PlayerFSM::A_AirPuff::Update ( Ctx& c , PlayerFSM& f )
     {
+        // 최초 프레임에 공기포 1회 발사
         if ( f.m_spitLockT <= 0.f ) {
             PlayerEvent ev{ PlayerEvent::AirPuffShot }; ev.facing = f.m_facing; f.m_events.push_back ( ev );
             f.m_spitLockT = 0.14f;
+
+            // 공기포를 쏘면 바로 Inflated 해제(움직임은 상황에 맞게)
+            const bool grounded = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
+            if ( f.m_mState == MState::Inflated ) {
+                if ( grounded ) f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+                else          f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall );
+            }
         }
+
+        // 짧은 발사 락
         c.mod.lockRunAxis = true;
+        f.m_spitLockT = std::max ( 0.f , f.m_spitLockT - c.dt );
         if ( f.m_spitLockT <= 0.f ) f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
     }
 
@@ -452,6 +464,14 @@ namespace game {
     void PlayerFSM::Z_Damaged::Update ( Ctx& c , PlayerFSM& f )
     {
         c.mod.lockRunAxis = true;
+
+        // 데미지 들어오면 공기머금기 해제
+        if ( f.m_mState == MState::Inflated ) {
+            const bool grounded = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
+            if ( grounded ) f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+            else          f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall );
+        }
+
         f.m_damagedT = std::max ( 0.f , f.m_damagedT - c.dt );
         if ( f.m_damagedT <= 0.f ) f.RequestOver ( std::make_unique<Z_None> ( ) , ZState::None );
     }
