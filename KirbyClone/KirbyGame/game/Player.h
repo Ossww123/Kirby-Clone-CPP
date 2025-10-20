@@ -13,7 +13,7 @@ namespace game {
         // 초기 위치/크기를 바로 지정
         explicit Player ( RECT playBounds ,
                         float x = 100.f , float y = 100.f ,
-                        float w = 32.f , float h = 24.f )
+                        float w = 14.f , float h = 14.f )
             : m_body ( playBounds )
         {
             m_body.SetSize ( w , h );
@@ -29,12 +29,15 @@ namespace game {
         void SetBounds ( RECT b ) { m_body.SetBounds ( b ); }
         void SetSize ( float w , float h ) { m_body.SetSize ( w , h ); }
         void SetPosition ( float x , float y ) { m_body.SetPosition ( x , y ); }
+        void SetVisualSize ( float w , float h ) { m_visW = w; m_visH = h; }
 
         engine::Vec2 Center ( ) const {
             int x , y , w , h; m_body.GetBounds ( x , y , w , h );
             return { x + w * 0.5f, y + h * 0.5f };
         }
+
         void GetBounds ( int& x , int& y , int& w , int& h ) const { m_body.GetBounds ( x , y , w , h ); }
+        void GetVisualSize ( float& w , float& h ) const { w = m_visW; h = m_visH; }
 
         // 충돌/물리 접근
         engine::PhysicsBody&        Body ( ) { return m_body; }
@@ -46,6 +49,7 @@ namespace game {
 
         void                        SetTexture ( const engine::Tex2D& t ) { m_tex = t; }
         const engine::Tex2D&        Texture ( ) const { return m_tex; }
+        float                       m_visW{ 32.f } , m_visH{ 32.f };
 
     private:
         engine::PhysicsBody m_body;

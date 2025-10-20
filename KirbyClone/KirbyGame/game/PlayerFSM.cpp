@@ -28,14 +28,34 @@ namespace game {
 
         m_health.Reset ( m_cfg.maxHp , m_cfg.iFrameMs );
 
+        // --- 런타임 상태/타이머/이벤트 하드 리셋 ---
+        m_events.clear ( );
+        m_mouthFull = false;
+        m_caughtGift = Ability::None;
+        m_ability = Ability::None;   // ← 능력 초기화 핵심
+        m_facing = +1;              // 원한다면 유지해도 됨
+        m_jumpLockT = 0.f;
+        m_damagedT = 0.f;
+        m_inhaleT = 0.f;
+        m_spitLockT = 0.f;
+        m_tapT = 0.f;
+        m_slideT = 0.f;
+        m_runQueued = false;
+        m_lastTapDir = 0;
+        m_pendingKB = { 0.f, 0.f };
+        m_mPending.reset ( ); m_aPending.reset ( ); m_zPending.reset ( );
+        m_transitionBudget = 0;
+
         m_move = std::make_unique<M_Idle> ( );    m_mState = MState::Idle;    m_mNeedEnter = true;
         m_action = std::make_unique<A_Neutral> ( ); m_aState = AState::Neutral; m_aNeedEnter = true;
         m_overlay = std::make_unique<Z_None> ( );    m_zState = ZState::None;    m_zNeedEnter = true;
 
         if ( m_anim ) m_anim->Play ( "Idle" , true );
 
+        m_dbg = {};
         m_dbg.hp = m_health.hp; m_dbg.iFrameT = m_health.iFrameT;
         m_dbg.mState = m_mState; m_dbg.aState = m_aState; m_dbg.zState = m_zState;
+        m_dbg.facing = m_facing; m_dbg.mouthFull = m_mouthFull; m_dbg.ability = m_ability;
     }
 
     void PlayerFSM::Step ( double fixedDt , const Input& input )

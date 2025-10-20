@@ -75,6 +75,7 @@ namespace engine {
         Camera     m_Cam{};
         game::Player* m_Player{ nullptr };
         game::PlayerFSM m_PlayerFSM;
+        game::PlayerFSM::Cfg m_playerFsmCfg{};
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
         std::vector<std::unique_ptr<game::Projectile>> m_Projectiles;
 

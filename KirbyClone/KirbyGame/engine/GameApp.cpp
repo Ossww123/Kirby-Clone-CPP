@@ -53,9 +53,8 @@ namespace engine {
 
         // 씬/플레이어
         m_Player = m_Scene.Spawn<game::Player> ( rc );
-        m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) ,
-                         /*anim*/ m_Player->Animator ( ) ,     // FSM이 Player의 Animator를 제어
-                         { .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f } );
+        m_playerFsmCfg = { .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
+        m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) , m_Player->Animator ( ) , m_playerFsmCfg );
 
         // 카메라
         m_Cam.SetScreenSize ( w , h );
@@ -90,7 +89,8 @@ namespace engine {
             // 텍스처 → Player
             m_Player->SetTexture ( m_PlayerTex );
             // 스프라이트 실제 크기
-            m_Player->SetSize ( 32.f , 32.f );
+            m_Player->SetSize ( 14.f , 14.f );
+            m_Player->SetVisualSize ( 32.f , 32.f );
             
             // CSV에서 로드
             if ( !game::LoadAnimCSV ( "assets/player_anim.csv" , m_Player->Animator ( ) , /*clearExisting=*/true ) ) {
@@ -234,10 +234,14 @@ namespace engine {
         game::PlayerStartCSV ps{};
         if ( game::LoadPlayerStartCSV ( ( base + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
             m_Player->SetPosition ( ps.x , ps.y );
+            m_Player->Body ( ).SetVelocity ( { 0.f, 0.f } );
             m_Cam.SetWorldRect ( m_World.WorldRectPx ( ) );
             m_Cam.SetLookAt ( { ps.x, ps.y } );
             m_Cam.SnapImmediate ( );
         }
+
+        // FSM 리셋
+        m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) , m_Player->Animator ( ) , m_playerFsmCfg );
 
         // 3) 몬스터 스폰 (팩토리 경유)
         std::vector<game::MonsterCSV> mons;
@@ -588,8 +592,12 @@ namespace engine {
                 const auto& tex = m_Player->Texture ( );
                 if ( tex.srv ) {
                     int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    const float x = float ( px - ox ) , y = float ( py - oy );
-                    const float w = float ( pw ) , h = float ( ph );
+                    float vw , vh; m_Player->GetVisualSize ( vw , vh );
+
+                    // 가로 중앙 정렬 + 발바닥 정렬(스프라이트가 약간 더 크더라도 발 밑이 맞게)
+                    const float x = ( px + pw * 0.5f ) - vw * 0.5f - ox;
+                    const float y = ( py + ph ) - vh - oy;
+                    const float w = vw , h = vh;
 
                     RECT src = m_Player->Animator ( )->CurrentSrc ( );
                     const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
