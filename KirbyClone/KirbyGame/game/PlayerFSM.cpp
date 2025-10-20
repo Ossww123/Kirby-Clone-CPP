@@ -384,7 +384,7 @@ namespace game {
         if ( f.m_mouthFull && c.attackPressed ) { f.RequestAct ( std::make_unique<A_SpitObject> ( ) , AState::SpitObject ); return; }
         if ( f.m_mState == MState::Inflated && c.attackPressed ) { f.RequestAct ( std::make_unique<A_AirPuff> ( ) , AState::AirPuff ); return; }
         if ( f.m_ability != Ability::None && c.attackPressed ) { f.RequestAct ( std::make_unique<A_AbilityAtk> ( ) , AState::AbilityAtk ); return; }
-        if ( !f.m_mouthFull && c.attackHeld ) { f.RequestAct ( std::make_unique<A_Inhale> ( ) , AState::Inhale ); return; }
+        if ( !f.m_mouthFull && c.attackHeld && f.m_ability == Ability::None ) { f.RequestAct ( std::make_unique<A_Inhale> ( ) , AState::Inhale ); return; }
     }
 
     void PlayerFSM::A_Inhale::OnEnter ( Ctx& c ) { Play ( c.anim , "Inhale" , true ); }
@@ -459,8 +459,48 @@ namespace game {
     void PlayerFSM::A_AbilityAtk::OnEnter ( Ctx& c ) { Play ( c.anim , "AbilityAtk" , true ); }
     void PlayerFSM::A_AbilityAtk::Update ( Ctx& c , PlayerFSM& f )
     {
-        // TODO: Fire/Spark/Beam 별 구현
-        f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+        // 최초 프레임에 능력별 공격 1회 발행
+        if ( f.m_spitLockT <= 0.f ) {
+            switch ( f.m_ability ) {
+            case Ability::Fire: {
+                PlayerEvent ev{ PlayerEvent::AbilityFire };
+                ev.facing = f.m_facing; ev.ability = f.m_ability;
+                f.m_events.push_back ( ev );
+                f.m_spitLockT = 0.22f;     // 불꽃 짧은 유지
+                break;
+            }
+            case Ability::Spark: {
+                PlayerEvent ev{ PlayerEvent::AbilitySpark };
+                ev.facing = f.m_facing; ev.ability = f.m_ability;
+                f.m_events.push_back ( ev );
+                f.m_spitLockT = 0.25f;     // 스파크 링
+                break;
+            }
+            case Ability::Beam: {
+                PlayerEvent ev{ PlayerEvent::AbilityBeam };
+                ev.facing = f.m_facing; ev.ability = f.m_ability;
+                f.m_events.push_back ( ev );
+                f.m_spitLockT = 0.18f;     // 빔 채찍
+                break;
+            }
+            default:
+                // 능력 없으면 바로 종료
+                f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+                return;
+            }
+        }
+
+        // 공격 중 입력 잠금(히트확정 연출)
+        c.mod.lockRunAxis = true;
+
+        if ( !c.attackHeld && f.m_spitLockT > 0.f ) {
+            f.m_spitLockT = 0.f;
+        }
+
+        // 락 해제되면 Neutral 복귀
+        f.m_spitLockT = std::max ( 0.f , f.m_spitLockT - c.dt );
+        if ( f.m_spitLockT <= 0.f )
+            f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
     }
 
     // ====== Overlay ======

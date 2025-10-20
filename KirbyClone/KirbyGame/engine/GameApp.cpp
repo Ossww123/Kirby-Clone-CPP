@@ -417,6 +417,58 @@ namespace engine {
                 case game::PlayerEvent::AbilityGained:
                     // HUD 아이콘 갱신 등(원하면 구현)
                     break;
+                case game::PlayerEvent::AbilityFire:
+                {
+                    // 짧은 화염 분사: 앞쪽으로 3발 빠르게
+                    RECT wr = m_World.WorldRectPx ( );
+                    for ( int i = 0; i < 3; ++i ) {
+                        game::Projectile::Cfg pcfg; pcfg.width = 10; pcfg.height = 8;
+                        auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
+                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                        float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - pcfg.width;
+                        float y = float ( py + ph * 0.5f - pcfg.height * 0.5f );
+                        float base = 360.f;                         // 불 속도
+                        float jitter = 40.f * ( i - 1 );                // 약간의 산포
+                        engine::Vec2 vel{ float ( m_PlayerFSM.Facing ( ) ) * ( base + jitter ), 0.f };
+                        p->Fire ( { x,y } , vel );
+                        m_Projectiles.push_back ( std::move ( p ) );
+                    }
+                    break;
+                }
+                case game::PlayerEvent::AbilitySpark:
+                {
+                    // 원형 스파크 링: 8~12방향으로 퍼뜨리기
+                    RECT wr = m_World.WorldRectPx ( );
+                    const int N = 10;
+                    const float speed = 260.f;
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    float cx = float ( px + pw * 0.5f ) , cy = float ( py + ph * 0.5f );
+                    for ( int i = 0; i < N; ++i ) {
+                        const float ang = ( float ( i ) / N ) * 6.2831853f; // 2π
+                        const float vx = std::cos ( ang ) * speed;
+                        const float vy = std::sin ( ang ) * speed;
+                        game::Projectile::Cfg pcfg; pcfg.width = 6; pcfg.height = 6;
+                        auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
+                        p->Fire ( { cx - 3.f, cy - 3.f } , { vx, vy } );
+                        m_Projectiles.push_back ( std::move ( p ) );
+                    }
+                    break;
+                }
+                case game::PlayerEvent::AbilityBeam:
+                {
+                    // 직선 빔: 빠른 한 발
+                    RECT wr = m_World.WorldRectPx ( );
+                    game::Projectile::Cfg pcfg; pcfg.width = 12; pcfg.height = 6;
+                    auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - pcfg.width;
+                    float y = float ( py + ph * 0.5f - pcfg.height * 0.5f );
+                    float speed = 620.f;
+                    p->Fire ( { x,y } , { float ( m_PlayerFSM.Facing ( ) ) * speed, 0.f } );
+                    m_Projectiles.push_back ( std::move ( p ) );
+                    break;
+                }
+
                 }
             }
         }
