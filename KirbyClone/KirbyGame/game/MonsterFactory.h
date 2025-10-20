@@ -7,10 +7,12 @@
 // --- 몬스터 ---
 #include "game/WaddleDee.h"
 #include "game/WaddleDoo.h"
+#include "game/HotHead.h"
+#include "game/Sparky.h"
 
 namespace game {
 
-    enum class MonsterType { WaddleDee , WaddleDoo /*, HotHead, Sparky, ... */ };
+    enum class MonsterType { WaddleDee , WaddleDoo , HotHead, Sparky /* , ... */ };
 
     struct SpawnSpec {
         MonsterType type;
@@ -85,6 +87,52 @@ namespace game {
                         return std::make_unique<WaddleDoo> ( b , col , cfg );
                 } );
 
+            // --- HotHead (Fire) ---
+            Register ( MonsterType::HotHead , [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
+                HotHead::Config cfg;
+                cfg.base.phys.accelRun = 1200.f;
+                cfg.base.phys.decelRun = 1500.f;
+                cfg.base.phys.maxSpeedRun = 45.f; // 느긋하게
+                cfg.base.phys.frictionGround = 520.f;
+                cfg.base.phys.frictionAir = 80.f;
+                cfg.base.phys.gravity = 1200.f;
+                cfg.base.phys.termVel = 1050.f;
+                cfg.base.ignoreOneWayUpward = false;
+                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
+                cfg.wakeRange = 260.f;
+                cfg.windupMs = 0.25f;
+                cfg.breathMs = 0.55f;
+                cfg.fireIntervalMs = 0.06f;
+                cfg.bulletSpeed = 360.f;
+                cfg.stopDuringWindup = true;
+                // 쿨다운(HotHead 소스에 firePeriod 사용 시)
+                // 필요하면 HotHead::Config에 float firePeriod 추가하세요.
+                return std::make_unique<HotHead> ( b , col , cfg );
+            } );
+
+            // --- Sparky (Spark) ---
+            Register ( MonsterType::Sparky , [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
+                Sparky::Config cfg;
+                cfg.base.phys.accelRun = 1400.f;
+                cfg.base.phys.decelRun = 1600.f;
+                cfg.base.phys.maxSpeedRun = 30.f; // 아주 천천히
+                cfg.base.phys.frictionGround = 520.f;
+                cfg.base.phys.frictionAir = 80.f;
+                cfg.base.phys.gravity = 1200.f;
+                cfg.base.phys.termVel = 1050.f;
+                cfg.base.ignoreOneWayUpward = false;
+                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
+                cfg.hopPeriodMs = 0.8f;
+                cfg.hopVy = 360.f;
+                cfg.wakeRange = 220.f;
+                cfg.windupMs = 0.30f;
+                cfg.firePeriod = 1.40f;
+                cfg.ringProjectiles = 10;
+                cfg.sparkSpeed = 260.f;
+                cfg.stopDuringWindup = true;
+                return std::make_unique<Sparky> ( b , col , cfg );
+            } );
+        
         }
 
     private:

@@ -123,6 +123,12 @@
     <ClInclude Include="game\ProjectileFactory.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\HotHead.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Sparky.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -171,6 +177,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\ProjectileFactory.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\HotHead.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\Sparky.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

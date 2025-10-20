@@ -27,11 +27,13 @@
 #include "game/Damage.h"
 #include "game/Projectile.h"
 #include "game/StageCSV.h"
-#include "game/MonsterFactory.h"
+//#include "game/MonsterFactory.h"
 #include "game/ProjectileFactory.h"
+
 #include "game/WaddleDee.h"
 #include "game/WaddleDoo.h"
-
+#include "game/HotHead.h"
+#include "game/Sparky.h"
 
 namespace engine {
     GameApp::~GameApp ( )
@@ -286,6 +288,27 @@ namespace engine {
             if ( r.stopDuringWindup >= 0 ) cfg.stopDuringWindup = ( r.stopDuringWindup != 0 );
             mon = std::make_unique<game::WaddleDoo> ( wr , &m_World.Collision ( ) , cfg );
         }
+        else if ( t == "hothead" ) {
+            game::HotHead::Config cfg;
+            cfg.dir = r.dir;
+            if ( r.turnOnHitX >= 0 )       cfg.turnOnHitX = ( r.turnOnHitX != 0 );
+            if ( r.turnAtEdge >= 0 )       cfg.turnAtEdge = ( r.turnAtEdge != 0 );
+            if ( r.wakeRange >= 0 )        cfg.wakeRange = r.wakeRange;
+            if ( r.windupMs >= 0 )         cfg.windupMs = r.windupMs;
+            if ( r.firePeriod >= 0 )       cfg.firePeriod = r.firePeriod;
+            if ( r.bulletSpeed >= 0 )      cfg.bulletSpeed = r.bulletSpeed;
+            mon = std::make_unique<game::HotHead> ( wr , &m_World.Collision ( ) , cfg );
+        }
+        else if ( t == "sparky" ) {
+            game::Sparky::Config cfg;
+            cfg.dir = r.dir;
+            if ( r.turnOnHitX >= 0 )       cfg.turnOnHitX = ( r.turnOnHitX != 0 );
+            if ( r.turnAtEdge >= 0 )       cfg.turnAtEdge = ( r.turnAtEdge != 0 );
+            if ( r.wakeRange >= 0 )        cfg.wakeRange = r.wakeRange;
+            if ( r.windupMs >= 0 )         cfg.windupMs = r.windupMs;
+            if ( r.firePeriod >= 0 )       cfg.firePeriod = r.firePeriod;
+            mon = std::make_unique<game::Sparky> ( wr , &m_World.Collision ( ) , cfg );
+        }
         else return; // 알 수 없는 타입
 
         // 위치
@@ -375,6 +398,9 @@ namespace engine {
                         // 어떤 능력 주는지 간단 매핑 (원하면 더 추가)
                         game::Ability gift = game::Ability::None;
                         if ( dynamic_cast< game::WaddleDoo* >( m.get ( ) ) ) gift = game::Ability::Beam;
+                        else if ( dynamic_cast< game::HotHead* >( m.get ( ) ) ) gift = game::Ability::Fire;
+                        else if ( dynamic_cast< game::Sparky* >( m.get ( ) ) )  gift = game::Ability::Spark;
+
                         // 제거 + FSM에 알림
                         m_Monsters.erase ( it );
                         m_PlayerFSM.OnMouthCatch ( gift );
