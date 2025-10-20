@@ -18,7 +18,18 @@ namespace game {
         MonsterType type;
         float x = 0.f , y = 0.f;
         int   dir = 1;
-        // 필요 시 사이즈/속성 추가 가능
+
+        // --- CSV 오버라이드(미기재 시 -1 / 빈칸 처리) ---
+        int   turnOnHitX = -1;
+        int   turnAtEdge = -1;
+        int   stopDuringWindup = -1;
+
+        float wakeRange = -1.f;
+        float windupMs = -1.f;
+        float firePeriod = -1.f;
+        float bulletSpeed = -1.f; // WaddleDoo/HotHead 용. Sparky는 있으면 sparkSpeed로 사용
+
+        /* 필요시 속성 추가 */
     };
 
     class MonsterFactory {
@@ -58,80 +69,109 @@ namespace game {
                         return std::make_unique<WaddleDee> ( b , col , cfg );
                 } );
 
+            // --- WaddleDoo ---
             Register ( MonsterType::WaddleDoo ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                        WaddleDoo::Config cfg;
+                                WaddleDoo::Config cfg;
+                                // 기본값
+                                cfg.base.phys.accelRun = 1400.f;
+                                cfg.base.phys.decelRun = 1600.f;
+                                cfg.base.phys.maxSpeedRun = 65.f;
+                                cfg.base.phys.frictionGround = 500.f;
+                                cfg.base.phys.frictionAir = 80.f;
+                                cfg.base.phys.gravity = 1200.f;
+                                cfg.base.phys.termVel = 1050.f;
+                                cfg.base.ignoreOneWayUpward = false;
+                                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
+                                cfg.turnOnHitX = true;
+                                cfg.turnAtEdge = true;
+                                cfg.wakeRange = 360.f;
+                                cfg.windupMs = 0.35f;
+                                cfg.firePeriod = 1.20f;
+                                cfg.bulletSpeed = 420.f;
+                                cfg.stopDuringWindup = true;
 
-                        // --- 이동(걷기 가능) ---
-                        cfg.base.phys.accelRun = 1400.f;
-                        cfg.base.phys.decelRun = 1600.f;
-                        cfg.base.phys.maxSpeedRun = 65.f;   // Dee(약 70)보다 살짝 느리게
-                        cfg.base.phys.frictionGround = 500.f;
-                        cfg.base.phys.frictionAir = 80.f;
-                        cfg.base.phys.gravity = 1200.f;
-                        cfg.base.phys.termVel = 1050.f;
-                        cfg.base.ignoreOneWayUpward = false;
+                                // CSV 오버라이드
+                                if ( s.turnOnHitX >= 0 )       cfg.turnOnHitX = ( s.turnOnHitX != 0 );
+                                if ( s.turnAtEdge >= 0 )       cfg.turnAtEdge = ( s.turnAtEdge != 0 );
+                                if ( s.wakeRange >= 0.f )     cfg.wakeRange = s.wakeRange;
+                                if ( s.windupMs >= 0.f )     cfg.windupMs = s.windupMs;
+                                if ( s.firePeriod >= 0.f )     cfg.firePeriod = s.firePeriod;
+                                if ( s.bulletSpeed >= 0.f )     cfg.bulletSpeed = s.bulletSpeed;
+                                if ( s.stopDuringWindup >= 0 ) cfg.stopDuringWindup = ( s.stopDuringWindup != 0 );
 
-                        // --- 이동 공통 키(Dee와 동일) ---
-                        cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
-                        cfg.turnOnHitX = true;
-                        cfg.turnAtEdge = true;
-
-                        // --- 공격 ---
-                        cfg.wakeRange = 360.f;
-                        cfg.windupMs = 0.35f;
-                        cfg.firePeriod = 1.20f;
-                        cfg.bulletSpeed = 420.f;
-                        cfg.stopDuringWindup = true;
-
-                        return std::make_unique<WaddleDoo> ( b , col , cfg );
+                                return std::make_unique<WaddleDoo> ( b , col , cfg );
                 } );
 
-            // --- HotHead (Fire) ---
-            Register ( MonsterType::HotHead , [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                HotHead::Config cfg;
-                cfg.base.phys.accelRun = 1200.f;
-                cfg.base.phys.decelRun = 1500.f;
-                cfg.base.phys.maxSpeedRun = 45.f; // 느긋하게
-                cfg.base.phys.frictionGround = 520.f;
-                cfg.base.phys.frictionAir = 80.f;
-                cfg.base.phys.gravity = 1200.f;
-                cfg.base.phys.termVel = 1050.f;
-                cfg.base.ignoreOneWayUpward = false;
-                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
-                cfg.wakeRange = 260.f;
-                cfg.windupMs = 0.25f;
-                cfg.breathMs = 0.55f;
-                cfg.fireIntervalMs = 0.06f;
-                cfg.bulletSpeed = 360.f;
-                cfg.stopDuringWindup = true;
-                // 쿨다운(HotHead 소스에 firePeriod 사용 시)
-                // 필요하면 HotHead::Config에 float firePeriod 추가하세요.
-                return std::make_unique<HotHead> ( b , col , cfg );
-            } );
+            // --- HotHead ---
+            Register ( MonsterType::HotHead ,
+                [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
+                                HotHead::Config cfg;
+                                cfg.base.phys.accelRun = 1200.f;
+                                cfg.base.phys.decelRun = 1500.f;
+                                cfg.base.phys.maxSpeedRun = 45.f;
+                                cfg.base.phys.frictionGround = 520.f;
+                                cfg.base.phys.frictionAir = 80.f;
+                                cfg.base.phys.gravity = 1200.f;
+                                cfg.base.phys.termVel = 1050.f;
+                                cfg.base.ignoreOneWayUpward = false;
 
-            // --- Sparky (Spark) ---
-            Register ( MonsterType::Sparky , [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                Sparky::Config cfg;
-                cfg.base.phys.accelRun = 1400.f;
-                cfg.base.phys.decelRun = 1600.f;
-                cfg.base.phys.maxSpeedRun = 30.f; // 아주 천천히
-                cfg.base.phys.frictionGround = 520.f;
-                cfg.base.phys.frictionAir = 80.f;
-                cfg.base.phys.gravity = 1200.f;
-                cfg.base.phys.termVel = 1050.f;
-                cfg.base.ignoreOneWayUpward = false;
-                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
-                cfg.hopPeriodMs = 0.8f;
-                cfg.hopVy = 360.f;
-                cfg.wakeRange = 220.f;
-                cfg.windupMs = 0.30f;
-                cfg.firePeriod = 1.40f;
-                cfg.ringProjectiles = 10;
-                cfg.sparkSpeed = 260.f;
-                cfg.stopDuringWindup = true;
-                return std::make_unique<Sparky> ( b , col , cfg );
-            } );
+                                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
+                                cfg.wakeRange = 260.f;
+                                cfg.windupMs = 0.25f;
+                                cfg.breathMs = 0.55f;
+                                cfg.fireIntervalMs = 0.06f;
+                                cfg.bulletSpeed = 360.f;
+                                cfg.stopDuringWindup = true;
+
+                                // CSV 오버라이드
+                                if ( s.turnOnHitX >= 0 )       cfg.turnOnHitX = ( s.turnOnHitX != 0 );
+                                if ( s.turnAtEdge >= 0 )       cfg.turnAtEdge = ( s.turnAtEdge != 0 );
+                                if ( s.wakeRange >= 0.f )     cfg.wakeRange = s.wakeRange;
+                                if ( s.windupMs >= 0.f )     cfg.windupMs = s.windupMs;
+                                if ( s.firePeriod >= 0.f )     cfg.firePeriod = s.firePeriod;
+                                if ( s.bulletSpeed >= 0.f )     cfg.bulletSpeed = s.bulletSpeed;
+                                if ( s.stopDuringWindup >= 0 ) cfg.stopDuringWindup = ( s.stopDuringWindup != 0 );
+
+                                return std::make_unique<HotHead> ( b , col , cfg );
+                } );
+
+            // --- Sparky ---
+            Register ( MonsterType::Sparky ,
+                [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
+                                Sparky::Config cfg;
+                                cfg.base.phys.accelRun = 1400.f;
+                                cfg.base.phys.decelRun = 1600.f;
+                                cfg.base.phys.maxSpeedRun = 30.f;
+                                cfg.base.phys.frictionGround = 520.f;
+                                cfg.base.phys.frictionAir = 80.f;
+                                cfg.base.phys.gravity = 1200.f;
+                                cfg.base.phys.termVel = 1050.f;
+                                cfg.base.ignoreOneWayUpward = false;
+
+                                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
+                                cfg.hopPeriodMs = 0.8f;
+                                cfg.hopVy = 360.f;
+
+                                cfg.wakeRange = 220.f;
+                                cfg.windupMs = 0.30f;
+                                cfg.firePeriod = 1.40f;
+                                cfg.ringProjectiles = 10;
+                                cfg.sparkSpeed = 260.f;
+                                cfg.stopDuringWindup = true;
+
+                                // CSV 오버라이드 (bulletSpeed가 있으면 sparkSpeed로 사용)
+                                if ( s.turnOnHitX >= 0 )       cfg.turnOnHitX = ( s.turnOnHitX != 0 );
+                                if ( s.turnAtEdge >= 0 )       cfg.turnAtEdge = ( s.turnAtEdge != 0 );
+                                if ( s.wakeRange >= 0.f )     cfg.wakeRange = s.wakeRange;
+                                if ( s.windupMs >= 0.f )     cfg.windupMs = s.windupMs;
+                                if ( s.firePeriod >= 0.f )     cfg.firePeriod = s.firePeriod;
+                                if ( s.bulletSpeed >= 0.f )     cfg.sparkSpeed = s.bulletSpeed; // CSV 호환
+                                if ( s.stopDuringWindup >= 0 ) cfg.stopDuringWindup = ( s.stopDuringWindup != 0 );
+
+                                return std::make_unique<Sparky> ( b , col , cfg );
+                } );
+
         
         }
 

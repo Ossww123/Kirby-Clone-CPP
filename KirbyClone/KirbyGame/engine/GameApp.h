@@ -48,7 +48,6 @@ namespace engine {
         bool DoOneFrame ( );
         bool LoadStageFromCSV ( const char* folder );
         bool ReloadStage ( );
-        void SpawnMonsterFromRow ( const RECT& worldRect , const game::MonsterCSV& r );
 
     private:
         void InitBindings ( );

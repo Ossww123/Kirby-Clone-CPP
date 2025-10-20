@@ -27,13 +27,8 @@
 #include "game/Damage.h"
 #include "game/Projectile.h"
 #include "game/StageCSV.h"
-//#include "game/MonsterFactory.h"
+#include "game/MonsterFactory.h"
 #include "game/ProjectileFactory.h"
-
-#include "game/WaddleDee.h"
-#include "game/WaddleDoo.h"
-#include "game/HotHead.h"
-#include "game/Sparky.h"
 
 namespace engine {
     GameApp::~GameApp ( )
@@ -244,11 +239,48 @@ namespace engine {
             m_Cam.SnapImmediate ( );
         }
 
-        // 3) 몬스터 스폰
+        // 3) 몬스터 스폰 (팩토리 경유)
         std::vector<game::MonsterCSV> mons;
         if ( game::LoadMonstersCSV ( ( base + "/monsters.csv" ).c_str ( ) , mons ) ) {
             RECT wr = m_World.WorldRectPx ( );
-            for ( auto& r : mons ) SpawnMonsterFromRow ( wr , r );
+
+            for ( auto& r : mons ) {
+                // 문자열 -> MonsterType 매핑
+                std::string t = r.type; for ( auto& c : t ) c = ( char ) tolower ( c );
+                game::MonsterType mt;
+                if ( t == "waddledee" ) mt = game::MonsterType::WaddleDee;
+                else if ( t == "waddledoo" ) mt = game::MonsterType::WaddleDoo;
+                else if ( t == "hothead" )   mt = game::MonsterType::HotHead;
+                else if ( t == "sparky" )    mt = game::MonsterType::Sparky;
+                else continue;
+
+                // CSV -> SpawnSpec
+                game::SpawnSpec spec;
+                spec.type = mt;
+                spec.x = r.x; spec.y = r.y;
+                spec.dir = ( r.dir >= 0 ) ? +1 : -1;
+                spec.turnOnHitX = r.turnOnHitX;          // -1 or 0/1
+                spec.turnAtEdge = r.turnAtEdge;
+                spec.wakeRange = r.wakeRange;
+                spec.windupMs = r.windupMs;
+                spec.firePeriod = r.firePeriod;
+                spec.bulletSpeed = r.bulletSpeed;
+                spec.stopDuringWindup = r.stopDuringWindup;
+
+                auto mon = game::MonsterFactory::Create ( spec.type , wr , &m_World.Collision ( ) , spec );
+                if ( !mon ) continue;
+
+                // 공통 콜백 부착
+                mon->SetProjectileSpawner ( [ this ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
+                    game::Projectile::Cfg pcfg; pcfg.width = 8; pcfg.height = 8;
+                    auto p = std::make_unique<game::Projectile> ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) , owner , pcfg );
+                    p->Fire ( pos , vel );
+                    m_Projectiles.push_back ( std::move ( p ) );
+                } );
+                mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
+
+                m_Monsters.push_back ( std::move ( mon ) );
+            }
         }
         return true;
     }
@@ -263,69 +295,6 @@ namespace engine {
         }
          return ok;
     }
-
-    void GameApp::SpawnMonsterFromRow ( const RECT& wr , const game::MonsterCSV& r )
-    {
-        std::unique_ptr<game::Monster> mon;
-        std::string t = r.type; for ( auto& c : t ) c = ( char ) tolower ( c );
-
-        if ( t == "waddledee" ) {
-            game::WaddleDee::Config cfg;
-            cfg.dir = r.dir;
-            if ( r.turnOnHitX >= 0 ) cfg.turnOnHitX = ( r.turnOnHitX != 0 );
-            if ( r.turnAtEdge >= 0 ) cfg.turnAtEdge = ( r.turnAtEdge != 0 );
-            mon = std::make_unique<game::WaddleDee> ( wr , &m_World.Collision ( ) , cfg );
-        }
-        else if ( t == "waddledoo" ) {
-            game::WaddleDoo::Config cfg;
-            cfg.dir = r.dir;
-            if ( r.turnOnHitX >= 0 )       cfg.turnOnHitX = ( r.turnOnHitX != 0 );
-            if ( r.turnAtEdge >= 0 )       cfg.turnAtEdge = ( r.turnAtEdge != 0 );
-            if ( r.wakeRange >= 0 )        cfg.wakeRange = r.wakeRange;
-            if ( r.windupMs >= 0 )         cfg.windupMs = r.windupMs;
-            if ( r.firePeriod >= 0 )       cfg.firePeriod = r.firePeriod;
-            if ( r.bulletSpeed >= 0 )      cfg.bulletSpeed = r.bulletSpeed;
-            if ( r.stopDuringWindup >= 0 ) cfg.stopDuringWindup = ( r.stopDuringWindup != 0 );
-            mon = std::make_unique<game::WaddleDoo> ( wr , &m_World.Collision ( ) , cfg );
-        }
-        else if ( t == "hothead" ) {
-            game::HotHead::Config cfg;
-            cfg.dir = r.dir;
-            if ( r.turnOnHitX >= 0 )       cfg.turnOnHitX = ( r.turnOnHitX != 0 );
-            if ( r.turnAtEdge >= 0 )       cfg.turnAtEdge = ( r.turnAtEdge != 0 );
-            if ( r.wakeRange >= 0 )        cfg.wakeRange = r.wakeRange;
-            if ( r.windupMs >= 0 )         cfg.windupMs = r.windupMs;
-            if ( r.firePeriod >= 0 )       cfg.firePeriod = r.firePeriod;
-            if ( r.bulletSpeed >= 0 )      cfg.bulletSpeed = r.bulletSpeed;
-            mon = std::make_unique<game::HotHead> ( wr , &m_World.Collision ( ) , cfg );
-        }
-        else if ( t == "sparky" ) {
-            game::Sparky::Config cfg;
-            cfg.dir = r.dir;
-            if ( r.turnOnHitX >= 0 )       cfg.turnOnHitX = ( r.turnOnHitX != 0 );
-            if ( r.turnAtEdge >= 0 )       cfg.turnAtEdge = ( r.turnAtEdge != 0 );
-            if ( r.wakeRange >= 0 )        cfg.wakeRange = r.wakeRange;
-            if ( r.windupMs >= 0 )         cfg.windupMs = r.windupMs;
-            if ( r.firePeriod >= 0 )       cfg.firePeriod = r.firePeriod;
-            mon = std::make_unique<game::Sparky> ( wr , &m_World.Collision ( ) , cfg );
-        }
-        else return; // 알 수 없는 타입
-
-        // 위치
-        mon->SetPosition ( r.x , r.y );
-
-        // 콜백(공통)
-        mon->SetProjectileSpawner ( [ this ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
-            game::Projectile::Cfg pcfg; pcfg.width = 8; pcfg.height = 8;
-            auto p = std::make_unique<game::Projectile> ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) , owner , pcfg );
-            p->Fire ( pos , vel );
-            m_Projectiles.push_back ( std::move ( p ) );
-        } );
-        mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
-
-        m_Monsters.push_back ( std::move ( mon ) );
-    }
-
 
     void GameApp::InitBindings ( )
     {
