@@ -2,7 +2,8 @@
 
 > Kirby-like 2D 게임 프레임워크의 핵심 API/모듈을 빠르게 파악하고 바로 통합할 수 있도록 정리했습니다.  
 > 본 문서는 **D3D11 기반** 구현을 포함하지만, 상위 레이어는 렌더러 추상화(`IRenderer`)를 통해 의존성을 최소화합니다.
-
+> 이번 업데이트에서 **PlayerFSM(병렬 상태 머신)**, **Inflated 로직**, **Spit/AirPuff 이벤트 흐름**, **ProjectileFactory(데이터 드리븐 투사체)**, **Animator CSV 로딩**을 반영했습니다.
+> 
 ---
 
 ## 목차
@@ -34,66 +35,60 @@
       - [`engine::Camera`](#enginecamera)
   - [3) 게임 오브젝트](#3-게임-오브젝트)
     - [기본 클래스](#기본-클래스)
-    - [플레이어](#플레이어)
+    - [플레이어 FSM (병렬 트랙: Movement/Action/Overlay)](#플레이어-fsm-병렬-트랙-movementactionoverlay)
     - [몬스터](#몬스터)
-    - [프로젝타일](#프로젝타일)
-    - [애니메이션](#애니메이션)
+    - [프로젝타일 시스템 (Projectile + Factory)](#프로젝타일-시스템-projectile--factory)
+    - [애니메이션 \& CSV 로더](#애니메이션--csv-로더)
   - [4) 데이터 로딩](#4-데이터-로딩)
     - [CSV 로더 (`StageCSV`)](#csv-로더-stagecsv)
   - [구현/사용 상 주의점 요약](#구현사용-상-주의점-요약)
-  - [통합 사용 예시 (한 눈에)](#통합-사용-예시-한-눈에)
-  - [확장/개선 포인트](#확장개선-포인트)
-  - [최근 조정 사항(요약)](#최근-조정-사항요약)
+  - [통합 사용 예시 (핵심 스니펫)](#통합-사용-예시-핵심-스니펫)
+  - [디버그/HUD/툴링](#디버그hud툴링)
+  - [구현/사용 상 주의점 요약](#구현사용-상-주의점-요약-1)
+  - [업데이트 변경 이력](#업데이트-변경-이력)
 
 ---
 
 ## 통합 사용 순서 (권장 파이프라인)
 
 1) **플랫폼/렌더러 초기화**
-- `D3D11Renderer.Initialize(hwnd, w, h, vsync)`  
-- `RenderSystem.Init(&renderer)` → `RenderSystem.OnResize(w, h)`  
-- (텍스처 로딩 예정이면) 앱 시작 시 1회: `CoInitializeEx(nullptr, COINIT_MULTITHREADED)`
+   - `D3D11Renderer.Initialize(hwnd, w, h, vsync)`  
+  - `RenderSystem.Init(&renderer)` → `RenderSystem.OnResize(w, h)`  
+  - (텍스처 로딩 예정이면) 앱 시작 시 1회: `CoInitializeEx(nullptr, COINIT_MULTITHREADED)`
 
 2) **월드/타일/충돌**
-- `WorldSystem.LoadTileset(dev, L"tiles.png", tileW, tileH)`  
-- CSV 또는 코드로 타일 정의 주입: `WorldSystem.DefineTile(id, TileDef{ solid, oneway, src })`  
-- `WorldSystem.LoadMapCSV(L"map.csv")` → `WorldSystem.RebuildColliders()`  
-- 카메라 월드 경계: `cam.SetWorldRect(world.WorldRectPx())`
+   - `WorldSystem.LoadTileset(dev, L"tiles.png", tileW, tileH)`  
+  - CSV 또는 코드로 타일 정의 주입: `WorldSystem.DefineTile(id, TileDef{ solid, oneway, src })`  
+  - `WorldSystem.LoadMapCSV(L"map.csv")` → `WorldSystem.RebuildColliders()`  
+  - 카메라 월드 경계: `cam.SetWorldRect(world.WorldRectPx())`
 
 3) **CSV로 스테이지 요소 로드**
-- `LoadPlayerStartCSV("player.csv", out)`  
-- `LoadMonstersCSV("monsters.csv", mons)` → `MonsterFactory::Create(...)`로 스폰  
-- `LoadTileDefsCSV("tiles.csv", defs)` → 규칙에 따라 `DefineTile` 반영
+   - `LoadPlayerStartCSV("player.csv", out)`  
+   - `LoadMonstersCSV("monsters.csv", mons)` → `MonsterFactory::Create(...)`로 스폰  
+   - `LoadTileDefsCSV("tiles.csv", defs)` → 규칙에 따라 `DefineTile` 반영
 
-4) **플레이어/몬스터/프로젝타일 구성**
-- `PlayerFSM.Init(&player.Body(), &world.Collision(), player.Animator(), cfg)`  
-- 몬스터 생성 후 콜백: `SetProjectileSpawner(...)`, `SetTargetQuery(...)` 등
+4. **플레이어/몬스터/투사체 구성**
+   - `PlayerFSM.Init(&player.Body(), &world.Collision(), player.Animator(), cfg)`  
+   - `MonsterFactory::RegisterDefaults()` / **`ProjectileFactory::RegisterDefaults()`**
 
 5) **카메라**
-- `cam.SetScreenSize(w, h)` → `cam.SetPixelSnap(true)` → 스폰 직후 `cam.SnapImmediate()`  
-- 매 프레임: `cam.SetLookAt(player.Center()); cam.Update(dt)`
+   - `cam.SetScreenSize(w, h)` → `cam.SetPixelSnap(true)` → 스폰 직후 `cam.SnapImmediate()`  
+   - 매 프레임: `cam.SetLookAt(player.Center()); cam.Update(dt)`
 
 6) **메인 루프**
-```cpp
-time.TickFrame();
-input.BeginFrame();
+   ```cpp
+   time.TickFrame();
+   input.BeginFrame();
 
-// 스파이럴 방지(상한): 앱 레벨에서 처리 권장
-int steps = 0;
-constexpr int MAX_STEPS = 5;
-while (time.ShouldFixedUpdate() && steps < MAX_STEPS) {
-    FixedUpdate(time.FixedDelta()); // FSM/물리/충돌 등
-    time.ConsumeFixedStep();
-    ++steps;
-}
+   // 스파이럴 방지 (예: 한 프레임 최대 5회)
+   int steps = 0; const int MAX_STEPS = 5;
+   while (time.ShouldFixedUpdate() && steps++ < MAX_STEPS) {
+       FixedUpdate(time.FixedDelta()); // FSM/물리/충돌 등
+       time.ConsumeFixedStep();
+   }
 
-// 렌더
-rs.Begin({0,0,0,1});
-auto [ox,oy] = cam.OffsetInt();
-world.RenderVisible(rs.Batch(), ox, oy, rs.BackbufferWidth(), rs.BackbufferHeight());
-// 스프라이트/디버그 추가 드로우...
-rs.End();
-```
+   RenderFrame();
+   ```
 
 ---
 
@@ -234,12 +229,59 @@ rs.End();
 ### 기본 클래스
 - `engine::Object`: `Update(double fixedDt, const Input&)`, `Render(HDC, ox, oy)` 가상 메서드.
 
-### 플레이어
-- `game::Player`: `PhysicsBody`, `Animator`, `Tex2D` 보유.  
-- `game::PlayerFSM`: HFSM(Idle/Walk/Jump/Fall/Damaged/Dead), 코요테/버퍼 점프/저점프/원웨이 드롭/지면 히스테리시스/점프락.  
-  - `Init(PhysicsBody*, CollisionSystem*, Animator*, Cfg)`  
-  - `Step(fixedDt, input)` / `ApplyDamage(Damage)`  
-  - `DebugInfo` 스냅샷 제공.
+### 플레이어 FSM (병렬 트랙: Movement/Action/Overlay)
+
+Kirby-like 특성에 맞춘 **병렬 FSM(3-Track)**:
+
+- **Movement (M)**: `Idle, Walk, Run, Crouch, Slide, Jump, Fall, Inflated, Ladder`
+- **Action (A)**: `Neutral, Inhale, MouthFull, SpitObject, AirPuff, AbilityAtk`
+- **Overlay (Z)**: `None, Damaged, Dead, DoorEnter, Dance, GameOver`
+
+핵심 포인트:
+
+1. **입력 매핑**
+   - **Z**: Jump / (공중) Inflated 진입 / (Inflated) 날개짓 / (Crouch) Sliding Kick
+   - **X**: Inhale / (MouthFull) Spit / (Inflated) AirPuff / (Ability) AbilityAtk / (Crouch) Slide
+   - **←/→**: 이동 (Walk→동방향 재입력 시 Run 가속 기동)
+   - **↑**: 문 입장 (DoorEnter)
+   - **↓**: Crouch / (MouthFull) Swallow
+
+2. **점프 락 & Inflated 진입**
+   - `IntegrateAndCollide()`의 버퍼 점프 성공 시 `m_jumpLockT = cfg.jumpLockMs`
+   - `M_Jump::Update()`에서 **락이 끝난 뒤** 공중 `Z`를 새로 **Pressed**하면 `Inflated`로 전이
+
+3. **Inflated 유지 규칙**
+   - 공중 `Z`로 진입 후 **키를 떼도 유지**
+   - **데미지**를 받거나 **X로 AirPuff 발사** 시 **즉시 종료**
+   - 소프트폴: 낙하속도 캡(예: `vy <= 80.f`), `Z` 탭 시 날개짓 상승(짧은 `vy = -240.f` 등)
+
+4. **Spit/AirPuff 단발 이벤트**
+   - `A_SpitObject`/`A_AirPuff`는 **상태 멤버 `fired`**로 **첫 Update에서만 이벤트** 발생
+   - `m_spitLockT`은 **`Step()`에서만 감소**
+   - 락 종료 시 `A_Neutral`로 복귀 → 이동 봉인 해제
+
+5. **이벤트 설계 (FSM→Game)**
+   ```cpp
+   struct PlayerEvent {
+     enum Type { InhaleVolume, SpitStar, AirPuffShot, SwallowAbility, AbilityGained } type;
+     RECT rect{};     // InhaleVolume: 흡입 범위
+     int  facing{+1}; // +1/-1
+     Ability ability{ Ability::None };
+   };
+   ```
+
+6. **디버그 스냅샷**
+   - `DebugInfo`에 `inhaleActive`, `inhaleRect` 추가 → `RenderDebug()`에서 시각화
+
+7. **전이 가드 예시**
+   ```cpp
+   bool CanAct(AState from, AState to, const Ctx&) const {
+     if (from==to) return false;
+     if (m_zState != ZState::None) return false;
+     if (from==AState::SpitObject && m_spitLockT > 0.f) return false; // 재진입 방지
+     return true;
+   }
+   ```
 
 ### 몬스터
 - `game::Monster` (베이스): `PhysicsBody`, `Animator`, `Health`, `StepPhysics` 공통, 히트/넉백/무적 처리.  
@@ -249,12 +291,87 @@ rs.End();
   - `WaddleDee`: 단순 좌우 순찰(벽/절벽에서 방향 전환 옵션).
   - `WaddleDoo`: 순찰 + 사격(감지/윈드업/쿨다운/탄속 파라미터).
 
-### 프로젝타일
-- `game::Projectile`: TTL, 직진(중력 옵션), 세계 충돌 시 소멸(옵션).
+### 프로젝타일 시스템 (Projectile + Factory)
 
-### 애니메이션
-- `engine::Animator`: 클립 루프/단발/행렬적 프레임 전진, 문자열 클립 이름.  
-  - 유틸: `MakeRowClip`로 일정 간격 스프라이트시트에서 연속 프레임 생성.
+**목표**: FSM은 “행동 결정/이벤트”만, **스폰/파라미터/자원**은 **팩토리/데이터**에 위임.
+
+- `Projectile`
+  ```cpp
+  struct Projectile::Cfg {
+    float width=8, height=8, speed=480, ttl=1.5;
+    bool  dieOnAnyWorldHit=true;
+    // 물리 오버라이드
+    float gravity=0, frictionAir=0, frictionGround=0, termVel=99999;
+    bool  ignoreOneWay=true;
+  };
+  // 생성자에서 Cfg → PhysicsBody::Params() 반영
+  ```
+
+- `ProjectileFactory`
+  ```cpp
+  struct ProjDef {
+    float width=8, height=8, speed=480, ttl=1.5;
+    float gravity=0, frictionAir=0, frictionGround=0, termVel=99999;
+    bool  dieOnAnyWorldHit=true, ignoreOneWay=true;
+    int   damage=1; engine::Vec2 knockback{0,0};
+  };
+  // Create()에서 ProjDef → Projectile::Cfg 복사 후 인스턴스 생성
+  // RegisterDefaults(): "Star", "AirPuff" 등 직선탄 기본값 (중력=0, 원웨이 무시)
+  ```
+
+- **GameApp 이벤트 처리 (FSM→팩토리→스폰)**
+  ```cpp
+  // Step() 직후
+  std::vector<game::PlayerEvent> evs;
+  m_PlayerFSM.DrainEvents(evs);
+
+  auto mouthPos = [&](int w=8,int h=8){
+    int px,py,pw,ph; m_Player->GetBounds(px,py,pw,ph);
+    float x = (m_PlayerFSM.Facing()>0) ? float(px+pw+1) : float(px-1-w);
+    float y = float(py + ph*0.5f - h*0.5f);
+    return engine::Vec2{ x, y };
+  };
+
+  for (auto& e : evs) switch (e.type) {
+    case game::PlayerEvent::SpitStar: {
+      RECT wr = m_World.WorldRectPx();
+      auto p = game::ProjectileFactory::Create("Star", wr, &m_World.Collision(), game::ProjOwner::Player);
+      if (p) { auto pos = mouthPos(int(p->Cfg().width), int(p->Cfg().height));
+               float s = p->Cfg().speed; // 또는 ProjDef 조회
+               p->Fire(pos, { float(m_PlayerFSM.Facing()) * s, 0.f });
+               m_Projectiles.push_back(std::move(p)); }
+      break;
+    }
+    case game::PlayerEvent::AirPuffShot: {
+      RECT wr = m_World.WorldRectPx();
+      auto p = game::ProjectileFactory::Create("AirPuff", wr, &m_World.Collision(), game::ProjOwner::Player);
+      if (p) { auto pos = mouthPos(int(p->Cfg().width), int(p->Cfg().height));
+               float s = p->Cfg().speed;
+               p->Fire(pos, { float(m_PlayerFSM.Facing()) * s, 0.f });
+               m_Projectiles.push_back(std::move(p)); }
+      break;
+    }
+    case game::PlayerEvent::InhaleVolume:
+      // e.rect 범위 내 몬스터 흡입 처리
+      break;
+    default: break;
+  }
+  ```
+
+- **렌더링**: 스프라이트 배치로 사각형 또는 텍스처 드로우.  
+  원웨이 관통 필요 시 `ignoreOneWay=true` 권장.
+
+### 애니메이션 & CSV 로더
+
+- `Animator`:
+  - `AddClip(name, AnimClip)`, `Play(name, reset)`, `Update(dt)`
+  - **추가**: `Clear()`, `HasClip(name)`, `RemoveClip(name)`
+- CSV 로더 예시 (`game::LoadAnimCSV`)
+  - 레코드
+    - `strip, name, sx,sy, fw,fh, count, dur, loop(0/1)`
+    - `frame, name, sx,sy, w,h, dur, loop(0/1)`
+  - 로드 성공 시 `Animator->Clear(); AddClip(...)` 등록
+  - **GameApp::Init**에서 하드코딩 제거 → `LoadAnimCSV("assets/player.anim.csv", player.Animator())`
 
 ---
 
@@ -281,80 +398,76 @@ rs.End();
 
 ---
 
-## 통합 사용 예시 (한 눈에)
+## 통합 사용 예시 (핵심 스니펫)
 
+1) **PlayerFSM 초기화**
 ```cpp
-// 초기화
-D3D11Renderer renderer;
-renderer.Initialize(hwnd, w, h, true);
-
-engine::RenderSystem rs;
-rs.Init(&renderer);
-rs.OnResize(w, h);
-
-engine::WorldSystem world;
-world.LoadTileset(renderer.Device(), L"tiles.png", 16, 16);
-// (CSV/규칙 기반) tiles.Define(...) 채움
-world.LoadMapCSV(L"map.csv");
-world.RebuildColliders();
-
-engine::Camera cam;
-cam.SetScreenSize(w, h);
-cam.SetWorldRect(world.WorldRectPx());
-cam.SetPixelSnap(true);
-
-// 플레이어/FSM
-game::Player player(world.WorldRectPx(), 100, 100);
-game::PlayerFSM fsm;
-fsm.Init(&player.Body(), &world.Collision(), player.Animator(), {});
-cam.SetLookAt(player.Center());
-cam.SnapImmediate();
-
-// 루프
-for (;;) {
-  time.TickFrame();
-  input.BeginFrame();
-
-  // 고정 업데이트
-  int steps=0; const int MAX_STEPS=5;
-  while (time.ShouldFixedUpdate() && steps++ < MAX_STEPS) {
-    fsm.Step(time.FixedDelta(), input);
-    // monsters/projectiles ... Step
-    time.ConsumeFixedStep();
-  }
-
-  // 카메라
-  cam.SetLookAt(player.Center());
-  cam.Update(time.DeltaTime());
-
-  // 렌더
-  rs.Begin({0.1f,0.12f,0.16f,1});
-  auto [ox,oy] = cam.OffsetInt();
-  world.RenderVisible(rs.Batch(), ox, oy, rs.BackbufferWidth(), rs.BackbufferHeight());
-  // 추가 드로우...
-  rs.End();
-}
+m_PlayerFSM.Init(&m_Player->Body(), &m_World.Collision(),
+                 m_Player->Animator(),
+                 { .jumpSpeed=700.f, .coyoteMs=0.08f, .bufferMs=0.10f, .dropMs=0.20f });
 ```
 
+2) **ProjectileFactory 등록**
+```cpp
+game::MonsterFactory::RegisterDefaults();
+game::ProjectileFactory::RegisterDefaults(); // ✅ 반드시 호출
+```
+
+3) **GameApp에서 임시 발사 제거 → 이벤트 기반 처리**
+- Attack 키 즉발 발사 코드 **삭제**
+- `m_PlayerFSM.DrainEvents(...)` 후 `Create("Star"/"AirPuff")`로 스폰
+
+4) **디버그: Inhale 박스 표시**
+- `DebugInfo`에 `inhaleActive, inhaleRect` 추가
+- `RenderDebug()`에서 `WorldRect()`/`WorldLine()`으로 시각화
+
 ---
 
-## 확장/개선 포인트
+## 디버그/HUD/툴링
 
-- **Collision broadphase**: 현재 정적 박스 전수 검사. 타일 버킷/셀 그리드(간단) 또는 스윕/분할 구조를 도입하면 대형 맵 성능↑.  
-- **원웨이/스냅 파라미터화**: `CollisionSystem`/`PhysicsParams`에 EPS/정책 노출.  
-- **Animator 상태 유틸**: 문자열 대신 enum → 이름표 테이블 도입.  
-- **공통 프리셋/튜닝 DRY**: Monster 물리 파라미터 공통화.  
-- **Render 추상화**: D3D11 외 백엔드(예: SDL+GL) 추가 시에도 `IRenderer` 계약만 만족하면 `RenderSystem` 재사용 가능.
+- HUD에 FSM 스냅샷 출력
+  - `VEL, grounded(raw/stable), timers(coyote/buffer/drop/groundHold)`  
+  - **ActState/MoveState/OverlayState**, **HP/iFrameT**, **Facing**  
+  - **Inflated** 시 `vy 캡`/날개짓 흔적 확인
+- 디버그 드로우
+  - 타일 그리드, SOLID/ONEWAY 콜라이더, 플레이어/몬스터 AABB
+  - **흡입 범위(InhaleVolume)** 박스
 
 ---
 
-## 최근 조정 사항(요약)
+## 구현/사용 상 주의점 요약
 
-- `IRenderer`에 **전방 선언 기반** D3D11 핸들 게터 추가:  
-  - `bool GetD3D11Handles(ID3D11Device**, ID3D11DeviceContext**)` (기본 false)  
-  - `BackbufferSize GetBackbufferSize() const`  
-  - → `RenderSystem`에서 `dynamic_cast` 제거, **추상화 누수 축소**.
-- `RenderSystem` 초기화 경로 갱신: `IRenderer`만으로 내부 배치/디버그 초기화 & 크기 질의.
-- 문서 전체 보강: 통합 순서/주의점/예시/개선 포인트 정리.
+- **Spit/AirPuff 반복 생성 방지**
+  - `A_SpitObject/A_AirPuff`에 `bool fired` 상태 멤버 → **첫 Update에서만** 이벤트 발행
+  - `m_spitLockT`는 **Step()에서만** 감소 (상태 내에서 건드리지 않기)
+  - `A_Neutral`에서 Spit 트리거는 **Pressed**로 (홀드 사용 금지)
+
+- **Inflated 유지**
+  - 자동 복귀 없음. **데미지** 또는 **AirPuff 발사**로만 종료
+  - 소프트폴/날개짓 적용
+
+- **중력 0 직선탄**
+  - `ProjectileFactory`의 `ProjDef` → `Projectile::Cfg`로 **물리 오버라이드 복사**
+  - `Projectile` 생성자에서 `Cfg` 값을 **PhysicsBody::Params()`에 반영**
+  - (필요) `ignoreOneWay=true`로 원웨이 관통
+
+- **GameApp 정리**
+  - 플레이어 물리 파라미터/타이머는 **FSM 단일 소스** (GameApp에서 제거)
+  - `m_facing` 대신 **`m_PlayerFSM.Facing()`** 사용
+  - 투사체 렌더링 루프 추가
+
+- **Animator**
+  - `Animator::Clear()` 추가 후 CSV 로딩 시 재등록
+  - 하드코딩 애니 초기화 제거
+
+---
+
+## 업데이트 변경 이력
+
+- **FSM**: 병렬 트랙(M/A/Z) 도입, Jump-Lock, Inflated 유지/종료 규칙, Inhale 디버그 박스
+- **Action**: Spit/AirPuff **단발 이벤트화**, 락 타이머 중앙 감소
+- **Projectile**: Factory/Def/Cfg 구조, **물리 오버라이드(중력/마찰/원웨이)** 지원
+- **GameApp**: 임시 발사 제거, 이벤트 기반 스폰, 디버그/HUD 갱신
+- **Animator**: `Clear/RemoveClip/HasClip` 추가, **CSV 로딩** 경로 확보
 
 ---
