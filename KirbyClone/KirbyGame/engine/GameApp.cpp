@@ -14,6 +14,7 @@
 #include "engine/Texture.h"
 #include "engine/TextureLoader.h"
 #include "engine/Anim.h"
+#include "game/AnimCSV.h"
 #include "engine/TileSet.h"
 #include "engine/TileMap.h"
 #include "engine/Collision.h"
@@ -27,6 +28,7 @@
 #include "game/Projectile.h"
 #include "game/StageCSV.h"
 #include "game/MonsterFactory.h"
+#include "game/ProjectileFactory.h"
 #include "game/WaddleDee.h"
 #include "game/WaddleDoo.h"
 
@@ -93,24 +95,10 @@ namespace engine {
             // 스프라이트 실제 크기
             m_Player->SetSize ( 32.f , 32.f );
             
-            // 좌상단 (sx,sy)에서 가로로 count개를 자르는 스트립 생성 헬퍼
-            auto makeStrip = [ & ] ( int sx , int sy , int fw , int fh , int count , float dur , bool loop )->engine::AnimClip {
-                engine::AnimClip c; c.loop = loop;
-                for ( int i = 0; i < count; ++i ) {
-                    c.frames.push_back ( { RECT{ sx + i * fw, sy, sx + ( i + 1 ) * fw, sy + fh }, dur } );
-                }
-                return c;
-            };
-            
-            // ===== 시트 레이아웃 (픽셀) : 셀 32x32 =====
-            // IDLE: (8, 8)부터 2개
-            m_Player->Animator ( )->AddClip ( "Idle" , makeStrip ( 8 , 8 , 32 , 32 , 2 , 0.20f , /*loop=*/true ) );
-            // WALK: (8, 72)부터 6개
-            m_Player->Animator ( )->AddClip ( "Walk" , makeStrip ( 8 , 72 , 32 , 32 , 6 , 0.10f , /*loop=*/true ) );
-            // JUMP: (8, 136)부터 1개
-            m_Player->Animator ( )->AddClip ( "Jump" , makeStrip ( 8 , 136 , 32 , 32 , 1 , 0.12f , /*loop=*/false ) );
-            // FALL: (40, 136)부터 6개  (40→72→104→…)
-            m_Player->Animator ( )->AddClip ( "Fall" , makeStrip ( 40 , 136 , 32 , 32 , 6 , 0.12f , /*loop=*/true ) );
+            // CSV에서 로드
+            if ( !game::LoadAnimCSV ( "assets/player_anim.csv" , m_Player->Animator ( ) , /*clearExisting=*/true ) ) {
+                // 로드 실패 시 최소한의 폴백(원하면 로그만 남기고 스킵)
+            }
             
             // 시작 클립
             m_Player->Animator ( )->Play ( "Idle" , /*restartIfSame=*/true );
@@ -141,6 +129,9 @@ namespace engine {
 
             // === 몬스터 팩토리 등록 + 스폰 ===
             game::MonsterFactory::RegisterDefaults ( ); // 한 번만
+
+            // 투사체 팩토리 등록
+            game::ProjectileFactory::RegisterDefaults ( );
 
             LoadStageFromCSV ( "assets/stage01" );
         }
@@ -398,11 +389,33 @@ namespace engine {
                     tryCaptureInhale ( e.rect , e.facing );
                     break;
                 case game::PlayerEvent::SpitStar:
-                    spawnPlayerProj ( 620.f );  // 별 탄속
+                {
+                    RECT wr = m_World.WorldRectPx ( );
+                    auto p = game::ProjectileFactory::Create ( "Star" , wr , &m_World.Collision ( ) , game::ProjOwner::Player );
+                    if ( p ) {
+                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                        float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f;
+                        float y = float ( py + ph * 0.5f - 4.f );
+                        float speed = 620.f; // 또는 Registry()["Star"].speed
+                        p->Fire ( { x,y } , { float ( m_PlayerFSM.Facing ( ) ) * speed, 0.f } );
+                        m_Projectiles.push_back ( std::move ( p ) );
+                    }
                     break;
+                }
                 case game::PlayerEvent::AirPuffShot:
-                    spawnPlayerProj ( 420.f );  // 공기포 탄속
+                {
+                    RECT wr = m_World.WorldRectPx ( );
+                    auto p = game::ProjectileFactory::Create ( "AirPuff" , wr , &m_World.Collision ( ) , game::ProjOwner::Player );
+                    if ( p ) {
+                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                        float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f;
+                        float y = float ( py + ph * 0.5f - 4.f );
+                        float speed = 420.f;
+                        p->Fire ( { x,y } , { float ( m_PlayerFSM.Facing ( ) ) * speed, 0.f } );
+                        m_Projectiles.push_back ( std::move ( p ) );
+                    }
                     break;
+                }
                 case game::PlayerEvent::SwallowAbility:
                     // 필요 시 SFX/HUD 연출만
                     break;

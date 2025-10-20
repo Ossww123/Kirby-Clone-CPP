@@ -48,6 +48,35 @@ namespace engine {
                 }
             }
         }
+
+        // 모든 클립 제거 + 상태 초기화
+        void Clear ( ) {
+            m_clips.clear ( );
+            m_cur = nullptr;
+            m_curName.clear ( );
+            m_idx = 0;
+            m_t = 0.f;
+        }
+
+        // 클립 존재 여부
+        bool HasClip ( const std::string& name ) const {
+            return m_clips.find ( name ) != m_clips.end ( );
+        }
+
+        // 특정 클립 제거 (현재 재생 중인 클립이면 상태도 리셋)
+        bool RemoveClip ( const std::string& name ) {
+            auto it = m_clips.find ( name );
+            if ( it == m_clips.end ( ) ) return false;
+            if ( m_cur == &it->second ) {
+                m_cur = nullptr;
+                m_curName.clear ( );
+                m_idx = 0;
+                m_t = 0.f;
+            }
+            m_clips.erase ( it );
+            return true;
+        }
+
         const RECT& CurrentSrc ( ) const {
             static RECT dummy{ 0,0,0,0 };
             return ( m_cur && !m_cur->frames.empty ( ) ) ? m_cur->frames[ m_idx ].src : dummy;

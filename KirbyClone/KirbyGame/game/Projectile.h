@@ -19,6 +19,13 @@ namespace game {
             float speed = 480.f;
             float ttl = 1.5f;   // 초: 수명
             bool  dieOnAnyWorldHit = true; // 벽/바닥/천장 접촉 시 소멸
+
+            // 물리 오버라이드
+            float gravity = 0.f;
+            float frictionAir = 0.f;
+            float frictionGround = 0.f;
+            float termVel = 99999.f;
+            bool  ignoreOneWay = true;   // 원웨이 발판 관통 여부
         };
 
         Projectile ( const RECT& worldBounds ,
@@ -29,6 +36,13 @@ namespace game {
             m_col ( col ) , m_cfg ( cfg ) , m_owner ( owner )
         {
             m_body.SetSize ( m_cfg.width , m_cfg.height );
+
+            // 중요: 공장(Cfg)의 물리값을 바디에 반영
+            auto& p = m_body.Params ( );
+            p.gravity = m_cfg.gravity;
+            p.frictionAir = m_cfg.frictionAir;
+            p.frictionGround = m_cfg.frictionGround;
+            p.termVel = m_cfg.termVel;
         }
 
         void Fire ( const engine::Vec2& pos , const engine::Vec2& vel ) {
@@ -53,7 +67,7 @@ namespace game {
             auto vel = m_body.Velocity ( );
             engine::physics::CollisionReport rep{};
             // 상승 중에도 원웨이는 무시: 관통 원하면 false로
-            const bool ignoreOneWay = ( vel.y < 0.f );
+            const bool ignoreOneWay = m_cfg.ignoreOneWay ? true : ( vel.y < 0.f );
 
             m_col->MoveAndCollide ( aabb , vel , &rep , ignoreOneWay , prevBottom );
             m_body.ApplyCollisionResult ( aabb , vel , rep , nx , ny );
