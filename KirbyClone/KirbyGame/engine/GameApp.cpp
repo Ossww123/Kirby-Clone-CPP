@@ -622,7 +622,12 @@ namespace engine {
         m_TextHUD->DrawTextLine ( buf , 8.f , 8.f );
 
         wchar_t st[ 64 ];
-        std::swprintf ( st , _countof ( st ) , L"STATE: %S" , m_PlayerFSM.MoveStateName ( ) );
+        // STATE: Movement / Action / Overlay
+        std::swprintf ( st , _countof ( st ) ,
+                      L"STATE  M:%S  A:%S  Z:%S" ,
+                      m_PlayerFSM.MoveStateName ( ) ,
+                      m_PlayerFSM.ActionStateName ( ) ,
+                      m_PlayerFSM.OverlayStateName ( ) );
         m_TextHUD->DrawTextLine ( st , 8.f , 28.f );
 
         // 추가: FSM 디버그 스냅샷
@@ -671,6 +676,26 @@ namespace engine {
         wchar_t hpLine[ 64 ];
         std::swprintf ( hpLine , _countof ( hpLine ) , L"HP: %d" , m_PlayerFSM.GetDebug ( ).hp );
         m_TextHUD->DrawTextLine ( hpLine , 8.f , 168.f );
+
+        const wchar_t* abilityName = L"None";
+        switch ( dbg.ability ) {
+        case game::Ability::Fire:  abilityName = L"Fire";  break;
+        case game::Ability::Spark: abilityName = L"Spark"; break;
+        case game::Ability::Beam:  abilityName = L"Beam";  break;
+        default: break;
+        }
+
+        // Kirby 플래그 라인 (facing / mouthFull / ability)
+        std::swprintf ( line , _countof ( line ) ,
+                      L"Kirby  facing:%d  mouthFull:%d  ability:%ls" ,
+                      dbg.facing , dbg.mouthFull ? 1 : 0 , abilityName );
+        m_TextHUD->DrawTextLine ( line , 8.f , 188.f );
+
+        // 액션 타이머(흡입/발사 락)
+        std::swprintf ( line , _countof ( line ) ,
+                      L"Action  inhaleT:%.2f  spitLockT:%.2f" ,
+                      dbg.inhaleT , dbg.spitLockT );
+        m_TextHUD->DrawTextLine ( line , 8.f , 208.f );
 
         m_TextHUD->End ( );
     }

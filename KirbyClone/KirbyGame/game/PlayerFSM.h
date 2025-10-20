@@ -78,7 +78,7 @@ namespace game {
 			float jumpLockMs = 0.03f;
 			int maxTransitionsPerStep = 3;
 			// combat/health
-			int maxHp = 3;
+			int maxHp = 6;
 			float iFrameMs = 0.8f;
 			float damagedStun = 0.25f;
 			float hurtKnockbackClamp = 520.f;
