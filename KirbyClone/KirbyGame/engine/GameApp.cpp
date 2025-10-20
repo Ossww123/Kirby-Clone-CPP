@@ -85,6 +85,12 @@ namespace engine {
             // CreateSolidTexture1x1(d3d->Device(), 0xFFFFFFFFu, &m_PlayerTex);
         }
 
+        // 몬스터 텍스처
+        if ( !LoadTextureWIC ( d3d->Device ( ) , L"assets/enemies.png" , &m_EnemiesTex ) ) {
+            // 필요 시 플레이스홀더 생성 가능
+            // CreateSolidTexture1x1(d3d->Device(), 0xFFFFFFFFu, &m_EnemiesTex);
+        }
+
         if ( m_PlayerTex.srv ) {
             // 텍스처 → Player
             m_Player->SetTexture ( m_PlayerTex );
@@ -273,6 +279,19 @@ namespace engine {
 
                 auto mon = game::MonsterFactory::Create ( spec.type , wr , &m_World.Collision ( ) , spec );
                 if ( !mon ) continue;
+
+                // === 임시 단일 스프라이트 적용 ===
+                mon->SetSpriteSheet ( &m_EnemiesTex );
+                mon->SetVisualSize ( 32.f , 32.f );
+                RECT src{};
+                switch ( mt ) {
+                case game::MonsterType::WaddleDee: src = RECT{ 8,   8,   8 + 32,   8 + 32 }; break;
+                case game::MonsterType::WaddleDoo: src = RECT{ 8,   40,  8 + 32,   40 + 32 }; break;
+                case game::MonsterType::HotHead:   src = RECT{ 8,   136, 8 + 32,   136 + 32 }; break;
+                case game::MonsterType::Sparky:    src = RECT{ 8,   168, 8 + 32,   168 + 32 }; break;
+                default: break;
+                }
+                mon->SetSpriteSrc ( src );
 
                 // 공통 콜백 부착
                 mon->SetProjectileSpawner ( [ this ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
@@ -604,6 +623,21 @@ namespace engine {
                     m_Batch->Draw ( tex , x , y , w , h , hasSrc ? &src : nullptr , 0xFFFFFFFF );
                 }
             }
+
+            // 3) 몬스터
+            for ( auto& m : m_Monsters )
+                if ( m && m->Alive ( ) ) {
+                    const auto * tex = m->TexturePtr ( );
+                    if ( tex && tex->srv ) {
+                        int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );   // 충돌 AABB
+                        float vw , vh; m->GetVisualSize ( vw , vh );             // 렌더 크기(32x32)
+                        // 가로 중앙 + 발바닥 정렬 (플레이어와 동일한 정렬 방식)
+                        const float x = ( mx + mw * 0.5f ) - vw * 0.5f - ox;
+                        const float y = ( my + mh ) - vh - oy;
+                        RECT src = m->SpriteSrc ( );
+                        m_Batch->Draw ( *tex , x , y , vw , vh , &src , 0xFFFFFFFF );
+                    }
+                }
 
             m_Batch->End ( );
         }

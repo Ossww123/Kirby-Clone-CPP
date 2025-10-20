@@ -8,6 +8,7 @@
 #include "engine/Anim.h"
 #include "engine/Math.h"
 #include "engine/D3D11DebugDraw.h"
+#include "engine/Texture.h"
 #include "game/Damage.h"
 
 namespace game {
@@ -97,6 +98,15 @@ namespace game {
         void SetProjectileSpawner ( SpawnProjectileFn fn ) { m_spawnProj = std::move ( fn ); }
         void SetTargetQuery ( QueryTargetPosFn fn ) { m_queryTarget = std::move ( fn ); }
 
+        // ===== Sprite (임시 단일 프레임) =====
+    public:
+        void SetSpriteSheet ( const engine::Tex2D * tex ) { m_tex = tex; }
+        void SetSpriteSrc ( const RECT & r ) { m_src = r; }
+        void SetVisualSize ( float w , float h ) { m_visW = w; m_visH = h; }
+        void GetVisualSize ( float& w , float& h ) const { w = m_visW; h = m_visH; }
+        const engine::Tex2D * TexturePtr ( ) const { return m_tex; }
+        RECT SpriteSrc ( ) const { return m_src; }
+
     protected:
         // 파생이 오버라이드: 이 프레임의 이동 의도/상태 결정(예: m_body.SetDesiredRunAxis(..))
         virtual void TickAI ( double fixedDt , const engine::Input& input ) = 0;
@@ -147,6 +157,11 @@ namespace game {
 
         SpawnProjectileFn m_spawnProj;  
         QueryTargetPosFn  m_queryTarget;
+
+    private:
+        const engine::Tex2D * m_tex{ nullptr }; // enemies.png (GameApp 소유)
+        RECT  m_src{ 0,0,0,0 };                // 시트 내 사각형
+        float m_visW{ 32.f } , m_visH{ 32.f };  // 화면 표시 크기
     };
 
 } // namespace game

@@ -69,6 +69,7 @@ namespace engine {
         std::unique_ptr<D3D11DebugDraw>     m_Debug;     // 라인/박스 디버그 드로우
         std::unique_ptr<DWriteTextHUD>      m_TextHUD;   // DirectWrite HUD
         Tex2D                               m_PlayerTex{};   // 플레이어 텍스처
+        Tex2D                               m_EnemiesTex{};
         RenderSystem m_Render{};
 
         // --- Camera/Player/Monster/Projectile ---
