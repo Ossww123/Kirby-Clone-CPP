@@ -1,8 +1,9 @@
 ﻿#include <windows.h>
 #include "engine/GameApp.h"
+#include "game/GameConfig.h"
 
-static int   gClientW = 960;
-static int   gClientH = 540;
+static int gClientW = game::CLIENT_W;  // 240*4 = 960
+static int gClientH = game::CLIENT_H;  // 160*4 = 640
 static engine::GameApp gApp;
 
 // 윈도우 프로시저: 윈도우로 전달되는 메시지를 처리하는 콜백 함수

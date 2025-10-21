@@ -5,21 +5,21 @@
 #include <vector>
 #include <string>
 
-// === 엔진 코어 ===
+// === engine / core ===
 #include "engine/Time.h"
 #include "engine/Input.h"
 #include "engine/Scene.h"
 #include "engine/Math.h"
 
-// === 카메라/애니/텍스처 ===
+// === camera / anim / texture ===
 #include "engine/Camera.h"
 #include "engine/Anim.h"
 #include "engine/Texture.h"
 
-// === 월드 ===
+// === world ===
 #include "engine/WorldSystem.h"
 
-// === 렌더러 & 유틸 ===
+// === renderer / utils ===
 #include "engine/IRenderer.h"
 #include "engine/RenderSystem.h"
 #include "engine/D3D11Renderer.h"
@@ -27,7 +27,7 @@
 #include "engine/DWriteText.h"
 #include "engine/D3D11SpriteBatch.h"
 
-// === 게임 오브젝트 ===
+// === game objects ===
 #include "game/Player.h"
 #include "game/PlayerFSM.h"
 #include "game/MonsterFactory.h"

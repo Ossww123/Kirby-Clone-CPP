@@ -77,7 +77,7 @@ namespace engine {
 
         // 상태
         float m_x = 100.f , m_y = 100.f;
-        float m_w = 32.f , m_h = 24.f;
+        float m_w = 56.f , m_h = 56.f;
         Vec2  m_vel{ 0.f, 0.f };
         bool  m_grounded = false;
         RECT  m_bounds{};

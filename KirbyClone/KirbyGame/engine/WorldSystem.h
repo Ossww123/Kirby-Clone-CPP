@@ -22,6 +22,9 @@ namespace engine {
 
         // 렌더(가시 타일만)
         void RenderVisible ( D3D11SpriteBatch& batch , int ox , int oy , int screenW , int screenH ) const;
+        void RenderVisibleScaled ( D3D11SpriteBatch & batch ,
+                                    int ox , int oy , int screenW , int screenH ,
+                                    int scale ) const;
 
         // 월드 크기(px) → 카메라 SetWorldRect에 사용
         RECT WorldRectPx ( ) const; // {0,0, mapW*tileW, mapH*tileH}

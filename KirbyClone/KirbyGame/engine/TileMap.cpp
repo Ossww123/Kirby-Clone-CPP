@@ -160,4 +160,40 @@ namespace engine {
         }
     }
 
+    void TileMap::RenderScaled ( D3D11SpriteBatch& batch , const TileSet& tiles ,
+                           int camOffX , int camOffY , int screenW , int screenH , int scale ) const
+    {
+        if ( !tiles.Atlas ( ).srv ) return;
+        const int tw = tiles.TileW ( ) , th = tiles.TileH ( );
+        if ( tw <= 0 || th <= 0 || m_w <= 0 || m_h <= 0 ) return;
+        if ( scale <= 0 ) return;
+
+        // Compute the visible range using *world* screen size:
+        // worldScreen = screenPixels / scale.
+        const int worldW = screenW / scale;
+        const int worldH = screenH / scale;
+
+        int x0 = std::max ( 0 , camOffX / tw );
+        int y0 = std::max ( 0 , camOffY / th );
+        int x1 = std::min ( m_w - 1 , ( camOffX + worldW ) / tw + 1 );
+        int y1 = std::min ( m_h - 1 , ( camOffY + worldH ) / th + 1 );
+
+        const float dw = float ( tw * scale );
+        const float dh = float ( th * scale );
+
+        for ( int y = y0; y <= y1; ++y ) {
+            for ( int x = x0; x <= x1; ++x ) {
+                int id = At ( x , y );
+                const TileDef* def = tiles.Get ( id );
+                if ( !def ) continue;
+
+                // Apply the scale only to draw positions/sizes.
+                const float px = float ( x * tw - camOffX ) * scale;
+                const float py = float ( y * th - camOffY ) * scale;
+
+                batch.Draw ( tiles.Atlas ( ) , px , py , dw , dh , &def->src , 0xFFFFFFFF );
+            }
+        }
+    }
+
 } // namespace engine

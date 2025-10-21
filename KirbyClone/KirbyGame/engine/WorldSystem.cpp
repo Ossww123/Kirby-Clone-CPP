@@ -34,6 +34,11 @@ namespace engine {
         m_map.Render ( batch , m_tiles , ox , oy , screenW , screenH );
     }
 
+    void WorldSystem::RenderVisibleScaled ( D3D11SpriteBatch& batch , int ox , int oy , int screenW , int screenH , int scale ) const
+    {
+        m_map.RenderScaled ( batch , m_tiles , ox , oy , screenW , screenH , scale );
+    }
+
     RECT WorldSystem::WorldRectPx ( ) const
     {
         const int w = m_map.W ( ) * m_tiles.TileW ( );

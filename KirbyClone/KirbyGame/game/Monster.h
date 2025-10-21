@@ -161,7 +161,7 @@ namespace game {
     private:
         const engine::Tex2D * m_tex{ nullptr }; // enemies.png (GameApp 소유)
         RECT  m_src{ 0,0,0,0 };                // 시트 내 사각형
-        float m_visW{ 32.f } , m_visH{ 32.f };  // 화면 표시 크기
+        float m_visW{ 16.f } , m_visH{ 16.f };  // 화면 표시 크기
     };
 
 } // namespace game

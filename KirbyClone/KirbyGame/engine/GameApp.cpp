@@ -1,10 +1,11 @@
 ﻿#include "GameApp.h"
 
-// 필요한 구현 헤더들
+// std
 #include <cwchar>
 #include <vector>
 #include <algorithm>
 
+// engine
 #include "engine/Time.h"
 #include "engine/Input.h"
 #include "engine/Scene.h"
@@ -23,12 +24,15 @@
 #include "engine/D3D11DebugDraw.h"
 #include "engine/DWriteText.h"
 #include "engine/D3D11SpriteBatch.h"
+
+// game
 #include "game/Player.h"
 #include "game/Damage.h"
 #include "game/Projectile.h"
 #include "game/StageCSV.h"
 #include "game/MonsterFactory.h"
 #include "game/ProjectileFactory.h"
+#include "game/GameConfig.h"
 
 namespace engine {
     GameApp::~GameApp ( )
@@ -95,7 +99,7 @@ namespace engine {
             // 텍스처 → Player
             m_Player->SetTexture ( m_PlayerTex );
             // 스프라이트 실제 크기
-            m_Player->SetSize ( 14.f , 14.f );
+            m_Player->SetSize ( float ( game::PLAYER_COLL_PX ) , float ( game::PLAYER_COLL_PX ) );
             m_Player->SetVisualSize ( 32.f , 32.f );
             
             // CSV에서 로드
@@ -114,11 +118,12 @@ namespace engine {
         m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
 
         // 타일셋 로드 + 타일 정의 + 맵 로드
-        m_World.LoadTileset ( d3d->Device ( ) , L"assets/tiles.png" , 32 , 32 );
+        m_World.LoadTileset ( d3d->Device ( ) , L"assets/tiles.png" ,
+                    game::TILE_PX , game::TILE_PX );
 
         // 예시 타일 정의
-        engine::TileDef solid{};  solid.solid   = true; solid.src  = RECT{ 0, 0, 32, 32 };
-        engine::TileDef oneway{}; oneway.oneway = true; oneway.src = RECT{ 32, 0, 64, 32 };
+        engine::TileDef solid{};  solid.solid   = true; solid.src  = RECT{ 0, 0, 16, 16 };
+        engine::TileDef oneway{}; oneway.oneway = true; oneway.src = RECT{ 16, 0, 32, 16 };
         m_World.DefineTile ( 1 , solid );
         m_World.DefineTile ( 2 , oneway );
 
@@ -219,7 +224,7 @@ namespace engine {
         const std::wstring mapCsv = ToWide ( base + "/tilemap.csv" );
 
         auto * d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
-        m_World.LoadTileset ( d3d->Device ( ) , tilesPng , /*tileW*/32 , /*tileH*/32 );
+        m_World.LoadTileset ( d3d->Device ( ) , tilesPng , /*tileW*/game::TILE_PX , /*tileH*/game::TILE_PX );
         m_World.LoadMapCSV ( mapCsv );
 
         // (선택) 타일 속성 적용 → 콜라이더 재구성
@@ -604,38 +609,42 @@ namespace engine {
             m_Batch->Begin ( );
 
             // 1) 타일맵 (가시 영역만)
-            m_World.RenderVisible ( *m_Batch , ox , oy , sw , sh );
+            m_World.RenderVisibleScaled ( *m_Batch , ox , oy , sw , sh , game::SCALE );
 
-            // 2) 플레이어
+            // --- Player draw ---
             if ( m_Player ) {
                 const auto& tex = m_Player->Texture ( );
                 if ( tex.srv ) {
                     int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    float vw , vh; m_Player->GetVisualSize ( vw , vh );
+                    float vw , vh;       m_Player->GetVisualSize ( vw , vh );
 
-                    // 가로 중앙 정렬 + 발바닥 정렬(스프라이트가 약간 더 크더라도 발 밑이 맞게)
-                    const float x = ( px + pw * 0.5f ) - vw * 0.5f - ox;
-                    const float y = ( py + ph ) - vh - oy;
-                    const float w = vw , h = vh;
+                    // world -> screen (center-x, foot-y alignment), then SCALE
+                    const float sx = ( ( px + pw * 0.5f ) - vw * 0.5f - ox );
+                    const float sy = ( ( py + ph ) - vh - oy );
+                    const float sw = vw * game::SCALE;
+                    const float sh = vh * game::SCALE;
 
                     RECT src = m_Player->Animator ( )->CurrentSrc ( );
                     const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
-                    m_Batch->Draw ( tex , x , y , w , h , hasSrc ? &src : nullptr , 0xFFFFFFFF );
+                    m_Batch->Draw ( tex , sx , sy , sw , sh , hasSrc ? &src : nullptr , 0xFFFFFFFF );
                 }
             }
 
-            // 3) 몬스터
+            // --- Monsters draw ---
             for ( auto& m : m_Monsters )
                 if ( m && m->Alive ( ) ) {
-                    const auto * tex = m->TexturePtr ( );
+                    const auto* tex = m->TexturePtr ( );
                     if ( tex && tex->srv ) {
-                        int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );   // 충돌 AABB
-                        float vw , vh; m->GetVisualSize ( vw , vh );             // 렌더 크기(32x32)
-                        // 가로 중앙 + 발바닥 정렬 (플레이어와 동일한 정렬 방식)
-                        const float x = ( mx + mw * 0.5f ) - vw * 0.5f - ox;
-                        const float y = ( my + mh ) - vh - oy;
+                        int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+                        float vw , vh;      m->GetVisualSize ( vw , vh );
+
+                        const float sx = ( ( mx + mw * 0.5f ) - vw * 0.5f - ox );
+                        const float sy = ( ( my + mh ) - vh - oy );
+                        const float sw = vw * game::SCALE;
+                        const float sh = vh * game::SCALE;
+
                         RECT src = m->SpriteSrc ( );
-                        m_Batch->Draw ( *tex , x , y , vw , vh , &src , 0xFFFFFFFF );
+                        m_Batch->Draw ( *tex , sx , sy , sw , sh , &src , 0xFFFFFFFF );
                     }
                 }
 
@@ -654,7 +663,7 @@ namespace engine {
     void GameApp::RenderDebug ( int ox , int oy , int sw , int sh )
     {
         if ( m_debugDrawEnabled && m_Debug ) {
-            const int GRID = 32;
+            const int GRID = game::GRID_PX;
             const int wx0 = ox , wy0 = oy , wx1 = ox + sw , wy1 = oy + sh;
             int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
             for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
@@ -741,12 +750,12 @@ namespace engine {
                       dbg.lastAABB.left , dbg.lastAABB.top , dbg.lastAABB.right , dbg.lastAABB.bottom , dbg.prevBottom );
         m_TextHUD->DrawTextLine ( line , 8.f , 88.f );
 
-        // 발밑 타일 좌표(타일 32px 가정)
+        // 발밑 타일 좌표(타일 16px)
         if ( m_Player ) {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
             const int footX = px + pw / 2;
             const int footY = py + ph;         // 발바닥 y
-            const int tileSize = 32;
+            const int tileSize = m_World.TileW ( );
             const int tx = footX / tileSize;
             const int ty = footY / tileSize;
             std::swprintf ( line , _countof ( line ) ,

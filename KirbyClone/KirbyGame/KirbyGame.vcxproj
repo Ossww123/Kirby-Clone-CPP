@@ -159,6 +159,7 @@
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="game\AnimCSV.h" />
     <ClInclude Include="game\Damage.h" />
+    <ClInclude Include="game\GameConfig.h" />
     <ClInclude Include="game\Monster.h" />
     <ClInclude Include="game\MonsterFactory.h" />
     <ClInclude Include="game\Player.h" />

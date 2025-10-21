@@ -13,7 +13,7 @@ namespace game {
         // 초기 위치/크기를 바로 지정
         explicit Player ( RECT playBounds ,
                         float x = 100.f , float y = 100.f ,
-                        float w = 14.f , float h = 14.f )
+                        float w = 56.f , float h = 56.f )
             : m_body ( playBounds )
         {
             m_body.SetSize ( w , h );
@@ -49,7 +49,7 @@ namespace game {
 
         void                        SetTexture ( const engine::Tex2D& t ) { m_tex = t; }
         const engine::Tex2D&        Texture ( ) const { return m_tex; }
-        float                       m_visW{ 32.f } , m_visH{ 32.f };
+        float                       m_visW{ 16.f } , m_visH{ 16.f };
 
     private:
         engine::PhysicsBody m_body;
