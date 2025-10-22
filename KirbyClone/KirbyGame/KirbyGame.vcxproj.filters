@@ -135,6 +135,18 @@
     <ClInclude Include="game\ProjectileSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\HitVolume.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\HitVolumeSystem.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\HitVolumeFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\CombatTarget.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -192,6 +204,15 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\ProjectileSystem.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\HitVolume.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\HitVolumeSystem.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\HitVolumeFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

@@ -139,13 +139,28 @@ namespace engine {
             // === Resiter Factory ===
             game::MonsterFactory::RegisterDefaults ( );
             game::ProjectileFactory::RegisterDefaults ( ); // Star, AirPuff, FirePellet
+            game::HitVolumeFactory::RegisterDefaults ( );
 
             // TODO : Transfer to CSV loader later
             // game::ProjectileFactory::LoadCSV ( "projectiles.csv" );
             
-            // === Init ProjectileSystem ===
+            // === Init System ===
             m_projSys.Initialize ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) );
-
+            m_hitSys.Initialize ( );
+            m_hitSys.SetOwnerLocator ( [ this ] ( int ownerId , engine::Vec2& outPos , int& outFacing )->bool {
+                if ( m_Player && m_Player->Id ( ) == ownerId ) {
+                    outPos = m_Player->Center ( );
+                    outFacing = m_PlayerFSM.Facing ( );
+                    return true;
+                }
+                for ( auto& mon : m_Monsters ) if ( mon && mon->Id ( ) == ownerId ) {
+                   int x , y , w , h; mon->GetBounds ( x , y , w , h );
+                   outPos = { x + w * 0.5f, y + h * 0.5f };
+                   outFacing = ( mon->Velocity ( ).x >= 0.f ) ? +1 : -1;
+                   return true;    
+                }
+                 return false;
+            });
 
             LoadStageFromCSV ( "assets/stage01" );
         }
@@ -408,65 +423,79 @@ namespace engine {
 
             for ( auto& e : evs ) {
                 switch ( e.type ) {
-                case game::PlayerEvent::InhaleVolume:
-                    tryCaptureInhale ( e.rect , e.facing );
-                    break;
-                case game::PlayerEvent::SpitStar:
-                {
-                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    game::ProjectileSystem::SpawnDesc sd{};
-                    sd.archetype = "Star";
-                    sd.owner = game::ProjOwner::Player;
-                    sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
-                    float ( py + ph * 0.5f - 4.f ) };
-                    sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f }; // 방향만 넘김
-                    sd.treatAsDirection = true; // 아키타입 speed 사용(Registry 값)
-                    m_projSys.Spawn ( sd );
-                    break;
-                }
-                case game::PlayerEvent::AirPuffShot:
-                {
-                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    game::ProjectileSystem::SpawnDesc sd{};
-                    sd.archetype = "AirPuff";
-                    sd.owner = game::ProjOwner::Player;
-                    sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
-                    float ( py + ph * 0.5f - 4.f ) };
-                    sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f };
-                    sd.treatAsDirection = true;
-                    m_projSys.Spawn ( sd );
-                    break;
-                }
-                case game::PlayerEvent::SwallowAbility:
-                    // 필요 시 SFX/HUD 연출만
-                    break;
-                case game::PlayerEvent::AbilityGained:
-                    // HUD 아이콘 갱신 등(원하면 구현)
-                    break;
-                case game::PlayerEvent::AbilityFire:
-                {
-                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 10.f;
-                    float y = float ( py + ph * 0.5f - 4.f );
-                    for ( int i = 0; i < 3; ++i ) {
-                        float base = 360.f , jitter = 40.f * ( i - 1 );
+                    case game::PlayerEvent::InhaleVolume:
+                        tryCaptureInhale ( e.rect , e.facing );
+                        break;
+                    case game::PlayerEvent::SpitStar:
+                    {
+                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
                         game::ProjectileSystem::SpawnDesc sd{};
-                        sd.archetype = "FirePellet";
+                        sd.archetype = "Star";
                         sd.owner = game::ProjOwner::Player;
-                        sd.pos = { x, y };
-                        sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ) * ( base + jitter ), 0.f };
-                        sd.treatAsDirection = false; // 속도를 그대로 사용
+                        sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
+                        float ( py + ph * 0.5f - 4.f ) };
+                        sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f }; // 방향만 넘김
+                        sd.treatAsDirection = true; // 아키타입 speed 사용(Registry 값)
                         m_projSys.Spawn ( sd );
+                        break;
                     }
-                    break;
-                }
-                // case game::PlayerEvent::AbilitySpark: 
-                //     // TODO: HitVolumeSystem 도입 후 오라로 구현
-                //     break;
-                // case game::PlayerEvent::AbilityBeam:
-                //     // TODO: HitVolumeSystem 도입 후 MeleeArc(부채꼴 스윕)로 구현
-                //     break;
-
+                    case game::PlayerEvent::AirPuffShot:
+                    {
+                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                        game::ProjectileSystem::SpawnDesc sd{};
+                        sd.archetype = "AirPuff";
+                        sd.owner = game::ProjOwner::Player;
+                        sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
+                        float ( py + ph * 0.5f - 4.f ) };
+                        sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f };
+                        sd.treatAsDirection = true;
+                        m_projSys.Spawn ( sd );
+                        break;
+                    }
+                    case game::PlayerEvent::SwallowAbility:
+                        // 필요 시 SFX/HUD 연출만
+                        break;
+                    case game::PlayerEvent::AbilityGained:
+                        // HUD 아이콘 갱신 등(원하면 구현)
+                        break;
+                    case game::PlayerEvent::AbilityFire:
+                    {
+                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                        float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 10.f;
+                        float y = float ( py + ph * 0.5f - 4.f );
+                        for ( int i = 0; i < 3; ++i ) {
+                            float base = 360.f , jitter = 40.f * ( i - 1 );
+                            game::ProjectileSystem::SpawnDesc sd{};
+                            sd.archetype = "FirePellet";
+                            sd.owner = game::ProjOwner::Player;
+                            sd.pos = { x, y };
+                            sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ) * ( base + jitter ), 0.f };
+                            sd.treatAsDirection = false; // 속도를 그대로 사용
+                            m_projSys.Spawn ( sd );
+                        }
+                        break;
+                    }
+                    case game::PlayerEvent::AbilitySpark:
+                    {
+                        game::HitVolumeSystem::SpawnDesc sd{};
+                        sd.archetype = "SparkAura";
+                        sd.ownerId = m_Player->Id ( );
+                        sd.ownerFacing = m_PlayerFSM.Facing ( );
+                        sd.worldAnchor = m_Player->Center ( );
+                        m_hitSys.Spawn ( sd );
+                        break;
+                    }
+                    case game::PlayerEvent::AbilityBeam:
+                    {
+                        game::HitVolumeSystem::SpawnDesc sd{};
+                        sd.archetype = "BeamSweep";
+                        sd.ownerId = m_Player->Id ( );
+                        sd.ownerFacing = m_PlayerFSM.Facing ( );
+                        // 손 위치를 정확히 쓰려면 MouthPos처럼 함수로 보정해도 됨. 일단 센터 기반 + localOffset
+                        sd.worldAnchor = m_Player->Center ( );
+                        m_hitSys.Spawn ( sd );
+                        break;
+                    }
                 }
             }
         }
@@ -513,9 +542,9 @@ namespace engine {
         m_projSys.Step ( fixedDt , targets );
         
         // 히트 이벤트를 꺼내 전투 시스템/엔티티에 적용
-        std::vector<game::ProjectileSystem::HitEvent> hits;
-        m_projSys.DrainHitEvents ( hits );
-        for ( const auto& ev : hits ) {
+        std::vector<game::ProjectileSystem::HitEvent> phits;
+        m_projSys.DrainHitEvents ( phits );
+        for ( const auto& ev : phits ) {
             game::Damage dmg{ ev.payload.damage, ev.payload.knockback };
 
             if ( ev.owner == game::ProjOwner::Player ) {
@@ -528,6 +557,25 @@ namespace engine {
             }
         }
 
+        // ---- HitVolumeSystem: Spark/Beam 등 근접 판정 ----
+        // 같은 targets 벡터 재사용 가능(플레이어/몬스터 모두 포함)
+        m_hitSys.Step ( fixedDt , targets );
+        std::vector<game::HitVolumeSystem::HitEvent> hvHits;
+        m_hitSys.DrainHitEvents ( hvHits );
+        for ( const auto& ev : hvHits ) {
+            game::Damage dmg{ ev.payload.damage, ev.payload.knockback };
+            // 볼륨의 팀 정보는 ownerId로 판단: 여기선 플레이어가 owner라고 가정(현재 스폰은 플레이어만)
+            // 확장 시 OwnerLocatorFn에서 팀을 함께 주거나, HitVolume에 ownerTeam을 넣어도 됨.
+            const bool ownerIsPlayer = ( m_Player && ev.ownerId == m_Player->Id ( ) );
+            if ( ownerIsPlayer ) {
+                for ( auto& m : m_Monsters ) {
+                    if ( m && m->Id ( ) == ev.targetId ) { m->OnHit ( dmg ); break; }
+                }
+            }
+            else {
+                if ( m_Player && m_Player->Id ( ) == ev.targetId ) m_PlayerFSM.ApplyDamage ( dmg );
+            }
+        }
 
         // 애니메이터 (플레이어)
         if ( m_Player && m_Player->Animator ( ) )
@@ -617,6 +665,7 @@ namespace engine {
 
             // 투사체
             m_projSys.DebugDraw ( *m_Debug , ox , oy );
+            m_hitSys.DebugDraw ( *m_Debug , ox , oy );
 
             // Inhale 디버그 박스
             auto dbg = m_PlayerFSM.GetDebug ( );

@@ -15,12 +15,12 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <windows.h> // RECT
 
 #include "game/Projectile.h"
 #include "game/ProjectileFactory.h"
 #include "engine/Collision.h"      // Overlap()
 #include "engine/Math.h"
+#include "game/CombatTarget.h"      // CombatTarget
 
 namespace engine { class D3D11DebugDraw; }
 
@@ -30,12 +30,7 @@ namespace game {
     public:
         // One “victim candidate” the system can test against.
         // Game layer가 각 프레임마다 대상 목록을 만들어 전달.
-        struct Target {
-            int   id = -1;              // stable game entity id
-            RECT  aabb{ 0,0,0,0 };        // world AABB
-            bool  alive = true;
-            bool  isPlayer = false;     // true=Player team, false=Enemy team (간단 필터)
-        };
+        using Target = CombatTarget;
 
         // Emitted when a projectile overlaps a valid target.
         struct HitEvent {

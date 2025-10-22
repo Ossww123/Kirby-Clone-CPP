@@ -32,6 +32,8 @@
 #include "game/PlayerFSM.h"
 #include "game/MonsterFactory.h"
 #include "game/ProjectileSystem.h"
+#include "game/HitVolumeSystem.h"
+#include "game/HitVolumeFactory.h"
 
 namespace game { struct MonsterCSV; }
 
@@ -72,13 +74,14 @@ namespace engine {
         Tex2D                               m_EnemiesTex{};
         RenderSystem m_Render{};
 
-        // --- Camera/Player/Monster/Projectile ---
+        // --- Camera/Player/Monster/Projectile/HitVolume ---
         Camera     m_Cam{};
         game::Player* m_Player{ nullptr };
         game::PlayerFSM m_PlayerFSM;
         game::PlayerFSM::Cfg m_playerFsmCfg{};
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
         game::ProjectileSystem m_projSys;
+        game::HitVolumeSystem m_hitSys;
 
         // --- World ---
         WorldSystem m_World{};

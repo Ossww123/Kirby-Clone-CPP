@@ -158,8 +158,12 @@
     <ClInclude Include="engine\TileSet.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="game\AnimCSV.h" />
+    <ClInclude Include="game\CombatTarget.h" />
     <ClInclude Include="game\Damage.h" />
     <ClInclude Include="game\GameConfig.h" />
+    <ClInclude Include="game\HitVolume.h" />
+    <ClInclude Include="game\HitVolumeFactory.h" />
+    <ClInclude Include="game\HitVolumeSystem.h" />
     <ClInclude Include="game\Monster.h" />
     <ClInclude Include="game\MonsterFactory.h" />
     <ClInclude Include="game\Player.h" />
@@ -185,6 +189,9 @@
     <ClCompile Include="engine\TileMap.cpp" />
     <ClCompile Include="engine\TileSet.cpp" />
     <ClCompile Include="game\AnimCSV.cpp" />
+    <ClCompile Include="game\HitVolume.cpp" />
+    <ClCompile Include="game\HitVolumeFactory.cpp" />
+    <ClCompile Include="game\HitVolumeSystem.cpp" />
     <ClCompile Include="game\PlayerFSM.cpp" />
     <ClCompile Include="game\ProjectileFactory.cpp" />
     <ClCompile Include="game\ProjectileSystem.cpp" />
