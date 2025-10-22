@@ -1,26 +1,63 @@
 ﻿#pragma once
+//
+// Responsibility: Data-driven projectile archetype registry and instance creation.
+//                 - Keep a map<string, ProjDef> of projectile presets (CSV/JSON or code-registered)
+//                 - Map ProjDef -> Projectile::Cfg and construct a single Projectile instance
+// Non-Goals:      - Runtime update/render of multiple projectiles (use ProjectileSystem or caller)
+//                 - Spawn patterns (burst/spread/fan), pooling, resource loading
+//                 - Direct sprite/animation handling (store only keys if needed)
+// Call-Context:   - Main thread only
+//                 - No dynamic allocation inside tight per-frame loops except Create() by design
+//
+
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include "game/Projectile.h"          // 기존 Projectile
+
+#include "game/Projectile.h"
 #include "engine/Collision.h"
 
 namespace game {
 
+    // Data preset for one projectile kind (archetype)
     struct ProjDef {
-        float width = 8.f , height = 8.f;
-        float speed = 480.f , ttl = 1.5f;
-        float gravity = 0.f , frictionAir = 0.f , frictionGround = 0.f , termVel = 99999.f;
-        bool  dieOnAnyWorldHit = true , ignoreOneWay = true;
+        // Collision AABB
+        float width = 8.f;
+        float height = 8.f;
+
+        // Kinematics / lifetime
+        float speed = 480.f;
+        float ttl = 1.5f;
+
+        // Physics overrides
+        float gravity = 0.f;
+        float frictionAir = 0.f;
+        float frictionGround = 0.f;
+        float termVel = 99999.f;
+
+        // World interaction
+        bool  dieOnAnyWorldHit = true;
+        bool  ignoreOneWay = true;
+
+        // Combat payload (optional; injected into Projectile as read-only payload)
         int   damage = 1;
-        engine::Vec2 knockback{ 0.f,0.f };   // 명중 시
-        // 렌더링/애니가 필요하면 텍스처/클립 이름 등도 추가 가능
+        engine::Vec2 knockback{ 0.f, 0.f };
+
+        // Visual keys (optional; kept as IDs only, real loading is outside)
+        // std::string spriteSheetId;
+        // std::string animClipName;
     };
 
     class ProjectileFactory {
     public:
+        // Register/lookup presets
         static void Register ( const std::string& id , const ProjDef& d );
-        static void RegisterDefaults ( ); // "Star", "AirPuff", "Beam" 등
+        static const ProjDef* Find ( const std::string& id );
+
+        // Useful presets (Star, AirPuff, FirePellet)
+        static void RegisterDefaults ( );
+
+        // Create a single projectile instance from an archetype id
         static std::unique_ptr<Projectile> Create (
             const std::string& id ,
             const RECT& worldRect ,
@@ -28,7 +65,10 @@ namespace game {
             ProjOwner owner
         );
 
-        // 선택: CSV 로딩 지원
+        // Load presets from CSV (columns are optional; missing -> keep defaults)
+        // Supported headers (case-sensitive):
+        //   id,width,height,speed,ttl,gravity,frictionAir,frictionGround,termVel,
+        //   dieOnAnyWorldHit,ignoreOneWay,damage,knockbackX,knockbackY
         static bool LoadCSV ( const char* filename );
 
     private:

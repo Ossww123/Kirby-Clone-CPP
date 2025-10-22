@@ -16,6 +16,7 @@ namespace game {
                         float w = 56.f , float h = 56.f )
             : m_body ( playBounds )
         {
+            SetId ( engine::GenEntityId ( ) );
             m_body.SetSize ( w , h );
             m_body.SetPosition ( x , y );
         }

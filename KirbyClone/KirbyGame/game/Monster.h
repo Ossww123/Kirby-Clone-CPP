@@ -34,6 +34,7 @@ namespace game {
                 const Cfg& cfg = {} )
             : m_body ( worldBounds , cfg.phys ) , m_col ( col ) , m_cfg ( cfg )
         {
+            SetId ( engine::GenEntityId ( ) );
             m_health.Reset ( cfg.maxHp , cfg.iFrameMs );
         }
 
@@ -72,17 +73,24 @@ namespace game {
         void Kill ( ) { m_alive = false; }
 
         // 피격 처리 (Projectile 등에서 호출)
-        virtual void OnHit ( const Damage& d ) {
+        void OnHit ( const Damage& d ) {
             if ( !m_alive ) return;
-            if ( !m_health.Apply ( d.amount ) ) return; // 무적 or 사망 시 이미 처리됨
-            // 넉백 (기본은 단순 적용)
-            engine::Vec2 v = m_body.Velocity ( );
+
+            const bool took = m_health.Apply ( d.amount ); // true=HP감소, false=i-frame or already dead
+
+            // HP 확인은 항상 한다 (Apply가 false여도)
+            if ( m_health.hp <= 0 ) {
+                m_alive = false;
+                return; // 사망 시 넉백/이동 없음
+            }
+
+            if ( !took ) return; // i-frame이면 끝
+
+            // 넉백
+            auto v = m_body.Velocity ( );
             v.x += d.knockback.x * 0.5f;
             v.y += d.knockback.y * 0.5f;
             m_body.SetVelocity ( v );
-            if ( m_health.hp <= 0 ) {
-                m_alive = false;
-            }
         }
 
         // 추후 스프라이트로 교체

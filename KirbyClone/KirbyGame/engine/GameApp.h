@@ -31,7 +31,7 @@
 #include "game/Player.h"
 #include "game/PlayerFSM.h"
 #include "game/MonsterFactory.h"
-#include "game/Projectile.h"
+#include "game/ProjectileSystem.h"
 
 namespace game { struct MonsterCSV; }
 
@@ -78,7 +78,7 @@ namespace engine {
         game::PlayerFSM m_PlayerFSM;
         game::PlayerFSM::Cfg m_playerFsmCfg{};
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
-        std::vector<std::unique_ptr<game::Projectile>> m_Projectiles;
+        game::ProjectileSystem m_projSys;
 
         // --- World ---
         WorldSystem m_World{};

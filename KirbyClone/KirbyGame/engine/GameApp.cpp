@@ -29,9 +29,10 @@
 #include "game/Player.h"
 #include "game/Damage.h"
 #include "game/Projectile.h"
+#include "game/ProjectileFactory.h"
+#include "game/ProjectileSystem.h"
 #include "game/StageCSV.h"
 #include "game/MonsterFactory.h"
-#include "game/ProjectileFactory.h"
 #include "game/GameConfig.h"
 
 namespace engine {
@@ -135,11 +136,16 @@ namespace engine {
             RECT wr = m_World.WorldRectPx ( );
             m_Cam.SetWorldRect ( ( float ) wr.left , ( float ) wr.top , ( float ) wr.right , ( float ) wr.bottom );
 
-            // === 몬스터 팩토리 등록 + 스폰 ===
-            game::MonsterFactory::RegisterDefaults ( ); // 한 번만
+            // === Resiter Factory ===
+            game::MonsterFactory::RegisterDefaults ( );
+            game::ProjectileFactory::RegisterDefaults ( ); // Star, AirPuff, FirePellet
 
-            // 투사체 팩토리 등록
-            game::ProjectileFactory::RegisterDefaults ( );
+            // TODO : Transfer to CSV loader later
+            // game::ProjectileFactory::LoadCSV ( "projectiles.csv" );
+            
+            // === Init ProjectileSystem ===
+            m_projSys.Initialize ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) );
+
 
             LoadStageFromCSV ( "assets/stage01" );
         }
@@ -212,8 +218,8 @@ namespace engine {
     bool GameApp::LoadStageFromCSV ( const char* folder )
     {
         // 0) 런타임 오브젝트 정리(핫리로드 시 기존 것 제거)
-        m_Projectiles.clear ( );
         m_Monsters.clear ( );
+        m_projSys.Clear ( );
 
         // 1) 타일셋 + 타일맵 (엔진)
         // 스테이지 폴더 기억 (핫리로드에서 사용)
@@ -241,7 +247,7 @@ namespace engine {
             m_World.RebuildColliders ( );
         }
 
-        // 2) 플레이어 시작
+        // 2) Player start
         game::PlayerStartCSV ps{};
         if ( game::LoadPlayerStartCSV ( ( base + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
             m_Player->SetPosition ( ps.x , ps.y );
@@ -251,7 +257,10 @@ namespace engine {
             m_Cam.SnapImmediate ( );
         }
 
-        // FSM 리셋
+        // ProjectileSystem: Reflection new world
+        m_projSys.Initialize ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) );
+
+        // Reset FSM
         m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) , m_Player->Animator ( ) , m_playerFsmCfg );
 
         // 3) 몬스터 스폰 (팩토리 경유)
@@ -300,11 +309,14 @@ namespace engine {
 
                 // 공통 콜백 부착
                 mon->SetProjectileSpawner ( [ this ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
-                    game::Projectile::Cfg pcfg; pcfg.width = 8; pcfg.height = 8;
-                    auto p = std::make_unique<game::Projectile> ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) , owner , pcfg );
-                    p->Fire ( pos , vel );
-                    m_Projectiles.push_back ( std::move ( p ) );
-                } );
+                    game::ProjectileSystem::SpawnDesc sd{};
+                    sd.archetype = "Star";
+                    sd.owner = owner;
+                    sd.pos = pos;
+                    sd.dirOrVel = vel;
+                    sd.treatAsDirection = false;
+                    m_projSys.Spawn ( sd );
+                    } );
                 mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
 
                 m_Monsters.push_back ( std::move ( mon ) );
@@ -372,18 +384,6 @@ namespace engine {
                 return engine::Vec2{ x, y };
                 };
 
-            // Projectile 스폰 헬퍼(별/공기포)
-            auto spawnPlayerProj = [ & ] ( float speed ) {
-                game::Projectile::Cfg pcfg;
-                pcfg.width = 8; pcfg.height = 8; pcfg.speed = speed;
-                RECT wr = m_World.WorldRectPx ( );
-                auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
-                engine::Vec2 pos = mouthPos ( pcfg.width , pcfg.height );
-                engine::Vec2 vel = { float ( facing ) * speed, 0.f };
-                p->Fire ( pos , vel );
-                m_Projectiles.push_back ( std::move ( p ) );
-                };
-
             // Inhale 처리(간단 버전: 범위에 겹치는 첫 몬스터를 빨아들임)
             auto tryCaptureInhale = [ & ] ( const RECT& r , int f ) {
                 for ( auto it = m_Monsters.begin ( ); it != m_Monsters.end ( ); ++it ) {
@@ -413,30 +413,28 @@ namespace engine {
                     break;
                 case game::PlayerEvent::SpitStar:
                 {
-                    RECT wr = m_World.WorldRectPx ( );
-                    auto p = game::ProjectileFactory::Create ( "Star" , wr , &m_World.Collision ( ) , game::ProjOwner::Player );
-                    if ( p ) {
-                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                        float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f;
-                        float y = float ( py + ph * 0.5f - 4.f );
-                        float speed = 620.f; // 또는 Registry()["Star"].speed
-                        p->Fire ( { x,y } , { float ( m_PlayerFSM.Facing ( ) ) * speed, 0.f } );
-                        m_Projectiles.push_back ( std::move ( p ) );
-                    }
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    game::ProjectileSystem::SpawnDesc sd{};
+                    sd.archetype = "Star";
+                    sd.owner = game::ProjOwner::Player;
+                    sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
+                    float ( py + ph * 0.5f - 4.f ) };
+                    sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f }; // 방향만 넘김
+                    sd.treatAsDirection = true; // 아키타입 speed 사용(Registry 값)
+                    m_projSys.Spawn ( sd );
                     break;
                 }
                 case game::PlayerEvent::AirPuffShot:
                 {
-                    RECT wr = m_World.WorldRectPx ( );
-                    auto p = game::ProjectileFactory::Create ( "AirPuff" , wr , &m_World.Collision ( ) , game::ProjOwner::Player );
-                    if ( p ) {
-                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                        float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f;
-                        float y = float ( py + ph * 0.5f - 4.f );
-                        float speed = 420.f;
-                        p->Fire ( { x,y } , { float ( m_PlayerFSM.Facing ( ) ) * speed, 0.f } );
-                        m_Projectiles.push_back ( std::move ( p ) );
-                    }
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    game::ProjectileSystem::SpawnDesc sd{};
+                    sd.archetype = "AirPuff";
+                    sd.owner = game::ProjOwner::Player;
+                    sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
+                    float ( py + ph * 0.5f - 4.f ) };
+                    sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f };
+                    sd.treatAsDirection = true;
+                    m_projSys.Spawn ( sd );
                     break;
                 }
                 case game::PlayerEvent::SwallowAbility:
@@ -447,55 +445,27 @@ namespace engine {
                     break;
                 case game::PlayerEvent::AbilityFire:
                 {
-                    // 짧은 화염 분사: 앞쪽으로 3발 빠르게
-                    RECT wr = m_World.WorldRectPx ( );
+                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                    float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 10.f;
+                    float y = float ( py + ph * 0.5f - 4.f );
                     for ( int i = 0; i < 3; ++i ) {
-                        game::Projectile::Cfg pcfg; pcfg.width = 10; pcfg.height = 8;
-                        auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
-                        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                        float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - pcfg.width;
-                        float y = float ( py + ph * 0.5f - pcfg.height * 0.5f );
-                        float base = 360.f;                         // 불 속도
-                        float jitter = 40.f * ( i - 1 );                // 약간의 산포
-                        engine::Vec2 vel{ float ( m_PlayerFSM.Facing ( ) ) * ( base + jitter ), 0.f };
-                        p->Fire ( { x,y } , vel );
-                        m_Projectiles.push_back ( std::move ( p ) );
+                        float base = 360.f , jitter = 40.f * ( i - 1 );
+                        game::ProjectileSystem::SpawnDesc sd{};
+                        sd.archetype = "FirePellet";
+                        sd.owner = game::ProjOwner::Player;
+                        sd.pos = { x, y };
+                        sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ) * ( base + jitter ), 0.f };
+                        sd.treatAsDirection = false; // 속도를 그대로 사용
+                        m_projSys.Spawn ( sd );
                     }
                     break;
                 }
-                case game::PlayerEvent::AbilitySpark:
-                {
-                    // 원형 스파크 링: 8~12방향으로 퍼뜨리기
-                    RECT wr = m_World.WorldRectPx ( );
-                    const int N = 10;
-                    const float speed = 260.f;
-                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    float cx = float ( px + pw * 0.5f ) , cy = float ( py + ph * 0.5f );
-                    for ( int i = 0; i < N; ++i ) {
-                        const float ang = ( float ( i ) / N ) * 6.2831853f; // 2π
-                        const float vx = std::cos ( ang ) * speed;
-                        const float vy = std::sin ( ang ) * speed;
-                        game::Projectile::Cfg pcfg; pcfg.width = 6; pcfg.height = 6;
-                        auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
-                        p->Fire ( { cx - 3.f, cy - 3.f } , { vx, vy } );
-                        m_Projectiles.push_back ( std::move ( p ) );
-                    }
-                    break;
-                }
-                case game::PlayerEvent::AbilityBeam:
-                {
-                    // 직선 빔: 빠른 한 발
-                    RECT wr = m_World.WorldRectPx ( );
-                    game::Projectile::Cfg pcfg; pcfg.width = 12; pcfg.height = 6;
-                    auto p = std::make_unique<game::Projectile> ( wr , &m_World.Collision ( ) , game::ProjOwner::Player , pcfg );
-                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - pcfg.width;
-                    float y = float ( py + ph * 0.5f - pcfg.height * 0.5f );
-                    float speed = 620.f;
-                    p->Fire ( { x,y } , { float ( m_PlayerFSM.Facing ( ) ) * speed, 0.f } );
-                    m_Projectiles.push_back ( std::move ( p ) );
-                    break;
-                }
+                // case game::PlayerEvent::AbilitySpark: 
+                //     // TODO: HitVolumeSystem 도입 후 오라로 구현
+                //     break;
+                // case game::PlayerEvent::AbilityBeam:
+                //     // TODO: HitVolumeSystem 도입 후 MeleeArc(부채꼴 스윕)로 구현
+                //     break;
 
                 }
             }
@@ -504,15 +474,12 @@ namespace engine {
         // 몬스터 업데이트
         for ( auto& m : m_Monsters ) if ( m ) m->Update ( fixedDt , m_Input );
 
-        // ── 투사체 업데이트 ──
-        for ( auto& p : m_Projectiles ) if ( p ) p->Update ( fixedDt , m_Input );
-
         // 접촉 데미지 체크
         int px , py , pw , ph;
         m_Player->GetBounds ( px , py , pw , ph );
         RECT pr{ px, py, px + pw, py + ph };
 
-        for ( auto& m : m_Monsters ) if ( m ) {
+        for ( auto& m : m_Monsters ) if ( m && m->Alive ( ) ) {
             int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
             RECT mr{ mx, my, mx + mw, my + mh };
             if ( engine::physics::Overlap ( pr , mr ) ) {
@@ -527,60 +494,40 @@ namespace engine {
             }
         }
 
-        // ── 몬스터 피격 판정 ──
-        for ( auto& p : m_Projectiles ) {
-            if ( p && p->Alive ( ) && p->Owner ( ) == game::ProjOwner::Player )
-            {
-                int px , py , pw , ph; p->GetBounds ( px , py , pw , ph );
-                RECT pr{ px, py, px + pw, py + ph };
+        // ── ProjectileSystem: 타깃 수집 → 틱 → 히트 처리 ──
+        std::vector<game::ProjectileSystem::Target> targets;
+        targets.reserve ( m_Monsters.size ( ) + 1 );
+        
+        // 몬스터들(플레이어 탄의 타깃)
+        for ( auto& m : m_Monsters ) if ( m && m->Alive ( ) ) {
+            int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+            targets.push_back ( { m->Id ( ), RECT{mx,my,mx + mw,my + mh}, true, /*isPlayer*/ false } );
+        }
+        // 플레이어(적 탄의 타깃)
+        if ( m_Player /*&& m_Player->Alive ( )*/ ) {
+            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+            targets.push_back ( { m_Player->Id ( ), RECT{px,py,px + pw,py + ph}, true, /*isPlayer*/ true } );
+        }
+        
+        // 시스템 틱 (월드 충돌은 Projectile 내부, 엔티티 충돌은 여기서 수행)
+        m_projSys.Step ( fixedDt , targets );
+        
+        // 히트 이벤트를 꺼내 전투 시스템/엔티티에 적용
+        std::vector<game::ProjectileSystem::HitEvent> hits;
+        m_projSys.DrainHitEvents ( hits );
+        for ( const auto& ev : hits ) {
+            game::Damage dmg{ ev.payload.damage, ev.payload.knockback };
 
-                for ( auto& m : m_Monsters ) {
-                    if ( m && m->Alive ( ) )
-                    {
-                        int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-                        RECT mr{ mx, my, mx + mw, my + mh };
-                        if ( engine::physics::Overlap ( pr , mr ) ) {
-                            // 명중!
-                            const float dir = ( px < mx ) ? -1.f : +1.f;
-                            game::Damage dmg;
-                            dmg.amount = 1;
-                            dmg.knockback = engine::Vec2{ dir * 300.f, -200.f };
-                            m->OnHit ( dmg );
-                            p->Kill ( ); // 투사체 소멸
-                            break;
-                        }
-                    }
-                }
+            if ( ev.owner == game::ProjOwner::Player ) {
+                for ( auto& m : m_Monsters )
+                    if ( m && m->Id ( ) == ev.targetId ) { m->OnHit ( dmg ); break; }
+            }
+            else { // Enemy → Player
+                if ( m_Player && m_Player->Id ( ) == ev.targetId )
+                    m_PlayerFSM.ApplyDamage ( dmg );
             }
         }
 
-        // === Enemy Projectile vs Player ===
-        for ( auto& p : m_Projectiles )
-            if ( p && p->Alive ( ) && p->Owner ( ) == game::ProjOwner::Enemy )
-            {
-                int bx , by , bw , bh; p->GetBounds ( bx , by , bw , bh );
-                RECT br{ bx,by,bx + bw,by + bh };
-
-                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                RECT pr{ px,py,px + pw,py + ph };
-
-                if ( engine::physics::Overlap ( br , pr ) ) {
-                    const float dir = ( ( px + pw * 0.5f ) < ( bx + bw * 0.5f ) ) ? -1.f : +1.f;
-                    game::Damage dmg;
-                    dmg.amount = 1;
-                    dmg.knockback = engine::Vec2{ dir * 260.f, -320.f };
-                    m_PlayerFSM.ApplyDamage ( dmg );
-                    p->Kill ( );
-                }
-            }
-
-
-        // ── 죽은 투사체 정리 ──
-        m_Projectiles.erase (
-            std::remove_if ( m_Projectiles.begin ( ) , m_Projectiles.end ( ) ,
-                [ ] ( const std::unique_ptr<game::Projectile>& p ) { return !p || !p->Alive ( ); } ) ,
-            m_Projectiles.end ( )
-        );
 
         // 애니메이터 (플레이어)
         if ( m_Player && m_Player->Animator ( ) )
@@ -598,67 +545,53 @@ namespace engine {
         const int sw = d3d ? d3d->Width ( ) : 0;
         const int sh = d3d ? d3d->Height ( ) : 0;
 
-        // BeginFrame은 Color 타입을 받도록 수정
-        Color clear{ 0.09f, 0.11f, 0.125f, 1.0f };
-        m_Renderer->BeginFrame ( clear );
+        m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
 
         auto [ox , oy] = m_Cam.OffsetInt ( );
 
-        // --- SpriteBatch ---
         if ( m_Batch ) {
             m_Batch->Begin ( );
 
-            // 1) 타일맵 (가시 영역만)
+            // 1) World
             m_World.RenderVisibleScaled ( *m_Batch , ox , oy , sw , sh , game::SCALE );
 
-            // --- Player draw ---
-            if ( m_Player ) {
-                const auto& tex = m_Player->Texture ( );
-                if ( tex.srv ) {
-                    int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-                    float vw , vh;       m_Player->GetVisualSize ( vw , vh );
+            // 2) Player
+            auto drawPlayer = [ & ] {
+                if ( !m_Player ) return;
+                const auto& tex = m_Player->Texture ( ); if ( !tex.srv ) return;
+                int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+                float vw , vh;     m_Player->GetVisualSize ( vw , vh );
+                const float sx = ( ( px + pw * 0.5f ) - vw * 0.5f - ox );
+                const float sy = ( ( py + ph ) - vh - oy );
+                RECT src = m_Player->Animator ( )->CurrentSrc ( );
+                m_Batch->Draw ( tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
+                              ( src.right > src.left ) ? &src : nullptr , 0xFFFFFFFF );
+            };
+            drawPlayer ( );
 
-                    // world -> screen (center-x, foot-y alignment), then SCALE
-                    const float sx = ( ( px + pw * 0.5f ) - vw * 0.5f - ox );
-                    const float sy = ( ( py + ph ) - vh - oy );
-                    const float sw = vw * game::SCALE;
-                    const float sh = vh * game::SCALE;
-
-                    RECT src = m_Player->Animator ( )->CurrentSrc ( );
-                    const bool hasSrc = ( src.right > src.left ) && ( src.bottom > src.top );
-                    m_Batch->Draw ( tex , sx , sy , sw , sh , hasSrc ? &src : nullptr , 0xFFFFFFFF );
+            // 3) Monster
+            auto drawMonsters = [ & ] {
+                for ( auto& m : m_Monsters ) if ( m && m->Alive ( ) ) {
+                    const auto* tex = m->TexturePtr ( ); if ( !tex || !tex->srv ) continue;
+                    int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+                    float vw , vh;     m->GetVisualSize ( vw , vh );
+                    const float sx = ( ( mx + mw * 0.5f ) - vw * 0.5f - ox );
+                    const float sy = ( ( my + mh ) - vh - oy );
+                    RECT src = m->SpriteSrc ( );
+                    m_Batch->Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE , &src , 0xFFFFFFFF );
                 }
-            }
-
-            // --- Monsters draw ---
-            for ( auto& m : m_Monsters )
-                if ( m && m->Alive ( ) ) {
-                    const auto* tex = m->TexturePtr ( );
-                    if ( tex && tex->srv ) {
-                        int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-                        float vw , vh;      m->GetVisualSize ( vw , vh );
-
-                        const float sx = ( ( mx + mw * 0.5f ) - vw * 0.5f - ox );
-                        const float sy = ( ( my + mh ) - vh - oy );
-                        const float sw = vw * game::SCALE;
-                        const float sh = vh * game::SCALE;
-
-                        RECT src = m->SpriteSrc ( );
-                        m_Batch->Draw ( *tex , sx , sy , sw , sh , &src , 0xFFFFFFFF );
-                    }
-                }
+            };
+            drawMonsters ( );
 
             m_Batch->End ( );
         }
 
-        // --- 디버그 드로우 ---
         if ( m_debugDrawEnabled ) RenderDebug ( ox , oy , sw , sh );
-
-        // --- HUD ---
         RenderHUD ( );
 
         m_Renderer->EndFrame ( );
     }
+
 
     void GameApp::RenderDebug ( int ox , int oy , int sw , int sh )
     {
@@ -683,12 +616,7 @@ namespace engine {
                     m->RenderDebug ( m_Debug.get ( ) , ox , oy );
 
             // 투사체
-            for ( auto& p : m_Projectiles )
-                if ( p && p->Alive ( ) ) {
-                    int x , y , w , h; p->GetBounds ( x , y , w , h );
-                    const auto color = ( p->Owner ( ) == game::ProjOwner::Player ) ? RGB ( 255 , 230 , 90 ) : RGB ( 120 , 200 , 255 );
-                    m_Debug->WorldRect ( x , y , w , h , ox , oy , color );
-                }
+            m_projSys.DebugDraw ( *m_Debug , ox , oy );
 
             // Inhale 디버그 박스
             auto dbg = m_PlayerFSM.GetDebug ( );
