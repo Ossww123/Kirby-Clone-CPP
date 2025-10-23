@@ -110,9 +110,6 @@ namespace game {
 			// action timers
 			float inhaleT{ 0.f };
 			float spitLockT{ 0.f };
-			// inhale box
-			bool inhaleActive{ false };
-			RECT inhaleRect{ 0,0,0,0 };
 		};
 
 		// ===== Public API =====

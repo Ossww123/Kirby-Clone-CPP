@@ -52,10 +52,30 @@ namespace engine {
         bool ReloadStage ( );
 
     private:
+        void FixedUpdate ( double fixedDt ); // phisics / collider / jump ochestration
+        void RenderFrame ( );               // tile / player / HUD / debug render
+
+        // ---- Init/teardown helpers ----
         void InitBindings ( );
-        void FixedUpdate ( double fixedDt ); // 물리/충돌/점프 오케스트레이션
-        void RenderFrame ( );               // 타일/플레이어/HUD/디버그 렌더
-        void RenderDebug ( int ox , int oy , int sw , int sh );
+        void InitPlayerAndCamera ( const RECT & rcClient );
+        void InitRendererUI ( HWND hWnd , int w , int h );
+        void RegisterDefaultFactories ( );
+        void InitSystems ( );
+        bool LocateOwner ( int ownerId , engine::Vec2 & outPos , int& outFacing ); // for HitVolumeSystem
+        
+        // ---- Update helpers ----
+        void StepPlayerFSM ( double fixedDt );
+        void HandlePlayerEvents ( const std::vector<game::PlayerEvent>&evs );
+        void UpdateMonsters ( double fixedDt );
+        void CheckContactDamage ( );
+        void BuildTargets ( std::vector<game::ProjectileSystem::Target>&projT ,
+                            std::vector<game::HitVolumeSystem::Target>&hvT );
+        void ApplyProjectileHits ( const std::vector<game::ProjectileSystem::HitEvent>&phits );
+        void ApplyHitVolumeHits ( const std::vector<game::HitVolumeSystem::HitEvent>&hvHits );
+        
+        // ---- Render helpers ----
+        void RenderWorldBatch ( int ox , int oy , int sw , int sh );
+        void RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh );
         void RenderHUD ( );
 
     private:
