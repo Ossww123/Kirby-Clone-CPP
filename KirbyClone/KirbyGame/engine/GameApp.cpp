@@ -551,11 +551,8 @@ namespace engine {
             t.id = m->Id ( );
             t.aabb = RECT{ mx,my,mx + mw,my + mh };
             t.alive = true; t.isPlayer = false;
-            // inhale metadata (임시: 추후 Monster 가상 접근자로 대체 권장)
-            if ( dynamic_cast< game::WaddleDoo* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::Beam; }
-            else if ( dynamic_cast< game::HotHead* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::Fire; }
-            else if ( dynamic_cast< game::Sparky* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::Spark; }
-            else if ( dynamic_cast< game::WaddleDee* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::None; }
+            t.inhalable = m->Inhalable ( );
+            t.abilityGift = m->AbilityGift ( );
             hvTargets.push_back ( t );
         }
         // 플레이어

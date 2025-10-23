@@ -36,8 +36,10 @@ namespace game {
             // m_anim.Play("Walk", true);
         }
 
-    protected:
         void TickAI ( double fixedDt , const engine::Input& ) override;
+
+        bool    Inhalable ( ) const override { return true; }
+        Ability AbilityGift ( ) const override { return Ability::Beam; }
 
     private:
         enum class AttackState { Idle , Windup , Cooldown };

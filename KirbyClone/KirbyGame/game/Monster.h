@@ -10,6 +10,7 @@
 #include "engine/D3D11DebugDraw.h"
 #include "engine/Texture.h"
 #include "game/Damage.h"
+#include "game/Ability.h"
 
 namespace game {
     enum class ProjOwner;
@@ -72,7 +73,10 @@ namespace game {
         bool Alive ( ) const { return m_alive; }
         void Kill ( ) { m_alive = false; }
 
-        // 피격 처리 (Projectile 등에서 호출)
+        // --- Inhale metadata ----
+        virtual bool    Inhalable ( ) const { return true; }
+        virtual Ability AbilityGift ( ) const { return Ability::None; }
+
         void OnHit ( const Damage& d ) {
             if ( !m_alive ) return;
 

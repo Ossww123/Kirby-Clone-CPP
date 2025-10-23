@@ -31,8 +31,10 @@ namespace game {
             , m_cfg ( cfg ) , m_dir ( cfg.dir )
             , m_turnOnHitX ( cfg.turnOnHitX ) , m_turnAtEdge ( cfg.turnAtEdge ) {}
 
-    protected:
         void TickAI ( double fixedDt , const engine::Input& ) override;
+
+        bool    Inhalable ( ) const override { return true; }
+        Ability AbilityGift ( ) const override { return Ability::Fire; }
 
     private:
         enum class AState { Idle , Windup , Breathing , Cooldown };
