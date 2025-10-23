@@ -15,7 +15,7 @@ namespace game {
     enum class MonsterType { WaddleDee , WaddleDoo , HotHead, Sparky /* , ... */ };
 
     struct SpawnSpec {
-        MonsterType type;
+        MonsterType type = MonsterType::WaddleDee;
         float x = 0.f , y = 0.f;
         int   dir = 1;
 

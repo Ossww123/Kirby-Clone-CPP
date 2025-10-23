@@ -1,11 +1,11 @@
 ﻿#include "GameApp.h"
 
-// std
+// === std ===
 #include <cwchar>
 #include <vector>
 #include <algorithm>
 
-// engine
+// === engine ===
 #include "engine/Time.h"
 #include "engine/Input.h"
 #include "engine/Scene.h"
@@ -25,7 +25,7 @@
 #include "engine/DWriteText.h"
 #include "engine/D3D11SpriteBatch.h"
 
-// game
+// === game ===
 #include "game/Player.h"
 #include "game/Damage.h"
 #include "game/Projectile.h"
@@ -34,6 +34,12 @@
 #include "game/StageCSV.h"
 #include "game/MonsterFactory.h"
 #include "game/GameConfig.h"
+
+// hit volume (spark/beam/inhale)
+#include "game/HitVolume.h"
+#include "game/HitVolumeFactory.h"
+#include "game/HitVolumeSystem.h"
+#include "game/CombatTarget.h"
 
 namespace engine {
     GameApp::~GameApp ( )
@@ -388,44 +394,22 @@ namespace engine {
             std::vector<game::PlayerEvent> evs;
             m_PlayerFSM.DrainEvents ( evs );
 
-            // 입(발사 위치)와 바라보는 방향
             auto facing = m_PlayerFSM.Facing ( );
             int px , py , pw , ph;
             m_Player->GetBounds ( px , py , pw , ph );
-            auto mouthPos = [ & ] ( int w = 8 , int h = 8 ) {
-                // 입 위치를 대충 중앙-약간 앞쪽으로
-                float x = ( facing > 0 ) ? float ( px + pw ) : float ( px ) - float ( w );
-                float y = float ( py + ph * 0.5f - h * 0.5f );
-                return engine::Vec2{ x, y };
-                };
-
-            // Inhale 처리(간단 버전: 범위에 겹치는 첫 몬스터를 빨아들임)
-            auto tryCaptureInhale = [ & ] ( const RECT& r , int f ) {
-                for ( auto it = m_Monsters.begin ( ); it != m_Monsters.end ( ); ++it ) {
-                    auto& m = *it;
-                    if ( !m || !m->Alive ( ) ) continue;
-                    int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-                    RECT mr{ mx, my, mx + mw, my + mh };
-                    if ( engine::physics::Overlap ( r , mr ) ) {
-                        // 어떤 능력 주는지 간단 매핑 (원하면 더 추가)
-                        game::Ability gift = game::Ability::None;
-                        if ( dynamic_cast< game::WaddleDoo* >( m.get ( ) ) ) gift = game::Ability::Beam;
-                        else if ( dynamic_cast< game::HotHead* >( m.get ( ) ) ) gift = game::Ability::Fire;
-                        else if ( dynamic_cast< game::Sparky* >( m.get ( ) ) )  gift = game::Ability::Spark;
-
-                        // 제거 + FSM에 알림
-                        m_Monsters.erase ( it );
-                        m_PlayerFSM.OnMouthCatch ( gift );
-                        return;
-                    }
-                }
-                };
 
             for ( auto& e : evs ) {
                 switch ( e.type ) {
-                    case game::PlayerEvent::InhaleVolume:
-                        tryCaptureInhale ( e.rect , e.facing );
-                        break;
+                case game::PlayerEvent::InhaleVolume: {
+                    // 흡입 볼륨은 'InhaleField' 아키타입으로 시스템에 위임
+                    game::HitVolumeSystem::SpawnDesc sd{};
+                    sd.archetype = "InhaleField";
+                    sd.ownerId = m_Player->Id ( );
+                    sd.ownerFacing = m_PlayerFSM.Facing ( );
+                    sd.worldAnchor = m_Player->Center ( );
+                    m_hitSys.Spawn ( sd );
+                    break;
+                }
                     case game::PlayerEvent::SpitStar:
                     {
                         int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
@@ -524,22 +508,22 @@ namespace engine {
         }
 
         // ── ProjectileSystem: 타깃 수집 → 틱 → 히트 처리 ──
-        std::vector<game::ProjectileSystem::Target> targets;
-        targets.reserve ( m_Monsters.size ( ) + 1 );
+        std::vector<game::ProjectileSystem::Target> projTargets;
+        projTargets.reserve ( m_Monsters.size ( ) + 1 );
         
         // 몬스터들(플레이어 탄의 타깃)
         for ( auto& m : m_Monsters ) if ( m && m->Alive ( ) ) {
             int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-            targets.push_back ( { m->Id ( ), RECT{mx,my,mx + mw,my + mh}, true, /*isPlayer*/ false } );
+            projTargets.push_back ( { m->Id ( ), RECT{mx,my,mx + mw,my + mh}, true, /*isPlayer*/ false } );
         }
         // 플레이어(적 탄의 타깃)
         if ( m_Player /*&& m_Player->Alive ( )*/ ) {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            targets.push_back ( { m_Player->Id ( ), RECT{px,py,px + pw,py + ph}, true, /*isPlayer*/ true } );
+            projTargets.push_back ( { m_Player->Id ( ), RECT{px,py,px + pw,py + ph}, true, /*isPlayer*/ true } );
         }
         
         // 시스템 틱 (월드 충돌은 Projectile 내부, 엔티티 충돌은 여기서 수행)
-        m_projSys.Step ( fixedDt , targets );
+        m_projSys.Step ( fixedDt , projTargets );
         
         // 히트 이벤트를 꺼내 전투 시스템/엔티티에 적용
         std::vector<game::ProjectileSystem::HitEvent> phits;
@@ -557,20 +541,62 @@ namespace engine {
             }
         }
 
-        // ---- HitVolumeSystem: Spark/Beam 등 근접 판정 ----
-        // 같은 targets 벡터 재사용 가능(플레이어/몬스터 모두 포함)
-        m_hitSys.Step ( fixedDt , targets );
+        // ---- HitVolumeSystem: Spark/Beam/흡입 판정 ----
+        std::vector<game::HitVolumeSystem::Target> hvTargets;
+        hvTargets.reserve ( m_Monsters.size ( ) + 1 );
+        // 몬스터
+        for ( auto& m : m_Monsters ) if ( m && m->Alive ( ) ) {
+            int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
+            game::HitVolumeSystem::Target t{};
+            t.id = m->Id ( );
+            t.aabb = RECT{ mx,my,mx + mw,my + mh };
+            t.alive = true; t.isPlayer = false;
+            // inhale metadata (임시: 추후 Monster 가상 접근자로 대체 권장)
+            if ( dynamic_cast< game::WaddleDoo* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::Beam; }
+            else if ( dynamic_cast< game::HotHead* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::Fire; }
+            else if ( dynamic_cast< game::Sparky* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::Spark; }
+            else if ( dynamic_cast< game::WaddleDee* >( m.get ( ) ) ) { t.inhalable = true; t.abilityGift = game::Ability::None; }
+            hvTargets.push_back ( t );
+        }
+        // 플레이어
+        if ( m_Player ) {
+            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+            game::HitVolumeSystem::Target pt{};
+            pt.id = m_Player->Id ( );
+            pt.aabb = RECT{ px,py,px + pw,py + ph };
+            pt.alive = true; pt.isPlayer = true;
+            pt.inhalable = false; pt.abilityGift = game::Ability::None;
+            hvTargets.push_back ( pt );
+        }
+        m_hitSys.Step ( fixedDt , hvTargets );
+
         std::vector<game::HitVolumeSystem::HitEvent> hvHits;
         m_hitSys.DrainHitEvents ( hvHits );
         for ( const auto& ev : hvHits ) {
-            game::Damage dmg{ ev.payload.damage, ev.payload.knockback };
-            // 볼륨의 팀 정보는 ownerId로 판단: 여기선 플레이어가 owner라고 가정(현재 스폰은 플레이어만)
-            // 확장 시 OwnerLocatorFn에서 팀을 함께 주거나, HitVolume에 ownerTeam을 넣어도 됨.
             const bool ownerIsPlayer = ( m_Player && ev.ownerId == m_Player->Id ( ) );
-            if ( ownerIsPlayer ) {
-                for ( auto& m : m_Monsters ) {
-                    if ( m && m->Id ( ) == ev.targetId ) { m->OnHit ( dmg ); break; }
+            if ( ev.isCapture ) {
+                // 흡입 캡처: 오너가 플레이어일 때만 처리 (확장 시 팀 분기)
+                if ( ownerIsPlayer ) {
+                    // 타깃 제거 + Kirby FSM에 선물 전달
+                    for ( auto it = m_Monsters.begin ( ); it != m_Monsters.end ( ); ++it ) {
+                        if ( *it && ( *it )->Id ( ) == ev.targetId ) {
+                            const game::Ability gift = ( ev.gift != game::Ability::None )
+                                ? ev.gift
+                                : game::Ability::None;
+                            m_Monsters.erase ( it );
+                            m_PlayerFSM.OnMouthCatch ( gift );
+                            break;
+                        }
+                    }
                 }
+                continue; // Damage 적용 안 함
+            }
+
+            // 일반 데미지 흐름
+            game::Damage dmg{ ev.payload.damage, ev.payload.knockback };
+            if ( ownerIsPlayer ) {
+                for ( auto& m : m_Monsters )
+                    if ( m && m->Id ( ) == ev.targetId ) { m->OnHit ( dmg ); break; }
             }
             else {
                 if ( m_Player && m_Player->Id ( ) == ev.targetId ) m_PlayerFSM.ApplyDamage ( dmg );

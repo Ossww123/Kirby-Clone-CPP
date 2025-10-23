@@ -157,6 +157,7 @@
     <ClInclude Include="engine\TileMap.h" />
     <ClInclude Include="engine\TileSet.h" />
     <ClInclude Include="engine\Time.h" />
+    <ClInclude Include="game\Ability.h" />
     <ClInclude Include="game\AnimCSV.h" />
     <ClInclude Include="game\CombatTarget.h" />
     <ClInclude Include="game\Damage.h" />

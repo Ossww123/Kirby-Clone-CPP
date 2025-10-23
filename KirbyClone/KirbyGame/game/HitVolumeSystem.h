@@ -33,6 +33,9 @@ namespace game {
             int        volumeId = -1;
             int        ownerId  = -1;
             HitPayload payload{};
+
+            bool       isCapture{ false };
+            Ability    gift{ Ability::None };
         };
 
         struct DespawnEvent {
@@ -99,6 +102,12 @@ namespace game {
         void BuildShape ( const HitVolume& hv , /*out*/ RECT& outBox ,
                         /*out*/ engine::Vec2& segA , /*out*/ engine::Vec2& segB ,
                         /*out*/ float& outRadius ) const;
+
+        inline void EmitCapture ( int volId , int ownerId , const Target& t , const HitVolume::Cfg& cfg ) {
+            HitEvent e{ t.id, volId, ownerId, cfg.payload, /*isCapture*/true, cfg.payload.gift };
+            if ( e.gift == Ability::None ) e.gift = t.abilityGift;
+            m_hits.push_back ( e );
+        }
 
     private:
         std::vector<Slot> m_vols;

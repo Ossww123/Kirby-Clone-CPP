@@ -13,13 +13,21 @@
 #include <unordered_map>
 #include "engine/Object.h"
 #include "engine/Math.h"
+#include "game/Ability.h"
 
 namespace game {
 
     enum class HitShape { Box , Circle , Capsule };
     enum class HitBehavior { Attached , AreaPulse , MeleeArc };
 
-    struct HitPayload { int damage{ 1 }; engine::Vec2 knockback{ 0.f, 0.f }; };
+    enum class HitEffect { Damage , Capture }; // Capture = 흡입/즉시 제거 이벤트
+    
+    struct HitPayload {
+        HitEffect    effect{ HitEffect::Damage };
+        int          damage{ 1 };            // Damage용
+        engine::Vec2 knockback{ 0.f, 0.f };  // Damage용
+        Ability      gift{ Ability::None };  // Capture용(없으면 타깃 메타에서 가져옴)
+    };
 
     class HitVolume final : public engine::Object {
     public:
@@ -53,6 +61,7 @@ namespace game {
 
             // Rules
             bool perTargetOnce = false; // if true, one hit per life regardless of tickInterval
+            bool excludeOwner = true;
         };
 
     public:

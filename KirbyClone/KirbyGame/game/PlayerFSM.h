@@ -8,11 +8,9 @@
 #include "engine/Collision.h"
 #include "engine/Anim.h"
 #include "game/Damage.h" // Team / HitKind / Damage / Health
+#include "game/Ability.h"
 
 namespace game {
-
-	// ---- Thin ability enum (expand later) ----
-	enum class Ability { None , Fire , Spark , Beam };
 
 	// ---- Parallel tracks ----
 	enum class MState { Idle , Walk , Run , Crouch , Slide , Jump , Fall , Inflated , Ladder };

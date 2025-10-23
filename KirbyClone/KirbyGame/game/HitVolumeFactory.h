@@ -18,7 +18,7 @@ namespace game {
     public:
         static void Register ( const std::string& id , const HitVolume::Cfg& cfg );
         static const HitVolume::Cfg* Find ( const std::string& id );
-        static void RegisterDefaults ( ); // SparkAura, BeamSweep
+        static void RegisterDefaults ( ); // SparkAura, BeamSweep, "InhaleField"
 
     private:
         static std::unordered_map<std::string , HitVolume::Cfg>& Registry ( );

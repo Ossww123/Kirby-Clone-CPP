@@ -1,5 +1,6 @@
 ﻿#include "game/HitVolumeSystem.h"
 #include "game/HitVolumeFactory.h"   // archetypes
+#include "game/Ability.h"
 
 #include <algorithm>
 #include <cmath>
@@ -56,6 +57,7 @@ namespace game {
             const auto& cfg = hv.GetCfg ( );
             for ( const auto& t : targets ) {
                 if ( !t.alive ) continue;
+                if ( cfg.excludeOwner && t.id == hv.Owner ( ) ) continue;
 
                 bool hit = false;
                 switch ( cfg.shape ) {
@@ -80,9 +82,28 @@ namespace game {
                 }
                 }
 
-                if ( hit && t.id != hv.Owner ( ) && hv.CanHitTarget ( t.id ) ) {
+                if ( hit && hv.CanHitTarget ( t.id ) ) {
                     hv.MarkHitTarget ( t.id );
-                    m_hits.push_back ( HitEvent{ t.id, s.id, hv.Owner ( ), cfg.payload } );
+                    // --- Capture(흡입) vs Damage 분기 ---
+                    if ( cfg.payload.effect == HitEffect::Capture ) {
+                        // 타깃이 흡입 가능한 경우만 캡처 이벤트 방출
+                        if ( t.inhalable ) {
+                            HitEvent ev{};
+                            ev.targetId = t.id;
+                            ev.volumeId = s.id;
+                            ev.ownerId = hv.Owner ( );
+                            ev.payload = cfg.payload;
+                            ev.isCapture = true;
+                            // payload.gift가 지정되어 있으면 우선, 아니면 타깃 메타 사용
+                            ev.gift = ( cfg.payload.gift != Ability::None ) ? cfg.payload.gift : t.abilityGift;
+                            m_hits.push_back ( ev );
+                        }
+                    } else { // HitKind::Damage
+                        HitEvent ev{ t.id, s.id, hv.Owner ( ), cfg.payload };
+                        ev.isCapture = false;
+                        ev.gift = Ability::None;
+                        m_hits.push_back ( ev );
+                    }
                 }
             }
 
