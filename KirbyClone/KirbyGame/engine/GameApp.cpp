@@ -194,6 +194,24 @@ namespace engine {
             m_World.RebuildColliders ( );
         }
 
+        // (옵션) 패럴랙스 배경: assets/<stage>/bg.png 를 찾으면 로드
+        {
+            std::wstring bgPng = ToWide ( base + "/bg.png" );
+            Tex2D bg{};
+            if ( LoadTextureWIC ( d3d->Device ( ) , bgPng.c_str ( ) , &bg ) ) {
+                m_BgTex = bg;
+                // 텍스처 원본 크기가 들어있다면 그대로 사용 (없다면 360x160으로 가정)
+                const int srcW = ( m_BgTex.width > 0 ) ? m_BgTex.width : 360;
+                const int srcH = ( m_BgTex.height > 0 ) ? m_BgTex.height : 160;
+                m_bgScaledW = srcW * game::SCALE;
+                m_bgScaledH = srcH * game::SCALE;
+            }
+            else {
+                m_BgTex = {};
+                m_bgScaledW = m_bgScaledH = 0;
+                }
+        }
+
         // 2) Player start
         game::PlayerStartCSV ps{};
         if ( game::LoadPlayerStartCSV ( ( base + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
@@ -332,7 +350,12 @@ namespace engine {
         m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
         auto [ox , oy] = m_Cam.OffsetInt ( );
 
-        if ( m_Batch ) { m_Batch->Begin ( ); RenderWorldBatch ( ox , oy , sw , sh ); m_Batch->End ( ); }
+        if ( m_Batch ) {
+            m_Batch->Begin ( );
+            RenderParallaxBG ( ox , oy , sw , sh );   // 1) 배경
+            RenderWorldBatch ( ox , oy , sw , sh );   // 2) 월드/플레이어/몬스터 (기존)
+            m_Batch->End ( );
+        }
         if ( m_debugDrawEnabled ) RenderDebugGridAndColliders ( ox , oy , sw , sh );
         RenderHUD ( );
 
@@ -566,6 +589,40 @@ namespace engine {
             };
         drawMonsters ( );
     }
+
+    void GameApp::RenderParallaxBG ( int ox , int oy , int sw , int sh )
+    {
+        if ( !m_BgTex.srv ) return;
+
+        // 스케일된 한 장의 그리기 크기 (기본 360x160 * 4 = 1440x640)
+        const int BW = ( m_bgScaledW > 0 ) ? m_bgScaledW : 360 * game::SCALE;
+        const int BH = ( m_bgScaledH > 0 ) ? m_bgScaledH : 160 * game::SCALE;
+
+        // 카메라 오프셋의 일부만 반영해서 "느리게" 스크롤
+        int scrollX = static_cast< int >( std::floor ( ox * m_bgParallaxX ) );
+        int scrollY = static_cast< int >( std::floor ( oy * m_bgParallaxY ) );
+
+        // 픽셀아트 지터 방지: 4배 스케일 그리드에 스냅
+        if ( game::SCALE > 1 ) {
+            scrollX = ( scrollX / game::SCALE ) * game::SCALE;
+            scrollY = ( scrollY / game::SCALE ) * game::SCALE;
+        }
+
+        // 화면을 덮도록 좌우(필요시 상하) 타일링
+        int startX = -( scrollX % BW ); if ( startX > 0 ) startX -= BW;
+        int startY = -( scrollY % BH ); if ( startY > 0 ) startY -= BH;
+
+        for ( int y = startY; y < sh; y += BH ) {
+            for ( int x = startX; x < sw + BW; x += BW ) {
+                m_Batch->Draw ( m_BgTex , static_cast< float >( x ) , static_cast< float >( y ) ,
+                               static_cast< float >( BW ) , static_cast< float >( BH ) ,
+                               /*src*/nullptr , 0xFFFFFFFF );
+            }
+            // 배경 한 장이 화면 높이를 이미 덮으면 한 줄만
+            if ( BH >= sh ) break;
+        }
+    }
+
 
     void GameApp::RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh ) {
         const int GRID = game::GRID_PX;
