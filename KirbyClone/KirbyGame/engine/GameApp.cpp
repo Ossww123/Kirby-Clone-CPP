@@ -4,6 +4,7 @@
 #include <cwchar>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 // === engine ===
 #include "engine/Time.h"
@@ -594,33 +595,39 @@ namespace engine {
     {
         if ( !m_BgTex.srv ) return;
 
-        // 스케일된 한 장의 그리기 크기 (기본 360x160 * 4 = 1440x640)
-        const int BW = ( m_bgScaledW > 0 ) ? m_bgScaledW : 360 * game::SCALE;
-        const int BH = ( m_bgScaledH > 0 ) ? m_bgScaledH : 160 * game::SCALE;
+        const int srcW = m_BgTex.width;
+        const int srcH = m_BgTex.height;
 
-        // 카메라 오프셋의 일부만 반영해서 "느리게" 스크롤
-        int scrollX = static_cast< int >( std::floor ( ox * m_bgParallaxX ) );
-        int scrollY = static_cast< int >( std::floor ( oy * m_bgParallaxY ) );
+        const int BW = srcW * game::SCALE;
+        const int BH = srcH * game::SCALE;
 
-        // 픽셀아트 지터 방지: 4배 스케일 그리드에 스냅
-        if ( game::SCALE > 1 ) {
-            scrollX = ( scrollX / game::SCALE ) * game::SCALE;
-            scrollY = ( scrollY / game::SCALE ) * game::SCALE;
-        }
+        const RECT wr = m_World.WorldRectPx ( );
+        const int worldW = wr.right - wr.left;           // 예: 타일칸수 * 16
+        const int viewW_world = sw / game::SCALE;        // 화면 가시폭을 월드 픽셀로 환산(예: 960/4=240)
+        const int camMax = std::max ( 0 , worldW - viewW_world );
 
-        // 화면을 덮도록 좌우(필요시 상하) 타일링
-        int startX = -( scrollX % BW ); if ( startX > 0 ) startX -= BW;
-        int startY = -( scrollY % BH ); if ( startY > 0 ) startY -= BH;
+        // bgMax: 배경이 보여줄 수 있는 여유 폭(= 배경폭 - 화면폭) → 1440-960=480
+        const int bgMax = std::max ( 0 , BW - sw );
 
-        for ( int y = startY; y < sh; y += BH ) {
-            for ( int x = startX; x < sw + BW; x += BW ) {
-                m_Batch->Draw ( m_BgTex , static_cast< float >( x ) , static_cast< float >( y ) ,
-                               static_cast< float >( BW ) , static_cast< float >( BH ) ,
-                               /*src*/nullptr , 0xFFFFFFFF );
-            }
-            // 배경 한 장이 화면 높이를 이미 덮으면 한 줄만
-            if ( BH >= sh ) break;
-        }
+        // 카메라 위치(ox)를 배경 여유 폭(bgMax)로 '0..camMax → 0..bgMax' 비율 매핑
+        // 이렇게 하면 맵 왼쪽 끝에서 bgX=0, 오른쪽 끝에서 bgX=480이 됩니다.
+        const int bgX_px = ( camMax > 0 )
+            ? ( int ) std::round ( ( double ) ox * ( double ) bgMax / ( double ) camMax )
+            : 0;
+
+        // --- srcRECT 계산 (원본 텍스처 픽셀 단위) ---
+        const int viewW_tex = sw / game::SCALE;  // 960/4 = 240
+        const int viewH_tex = sh / game::SCALE;  // 640/4 = 160
+        int srcLeft = bgX_px / game::SCALE;      // 스케일을 되돌려서 텍스처 좌표로
+        // 범위 클램프(경계 초과 방지)
+        srcLeft = std::clamp ( srcLeft , 0 , srcW - viewW_tex );
+
+        RECT src = { srcLeft, 0, srcLeft + viewW_tex, viewH_tex };
+
+        // --- 단 한 번만 그리기: 화면(0,0)-(sw,sh)에 배경 한 장 클리핑해서 꽉 채움 ---
+        m_Batch->Draw ( m_BgTex ,
+                      0.0f , 0.0f , ( float ) sw , ( float ) sh ,
+                      &src , 0xFFFFFFFF );
     }
 
 
