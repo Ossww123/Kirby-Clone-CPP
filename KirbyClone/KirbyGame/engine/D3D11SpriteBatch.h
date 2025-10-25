@@ -25,7 +25,7 @@ namespace engine {
     // 수집 커맨드(정렬 키 포함)
     struct SpriteItem {
         uint64_t sortKeyHi = 0;    // [blend:8 | sampler:8 | z:16 | pad:32]
-        uint64_t sortKeyLo = 0;    // SRV 주소(보조키)
+        uint64_t seq = 0;          // 제출 순서(안정 타이브레이커)
         const Tex2D* tex = nullptr;
         RECT   src{ 0,0,0,0 };
         float  x = 0 , y = 0 , w = 0 , h = 0;
@@ -123,6 +123,7 @@ namespace engine {
         SamplerMode  m_defaultSampler = SamplerMode::Point;
 
         bool m_inBegin = false;
+        uint64_t m_seq = 0;
     };
 
 } // namespace engine

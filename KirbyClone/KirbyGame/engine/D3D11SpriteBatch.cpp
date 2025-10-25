@@ -137,6 +137,7 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         m_vertices.clear ( );
         m_indices.clear ( );
         m_inBegin = true;
+        m_seq = 0;
 
         // 상태 캐시 리셋
         m_boundTex = nullptr;
@@ -169,7 +170,7 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         std::sort ( m_items.begin ( ) , m_items.end ( ) ,
                   [ ] ( const SpriteItem& a , const SpriteItem& b ) {
                           if ( a.sortKeyHi != b.sortKeyHi ) return a.sortKeyHi < b.sortKeyHi;
-                          return a.sortKeyLo < b.sortKeyLo;
+                          return a.seq < b.seq;
                   } );
 
         flushBatches ( );
@@ -202,8 +203,7 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         it.rgba = tintRGBA;
 
         it.sortKeyHi = packHi ( blend , sampler , zSort );
-        auto* srv = tex.srv.Get ( );
-        it.sortKeyLo = static_cast< uint64_t >( reinterpret_cast< uintptr_t >( srv ) );
+        it.seq = m_seq++;
 
         m_items.emplace_back ( it );
     }
