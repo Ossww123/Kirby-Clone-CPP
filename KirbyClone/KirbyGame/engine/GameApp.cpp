@@ -124,6 +124,21 @@ namespace engine {
         // 3) RenderSystem(프로젝션) 갱신
         m_Render.OnResize ( sw , sh );
 
+        {
+            RECT wr0 = m_World.WorldRectPx ( );
+            if ( wr0.right > wr0.left && wr0.bottom > wr0.top ) {
+                const int viewW_world = sw / game::SCALE;
+                const int viewH_world = sh / game::SCALE;
+                const int padWorld = game::TILE_PX / 2;
+                RECT wr = wr0;
+                const int wldW = wr.right - wr.left , wldH = wr.bottom - wr.top;
+                if ( wldW > viewW_world ) { wr.left += padWorld; wr.right -= padWorld; }
+                if ( wldH > viewH_world ) { wr.top += padWorld; wr.bottom -= padWorld; }
+                m_Cam.SetWorldRect ( wr );
+                m_Cam.SnapImmediate ( );
+            }
+        }
+
         // 4) 카메라 화면 크기 갱신(오프셋/halfW,halfH 일치)
         m_Cam.SetScreenSize ( sw , sh );
         m_Cam.SnapImmediate ( );
@@ -218,7 +233,18 @@ namespace engine {
         if ( game::LoadPlayerStartCSV ( ( base + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
             m_Player->SetPosition ( ps.x , ps.y );
             m_Player->Body ( ).SetVelocity ( { 0.f, 0.f } );
-            m_Cam.SetWorldRect ( m_World.WorldRectPx ( ) );
+            auto * d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+            const int sw = d3d ? d3d->Width ( ) : 0;
+            const int sh = d3d ? d3d->Height ( ) : 0;
+            RECT wr0 = m_World.WorldRectPx ( );
+            const int viewW_world = sw / game::SCALE;   // 화면 가시폭(월드 픽셀)
+            const int viewH_world = sh / game::SCALE;   // 화면 가시높이(월드 픽셀)
+            const int padWorld = game::TILE_PX / 2;   // 반 타일(월드 픽셀) = 8
+            RECT wr = wr0;
+            const int w = wr.right - wr.left , h = wr.bottom - wr.top;
+            if ( w > viewW_world ) { wr.left += padWorld; wr.right -= padWorld; }
+            if ( h > viewH_world ) { wr.top += padWorld; wr.bottom -= padWorld; }
+            m_Cam.SetWorldRect ( wr );
             m_Cam.SetLookAt ( { ps.x, ps.y } );
             m_Cam.SnapImmediate ( );
         }
@@ -598,37 +624,55 @@ namespace engine {
         const int srcW = m_BgTex.width;
         const int srcH = m_BgTex.height;
 
-        const int BW = srcW * game::SCALE;
-        const int BH = srcH * game::SCALE;
+        const int BW = srcW * game::SCALE; // 배경 스케일 폭(스크린 px)
+        const int BH = srcH * game::SCALE; // 배경 스케일 높이(스크린 px)
 
         const RECT wr = m_World.WorldRectPx ( );
-        const int worldW = wr.right - wr.left;           // 예: 타일칸수 * 16
-        const int viewW_world = sw / game::SCALE;        // 화면 가시폭을 월드 픽셀로 환산(예: 960/4=240)
-        const int camMax = std::max ( 0 , worldW - viewW_world );
+        const int worldW = wr.right - wr.left;        // 월드 폭(월드 px)
+        const int worldH = wr.bottom - wr.top;        // 월드 높이(월드 px)
+        const int viewW_world = sw / game::SCALE;     // 화면 폭(월드 px)
+        const int viewH_world = sh / game::SCALE;     // 화면 높이(월드 px)
 
-        // bgMax: 배경이 보여줄 수 있는 여유 폭(= 배경폭 - 화면폭) → 1440-960=480
-        const int bgMax = std::max ( 0 , BW - sw );
+        // 반 타일(=32px 스크린) 여유
+        const int padWorld = game::TILE_PX / 2;            // 8 (월드 px)
+        const int padScreen = padWorld * game::SCALE;       // 32 (스크린 px)
 
-        // 카메라 위치(ox)를 배경 여유 폭(bgMax)로 '0..camMax → 0..bgMax' 비율 매핑
-        // 이렇게 하면 맵 왼쪽 끝에서 bgX=0, 오른쪽 끝에서 bgX=480이 됩니다.
-        const int bgX_px = ( camMax > 0 )
-            ? ( int ) std::round ( ( double ) ox * ( double ) bgMax / ( double ) camMax )
-            : 0;
+        // --- X축: 카메라 유효 이동폭 & 배경 유효 이동폭(패드 반영) ---
+        const int camMaxX = std::max ( 0 , ( worldW - viewW_world ) - 2 * padWorld ); // 월드 px
+        const int bgMaxX = std::max ( 0 , BW - sw );                                // 스크린 px (전체 여유)
+        const int bgPadX = std::min ( padScreen , bgMaxX / 2 );                     // 배경도 좌우 32px 안쪽만 사용
+        const int bgMaxEffX = std::max ( 0 , bgMaxX - 2 * bgPadX );                  // 스크린 px
 
-        // --- srcRECT 계산 (원본 텍스처 픽셀 단위) ---
+        const int oxEff = std::clamp ( ox - ( (int)wr.left + padWorld ) , 0 , camMaxX );     // 월드 px
+        const int bgX_px = ( camMaxX > 0 ) ? ( int ) std::lround ( ( double ) oxEff * ( double ) bgMaxEffX / ( double ) camMaxX ) : 0;
+        const int srcLeftTex = ( bgX_px + bgPadX ) / game::SCALE;                   // 텍스처 px
+
+        // --- Y축: 세로도 가능하면 같은 방식으로(배경 높이가 충분할 때만 패드 적용) ---
+        const int camMaxY = std::max ( 0 , ( worldH - viewH_world ) - 2 * padWorld );  // 월드 px
+        const int bgMaxY = std::max ( 0 , BH - sh );                                // 스크린 px
+        const int bgPadY = std::min ( padScreen , bgMaxY / 2 );                     // 상하 32px, 가능할 때만
+        const int bgMaxEffY = std::max ( 0 , bgMaxY - 2 * bgPadY );
+
+        const int oyEff = std::clamp ( oy - ( ( int ) wr.top + padWorld ) , 0 , camMaxY );      // 월드 px
+        const int bgY_px = ( camMaxY > 0 ) ? ( int ) std::lround ( ( double ) oyEff * ( double ) bgMaxEffY / ( double ) camMaxY ) : 0;
+        const int srcTopTex = ( bgY_px + bgPadY ) / game::SCALE;                    // 텍스처 px
+
+        // --- srcRECT (원본 텍스처 픽셀 단위) ---
         const int viewW_tex = sw / game::SCALE;  // 960/4 = 240
         const int viewH_tex = sh / game::SCALE;  // 640/4 = 160
-        int srcLeft = bgX_px / game::SCALE;      // 스케일을 되돌려서 텍스처 좌표로
-        // 범위 클램프(경계 초과 방지)
-        srcLeft = std::clamp ( srcLeft , 0 , srcW - viewW_tex );
 
-        RECT src = { srcLeft, 0, srcLeft + viewW_tex, viewH_tex };
+        RECT src{
+            std::clamp ( srcLeftTex, 0, std::max ( 0, srcW - viewW_tex ) ),
+            std::clamp ( srcTopTex,  0, std::max ( 0, srcH - viewH_tex ) ),
+            0, 0
+        };
+        src.right = src.left + viewW_tex;
+        src.bottom = src.top + viewH_tex;
 
-        // --- 단 한 번만 그리기: 화면(0,0)-(sw,sh)에 배경 한 장 클리핑해서 꽉 채움 ---
-        m_Batch->Draw ( m_BgTex ,
-                      0.0f , 0.0f , ( float ) sw , ( float ) sh ,
-                      &src , 0xFFFFFFFF );
+        // 한 번만 그리기: (0,0)-(sw,sh)로 꽉 채움
+        m_Batch->Draw ( m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src , 0xFFFFFFFF );
     }
+
 
 
     void GameApp::RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh ) {
