@@ -127,8 +127,8 @@ namespace engine {
         {
             RECT wr0 = m_World.WorldRectPx ( );
             if ( wr0.right > wr0.left && wr0.bottom > wr0.top ) {
-                const int viewW_world = sw / game::SCALE;
-                const int viewH_world = sh / game::SCALE;
+                const int viewW_world = sw;
+                const int viewH_world = sh;
                 const int padWorld = game::TILE_PX / 2;
                 RECT wr = wr0;
                 const int wldW = wr.right - wr.left , wldH = wr.bottom - wr.top;
@@ -180,79 +180,83 @@ namespace engine {
 
     bool GameApp::LoadStageFromCSV ( const char* folder )
     {
-        // 0) 런타임 오브젝트 정리(핫리로드 시 기존 것 제거)
+        // 0) runtime clear
         m_Monsters.clear ( );
         m_projSys.Clear ( );
 
-        // 1) 타일셋 + 타일맵 (엔진)
-        // 스테이지 폴더 기억 (핫리로드에서 사용)
+        // 1) paths
         if ( folder && *folder ) m_stageFolder = folder;
         const std::string base = m_stageFolder;
-
         const std::wstring tilesPng = ToWide ( base + "/tileset.png" );
-        const std::wstring mapCsv = ToWide ( base + "/tilemap.csv" );
 
-        auto * d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
-        m_World.LoadTileset ( d3d->Device ( ) , tilesPng , /*tileW*/game::TILE_PX , /*tileH*/game::TILE_PX );
-        m_World.LoadMapCSV ( mapCsv );
+        auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
 
-        // (선택) 타일 속성 적용 → 콜라이더 재구성
+        // --- 타일셋: 셀(16) + 월드(64) 분리 ---
+        // (cell 16은 PNG 아틀라스 그리드, world 64는 타일 배치 크기)
+        m_World.LoadTileset ( d3d->Device ( ) , tilesPng , /*cellW*/16 , /*cellH*/16 );
+        m_World.SetWorldTileSize (/*tileW*/game::TILE_PX , /*tileH*/game::TILE_PX ); // TILE_PX=64
+
+        // --- 맵: CSV -> 메모리 -> World ---
+        int mw = 0 , mh = 0; std::vector<int> ids;
+        game::LoadTileMapCSV ( ( base + "/tilemap.csv" ).c_str ( ) , mw , mh , ids );
+        m_World.SetMapFromMemory ( mw , mh , ids.data ( ) );
+
+        // --- 타일 정의: CSV -> DefineTile() ---
         std::vector<game::TileDefCSV> tdefs;
         if ( game::LoadTileDefsCSV ( ( base + "/tiledefs.csv" ).c_str ( ) , tdefs ) && !tdefs.empty ( ) ) {
+            const int cw = m_World.Tiles ( ).CellW ( ); // 16
+            const int ch = m_World.Tiles ( ).CellH ( ); // 16
             for ( auto& r : tdefs ) {
-                engine::TileDef d{}; d.solid = ( r.solid != 0 ); d.oneway = ( r.oneway != 0 );
+                engine::TileDef d{};
+                d.solid = ( r.solid != 0 );
+                d.oneway = ( r.oneway != 0 );
+                if ( r.gx >= 0 && r.gy >= 0 ) {
+                    d.src = RECT{ r.gx * cw, r.gy * ch, r.gx * cw + cw, r.gy * ch + ch };
+                } // 없으면 렌더 폴백(id→index) 사용
                 m_World.DefineTile ( r.id , d );
             }
-            m_World.RebuildColliders ( );
         }
-        else {
-            // defs가 없어도 최소한 콜라이더는 갱신
-            m_World.RebuildColliders ( );
-        }
+        // --- 충돌 재구성 ---
+        m_World.RebuildColliders ( );
 
-        // (옵션) 패럴랙스 배경: assets/<stage>/bg.png 를 찾으면 로드
+        // (옵션) 배경 로드: 기존 로직 유지해도 되지만 SCALE 의존 제거 권장 (아래 4번 참고)
         {
             std::wstring bgPng = ToWide ( base + "/bg.png" );
             Tex2D bg{};
             if ( LoadTextureWIC ( d3d->Device ( ) , bgPng.c_str ( ) , &bg ) ) {
                 m_BgTex = bg;
-                // 텍스처 원본 크기가 들어있다면 그대로 사용 (없다면 360x160으로 가정)
-                const int srcW = ( m_BgTex.width > 0 ) ? m_BgTex.width : 360;
-                const int srcH = ( m_BgTex.height > 0 ) ? m_BgTex.height : 160;
-                m_bgScaledW = srcW * game::SCALE;
-                m_bgScaledH = srcH * game::SCALE;
+                m_bgScaledW = m_BgTex.width;  // SCALE 안 씀
+                m_bgScaledH = m_BgTex.height;
             }
             else {
-                m_BgTex = {};
-                m_bgScaledW = m_bgScaledH = 0;
-                }
+                m_BgTex = {}; m_bgScaledW = m_bgScaledH = 0;
+            }
         }
 
-        // 2) Player start
+        // 2) Player start (카메라 월드 rect 세팅은 2번 패치 참고)
         game::PlayerStartCSV ps{};
         if ( game::LoadPlayerStartCSV ( ( base + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
             m_Player->SetPosition ( ps.x , ps.y );
             m_Player->Body ( ).SetVelocity ( { 0.f, 0.f } );
-            auto * d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
-            const int sw = d3d ? d3d->Width ( ) : 0;
-            const int sh = d3d ? d3d->Height ( ) : 0;
+            auto* rd = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+            const int sw = rd ? rd->Width ( ) : 0;
+            const int sh = rd ? rd->Height ( ) : 0;
             RECT wr0 = m_World.WorldRectPx ( );
-            const int viewW_world = sw / game::SCALE;   // 화면 가시폭(월드 픽셀)
-            const int viewH_world = sh / game::SCALE;   // 화면 가시높이(월드 픽셀)
-            const int padWorld = game::TILE_PX / 2;   // 반 타일(월드 픽셀) = 8
+            // === 여기서 더 이상 /SCALE 하지 않음 ===
+            const int viewW_world = sw;
+            const int viewH_world = sh;
+            const int padWorld = game::TILE_PX / 2; // 32
             RECT wr = wr0;
-            const int w = wr.right - wr.left , h = wr.bottom - wr.top;
-            if ( w > viewW_world ) { wr.left += padWorld; wr.right -= padWorld; }
-            if ( h > viewH_world ) { wr.top += padWorld; wr.bottom -= padWorld; }
+            const int ww = wr.right - wr.left , wh = wr.bottom - wr.top;
+            if ( ww > viewW_world ) { wr.left += padWorld; wr.right -= padWorld; }
+            if ( wh > viewH_world ) { wr.top += padWorld; wr.bottom -= padWorld; }
             m_Cam.SetWorldRect ( wr );
             m_Cam.SetLookAt ( { ps.x, ps.y } );
             m_Cam.SnapImmediate ( );
         }
 
-        // ProjectileSystem: Reflection new world
+        // 3) 시스템 재초기화
         m_projSys.Initialize ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) );
-
-        // Reset FSM
         m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) , m_Player->Animator ( ) , m_playerFsmCfg );
 
         // 3) 몬스터 스폰 (팩토리 경유)
@@ -318,11 +322,11 @@ namespace engine {
     }
 
     bool GameApp::ReloadStage ( ) {
-        // 디바운스: 너무 자주 호출 방지 (m_reloadCooldown은 FixedUpdate에서 감소)
+        // Debounce
         if ( m_reloadCooldown > 0.0 ) return false;
         const bool ok = LoadStageFromCSV ( m_stageFolder.c_str ( ) );
         if ( ok ) {
-            m_reloadCooldown = 0.25; // 0.25초 쿨다운
+            m_reloadCooldown = 0.25; // Cooldown
             OutputDebugStringA ( "[HotReload] Stage reloaded.\n" );    
         }
          return ok;
@@ -379,8 +383,8 @@ namespace engine {
 
         if ( m_Batch ) {
             m_Batch->Begin ( );
-            RenderParallaxBG ( ox , oy , sw , sh );   // 1) 배경
-            RenderWorldBatch ( ox , oy , sw , sh );   // 2) 월드/플레이어/몬스터 (기존)
+            RenderParallaxBG ( ox , oy , sw , sh );   // 1) Background
+            RenderWorldBatch ( ox , oy , sw , sh );   // 2) World / Player / Monster
             m_Batch->End ( );
         }
         if ( m_debugDrawEnabled ) RenderDebugGridAndColliders ( ox , oy , sw , sh );
@@ -586,7 +590,8 @@ namespace engine {
     void GameApp::RenderWorldBatch ( int ox , int oy , int sw , int sh )
     {
         // 1) World
-        m_World.RenderVisibleScaled ( *m_Batch , ox , oy , sw , sh , game::SCALE );
+        // m_World.RenderVisibleScaled ( *m_Batch , ox , oy , sw , sh , game::SCALE );
+        m_World.RenderVisible ( *m_Batch , ox , oy , sw , sh );
 
         // 2) Player
         auto drawPlayer = [ & ] {

@@ -2,43 +2,50 @@
 
 namespace engine {
 
-    bool WorldSystem::Load ( ID3D11Device* dev ,
-                           const std::wstring& tilesPng ,
-                           const std::wstring& csv ,
-                           int tileW , int tileH )
+    // ---- Tileset ----
+    bool WorldSystem::LoadTileset ( ID3D11Device* dev ,
+                                    const std::wstring& tilesPng ,
+                                    int cellW , int cellH )
     {
-        if ( !LoadTileset ( dev , tilesPng , tileW , tileH ) ) return false;
-        if ( !LoadMapCSV ( csv ) ) return false;
+        return m_tiles.LoadAtlas ( dev , tilesPng.c_str ( ) , cellW , cellH );
+    }
+
+    // ---- Optional one-shot loader (no CSV) ----
+    bool WorldSystem::Load ( ID3D11Device* dev ,
+                             const std::wstring& tilesPng ,
+                             int cellW , int cellH ,
+                             int tileW , int tileH ,
+                             int mapW , int mapH , const int* ids )
+    {
+        if ( !LoadTileset ( dev , tilesPng , cellW , cellH ) ) return false;
+        m_tiles.SetWorldTileSize ( tileW , tileH );
+        if ( !m_map.LoadFromMemory ( mapW , mapH , ids ) )    return false;
         RebuildColliders ( );
         return true;
     }
 
-    bool WorldSystem::LoadTileset ( ID3D11Device* dev , const std::wstring& tilesPng , int tileW , int tileH )
-    {
-        return m_tiles.LoadAtlas ( dev , tilesPng.c_str ( ) , tileW , tileH );
-    }
-
-    bool WorldSystem::LoadMapCSV ( const std::wstring& csv )
-    {
-        return m_map.LoadCSV ( csv.c_str ( ) );
-    }
-
+    // ---- Collision ----
     void WorldSystem::RebuildColliders ( )
     {
         m_collision.Clear ( );
         m_map.BuildSolidColliders ( m_collision , m_tiles );
     }
 
-    void WorldSystem::RenderVisible ( D3D11SpriteBatch& batch , int ox , int oy , int screenW , int screenH ) const
+    // ---- Rendering ----
+    void WorldSystem::RenderVisible ( D3D11SpriteBatch& batch ,
+                                      int ox , int oy , int screenW , int screenH ) const
     {
         m_map.Render ( batch , m_tiles , ox , oy , screenW , screenH );
     }
 
-    void WorldSystem::RenderVisibleScaled ( D3D11SpriteBatch& batch , int ox , int oy , int screenW , int screenH , int scale ) const
+    void WorldSystem::RenderVisibleScaled ( D3D11SpriteBatch& batch ,
+                                            int ox , int oy , int screenW , int screenH ,
+                                            int scale ) const
     {
         m_map.RenderScaled ( batch , m_tiles , ox , oy , screenW , screenH , scale );
     }
 
+    // ---- World rect ----
     RECT WorldSystem::WorldRectPx ( ) const
     {
         const int w = m_map.W ( ) * m_tiles.TileW ( );
