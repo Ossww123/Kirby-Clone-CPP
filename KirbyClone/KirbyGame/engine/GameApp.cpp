@@ -626,59 +626,40 @@ namespace engine {
     {
         if ( !m_BgTex.srv ) return;
 
-        const int srcW = m_BgTex.width;
-        const int srcH = m_BgTex.height;
-
-        const int BW = srcW * game::SCALE; // 배경 스케일 폭(스크린 px)
-        const int BH = srcH * game::SCALE; // 배경 스케일 높이(스크린 px)
-
         const RECT wr = m_World.WorldRectPx ( );
-        const int worldW = wr.right - wr.left;        // 월드 폭(월드 px)
-        const int worldH = wr.bottom - wr.top;        // 월드 높이(월드 px)
-        const int viewW_world = sw / game::SCALE;     // 화면 폭(월드 px)
-        const int viewH_world = sh / game::SCALE;     // 화면 높이(월드 px)
+        const int worldW = wr.right - wr.left;
+        const int worldH = wr.bottom - wr.top;
 
-        // 반 타일(=32px 스크린) 여유
-        const int padWorld = game::TILE_PX / 2;            // 8 (월드 px)
-        const int padScreen = padWorld * game::SCALE;       // 32 (스크린 px)
+        const int pad = game::TILE_PX / 2;
 
-        // --- X축: 카메라 유효 이동폭 & 배경 유효 이동폭(패드 반영) ---
-        const int camMaxX = std::max ( 0 , ( worldW - viewW_world ) - 2 * padWorld ); // 월드 px
-        const int bgMaxX = std::max ( 0 , BW - sw );                                // 스크린 px (전체 여유)
-        const int bgPadX = std::min ( padScreen , bgMaxX / 2 );                     // 배경도 좌우 32px 안쪽만 사용
-        const int bgMaxEffX = std::max ( 0 , bgMaxX - 2 * bgPadX );                  // 스크린 px
+        auto calcParallaxOffset = [ & ] ( int camPos , int screenSize , int bgSize , int worldSize , int worldMin ) {
+            const int camMax = std::max ( 0 , worldSize - screenSize - 2 * pad );
+            const int bgMax = std::max ( 0 , bgSize - screenSize );
+            const int bgPad = std::min ( pad , bgMax / 2 );
+            const int bgMaxEff = std::max ( 0 , bgMax - 2 * bgPad );
 
-        const int oxEff = std::clamp ( ox - ( (int)wr.left + padWorld ) , 0 , camMaxX );     // 월드 px
-        const int bgX_px = ( camMaxX > 0 ) ? ( int ) std::lround ( ( double ) oxEff * ( double ) bgMaxEffX / ( double ) camMaxX ) : 0;
-        const int srcLeftTex = ( bgX_px + bgPadX ) / game::SCALE;                   // 텍스처 px
+            const int camEff = std::clamp ( camPos - ( worldMin + pad ) , 0 , camMax );
+            const int bgOffset = ( camMax > 0 ) ? ( int ) std::lround ( ( double ) camEff * bgMaxEff / camMax ) : 0;
 
-        // --- Y축: 세로도 가능하면 같은 방식으로(배경 높이가 충분할 때만 패드 적용) ---
-        const int camMaxY = std::max ( 0 , ( worldH - viewH_world ) - 2 * padWorld );  // 월드 px
-        const int bgMaxY = std::max ( 0 , BH - sh );                                // 스크린 px
-        const int bgPadY = std::min ( padScreen , bgMaxY / 2 );                     // 상하 32px, 가능할 때만
-        const int bgMaxEffY = std::max ( 0 , bgMaxY - 2 * bgPadY );
+            return ( bgOffset + bgPad ) / game::SCALE;
+            };
 
-        const int oyEff = std::clamp ( oy - ( ( int ) wr.top + padWorld ) , 0 , camMaxY );      // 월드 px
-        const int bgY_px = ( camMaxY > 0 ) ? ( int ) std::lround ( ( double ) oyEff * ( double ) bgMaxEffY / ( double ) camMaxY ) : 0;
-        const int srcTopTex = ( bgY_px + bgPadY ) / game::SCALE;                    // 텍스처 px
+        const int srcLeft = calcParallaxOffset ( ox , sw , m_BgTex.width * game::SCALE , worldW , wr.left );
+        const int srcTop = calcParallaxOffset ( oy , sh , m_BgTex.height * game::SCALE , worldH , wr.top );
 
-        // --- srcRECT (원본 텍스처 픽셀 단위) ---
-        const int viewW_tex = sw / game::SCALE;  // 960/4 = 240
-        const int viewH_tex = sh / game::SCALE;  // 640/4 = 160
+        const int viewW_tex = sw / game::SCALE;
+        const int viewH_tex = sh / game::SCALE;
 
         RECT src{
-            std::clamp ( srcLeftTex, 0, std::max ( 0, srcW - viewW_tex ) ),
-            std::clamp ( srcTopTex,  0, std::max ( 0, srcH - viewH_tex ) ),
+            std::clamp ( srcLeft, 0, std::max ( 0, m_BgTex.width - viewW_tex ) ),
+            std::clamp ( srcTop, 0, std::max ( 0, m_BgTex.height - viewH_tex ) ),
             0, 0
         };
         src.right = src.left + viewW_tex;
         src.bottom = src.top + viewH_tex;
 
-        // 한 번만 그리기: (0,0)-(sw,sh)로 꽉 채움
         m_Batch->Draw ( m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src , 0xFFFFFFFF );
     }
-
-
 
     void GameApp::RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh ) {
         const int GRID = game::GRID_PX;
