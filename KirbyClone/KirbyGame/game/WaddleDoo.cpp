@@ -7,11 +7,6 @@ using namespace engine;
 
 namespace game {
 
-    static inline float Len ( const Vec2& v ) { return std::sqrt ( v.x * v.x + v.y * v.y ); }
-    static inline Vec2  Norm ( const Vec2& v ) {
-        const float l = Len ( v ); if ( l <= 1e-6f ) return { 0,0 }; return { v.x / l, v.y / l };
-    }
-
     void WaddleDoo::TickAI ( double fixedDt , const engine::Input& )
     {
         const float dt = static_cast< float >( fixedDt );
@@ -42,7 +37,7 @@ namespace game {
         const Vec2 myCenter{ x + w * 0.5f, y + h * 0.5f };
         const Vec2 target = m_queryTarget ( );
         const Vec2 to = { target.x - myCenter.x, target.y - myCenter.y };
-        const float dist = Len ( to );
+        const float dist = to.Length ( );
 
         // 타겟이 범위 안이면 "공격시 페이싱"만 업데이트(이동 방향 m_dir 는 유지)
         if ( dist <= m_cfg.wakeRange && std::fabs ( to.x ) > 1.f ) {
