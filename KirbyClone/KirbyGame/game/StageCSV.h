@@ -11,17 +11,10 @@ namespace game {
 
     struct MonsterCSV {
         std::string type;
-        float x = 0 , y = 0;
-        int   dir = 1;
-
-        // Optional AI params (−1 = unspecified)
-        int   turnOnHitX = -1;  // 0/1
-        int   turnAtEdge = -1;  // 0/1
-        float wakeRange = -1.f;
-        float windupMs = -1.f;
-        float firePeriod = -1.f;
-        float bulletSpeed = -1.f;
-        int   stopDuringWindup = -1;  // 0/1
+        float x = 0.f , y = 0.f;
+        int   dir = 1;     // -1, 0, +1
+        int   attack = 1;  // 1/0
+        int   move = 1;    // 1/0
     };
 
     // Tile definition row as authored in CSV.

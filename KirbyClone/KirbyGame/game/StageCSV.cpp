@@ -105,17 +105,13 @@ namespace game {
         std::vector<std::string> hdr;
         if ( !read_header ( f , hdr ) ) return false;
 
+        // 새 스키마: type,x,y,dir,attack,move
         const int it = findIdx ( hdr , "type" );
         const int ix = findIdx ( hdr , "x" );
         const int iy = findIdx ( hdr , "y" );
         const int id = findIdx ( hdr , "dir" );
-        const int iToX = findIdx ( hdr , "turnonhitx" );
-        const int iTaE = findIdx ( hdr , "turnatedge" );
-        const int iWr = findIdx ( hdr , "wakerange" );
-        const int iWu = findIdx ( hdr , "windupms" );
-        const int iFp = findIdx ( hdr , "fireperiod" );
-        const int iBs = findIdx ( hdr , "bulletspeed" );
-        const int iSD = findIdx ( hdr , "stopduringwindup" );
+        const int ia = findIdx ( hdr , "attack" ); // optional
+        const int im = findIdx ( hdr , "move" );   // optional
 
         if ( it < 0 || ix < 0 || iy < 0 || id < 0 ) return false;
 
@@ -134,13 +130,8 @@ namespace game {
             m.y = to<float> ( row[ iy ] , 0.f );
             m.dir = to<int> ( row[ id ] , 1 );
 
-            if ( iToX >= 0 && iToX < ( int ) row.size ( ) ) m.turnOnHitX = to_bool01 ( row[ iToX ] , -1 );
-            if ( iTaE >= 0 && iTaE < ( int ) row.size ( ) ) m.turnAtEdge = to_bool01 ( row[ iTaE ] , -1 );
-            if ( iWr >= 0 && iWr < ( int ) row.size ( ) ) m.wakeRange = to<float> ( row[ iWr ] , -1.f );
-            if ( iWu >= 0 && iWu < ( int ) row.size ( ) ) m.windupMs = to<float> ( row[ iWu ] , -1.f );
-            if ( iFp >= 0 && iFp < ( int ) row.size ( ) ) m.firePeriod = to<float> ( row[ iFp ] , -1.f );
-            if ( iBs >= 0 && iBs < ( int ) row.size ( ) ) m.bulletSpeed = to<float> ( row[ iBs ] , -1.f );
-            if ( iSD >= 0 && iSD < ( int ) row.size ( ) ) m.stopDuringWindup = to_bool01 ( row[ iSD ] , -1 );
+            if ( ia >= 0 && ia < ( int ) row.size ( ) ) m.attack = to_bool01 ( row[ ia ] , m.attack );
+            if ( im >= 0 && im < ( int ) row.size ( ) ) m.move = to_bool01 ( row[ im ] , m.move );
 
             out.push_back ( std::move ( m ) );
         }

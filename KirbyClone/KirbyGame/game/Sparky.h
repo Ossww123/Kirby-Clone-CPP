@@ -13,16 +13,21 @@ namespace game {
             int   dir = 1;
             bool  turnOnHitX = true;
             bool  turnAtEdge = true;
-            float hopPeriodMs = 0.8f; // 점프 주기
-            float hopVy = 360.f;      // 점프 초기상승(플러스 -> 내부에서 -적용)
+            float hopRestMs = 0.5f;
+            float hopVy = 360.f;  // 점프 초기상승(플러스 -> 내부에서 -적용)
+            // 점프 종류별 가로 목표 이동거리(px)
+            float hopSmallDist = 32.f;  // 0.5 tile (타일 64px 기준)
+            float hopMediumDist = 96.f;  // 1.5 tile
 
-            // 공격(자기장 링)
+            // 공격(자기장 오라: HitVolume "SparkAura")
             float wakeRange = 220.f;
             float windupMs = 0.30f;
             float firePeriod = 1.40f;
-            int   ringProjectiles = 10;
-            float sparkSpeed = 260.f;
             bool  stopDuringWindup = true;
+            
+            // 인스턴스 플래그(새 스키마)
+            bool  enableMove = true;
+            bool  enableAttack = true;
         };
 
         Sparky ( const RECT& worldBounds ,
@@ -38,13 +43,15 @@ namespace game {
         Ability AbilityGift ( ) const override { return Ability::Spark; }
 
     private:
-        enum class AState { Idle , Windup , Burst , Cooldown };
+        enum class AState { Idle , Windup , Cooldown };
 
         // 이동/점프
         int   m_dir = 1;
         bool  m_turnOnHitX = true;
         bool  m_turnAtEdge = true;
-        float m_hopT = 0.f;
+        float m_restT = 0.f;        // 지상 휴식 타이머(착지 후에만 카운트)
+        bool  m_airborne = false;   // 공중 여부(점프 시작~착지까지)
+        float m_lockedVx = 0.f;     // 점프 동안 고정할 수평 속도
 
         // 공격 상태
         AState m_state{ AState::Idle };

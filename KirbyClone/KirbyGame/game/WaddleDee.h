@@ -7,16 +7,21 @@ namespace game {
     public:
         struct Config {
             Monster::Cfg base{};
-            int   dir = 1;       // +1: 오른쪽, -1: 왼쪽
-            bool  turnOnHitX = true; // 벽 충돌 시 방향 전환
-            bool  turnAtEdge = true; // 낭떠러지 앞에서 방향 전환
+            int   dir = 1;       // +1: right, -1: left
+            bool  turnOnHitX = true;
+            bool  turnAtEdge = true;
+
+            // Instance flag
+            bool  enableMove = true;
+            bool  enableAttack = false;
         };
 
         WaddleDee ( const RECT& worldBounds ,
                   const engine::physics::CollisionSystem* col ,
                   const Config& cfg = {} )
             : Monster ( worldBounds , col , cfg.base ) , m_dir ( cfg.dir ) ,
-            m_turnOnHitX ( cfg.turnOnHitX ) , m_turnAtEdge ( cfg.turnAtEdge )
+            m_turnOnHitX ( cfg.turnOnHitX ) , m_turnAtEdge ( cfg.turnAtEdge ),
+            m_enableMove ( cfg.enableMove ) , m_enableAttack ( cfg.enableAttack )
         {
             // 애니(선택): "Walk" 클립만 간단히 만들어 둠(없어도 동작)
             // m_anim.AddClip("Walk", engine::Animator::MakeRowClip(...));
@@ -32,6 +37,8 @@ namespace game {
         int  m_dir = 1;
         bool m_turnOnHitX = true;
         bool m_turnAtEdge = true;
+        bool m_enableMove = true;
+        bool m_enableAttack = false; // 미사용
     };
 
 } // namespace game

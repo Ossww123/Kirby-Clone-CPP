@@ -8,18 +8,17 @@ namespace game {
         struct Config {
             // 공통(몬스터 베이스)
             Monster::Cfg base{};
-
-            // === 이동(Dee와 동일 키) ===
-            int   dir = 1;             // +1: 오른쪽, -1: 왼쪽
-            bool  turnOnHitX = true;   // 벽 충돌 시 방향 전환
-            bool  turnAtEdge = true;   // 낭떠러지 앞에서 방향 전환
-
-            // === 빔 스윕(HitVolume) ===
-            float wakeRange = 360.f;   // 감지 범위
-            float windupMs = 0.35f;   // 공격 준비(텔레그래프) 시간
-            float firePeriod = 1.20f;   // 쿨다운
-
-            bool  stopDuringWindup = true; // 와인드업 중 멈춤
+            // 타입 고정 튜닝(수치는 코드/데이터에서 고정) + 인스턴스 플래그
+            int   dir = 1;
+            bool  enableAttack = true;
+            bool  enableMove = true;
+            // 아래는 타입 공통값(인스턴스별 변경 X)
+            bool  turnOnHitX = true;
+            bool  turnAtEdge = true;
+            float wakeRange = 360.f;
+            float windupMs = 0.35f;
+            float firePeriod = 1.20f;
+            bool  stopDuringWindup = true;
         };
 
         WaddleDoo ( const RECT& worldBounds ,

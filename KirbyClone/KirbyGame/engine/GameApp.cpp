@@ -264,9 +264,15 @@ namespace engine {
         if ( game::LoadMonstersCSV ( ( base + "/monsters.csv" ).c_str ( ) , mons ) ) {
             RECT wr = m_World.WorldRectPx ( );
 
+            auto lower_copy = [ ] ( std::string s ) {
+                for ( auto& c : s ) c = ( char ) std::tolower ( ( unsigned char ) c );
+                return s;
+            };
+
             for ( auto& r : mons ) {
                 // 문자열 -> MonsterType 매핑
-                std::string t = r.type; for ( auto& c : t ) c = ( char ) tolower ( c );
+                std::string t = lower_copy ( r.type );
+
                 game::MonsterType mt;
                 if ( t == "waddledee" ) mt = game::MonsterType::WaddleDee;
                 else if ( t == "waddledoo" ) mt = game::MonsterType::WaddleDoo;
@@ -278,14 +284,9 @@ namespace engine {
                 game::SpawnSpec spec;
                 spec.type = mt;
                 spec.x = r.x; spec.y = r.y;
-                spec.dir = ( r.dir >= 0 ) ? +1 : -1;
-                spec.turnOnHitX = r.turnOnHitX;          // -1 or 0/1
-                spec.turnAtEdge = r.turnAtEdge;
-                spec.wakeRange = r.wakeRange;
-                spec.windupMs = r.windupMs;
-                spec.firePeriod = r.firePeriod;
-                spec.bulletSpeed = r.bulletSpeed;
-                spec.stopDuringWindup = r.stopDuringWindup;
+                spec.dir = ( r.dir < 0 ? -1 : ( r.dir > 0 ? +1 : 0 ) );
+                spec.attack = r.attack;
+                spec.move = r.move;
 
                 auto mon = game::MonsterFactory::Create ( spec.type , wr , &m_World.Collision ( ) , spec );
                 if ( !mon ) continue;

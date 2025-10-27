@@ -1,8 +1,5 @@
-type,x,y,dir,turnOnHitX,turnAtEdge,wakeRange,windupMs,firePeriod,bulletSpeed,stopDuringWindup
-WaddleDee,1000,160,1,1,1,,,,,
-WaddleDee,1100,160,0,1,1,,,,,
-WaddleDee,1200,160,-1,1,1,,,,,
-WaddleDee,1300,160,1,1,1,,,,,
-WaddleDoo,1420,160,1,1,1,360,0.35,1.2,,1
-WaddleDoo,1580,160,-1,1,1,320,0.28,1.2,,1
-WaddleDoo,1760,160,1,1,1,360,0.35,1.2,,0
+type,x,y,dir,attack,move
+WaddleDee,1000,160,1,1,1
+WaddleDoo,1420,160,-1,1,1
+Sparky,1760,160,0,1,0
+Sparky,800,160,1,1,1
