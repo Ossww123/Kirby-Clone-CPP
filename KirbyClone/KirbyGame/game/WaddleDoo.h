@@ -14,13 +14,12 @@ namespace game {
             bool  turnOnHitX = true;   // 벽 충돌 시 방향 전환
             bool  turnAtEdge = true;   // 낭떠러지 앞에서 방향 전환
 
-            // === 사격 ===
-            float wakeRange = 360.f; // 감지 범위
-            float windupMs = 0.35f; // 공격 준비(텔레그래프) 시간
-            float firePeriod = 1.2f;  // 발사 주기(쿨다운)
-            float bulletSpeed = 420.f; // 탄속
+            // === 빔 스윕(HitVolume) ===
+            float wakeRange = 360.f;   // 감지 범위
+            float windupMs = 0.35f;   // 공격 준비(텔레그래프) 시간
+            float firePeriod = 1.20f;   // 쿨다운
 
-            bool  stopDuringWindup = true; // 윈드업 중 멈춤
+            bool  stopDuringWindup = true; // 와인드업 중 멈춤
         };
 
         WaddleDoo ( const RECT& worldBounds ,
@@ -53,6 +52,7 @@ namespace game {
         AttackState m_state{ AttackState::Idle };
         float m_cd = 0.f;       // 쿨다운 타이머
         float m_windupT = 0.f;  // 윈드업 잔여 시간
+        int   m_face = +1;      // 공격 시 바라보는 방향(이동 방향과 분리)
 
         Config m_cfg{};
     };

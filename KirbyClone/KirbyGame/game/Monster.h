@@ -22,6 +22,9 @@ namespace game {
                                                      const engine::Vec2& vel ,
                                                      ProjOwner owner )>;
         using QueryTargetPosFn = std::function<engine::Vec2 ( )>; // 예: 플레이어 센터
+        using SpawnHitVolumeFn = std::function<void ( const std::string& archetype ,
+                                                    int ownerId , int facing ,
+                                                    const engine::Vec2 & anchor )>;
 
         struct Cfg {
             engine::PhysicsParams phys;
@@ -109,6 +112,9 @@ namespace game {
         // 콜백 설정자
         void SetProjectileSpawner ( SpawnProjectileFn fn ) { m_spawnProj = std::move ( fn ); }
         void SetTargetQuery ( QueryTargetPosFn fn ) { m_queryTarget = std::move ( fn ); }
+        void SetHitVolumeSpawner ( SpawnHitVolumeFn fn ) { m_spawnHV = std::move ( fn ); }
+        engine::Animator * Animator ( ) { return &m_anim; }
+        const engine::Animator * Animator ( ) const { return &m_anim; }
 
         // ===== Sprite (임시 단일 프레임) =====
     public:
@@ -169,6 +175,7 @@ namespace game {
 
         SpawnProjectileFn m_spawnProj;  
         QueryTargetPosFn  m_queryTarget;
+        SpawnHitVolumeFn  m_spawnHV;
 
     private:
         const engine::Tex2D * m_tex{ nullptr }; // enemies.png (GameApp 소유)

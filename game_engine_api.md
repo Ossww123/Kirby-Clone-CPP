@@ -196,20 +196,52 @@
 ### 타일/맵 시스템
 
 #### `engine::TileSet`
-
-- **역할**: 타일 아틀라스 텍스처 + id→`TileDef`(solid/oneway/src) 보관.
-- **API**: `LoadAtlas`, `Define`, `Get`, `TileW/H`, `Atlas()`
+- **역할**: 타일 아틀라스 텍스처 보관(셀 크기) + id→`TileDef`(solid/oneway/src) 사전 + 월드 타일 크기 보관.
+- **API**
+  - `bool LoadAtlas(ID3D11Device*, const wchar_t* png, int cellW, int cellH)`
+  - `void SetWorldTileSize(int tileW, int tileH)`
+  - `void Define(int id, const TileDef& def)` / `const TileDef* Get(int id) const`
+  - `bool TrySrcFromIndex(int idx, RECT* out) const`  // 아틀라스 셀 그리드 기준(텍스처 픽셀)
+  - 접근자: `Atlas()`, `CellW/H()`, `TileW/H()`, `Cols()`, `Rows()`
 
 #### `engine::TileMap`
-
-- **역할**: CSV 맵 로드, SOLID를 큰 직사각형으로 병합하여 충돌 생성, 가시 타일만 렌더.
-- **API**: `LoadCSV`, `BuildSolidColliders(cs, tiles)`, `Render(batch, tiles, camOffX, camOffY, screenW, screenH)`
-- **좌표계**: 월드(px) = 타일 인덱스 × (TileW, TileH)
+- **역할**: 맵 ID 그리드 보관/주입, SOLID 병합·ONEWAY 개별 등록으로 충돌 빌드, 가시 타일만 렌더.
+- **API**
+  - `bool LoadFromMemory(int w, int h, const int* ids)`   // CSV 파싱은 게임 레이어 담당
+  - `int  BuildSolidColliders(physics::CollisionSystem&, const TileSet&) const`
+  - `void Render(D3D11SpriteBatch&, const TileSet&, int camOffX, int camOffY, int screenW, int screenH) const`
+  - `void RenderScaled(D3D11SpriteBatch&, const TileSet&, int camOffX, int camOffY, int screenW, int screenH, int scale) const`
+  - 접근자: `W()`, `H()`, `At(x,y)`
+- **좌표계**
+  - 소스(`RECT src`): **텍스처 픽셀**(셀 크기 `TileSet.CellW/H`)
+  - 배치/컬링: **월드 픽셀**(타일 크기 `TileSet.TileW/H`)
+  - 카메라 오프셋 `camOffX/Y`: **월드 픽셀**
 
 #### `engine::WorldSystem`
+- **역할**: `TileSet` + `TileMap` + `CollisionSystem` 오케스트레이션(로드/정의 주입/충돌 빌드/렌더).
+- **API**
+  - `bool LoadTileset(ID3D11Device*, const std::wstring& png, int cellW, int cellH)`
+  - `void SetWorldTileSize(int tileW, int tileH)`
+  - `bool SetMapFromMemory(int w, int h, const int* ids)`
+  - `void DefineTile(int id, const TileDef& def)`
+  - `void RebuildColliders()`
+  - `void RenderVisible(D3D11SpriteBatch&, int ox, int oy, int screenW, int screenH) const`
+  - `void RenderVisibleScaled(D3D11SpriteBatch&, int ox, int oy, int screenW, int screenH, int scale) const`
+  - `RECT WorldRectPx() const`
+  - 접근자: `Tiles()`, `Map()`, `Collision()`, `TileW/H()`, `MapW/H()`
 
-- **역할**: `TileSet`+`TileMap`+`CollisionSystem` 오케스트라.
-- **API**: `Load(...)`, `LoadTileset`, `LoadMapCSV`, `RebuildColliders`, `RenderVisible`, `WorldRectPx()`
+#### `game::StageCSV` (게임 레이어)
+- **역할**: 모든 CSV 파싱 담당(엔진은 파일 포맷 비의존).
+- **API**
+  - `bool LoadTileMapCSV(const char* path, int& outW, int& outH, std::vector<int>& outIds)`
+  - `bool LoadTileDefsCSV(const char* path, std::vector<TileDefCSV>& out)`  // `TileDefCSV{ id, solid, oneway, gx, gy }`
+  - `bool LoadPlayerStartCSV(const char* path, PlayerStartCSV& out)`
+  - `bool LoadMonstersCSV(const char* path, std::vector<MonsterCSV>& out)`
+
+### 스케일 합의
+- **셀 크기(Cell)**: 아틀라스 소스 격자(예: 16×16)
+- **월드 타일 크기(World)**: 화면 배치 크기(예: 64×64)
+- 기본 렌더는 1×(추가 스케일 없음). 필요 시 `RenderScaled(..., scale)` 사용.
 
 ---
 

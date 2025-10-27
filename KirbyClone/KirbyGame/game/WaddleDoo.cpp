@@ -44,9 +44,9 @@ namespace game {
         const Vec2 to = { target.x - myCenter.x, target.y - myCenter.y };
         const float dist = Len ( to );
 
-        // 타겟이 범위 안이면 바라보는 방향 업데이트
-        if ( dist <= m_cfg.wakeRange ) {
-            if ( std::fabs ( to.x ) > 1.f ) m_dir = ( to.x >= 0.f ) ? +1 : -1;
+        // 타겟이 범위 안이면 "공격시 페이싱"만 업데이트(이동 방향 m_dir 는 유지)
+        if ( dist <= m_cfg.wakeRange && std::fabs ( to.x ) > 1.f ) {
+            m_face = ( to.x >= 0.f ) ? +1 : -1;
         }
 
         switch ( m_state ) {
@@ -55,22 +55,20 @@ namespace game {
                 // 공격 준비 진입
                 m_state = AttackState::Windup;
                 m_windupT = m_cfg.windupMs;
+                // TODO : add anim
             }
             break;
 
         case AttackState::Windup:
-            if ( m_windupT <= 0.f && m_spawnProj ) {
-                // 발사
-                Vec2 dir = Norm ( to );
-                if ( dir.x == 0.f && dir.y == 0.f )
-                    dir = { static_cast< float >( m_dir ), 0.f };
-
-                const Vec2 vel = { dir.x * m_cfg.bulletSpeed, dir.y * m_cfg.bulletSpeed };
-                const Vec2 muzzle{ myCenter.x, myCenter.y - 6.f }; // 눈높이 근처
-
-                m_spawnProj ( muzzle , vel , ProjOwner::Enemy );
+            // 윈드업 동안 계속 목표 방향으로 "바라보기"만 갱신
+            if ( std::fabs ( to.x ) > 1.f ) m_face = ( to.x >= 0.f ) ? +1 : -1;
+            if ( m_windupT <= 0.f && m_spawnHV ) {
+                // 빔 스윕(HitVolume) 생성
+                Vec2 anchor = myCenter; anchor.x += ( float ) m_face * 8.f; // 손/눈 앞 오프셋
+                m_spawnHV ( "BeamSweep" , Id ( ) , m_face , anchor );
                 m_cd = m_cfg.firePeriod;
                 m_state = AttackState::Cooldown;
+                if ( auto* an = Animator ( ) ) an->Play ( "Attack" , false );
             }
             break;
 

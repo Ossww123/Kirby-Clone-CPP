@@ -43,6 +43,9 @@ namespace game {
         m_runQueued = false;
         m_lastTapDir = 0;
         m_pendingKB = { 0.f, 0.f };
+        // fall/bounce
+        m_fallT = 0.f; m_fallY0 = 0.f; m_tumbleT = 0.f;
+        m_fellFromJump = false; m_inLongFall = false; m_bounceQueued = false;
         m_mPending.reset ( ); m_aPending.reset ( ); m_zPending.reset ( );
         m_transitionBudget = 0;
 
@@ -161,6 +164,7 @@ namespace game {
         m_dbg.hp = m_health.hp; m_dbg.iFrameT = m_health.iFrameT;
         m_dbg.facing = m_facing; m_dbg.mouthFull = m_mouthFull; m_dbg.ability = m_ability;
         m_dbg.inhaleT = m_inhaleT; m_dbg.spitLockT = m_spitLockT;
+        m_dbg.fallT = m_fallT; m_dbg.longFall = m_inLongFall;
     }
 
     bool PlayerFSM::ApplyDamage ( const Damage& d )
@@ -220,7 +224,11 @@ namespace game {
 
         if ( c.rep.grounded ) m_dbg.groundHoldT = m_cfg.groundHoldMs;
 
-        if ( !c.jumpHeld && c.body->Velocity ( ).y < 0.f ) {
+        if ( c.rep.grounded && m_mState == MState::Fall && m_inLongFall && !m_bounceQueued ) {
+            m_bounceQueued = true;
+        }
+
+        if ( !c.jumpHeld && c.body->Velocity ( ).y < 0.f && m_mState == MState::Jump ) {
             auto v = c.body->Velocity ( ); v.y *= m_cfg.shortHopMul; c.body->SetVelocity ( v );
         }
     }
@@ -241,6 +249,17 @@ namespace game {
         r.top = cy - ( int ) ( H * 0.5f ); r.bottom = cy + ( int ) ( H * 0.5f ); return r;
     }
 
+    // --- Reset accumulated fall value ---
+    void PlayerFSM::ResetFallAccumulators ( )
+    {
+        m_fallT = 0.f;
+        m_tumbleT = 0.f;
+        m_inLongFall = false;
+        m_bounceQueued = false;
+        m_fellFromJump = false;
+        // m_fallY0는 새로 Fall에 들어가는 1프레임 차에 다시 설정됨(M_Fall::Update 첫 분기)
+    }
+
     // ====== Movement ======
     void PlayerFSM::M_Grounded::Update ( Ctx& c , PlayerFSM& f )
     {
@@ -249,8 +268,13 @@ namespace game {
 
         // 공통: 지면 이탈 감시
         const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
-        if ( !stable ) { f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall ); return; }
-
+        if ( !stable ) {
+            f.m_fallT = 0.f;
+            f.m_fellFromJump = false;                  // 지면 이탈로 인한 낙하
+            f.m_tumbleT = 0.f;
+            f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall );
+            return;
+        }
         // 웅크리기: 아래 입력이면 Crouch으로
         if ( c.ay < -0.5f ) {
             if ( f.m_mState != MState::Crouch && f.m_mState != MState::Slide )
@@ -268,10 +292,20 @@ namespace game {
             f.RequestMove ( std::make_unique<M_Inflated> ( ) , MState::Inflated );
         }
 
-        const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
+        const bool stable = ( c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f ) ) && ( c.vel.y >= 0.f );
         if ( stable ) {
+            if ( f.m_bounceQueued ) {
+                auto v = c.body->Velocity ( );
+                v.y = -std::abs ( f.m_cfg.bounceSpeedUp );
+                c.body->SetVelocity ( v );
+                f.m_bounceQueued = false;
+                f.m_inLongFall = false;
+                f.m_fallT = 0.f; f.m_tumbleT = 0.f;
+                Play ( c.anim , "Bounce" , true );
+                return; // 이번 틱에는 지상 전이 금지, 공중 유지
+            }
             if ( Abs ( c.ax ) > RUN_TOGGLE_AX ) f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk );
-            else                           f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+            else                                f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
         }
     }
 
@@ -358,7 +392,13 @@ namespace game {
         if ( c.jumpPressed ) { f.RequestMove ( std::make_unique<M_Inflated> ( ) , MState::Inflated ); return; }
 
         if ( f.m_jumpLockT > 0.f ) return;
-        if ( c.body->Velocity ( ).y >= 0.f ) { f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall ); return; }
+        if ( c.body->Velocity ( ).y >= 0.f ) {
+            f.m_fallT = 0.f;
+            f.m_fellFromJump = true;
+            f.m_tumbleT = f.m_cfg.fallTumbleMs;
+            f.RequestMove ( std::make_unique<M_Fall> ( ) , MState::Fall );
+            return;
+        }
 
         const bool stable = c.body->Grounded ( ) || ( f.m_dbg.groundHoldT > 0.f );
         if ( stable ) {
@@ -367,9 +407,36 @@ namespace game {
         }
     }
 
-    void PlayerFSM::M_Fall::OnEnter ( Ctx& c ) { Play ( c.anim , "Fall" , true ); }
-    void PlayerFSM::M_Fall::Update ( Ctx& c , PlayerFSM& f )
+    void PlayerFSM::M_Fall::OnEnter ( Ctx & c ) {}
+    void PlayerFSM::M_Fall::Update ( Ctx & c , PlayerFSM & f )
     {
+        // 좌우 이동
+        float axis = c.ax * ( c.mod.lockRunAxis ? 0.f : c.mod.runAxisMul );
+        c.body->SetDesiredRunAxis ( axis );
+
+        // 진입 1프레임: FALL0 또는 FALL1 시작
+        if ( f.m_fallT <= 0.f ) {
+            Play ( c.anim , ( f.m_tumbleT > 0.f ? "Fall0" : "Fall1" ) , true );
+            f.m_inLongFall = false;
+            f.m_bounceQueued = false;
+            f.m_fallY0 = static_cast< float >( c.aabb.bottom );
+        }
+
+        // 페이즈 타이머
+        f.m_fallT += c.dt;
+        if ( f.m_tumbleT > 0.f ) {
+            f.m_tumbleT = std::max ( 0.f , f.m_tumbleT - c.dt );
+            if ( f.m_tumbleT <= 0.f ) Play ( c.anim , "Fall1" , true );
+        }
+        // 장낙하 진입 조건: 시간 OR 누적높이
+        if ( !f.m_inLongFall ) {
+            const float dropPx = static_cast< float >( c.aabb.bottom ) - f.m_fallY0;
+            if ( f.m_fallT >= f.m_cfg.fallLongMs || dropPx >= f.m_cfg.fallLongHeightPx ) {
+                f.m_inLongFall = true;
+                Play ( c.anim , "Fall2" , true );
+            }
+        }
+        // 일반 공중 공통 처리(착지/전이/바운스)는 베이스로 위임
         M_Airborne::Update ( c , f );
     }
 
@@ -400,13 +467,26 @@ namespace game {
         // 우선순위: (1) 머금은 물체 뱉기 (2) 공기포 (Inflated) (3) 카피능력 공격 (4) 빨아들이기
         if ( f.m_mouthFull && c.attackPressed ) { f.RequestAct ( std::make_unique<A_SpitObject> ( ) , AState::SpitObject ); return; }
         if ( f.m_mState == MState::Inflated && c.attackPressed ) { f.RequestAct ( std::make_unique<A_AirPuff> ( ) , AState::AirPuff ); return; }
-        if ( f.m_ability != Ability::None && c.attackPressed ) { f.RequestAct ( std::make_unique<A_AbilityAtk> ( ) , AState::AbilityAtk ); return; }
-        if ( !f.m_mouthFull && c.attackHeld && f.m_ability == Ability::None ) { f.RequestAct ( std::make_unique<A_Inhale> ( ) , AState::Inhale ); return; }
+        if ( f.m_ability != Ability::None && c.attackPressed ) {
+            // Crouch/Slide 중에 능력공격을 금지 가드를 추가
+            f.RequestAct ( std::make_unique<A_AbilityAtk> ( ) , AState::AbilityAtk ); return;
+        }
+        // Inhale 가드: Crouch/Slide 중이거나 아래 입력 중일 때는 Inhale 금지 (슬라이딩킥 우선)
+        const bool crouchLike = ( f.m_mState == MState::Crouch || f.m_mState == MState::Slide || c.ay < -0.5f );
+        if ( !f.m_mouthFull && c.attackHeld && f.m_ability == Ability::None && !crouchLike ) {
+            f.RequestAct ( std::make_unique<A_Inhale> ( ) , AState::Inhale ); return;
+        }
     }
 
     void PlayerFSM::A_Inhale::OnEnter ( Ctx& c ) { Play ( c.anim , "Inhale" , true ); }
     void PlayerFSM::A_Inhale::Update ( Ctx& c , PlayerFSM& f )
     {
+        // Crouch/Slide에 들어가면 Inhale 즉시 취소(동시 발동 방지)
+        if ( f.m_mState == MState::Crouch || f.m_mState == MState::Slide ) {
+            f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+            return;
+        }
+
         c.mod.runAxisMul = 0.5f;
         if ( f.m_inhaleT <= 0.f ) f.m_inhaleT = 0.55f;
         f.m_inhaleT = std::max ( 0.f , f.m_inhaleT - c.dt );
@@ -439,13 +519,22 @@ namespace game {
     void PlayerFSM::A_SpitObject::OnEnter ( Ctx& c ) { Play ( c.anim , "Spit" , true ); }
     void PlayerFSM::A_SpitObject::Update ( Ctx& c , PlayerFSM& f )
     {
-        if ( f.m_spitLockT <= 0.f ) {
-            PlayerEvent ev{ PlayerEvent::SpitStar }; ev.facing = f.m_facing; f.m_events.push_back ( ev );
-            f.m_spitLockT = 0.18f;
-            f.m_mouthFull = false; f.m_caughtGift = Ability::None;
+        // 최초 1프레임에만 발사
+        if ( !f.m_spitEmitted ) {
+            PlayerEvent ev{ PlayerEvent::SpitStar };
+            ev.facing = f.m_facing;
+            f.m_events.push_back ( ev );
+            f.m_spitLockT = 0.18f;                 // 짧은 공격 락
+            f.m_mouthFull = false;
+            f.m_caughtGift = Ability::None;
+            f.m_spitEmitted = true;                // 원샷 가드
         }
+        // 락 동안 입력 잠금
         c.mod.lockRunAxis = true;
-        if ( f.m_spitLockT <= 0.f ) f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+        // 락이 끝나면 Neutral로 복귀 (재발사 없음)
+        if ( f.m_spitEmitted && f.m_spitLockT <= 0.f ) {
+            f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+        }
     }
 
     void PlayerFSM::A_AirPuff::OnEnter ( Ctx& c ) { Play ( c.anim , "AirPuff" , true ); }
@@ -553,7 +642,23 @@ namespace game {
     void PlayerFSM::RequestAct ( std::unique_ptr<ABase> ns , AState tag ) { m_aPending = std::move ( ns ); m_aPendingTag = tag; }
     void PlayerFSM::RequestOver ( std::unique_ptr<ZBase> ns , ZState tag ) { m_zPending = std::move ( ns ); m_zPendingTag = tag; }
 
-    void PlayerFSM::ApplyPendingMove ( Ctx& ) { if ( !m_mPending ) return; if ( !CanMove ( m_mState , m_mPendingTag , {} ) ) { m_mPending.reset ( ); return; } if ( m_move ) m_move->OnExit ( ); m_move = std::move ( m_mPending ); m_mState = m_mPendingTag; m_mNeedEnter = true; }
+    void PlayerFSM::ApplyPendingMove ( Ctx& )
+    {
+        if ( !m_mPending ) return;
+        if ( !CanMove ( m_mState , m_mPendingTag , {} ) ) { m_mPending.reset ( ); return; }
+        // SpitObject 진입 시 one-shot 플래그 리셋
+        if ( m_aPendingTag == AState::SpitObject ) {
+            m_spitEmitted = false;
+        }
+        // Fall → (다른 상태) 로 나갈 때, 장낙하/높이 누적 리셋
+        if ( m_mState == MState::Fall && m_mPendingTag != MState::Fall ) {
+            ResetFallAccumulators ( );
+        }
+        if ( m_move ) m_move->OnExit ( );
+        m_move = std::move ( m_mPending );
+        m_mState = m_mPendingTag;
+        m_mNeedEnter = true;
+    }
     void PlayerFSM::ApplyPendingAct ( Ctx& ) { if ( !m_aPending ) return; if ( !CanAct ( m_aState , m_aPendingTag , {} ) ) { m_aPending.reset ( ); return; } if ( m_action ) m_action->OnExit ( ); m_action = std::move ( m_aPending ); m_aState = m_aPendingTag; m_aNeedEnter = true; }
     void PlayerFSM::ApplyPendingOver ( Ctx& ) { if ( !m_zPending ) return; if ( !CanOver ( m_zState , m_zPendingTag , {} ) ) { m_zPending.reset ( ); return; } if ( m_overlay ) m_overlay->OnExit ( ); m_overlay = std::move ( m_zPending ); m_zState = m_zPendingTag; m_zNeedEnter = true; }
 

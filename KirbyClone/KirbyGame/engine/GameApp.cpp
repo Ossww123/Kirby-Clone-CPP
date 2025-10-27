@@ -315,6 +315,14 @@ namespace engine {
                     } );
                 mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
 
+                // --- HitVolume 스포너 ---
+                mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche ,
+                                            int ownerId , int facing ,
+                                            const engine::Vec2 & anchor ) {
+                    game::HitVolumeSystem::SpawnDesc sd{ arche, ownerId, facing, anchor };
+                    m_hitSys.Spawn ( sd );
+                });
+
                 m_Monsters.push_back ( std::move ( mon ) );
             }
         }

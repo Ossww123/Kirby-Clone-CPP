@@ -88,7 +88,6 @@ namespace game {
                                 cfg.wakeRange = 360.f;
                                 cfg.windupMs = 0.35f;
                                 cfg.firePeriod = 1.20f;
-                                cfg.bulletSpeed = 420.f;
                                 cfg.stopDuringWindup = true;
 
                                 // CSV 오버라이드
@@ -97,7 +96,6 @@ namespace game {
                                 if ( s.wakeRange >= 0.f )     cfg.wakeRange = s.wakeRange;
                                 if ( s.windupMs >= 0.f )     cfg.windupMs = s.windupMs;
                                 if ( s.firePeriod >= 0.f )     cfg.firePeriod = s.firePeriod;
-                                if ( s.bulletSpeed >= 0.f )     cfg.bulletSpeed = s.bulletSpeed;
                                 if ( s.stopDuringWindup >= 0 ) cfg.stopDuringWindup = ( s.stopDuringWindup != 0 );
 
                                 return std::make_unique<WaddleDoo> ( b , col , cfg );

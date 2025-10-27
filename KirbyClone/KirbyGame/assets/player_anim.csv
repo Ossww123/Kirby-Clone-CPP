@@ -1,4 +1,44 @@
-strip, Idle,  8,   8,  32, 32, 2, 0.20, 1
-strip, Walk,  8,  72,  32, 32, 6, 0.10, 1
-strip, Jump,  8, 136,  32, 32, 1, 0.12, 0
-strip, Fall, 40, 136,  32, 32, 6, 0.12, 1
+# Idle
+frame, Idle,  8,   8, 32, 32, 2.0, 1
+frame, Idle, 40,   8, 32, 32, 0.1, 1
+frame, Idle,  8,   8, 32, 32, 1.0, 1
+frame, Idle, 40,   8, 32, 32, 0.1, 1
+frame, Idle,  8,   8, 32, 32, 0.2, 1
+frame, Idle, 40,   8, 32, 32, 0.1, 1
+
+# Walk
+strip, Walk,  8,  72, 32, 32, 10, 0.10, 1
+
+# Run
+strip, Run,   8, 104, 32, 32,  8, 0.08, 1
+
+# Jump
+strip, Jump,   8, 136, 32, 32,  1, 1.00, 1
+
+# Fall0
+frame, Fall0,  40, 136, 32, 32, 0.05, 1
+frame, Fall0,  72, 136, 32, 32, 0.05, 1
+frame, Fall0, 104, 136, 32, 32, 0.05, 1
+frame, Fall0, 136, 136, 32, 32, 0.05, 1
+frame, Fall0, 168, 136, 32, 32, 0.05, 1
+frame, Fall0, 200, 136, 32, 32, 0.05, 1
+
+# Fall1
+strip, Fall, 232, 136,  32, 32, 2, 0.05, 1
+
+# Fall2
+strip, Fall2,   8, 168, 32, 32,  5, 0.02, 1
+
+# Bounce
+strip, Bounce, 168, 168, 32, 32,  8, 0.08, 0
+
+# Crouch
+frame, Crouch,  8,  40, 32, 32, 2.00, 1
+frame, Crouch, 40,  40, 32, 32, 0.10, 1
+frame, Crouch,  8,  40, 32, 32, 1.00, 1
+frame, Crouch, 40,  40, 32, 32, 0.10, 1
+frame, Crouch,  8,  40, 32, 32, 0.20, 1
+frame, Crouch, 40,  40, 32, 32, 0.10, 1
+
+# Slide
+strip, Slide, 72,  40, 32, 32,  1, 1.00, 1

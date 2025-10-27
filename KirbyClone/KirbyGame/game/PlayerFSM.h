@@ -84,6 +84,11 @@ namespace game {
 			float iFrameMs = 0.8f;
 			float damagedStun = 0.25f;
 			float hurtKnockbackClamp = 520.f;
+			// fall phases / long-fall & bounce
+			float fallTumbleMs = 0.30f;      // FALL0(덤블) 재생 시간 (점프→낙하 전이 직후)
+			float fallLongMs = 0.70f;      // 이 시간 이상 낙하하면 FALL2 진입
+			float fallLongHeightPx = 400.f;   // 또는 이 높이 이상 하강하면 FALL2 진입
+			float bounceSpeedUp = 400.f;     // 장낙하 착지시 다시 튀어오를 초기 상승속도(px/s)
 		};
 
 
@@ -110,6 +115,9 @@ namespace game {
 			// action timers
 			float inhaleT{ 0.f };
 			float spitLockT{ 0.f };
+			// fall-phase debug
+			float fallT{ 0.f };
+			bool  longFall{ false };
 		};
 
 		// ===== Public API =====
@@ -210,6 +218,7 @@ namespace game {
 		static void Play ( engine::Animator* a , const char* name , bool reset = false ) { if ( a ) a->Play ( name , reset ); }
 		void UpdateFacing ( const Ctx& c );
 		RECT MakeInhaleBox ( const Ctx& c ) const;
+		void ResetFallAccumulators ( );
 
 		// transitions per track
 		void RequestMove ( std::unique_ptr<MBase> ns , MState tag );
@@ -261,7 +270,17 @@ namespace game {
 			Ability m_caughtGift{ Ability::None };
 			int   m_lastTapDir{ 0 };     // -1/0/+1 : 좌/없음/우
 			bool  m_runQueued{ false };
+
+			// --- one-shot flags for action states ---
+			bool  m_spitEmitted{ false };   // SpitObject에서 1회만 발사
 			
+			// fall phases / bounce
+			float m_fallT{ 0.f };        // 낙하 경과 시간
+			float m_fallY0{ 0.f };       // 낙하 시작 바닥(y) (AABB.bottom 기준)
+			float m_tumbleT{ 0.f };      // FALL0 남은 시간
+			bool  m_fellFromJump{ false }; // 점프에서 낙하로 전이했는가?
+			bool  m_inLongFall{ false };   // FALL2 상태 플래그
+			bool  m_bounceQueued{ false }; // 착지 직후 바운스 예약
 
 			// health
 			Health m_health{};
