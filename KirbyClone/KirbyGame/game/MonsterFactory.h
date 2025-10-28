@@ -81,25 +81,32 @@ namespace game {
             // --- HotHead ---
             Register ( MonsterType::HotHead ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                                HotHead::Config cfg;
-                                cfg.base.phys.accelRun = 1200.f;
-                                cfg.base.phys.decelRun = 1500.f;
-                                cfg.base.phys.maxSpeedRun = 45.f;
-                                cfg.base.phys.frictionGround = 520.f;
-                                cfg.base.phys.frictionAir = 80.f;
-                                cfg.base.phys.gravity = 1200.f;
-                                cfg.base.phys.termVel = 1050.f;
-                                cfg.base.ignoreOneWayUpward = false;
+                    HotHead::Config cfg;
+                    // 타입 고정 튜닝
+                    cfg.base.phys.accelRun = 1200.f;
+                    cfg.base.phys.decelRun = 1500.f;
+                    cfg.base.phys.maxSpeedRun = 45.f;
+                    cfg.base.phys.frictionGround = 520.f;
+                    cfg.base.phys.frictionAir = 80.f;
+                    cfg.base.phys.gravity = 1200.f;
+                    cfg.base.phys.termVel = 1050.f;
+                    cfg.base.ignoreOneWayUpward = false;
 
-                                cfg.dir = ( s.dir >= 0 ) ? 1 : -1;
-                                cfg.wakeRange = 260.f;
-                                cfg.windupMs = 0.25f;
-                                cfg.breathMs = 0.55f;
-                                cfg.fireIntervalMs = 0.06f;
-                                cfg.bulletSpeed = 360.f;
-                                cfg.stopDuringWindup = true;
+                    cfg.turnOnHitX = true; cfg.turnAtEdge = true;
+                    cfg.dir = ( s.dir > 0 ) ? +1 : ( s.dir < 0 ? -1 : +1 );
 
-                                return std::make_unique<HotHead> ( b , col , cfg );
+                    cfg.wakeRange = 260.f;
+                    cfg.windupMs = 0.25f;
+                    cfg.breathMs = 0.55f;
+                    cfg.fireIntervalMs = 0.06f;
+                    cfg.bulletSpeed = 360.f;
+                    cfg.stopDuringWindup = true;
+                    cfg.firePeriod = 1.10f;
+
+                    // 인스턴스 플래그
+                    cfg.enableMove = ( s.move != 0 );
+                    cfg.enableAttack = ( s.attack != 0 );
+                    return std::make_unique<HotHead> ( b , col , cfg );
                 } );
 
             // --- Sparky ---

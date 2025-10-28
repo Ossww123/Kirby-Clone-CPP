@@ -1,5 +1,5 @@
 type,x,y,dir,attack,move
 WaddleDee,1000,160,1,1,1
 WaddleDoo,1420,160,-1,1,1
-Sparky,1760,160,0,1,0
-Sparky,800,160,1,1,1
+HotHead,1760,160,0,1,0
+HotHead,800,160,1,1,1

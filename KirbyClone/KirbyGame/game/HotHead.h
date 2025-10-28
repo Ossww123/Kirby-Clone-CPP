@@ -6,15 +6,15 @@ namespace game {
     class HotHead : public Monster {
     public:
         struct Config {
-            // 공통
+            // Common
             Monster::Cfg base{};
 
-            // 이동
+            // Movement
             int   dir = 1;
             bool  turnOnHitX = true;
             bool  turnAtEdge = true;
 
-            // 공격(화염 분사)
+            // Attack ( Fire )
             float wakeRange = 260.f;      // 감지 거리
             float windupMs = 0.25f;      // 텔레그래프
             float breathMs = 0.55f;      // 분사 지속
@@ -22,6 +22,10 @@ namespace game {
             float bulletSpeed = 360.f;    // 화염탄 속도
             bool  stopDuringWindup = true; // 윈드업/분사 중 정지
             float firePeriod = 1.1f;
+
+            // Instance flag
+            bool  enableMove = true;
+            bool  enableAttack = true;
         };
 
         HotHead ( const RECT& worldBounds ,
@@ -50,6 +54,7 @@ namespace game {
         float  m_windupT = 0.f;   // 텔레그래프 잔여
         float  m_breathT = 0.f;   // 분사 잔여
         float  m_emitT = 0.f;     // 다음 탄까지 간격
+        int    m_face = +1;       // 공격 페이싱(윈드업~분사 동안 고정)
 
         Config m_cfg{};
     };

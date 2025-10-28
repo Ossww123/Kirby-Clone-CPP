@@ -11,20 +11,20 @@
 #include "engine/Texture.h"
 #include "game/Damage.h"
 #include "game/Ability.h"
+#include "game/CombatTypes.h"
 
 namespace game {
-    enum class ProjOwner;
-
     class Monster : public engine::Object {
     public:
         // 콜백 타입
-        using SpawnProjectileFn = std::function<void ( const engine::Vec2& pos ,
-                                                     const engine::Vec2& vel ,
-                                                     ProjOwner owner )>;
-        using QueryTargetPosFn = std::function<engine::Vec2 ( )>; // 예: 플레이어 센터
+        using QueryTargetPosFn = std::function<engine::Vec2 ( )>;
+        using SpawnProjectileIdFn = std::function<void ( const std::string& archetype ,
+                                                    const engine::Vec2& pos ,
+                                                    const engine::Vec2& vel ,
+                                                    ProjOwner owner )>;
         using SpawnHitVolumeFn = std::function<void ( const std::string& archetype ,
                                                     int ownerId , int facing ,
-                                                    const engine::Vec2 & anchor )>;
+                                                    const engine::Vec2& anchor )>;
 
         struct Cfg {
             engine::PhysicsParams phys;
@@ -110,19 +110,19 @@ namespace game {
         void GetBounds ( int& x , int& y , int& w , int& h ) const { m_body.GetBounds ( x , y , w , h ); }
 
         // 콜백 설정자
-        void SetProjectileSpawner ( SpawnProjectileFn fn ) { m_spawnProj = std::move ( fn ); }
+        void SetProjectileSpawnerId ( SpawnProjectileIdFn fn ) { m_spawnProjId = std::move ( fn ); }
         void SetTargetQuery ( QueryTargetPosFn fn ) { m_queryTarget = std::move ( fn ); }
         void SetHitVolumeSpawner ( SpawnHitVolumeFn fn ) { m_spawnHV = std::move ( fn ); }
-        engine::Animator * Animator ( ) { return &m_anim; }
-        const engine::Animator * Animator ( ) const { return &m_anim; }
+        engine::Animator* Animator ( ) { return &m_anim; }
+        const engine::Animator* Animator ( ) const { return &m_anim; }
 
         // ===== Sprite (임시 단일 프레임) =====
     public:
-        void SetSpriteSheet ( const engine::Tex2D * tex ) { m_tex = tex; }
-        void SetSpriteSrc ( const RECT & r ) { m_src = r; }
+        void SetSpriteSheet ( const engine::Tex2D* tex ) { m_tex = tex; }
+        void SetSpriteSrc ( const RECT& r ) { m_src = r; }
         void SetVisualSize ( float w , float h ) { m_visW = w; m_visH = h; }
         void GetVisualSize ( float& w , float& h ) const { w = m_visW; h = m_visH; }
-        const engine::Tex2D * TexturePtr ( ) const { return m_tex; }
+        const engine::Tex2D* TexturePtr ( ) const { return m_tex; }
         RECT SpriteSrc ( ) const { return m_src; }
 
     protected:
@@ -173,14 +173,13 @@ namespace game {
         bool m_alive = true;
         Cfg m_cfg{};
 
-        SpawnProjectileFn m_spawnProj;  
+        SpawnProjectileIdFn m_spawnProjId;
         QueryTargetPosFn  m_queryTarget;
         SpawnHitVolumeFn  m_spawnHV;
 
     private:
-        const engine::Tex2D * m_tex{ nullptr }; // enemies.png (GameApp 소유)
+        const engine::Tex2D* m_tex{ nullptr }; // enemies.png (GameApp 소유)
         RECT  m_src{ 0,0,0,0 };                // 시트 내 사각형
         float m_visW{ 16.f } , m_visH{ 16.f };  // 화면 표시 크기
     };
-
 } // namespace game

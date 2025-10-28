@@ -19,11 +19,9 @@
 #include "engine/PhysicsBody.h"     // engine::PhysicsBody
 #include "engine/Collision.h"       // engine::physics::CollisionSystem/Report
 #include "engine/Math.h"            // engine::Vec2
+#include "game/CombatTypes.h"       // game::ProjOwner
 
 namespace game {
-
-    // Who fired the projectile (used by hit filtering outside)
-    enum class ProjOwner { Player , Enemy };
 
     // Optional hit payload stored by the projectile (read-only to others).
     struct ProjPayload {

@@ -160,6 +160,7 @@
     <ClInclude Include="game\Ability.h" />
     <ClInclude Include="game\AnimCSV.h" />
     <ClInclude Include="game\CombatTarget.h" />
+    <ClInclude Include="game\CombatTypes.h" />
     <ClInclude Include="game\Damage.h" />
     <ClInclude Include="game\GameConfig.h" />
     <ClInclude Include="game\HitVolume.h" />

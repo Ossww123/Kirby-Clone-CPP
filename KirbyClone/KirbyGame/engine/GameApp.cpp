@@ -305,15 +305,18 @@ namespace engine {
                 mon->SetSpriteSrc ( src );
 
                 // 공통 콜백 부착
-                mon->SetProjectileSpawner ( [ this ] ( const engine::Vec2& pos , const engine::Vec2& vel , game::ProjOwner owner ) {
+                mon->SetProjectileSpawnerId ( [ this ] ( const std::string& arche ,
+                                                        const engine::Vec2 & pos ,
+                                                        const engine::Vec2 & vel ,
+                                                        game::ProjOwner owner ) {
                     game::ProjectileSystem::SpawnDesc sd{};
-                    sd.archetype = "Star";
+                    sd.archetype = arche;
                     sd.owner = owner;
                     sd.pos = pos;
                     sd.dirOrVel = vel;
                     sd.treatAsDirection = false;
                     m_projSys.Spawn ( sd );
-                    } );
+                } );
                 mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
 
                 // --- HitVolume 스포너 ---
