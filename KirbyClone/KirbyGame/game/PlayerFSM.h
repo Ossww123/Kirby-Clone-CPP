@@ -20,9 +20,8 @@ namespace game {
 	// ---- Events from FSM to Game/World ----
 	struct PlayerEvent {
 		enum Type { InhaleVolume , SpitStar , AirPuffShot , SwallowAbility , AbilityGained ,
-			AbilityFire ,
-			AbilitySpark ,
-			AbilityBeam
+			AbilityFire , AbilitySpark , AbilityBeam ,
+			DoorInteract
 		} type;
 		RECT rect{}; // world-space AABB (for InhaleVolume)
 		int facing{ +1 }; // +1 right, -1 left

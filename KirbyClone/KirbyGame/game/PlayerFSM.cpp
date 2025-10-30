@@ -607,7 +607,16 @@ namespace game {
     }
 
     // ====== Overlay ======
-    void PlayerFSM::Z_None::Update ( Ctx& , PlayerFSM& ) {}
+    void PlayerFSM::Z_None::Update ( Ctx& c , PlayerFSM& f )
+    {
+        // Overlay 제약이 없을 때만 Interact 처리(피격/사망/연출 중엔 차단)
+        if ( c.interactPressed ) {
+            PlayerEvent ev{ PlayerEvent::DoorInteract };
+            ev.rect = c.aabb;        // 현재 커비 AABB (원하면 사용)
+            ev.facing = f.m_facing;
+            f.m_events.push_back ( ev );
+        }
+    }
 
     void PlayerFSM::Z_Damaged::OnEnter ( Ctx& c ) { Play ( c.anim , "Hurt" , true ); }
     void PlayerFSM::Z_Damaged::Update ( Ctx& c , PlayerFSM& f )

@@ -175,6 +175,7 @@
     <ClInclude Include="game\ProjectileFactory.h" />
     <ClInclude Include="game\ProjectileSystem.h" />
     <ClInclude Include="game\StageCSV.h" />
+    <ClInclude Include="game\StageDesc.h" />
     <ClInclude Include="game\WaddleDee.h" />
     <ClInclude Include="game\WaddleDoo.h" />
     <ClInclude Include="game\HotHead.h" />
@@ -198,6 +199,7 @@
     <ClCompile Include="game\ProjectileFactory.cpp" />
     <ClCompile Include="game\ProjectileSystem.cpp" />
     <ClCompile Include="game\StageCSV.cpp" />
+    <ClCompile Include="game\StageDesc.cpp" />
     <ClCompile Include="game\WaddleDee.cpp" />
     <ClCompile Include="game\WaddleDoo.cpp" />
     <ClCompile Include="game\HotHead.cpp" />

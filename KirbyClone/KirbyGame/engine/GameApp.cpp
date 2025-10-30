@@ -32,9 +32,10 @@
 #include "game/Projectile.h"
 #include "game/ProjectileFactory.h"
 #include "game/ProjectileSystem.h"
-#include "game/StageCSV.h"
+#include "game/StageDesc.h"
 #include "game/MonsterFactory.h"
 #include "game/GameConfig.h"
+#include "game/StageCSV.h"
 
 // hit volume (spark/beam/inhale)
 #include "game/HitVolume.h"
@@ -100,7 +101,7 @@ namespace engine {
 
         RegisterDefaultFactories ( );
         InitSystems ( );
-        LoadStageFromCSV ( "assets/stage01" );
+        LoadStage ( m_stageJsonPath.c_str ( ) );
     }
 
     LRESULT GameApp::OnWndMessage ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam )
@@ -178,171 +179,153 @@ namespace engine {
         return true;
     }
 
-    bool GameApp::LoadStageFromCSV ( const char* folder )
+    bool GameApp::LoadStage ( const char* jsonPath )
     {
-        // 0) runtime clear
+        // ---- 0) runtime clear ----
         m_Monsters.clear ( );
         m_projSys.Clear ( );
+        m_hitSys.Clear ( );
+        m_Doors.clear ( );
 
-        // 1) paths
-        if ( folder && *folder ) m_stageFolder = folder;
-        const std::string base = m_stageFolder;
-        const std::wstring tilesPng = ToWide ( base + "/tileset.png" );
+        // ---- 1) stage.json 읽기 ----
+        game::StageDesc desc{};
+        if ( !game::LoadStageDesc ( jsonPath , desc ) ) return false;
 
         auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
+        if ( !d3d ) return false;
 
-        // --- 타일셋: 셀(16) + 월드(64) 분리 ---
-        // (cell 16은 PNG 아틀라스 그리드, world 64는 타일 배치 크기)
-        m_World.LoadTileset ( d3d->Device ( ) , tilesPng , /*cellW*/16 , /*cellH*/16 );
-        m_World.SetWorldTileSize (/*tileW*/game::TILE_PX , /*tileH*/game::TILE_PX ); // TILE_PX=64
+        // ---- 2) 타일셋/맵/정의 ----
+        m_World.LoadTileset ( d3d->Device ( ) , ToWide ( desc.tileset ).c_str ( ) , /*cellW/H*/16 , 16 );
+        m_World.SetWorldTileSize ( game::TILE_PX , game::TILE_PX ); // 월드 타일 크기(= 16*SCALE)
 
-        // --- 맵: CSV -> 메모리 -> World ---
         int mw = 0 , mh = 0; std::vector<int> ids;
-        game::LoadTileMapCSV ( ( base + "/tilemap.csv" ).c_str ( ) , mw , mh , ids );
+        game::LoadTileMapCSV ( desc.tilemap.c_str ( ) , mw , mh , ids );
         m_World.SetMapFromMemory ( mw , mh , ids.data ( ) );
 
-        // --- 타일 정의: CSV -> DefineTile() ---
         std::vector<game::TileDefCSV> tdefs;
-        if ( game::LoadTileDefsCSV ( ( base + "/tiledefs.csv" ).c_str ( ) , tdefs ) && !tdefs.empty ( ) ) {
-            const int cw = m_World.Tiles ( ).CellW ( ); // 16
-            const int ch = m_World.Tiles ( ).CellH ( ); // 16
+        if ( game::LoadTileDefsCSV ( desc.tiledefs.c_str ( ) , tdefs ) && !tdefs.empty ( ) ) {
+            const int cw = 16 , ch = 16;
             for ( auto& r : tdefs ) {
                 engine::TileDef d{};
                 d.solid = ( r.solid != 0 );
                 d.oneway = ( r.oneway != 0 );
-                if ( r.gx >= 0 && r.gy >= 0 ) {
+                if ( r.gx >= 0 && r.gy >= 0 )
                     d.src = RECT{ r.gx * cw, r.gy * ch, r.gx * cw + cw, r.gy * ch + ch };
-                } // 없으면 렌더 폴백(id→index) 사용
                 m_World.DefineTile ( r.id , d );
             }
         }
-        // --- 충돌 재구성 ---
         m_World.RebuildColliders ( );
 
-        // (옵션) 배경 로드: 기존 로직 유지해도 되지만 SCALE 의존 제거 권장 (아래 4번 참고)
-        {
-            std::wstring bgPng = ToWide ( base + "/bg.png" );
+        // ---- 3) 배경 ----
+        if ( !desc.background.empty ( ) ) {
             Tex2D bg{};
-            if ( LoadTextureWIC ( d3d->Device ( ) , bgPng.c_str ( ) , &bg ) ) {
+            if ( LoadTextureWIC ( d3d->Device ( ) , ToWide ( desc.background ).c_str ( ) , &bg ) ) {
                 m_BgTex = bg;
-                m_bgScaledW = m_BgTex.width;  // SCALE 안 씀
-                m_bgScaledH = m_BgTex.height;
             }
             else {
-                m_BgTex = {}; m_bgScaledW = m_bgScaledH = 0;
+                m_BgTex = {};
             }
         }
+        else {
+            m_BgTex = {};
+        }
 
-        // 2) Player start (카메라 월드 rect 세팅은 2번 패치 참고)
+        // ---- 4) 플레이어 시작점 & 카메라 월드 경계 ----
         game::PlayerStartCSV ps{};
-        if ( game::LoadPlayerStartCSV ( ( base + "/player_start.csv" ).c_str ( ) , ps ) && m_Player ) {
+        if ( game::LoadPlayerStartCSV ( desc.player_start.c_str ( ) , ps ) && m_Player ) {
             m_Player->SetPosition ( ps.x , ps.y );
             m_Player->Body ( ).SetVelocity ( { 0.f, 0.f } );
+
             auto* rd = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
             const int sw = rd ? rd->Width ( ) : 0;
             const int sh = rd ? rd->Height ( ) : 0;
+
             RECT wr0 = m_World.WorldRectPx ( );
-            // === 여기서 더 이상 /SCALE 하지 않음 ===
-            const int viewW_world = sw;
-            const int viewH_world = sh;
-            const int padWorld = game::TILE_PX / 2; // 32
+            const int viewW_world = sw , viewH_world = sh;
+            const int padWorld = game::TILE_PX / 2;
+
             RECT wr = wr0;
             const int ww = wr.right - wr.left , wh = wr.bottom - wr.top;
             if ( ww > viewW_world ) { wr.left += padWorld; wr.right -= padWorld; }
             if ( wh > viewH_world ) { wr.top += padWorld; wr.bottom -= padWorld; }
+
             m_Cam.SetWorldRect ( wr );
             m_Cam.SetLookAt ( { ps.x, ps.y } );
             m_Cam.SnapImmediate ( );
         }
 
-        // 3) 시스템 재초기화
+        // ---- 5) 시스템 재초기화 ----
         m_projSys.Initialize ( m_World.WorldRectPx ( ) , &m_World.Collision ( ) );
         m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) , m_Player->Animator ( ) , m_playerFsmCfg );
 
-        // 3) 몬스터 스폰 (팩토리 경유)
+        // ---- 6) 몬스터 스폰 ----
         std::vector<game::MonsterCSV> mons;
-        if ( game::LoadMonstersCSV ( ( base + "/monsters.csv" ).c_str ( ) , mons ) ) {
+        if ( game::LoadMonstersCSV ( desc.monsters.c_str ( ) , mons ) ) {
             RECT wr = m_World.WorldRectPx ( );
-
-            auto lower_copy = [ ] ( std::string s ) {
-                for ( auto& c : s ) c = ( char ) std::tolower ( ( unsigned char ) c );
-                return s;
-            };
+            auto lower_copy = [ ] ( std::string s ) { for ( auto& c : s ) c = ( char ) std::tolower ( ( unsigned char ) c ); return s; };
 
             for ( auto& r : mons ) {
-                // 문자열 -> MonsterType 매핑
                 std::string t = lower_copy ( r.type );
-
                 game::MonsterType mt;
                 if ( t == "waddledee" ) mt = game::MonsterType::WaddleDee;
                 else if ( t == "waddledoo" ) mt = game::MonsterType::WaddleDoo;
-                else if ( t == "hothead" )   mt = game::MonsterType::HotHead;
-                else if ( t == "sparky" )    mt = game::MonsterType::Sparky;
+                else if ( t == "hothead" ) mt = game::MonsterType::HotHead;
+                else if ( t == "sparky" ) mt = game::MonsterType::Sparky;
                 else continue;
 
-                // CSV -> SpawnSpec
                 game::SpawnSpec spec;
-                spec.type = mt;
-                spec.x = r.x; spec.y = r.y;
+                spec.type = mt; spec.x = r.x; spec.y = r.y;
                 spec.dir = ( r.dir < 0 ? -1 : ( r.dir > 0 ? +1 : 0 ) );
-                spec.attack = r.attack;
-                spec.move = r.move;
+                spec.attack = r.attack; spec.move = r.move;
 
                 auto mon = game::MonsterFactory::Create ( spec.type , wr , &m_World.Collision ( ) , spec );
                 if ( !mon ) continue;
 
-                // === 임시 단일 스프라이트 적용 ===
                 mon->SetSpriteSheet ( &m_EnemiesTex );
                 mon->SetVisualSize ( 32.f , 32.f );
                 RECT src{};
                 switch ( mt ) {
-                case game::MonsterType::WaddleDee: src = RECT{ 8,   8,   8 + 32,   8 + 32 }; break;
-                case game::MonsterType::WaddleDoo: src = RECT{ 8,   40,  8 + 32,   40 + 32 }; break;
-                case game::MonsterType::HotHead:   src = RECT{ 8,   136, 8 + 32,   136 + 32 }; break;
-                case game::MonsterType::Sparky:    src = RECT{ 8,   168, 8 + 32,   168 + 32 }; break;
+                case game::MonsterType::WaddleDee: src = RECT{ 8, 8, 40, 40 }; break;
+                case game::MonsterType::WaddleDoo: src = RECT{ 8, 40, 40, 72 }; break;
+                case game::MonsterType::HotHead:   src = RECT{ 8, 136, 40, 168 }; break;
+                case game::MonsterType::Sparky:    src = RECT{ 8, 168, 40, 200 }; break;
                 default: break;
                 }
                 mon->SetSpriteSrc ( src );
 
-                // 공통 콜백 부착
-                mon->SetProjectileSpawnerId ( [ this ] ( const std::string& arche ,
-                                                        const engine::Vec2 & pos ,
-                                                        const engine::Vec2 & vel ,
-                                                        game::ProjOwner owner ) {
-                    game::ProjectileSystem::SpawnDesc sd{};
-                    sd.archetype = arche;
-                    sd.owner = owner;
-                    sd.pos = pos;
-                    sd.dirOrVel = vel;
-                    sd.treatAsDirection = false;
-                    m_projSys.Spawn ( sd );
+                mon->SetProjectileSpawnerId ( [ this ] ( const std::string& arche , const engine::Vec2& pos ,
+                    const engine::Vec2& vel , game::ProjOwner owner ) {
+                        game::ProjectileSystem::SpawnDesc sd{};
+                        sd.archetype = arche; sd.owner = owner; sd.pos = pos; sd.dirOrVel = vel; sd.treatAsDirection = false;
+                        m_projSys.Spawn ( sd );
                 } );
                 mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
-
-                // --- HitVolume 스포너 ---
-                mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche ,
-                                            int ownerId , int facing ,
-                                            const engine::Vec2 & anchor ) {
+                mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche , int ownerId , int facing , const engine::Vec2& anchor ) {
                     game::HitVolumeSystem::SpawnDesc sd{ arche, ownerId, facing, anchor };
                     m_hitSys.Spawn ( sd );
-                });
+                } );
 
                 m_Monsters.push_back ( std::move ( mon ) );
             }
         }
+
+        // ---- 7) 도어 로드(선택) ----
+        if ( !desc.doors.empty ( ) ) {
+            std::vector<game::DoorCSV> doors;
+            if ( game::LoadDoorsCSV ( desc.doors.c_str ( ) , doors ) ) {
+                m_Doors.reserve ( doors.size ( ) );
+                for ( const auto& d : doors ) {
+                    Door dd;
+                    dd.aabb = RECT{ d.x, d.y, d.x + d.w, d.y + d.h };
+                    dd.target = d.target; // ex) "assets/stages/stage02/stage.json"
+                    m_Doors.push_back ( std::move ( dd ) );
+                }
+            }
+        }
+
         return true;
     }
 
-    bool GameApp::ReloadStage ( ) {
-        // Debounce
-        if ( m_reloadCooldown > 0.0 ) return false;
-        const bool ok = LoadStageFromCSV ( m_stageFolder.c_str ( ) );
-        if ( ok ) {
-            m_reloadCooldown = 0.25; // Cooldown
-            OutputDebugStringA ( "[HotReload] Stage reloaded.\n" );    
-        }
-         return ok;
-    }
 
     void GameApp::InitBindings ( )
     {
@@ -362,10 +345,27 @@ namespace engine {
 
     void GameApp::FixedUpdate ( double fixedDt ) {
         if ( m_reloadCooldown > 0.0 ) m_reloadCooldown -= fixedDt;
-        if ( m_Input.Pressed ( VK_F5 ) ) { ReloadStage ( ); return; }
+        if ( m_Input.Pressed ( VK_F5 ) && m_reloadCooldown <= 0.0 ) {
+            LoadStage ( m_stageJsonPath.c_str ( ) );
+            m_reloadCooldown = 0.25;
+            return;
+        }
+        if ( m_Input.Pressed ( VK_F6 ) ) {
+            m_stageJsonPath = "assets/stages/stage02/stage.json";
+            LoadStage ( m_stageJsonPath.c_str ( ) );
+            m_reloadCooldown = 0.25;
+            return;
+        }
+        if ( m_Input.Pressed ( VK_F7 ) ) {
+            m_stageJsonPath = "assets/stages/stage01/stage.json";
+            LoadStage ( m_stageJsonPath.c_str ( ) );
+            m_reloadCooldown = 0.25;
+            return;
+        }
         if ( !m_Player ) return;
 
         StepPlayerFSM ( fixedDt );
+        if ( m_reloadCooldown > 0.0 ) return;
         UpdateMonsters ( fixedDt );
         CheckContactDamage ( );
 
@@ -469,6 +469,10 @@ namespace engine {
 
     void GameApp::HandlePlayerEvents ( const std::vector<game::PlayerEvent>& evs ) {
         for ( auto& e : evs ) switch ( e.type ) {
+        case game::PlayerEvent::DoorInteract: {
+            CheckDoorInteract ( );
+            break; // 실제 전환되면 m_reloadCooldown이 세팅됨
+        }
         case game::PlayerEvent::InhaleVolume: {
             game::HitVolumeSystem::SpawnDesc sd{ "InhaleField", m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
             m_hitSys.Spawn ( sd ); break;
@@ -684,6 +688,13 @@ namespace engine {
         for ( auto& m : m_Monsters ) if ( m && m->Alive ( ) ) m->RenderDebug ( m_Debug.get ( ) , ox , oy );
         m_projSys.DebugDraw ( *m_Debug , ox , oy );
         m_hitSys.DebugDraw ( *m_Debug , ox , oy );
+        // Doors
+        for ( const auto& d : m_Doors ) {
+            const int x = d.aabb.left , y = d.aabb.top;
+            const int w = d.aabb.right - d.aabb.left;
+            const int h = d.aabb.bottom - d.aabb.top;
+            m_Debug->WorldRect ( x , y , w , h , ox , oy , RGB ( 80 , 160 , 255 ) );
+        }
         m_Debug->Flush ( );
     }
 
@@ -775,5 +786,29 @@ namespace engine {
 
         m_TextHUD->End ( );
     }
+
+    void GameApp::CheckDoorInteract ( )
+    {
+        if ( !m_Player || m_Doors.empty ( ) ) return;
+
+        int px , py , pw , ph;
+        m_Player->GetBounds ( px , py , pw , ph );
+        RECT pr{ px, py, px + pw, py + ph };
+
+        for ( const auto& d : m_Doors ) {
+            if ( engine::physics::Overlap ( pr , d.aabb ) ) {
+                // stage 전환
+                if ( !d.target.empty ( ) ) {
+                    m_stageJsonPath = d.target;
+                    if ( !LoadStage ( m_stageJsonPath.c_str ( ) ) ) {
+                        OutputDebugStringA ( "[Door] Stage load FAILED: check target path.\n" );
+                    }
+                    m_reloadCooldown = 0.25;
+                }
+                return;
+            }
+        }
+    }
+
 
 } // namespace engine

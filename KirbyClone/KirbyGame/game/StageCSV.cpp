@@ -171,6 +171,35 @@ namespace game {
         return true;
     }
 
+    bool LoadDoorsCSV ( const char* path , std::vector<DoorCSV>& out )
+    {
+        out.clear ( );
+        std::ifstream ifs ( path );
+        if ( !ifs ) return false;
+
+        std::string line; bool headerSeen = false;
+        while ( std::getline ( ifs , line ) ) {
+            line.erase ( std::remove ( line.begin ( ) , line.end ( ) , '\r' ) , line.end ( ) );
+            strip_bom ( line );
+            line = trim ( line );
+            if ( line.empty ( ) || line[ 0 ] == '#' || line[ 0 ] == ';' ) continue;
+
+            // 첫 유효 줄을 헤더로 간주하고 스킵
+            if ( !headerSeen ) { headerSeen = true; continue; }
+
+            auto row = splitCSV ( line );
+            if ( row.size ( ) < 5 ) continue;
+            DoorCSV d{};
+            d.x = to<int> ( row[ 0 ] , 0 );
+            d.y = to<int> ( row[ 1 ] , 0 );
+            d.w = to<int> ( row[ 2 ] , 0 );
+            d.h = to<int> ( row[ 3 ] , 0 );
+            d.target = row[ 4 ];
+            out.push_back ( d );
+        }
+        return true;
+    }
+
     // 숫자 그리드(tilemap.csv) 로더
     bool LoadTileMapCSV ( const char* path , int& outW , int& outH , std::vector<int>& outIds ) {
         std::ifstream f ( path ); if ( !f ) return false;

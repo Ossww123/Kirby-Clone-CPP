@@ -48,8 +48,6 @@ namespace engine {
         LRESULT OnWndMessage ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam );
         void OnResize ( int w , int h );
         bool DoOneFrame ( );
-        bool LoadStageFromCSV ( const char* folder );
-        bool ReloadStage ( );
 
     private:
         void FixedUpdate ( double fixedDt ); // phisics / collider / jump ochestration
@@ -72,12 +70,16 @@ namespace engine {
                             std::vector<game::HitVolumeSystem::Target>&hvT );
         void ApplyProjectileHits ( const std::vector<game::ProjectileSystem::HitEvent>&phits );
         void ApplyHitVolumeHits ( const std::vector<game::HitVolumeSystem::HitEvent>&hvHits );
+        bool LoadStage ( const char* jsonPath );
         
         // ---- Render helpers ----
         void RenderWorldBatch ( int ox , int oy , int sw , int sh );
         void RenderParallaxBG ( int ox , int oy , int sw , int sh );
         void RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh );
         void RenderHUD ( );
+
+        // ---- Door Systems ----
+        void CheckDoorInteract ( );
 
     private:
         // --- Window/Core ---
@@ -97,10 +99,6 @@ namespace engine {
 
         // --- Background (Parallax) ---
         Tex2D  m_BgTex{};
-        int    m_bgScaledW = 0;       // = OriginW * game::SCALE
-        int    m_bgScaledH = 0;       // = OriginH * game::SCALE
-        float  m_bgParallaxX = 0.25f; // 카메라보다 1/4 속도로 움직임
-        float  m_bgParallaxY = 0.10f; // 필요 시 세로 패럴랙스도 적용
 
         // --- Camera/Player/Monster/Projectile/HitVolume ---
         Camera     m_Cam{};
@@ -118,9 +116,11 @@ namespace engine {
         bool m_comInitialized = false;  // CoInitializeEx 성공 여부
         bool m_debugDrawEnabled = true;
 
-        // -- Reload ---
-        std::string m_stageFolder{ "assets/stage01" };
+        // -- Stage & Reload & Door ---
+        std::string m_stageJsonPath{ "assets/stages/stage01/stage.json" };
         double      m_reloadCooldown = 0.0;
+        struct Door { RECT aabb{}; std::string target; };
+        std::vector<Door> m_Doors;
     };
 
 } // namespace engine
