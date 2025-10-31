@@ -80,6 +80,7 @@ namespace engine {
 
         // ---- Door Systems ----
         void CheckDoorInteract ( );
+        void UpdateTransition ( double dt ); // 페이드/로드/복귀
 
     private:
         // --- Window/Core ---
@@ -95,7 +96,20 @@ namespace engine {
         std::unique_ptr<DWriteTextHUD>      m_TextHUD;   // DirectWrite HUD
         Tex2D                               m_PlayerTex{};   // 플레이어 텍스처
         Tex2D                               m_EnemiesTex{};
+        Tex2D                               m_WhiteTex{};   // 페이드용 1x1 white
         RenderSystem m_Render{};
+        struct Transition {
+            bool active = false;
+            enum Phase { Idle , FadeOut , LoadStage , FadeIn } phase = Idle;
+            std::string nextStage;  // doors.csv target
+            float t = 0.f;          // 현재 phase 남은 시간
+            float fadeAlpha = 0.f;  // 0..1
+            float outMs = 0.35f;    // 페이드아웃 시간
+            float holdMs = 0.05f;   // 완전 백 화면 유지
+            float inMs = 0.33f;    // 페이드인 시간
+            // 문 연출: 문 하단 중앙으로 플레이어 살짝 끌어오기
+            int targetX = 0 , targetY = 0; // world px (문 하단 중앙)
+        } m_Trans;
 
         // --- Background (Parallax) ---
         Tex2D  m_BgTex{};
@@ -121,6 +135,6 @@ namespace engine {
         double      m_reloadCooldown = 0.0;
         struct Door { RECT aabb{}; std::string target; };
         std::vector<Door> m_Doors;
+        game::PlayerFSM::Persistent m_playerSave{};
     };
-
 } // namespace engine

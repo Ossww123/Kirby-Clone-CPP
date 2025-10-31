@@ -87,6 +87,11 @@ namespace engine {
             // CreateSolidTexture1x1(d3d->Device(), 0xFFFFFFFFu, &m_EnemiesTex);
         }
 
+        // 1x1 white (페이드 오버레이용)
+        if ( !m_WhiteTex.srv ) {
+            CreateSolidTexture1x1 ( d3d->Device ( ) , 0xFFFFFFFFu , &m_WhiteTex );
+        }
+
         if ( m_PlayerTex.srv ) {
             m_Player->SetTexture ( m_PlayerTex );
             m_Player->SetSize ( float ( game::PLAYER_COLL_PX ) , float ( game::PLAYER_COLL_PX ) );
@@ -365,6 +370,7 @@ namespace engine {
         if ( !m_Player ) return;
 
         StepPlayerFSM ( fixedDt );
+        UpdateTransition ( fixedDt );
         if ( m_reloadCooldown > 0.0 ) return;
         UpdateMonsters ( fixedDt );
         CheckContactDamage ( );
@@ -401,6 +407,15 @@ namespace engine {
         }
         if ( m_debugDrawEnabled ) RenderDebugGridAndColliders ( ox , oy , sw , sh );
         RenderHUD ( );
+
+        // 페이드 오버레이 (화이트)
+        if ( m_Trans.active && m_WhiteTex.srv && m_Trans.fadeAlpha > 0.f ) {
+            const uint32_t a = ( uint32_t ) std::lround ( std::min ( 1.f , m_Trans.fadeAlpha ) * 255.f );
+            const uint32_t color = ( a << 24 ) | 0x00FFFFFF; // AARRGGBB (흰색 + 가변 알파)
+            m_Batch->Begin ( );
+            m_Batch->Draw ( m_WhiteTex , 0.f , 0.f , ( float ) sw , ( float ) sh , nullptr , color );
+            m_Batch->End ( );
+        }
 
         m_Renderer->EndFrame ( );
     }
@@ -787,28 +802,110 @@ namespace engine {
         m_TextHUD->End ( );
     }
 
-    void GameApp::CheckDoorInteract ( )
-    {
-        if ( !m_Player || m_Doors.empty ( ) ) return;
+    void GameApp::CheckDoorInteract ( ) {
+        if ( m_Trans.active ) return; // 이미 전환 중이면 무시
+        if ( !m_Player ) return;
 
-        int px , py , pw , ph;
-        m_Player->GetBounds ( px , py , pw , ph );
-        RECT pr{ px, py, px + pw, py + ph };
+        // 플레이어 AABB
+        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+        RECT pr{ px,py,px + pw,py + ph };
 
+        // 겹치는 문 찾기 (가장 먼저 걸리는 하나)
+        const game::DoorCSV* hit = nullptr;
+        RECT hitR{};
         for ( const auto& d : m_Doors ) {
-            if ( engine::physics::Overlap ( pr , d.aabb ) ) {
-                // stage 전환
-                if ( !d.target.empty ( ) ) {
-                    m_stageJsonPath = d.target;
-                    if ( !LoadStage ( m_stageJsonPath.c_str ( ) ) ) {
-                        OutputDebugStringA ( "[Door] Stage load FAILED: check target path.\n" );
-                    }
-                    m_reloadCooldown = 0.25;
-                }
-                return;
+            RECT dr = d.aabb;
+            if ( engine::physics::Overlap ( pr , dr ) ) { hit = nullptr; hitR = dr; hit = reinterpret_cast< const game::DoorCSV* >( &d ); break; }
+        }
+        if ( !hit ) return;
+
+        // --- 현재 플레이어 상태 저장 (HP/Ability/방향 등) ---
+        m_playerSave = m_PlayerFSM.SnapshotPersistent ( );
+
+        // 전환 세팅
+        m_Trans.active = true;
+        m_Trans.phase = Transition::FadeOut;
+        m_Trans.t = m_Trans.outMs;
+        m_Trans.fadeAlpha = 0.f;
+        m_Trans.nextStage = hit->target;
+        m_Trans.targetX = ( hitR.left + hitR.right ) / 2;
+        m_Trans.targetY = hitR.bottom; // 문 "바닥" 기준
+
+        // FSM Overlay 진입 → 입력/행동 락
+        m_PlayerFSM.BeginDoorEnter ( );
+    }
+
+    void GameApp::UpdateTransition ( double dt )
+    {
+        if ( !m_Trans.active ) return;
+
+        auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+        const int sw = d3d ? d3d->Width ( ) : 0;
+        const int sh = d3d ? d3d->Height ( ) : 0;
+
+        // 1) 문 쪽으로 살짝 끌어오기(문 바닥 중앙 정렬)
+        if ( m_Player && m_Trans.phase == Transition::FadeOut ) {
+            int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+            const int goalX = m_Trans.targetX - pw / 2;
+            const int goalY = m_Trans.targetY - ph;
+            const float k = 10.f; // 위치 보간 속도
+            const float nx = std::lerp ( ( float ) px , ( float ) goalX , std::clamp ( k * ( float ) dt , 0.f , 1.f ) );
+            const float ny = std::lerp ( ( float ) py , ( float ) goalY , std::clamp ( k * ( float ) dt , 0.f , 1.f ) );
+            m_Player->SetPosition ( nx , ny );
+            // 카메라도 따라오게
+            m_Cam.SetLookAt ( m_Player->Center ( ) );
+        }
+
+        switch ( m_Trans.phase )
+        {
+        case Transition::FadeOut:
+            m_Trans.t -= ( float ) dt;
+            m_Trans.fadeAlpha = 1.f - std::max ( 0.f , m_Trans.t ) / std::max ( 0.0001f , m_Trans.outMs );
+            if ( m_Trans.t <= 0.f ) {
+                m_Trans.phase = Transition::LoadStage;
+                m_Trans.t = m_Trans.holdMs;
+                m_Trans.fadeAlpha = 1.f;
             }
+            break;
+
+        case Transition::LoadStage:
+            // 완전 백 화면에서 로드, 약간의 홀드
+            if ( m_Trans.t == m_Trans.holdMs ) {
+                if ( !m_Trans.nextStage.empty ( ) ) {
+                    LoadStage ( m_Trans.nextStage.c_str ( ) );
+                    m_stageJsonPath = m_Trans.nextStage;
+                    m_reloadCooldown = 0.10; // 안전 여유
+                    // ---- FSM 재초기화 이후 능력/HP/방향 복원 ----
+                    m_PlayerFSM.RestorePersistent ( m_playerSave );
+                    // 애니메이션 리셋: 능력별 idle이 따로 있다면 전환
+                    // if (auto* a = m_Player->Animator()) { a->Play("Idle", true); }
+                }
+            }
+            m_Trans.t -= ( float ) dt;
+            if ( m_Trans.t <= 0.f ) {
+                m_Trans.phase = Transition::FadeIn;
+                m_Trans.t = m_Trans.inMs;
+                m_Trans.fadeAlpha = 1.f;
+            }
+            break;
+
+        case Transition::FadeIn:
+            m_Trans.t -= ( float ) dt;
+            m_Trans.fadeAlpha = std::max ( 0.f , m_Trans.t ) / std::max ( 0.0001f , m_Trans.inMs );
+            if ( m_Trans.t <= 0.f ) {
+                m_Trans.fadeAlpha = 0.f;
+                m_Trans.phase = Transition::Idle;
+                m_Trans.active = false;
+                // FSM Overlay 해제 → 조작 복귀
+                m_PlayerFSM.EndDoorEnter ( );
+            }
+            break;
+
+        default: break;
         }
     }
+
+
 
 
 } // namespace engine

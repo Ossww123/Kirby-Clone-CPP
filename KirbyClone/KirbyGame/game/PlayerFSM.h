@@ -119,6 +119,14 @@ namespace game {
 			bool  longFall{ false };
 		};
 
+		// ---- Persistent snapshot (stage transition용) ----
+		struct Persistent {
+			int     hp = 0;
+			Ability ability = Ability::None;
+			int     facing = +1;
+			bool    mouthFull = false; // 문 이동에서는 보통 false로 정리
+		};
+
 		// ===== Public API =====
 		void Init ( engine::PhysicsBody* body ,
 		const engine::physics::CollisionSystem* worldCol ,
@@ -154,6 +162,14 @@ namespace game {
 				+ " | A:" + ToString ( m_aState )
 				+ " | Z:" + ToString ( m_zState );
 		}
+
+		// ---- Door enter overlay 제어 (GameApp에서 호출) ----
+		void BeginDoorEnter ( );  // Overlay = DoorEnter
+		void EndDoorEnter ( );    // Overlay = None
+
+		// ---- Persistent snapshot (stage transition용) ----
+		Persistent SnapshotPersistent ( ) const;
+		void       RestorePersistent ( const Persistent& s );
 
 	private:
 		// ===== Per-frame context =====

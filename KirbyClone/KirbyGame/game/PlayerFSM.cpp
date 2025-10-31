@@ -201,6 +201,41 @@ namespace game {
         m_caughtGift = gift;
     }
 
+    void PlayerFSM::BeginDoorEnter ( ) {
+        RequestOver ( std::make_unique<Z_DoorEnter> ( ) , ZState::DoorEnter );        
+    }
+
+    void PlayerFSM::EndDoorEnter ( ) {
+        RequestOver ( std::make_unique<Z_None> ( ) , ZState::None );        
+    }
+
+    PlayerFSM::Persistent PlayerFSM::SnapshotPersistent ( ) const
+    {
+        Persistent s{};
+        s.hp = m_health.hp;
+        s.ability = m_ability;
+        s.facing = m_facing;
+        s.mouthFull = m_mouthFull;
+        return s;
+    }
+
+    void PlayerFSM::RestorePersistent ( const Persistent& s )
+    {
+        // 능력/HP/방향 복원 (경계/일관성 정리)
+        m_health.hp = std::clamp ( s.hp , 0 , m_cfg.maxHp );
+        m_ability = s.ability;
+        m_facing = ( s.facing >= 0 ) ? +1 : -1;
+        // 문 이동에서는 입에 머금은 상태는 비우는 편이 일반적
+        m_mouthFull = false;
+        m_caughtGift = Ability::None;
+        // 디버그 스냅샷도 맞춰줌(다음 Step 전 HUD 안정)
+        m_dbg.hp = m_health.hp;
+        m_dbg.ability = m_ability;
+        m_dbg.facing = m_facing;
+        m_dbg.mouthFull = m_mouthFull;
+    }
+
+
     // ====== 공통 시스템 ======
     void PlayerFSM::IntegrateAndCollide ( double fixedDt , const Input& , Ctx& c )
     {
