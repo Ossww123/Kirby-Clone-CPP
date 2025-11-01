@@ -82,6 +82,11 @@ namespace engine {
         void CheckDoorInteract ( );
         void UpdateTransition ( double dt ); // 페이드/로드/복귀
 
+        // ---- Monster spawner ----
+        int SpawnMonster ( const game::SpawnSpec& spec );
+        int RequestSpawnMonster ( const game::SpawnSpec& spec );
+        void FlushPendingSpawns ( );
+
     private:
         // --- Window/Core ---
         HWND   m_hWnd{};
@@ -120,6 +125,7 @@ namespace engine {
         game::PlayerFSM m_PlayerFSM;
         game::PlayerFSM::Cfg m_playerFsmCfg{};
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
+        std::vector<game::SpawnSpec> m_pendingMonsterSpawns;
         game::ProjectileSystem m_projSys;
         game::HitVolumeSystem m_hitSys;
 

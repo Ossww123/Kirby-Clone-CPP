@@ -367,6 +367,12 @@ namespace engine {
             m_reloadCooldown = 0.25;
             return;
         }
+        if ( m_Input.Pressed ( VK_F8 ) ) {
+            m_stageJsonPath = "assets/stages/stage03/stage.json";
+            LoadStage ( m_stageJsonPath.c_str ( ) );
+            m_reloadCooldown = 0.25;
+            return;
+        }
         if ( !m_Player ) return;
 
         StepPlayerFSM ( fixedDt );
@@ -389,6 +395,7 @@ namespace engine {
 
         if ( m_Player && m_Player->Animator ( ) ) m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
         m_Cam.SetLookAt ( m_Player->Center ( ) ); m_Cam.Update ( fixedDt );
+        FlushPendingSpawns ( );
     }
 
     void GameApp::RenderFrame ( )
@@ -905,6 +912,71 @@ namespace engine {
         }
     }
 
+    int GameApp::SpawnMonster ( const game::SpawnSpec& spec )
+    {
+        RECT wr = m_World.WorldRectPx ( );
+        auto mon = game::MonsterFactory::Create ( spec.type , wr , &m_World.Collision ( ) , spec );
+        if ( !mon ) return -1;
+
+        // 공통 비주얼 세팅
+        mon->SetSpriteSheet ( &m_EnemiesTex );
+        mon->SetVisualSize ( 32.f , 32.f );
+        RECT src{};
+        switch ( spec.type ) {
+        case game::MonsterType::WaddleDee:  src = { 8,  8, 40, 40 }; break;
+        case game::MonsterType::WaddleDoo:  src = { 8, 40, 40, 72 }; break;
+        case game::MonsterType::HotHead:    src = { 8,136, 40,168 }; break;
+        case game::MonsterType::Sparky:     src = { 8,168, 40,200 }; break;
+            // 새로 추가될 타입들
+        case game::MonsterType::Apple:      src = { 72,200,104,232 }; break; // 예시 좌표
+        case game::MonsterType::WhispyWoods:src = { 136,  8,200,104 }; break; // 예시 좌표
+        default: break;
+        }
+        mon->SetSpriteSrc ( src );
+
+        // 공용 콜백들 라우팅
+        mon->SetProjectileSpawnerId ( [ this ] ( const std::string& arche , const engine::Vec2& pos ,
+            const engine::Vec2& vel , game::ProjOwner owner ) {
+                game::ProjectileSystem::SpawnDesc sd{};
+                sd.archetype = arche; sd.owner = owner; sd.pos = pos; sd.dirOrVel = vel; sd.treatAsDirection = false;
+                m_projSys.Spawn ( sd );
+        } );
+        mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
+        mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche , int ownerId , int facing , const engine::Vec2& anchor ) {
+            game::HitVolumeSystem::SpawnDesc sd{ arche, ownerId, facing, anchor };
+            m_hitSys.Spawn ( sd );
+        } );
+        mon->SetMonsterSpawner ( [ this ] (
+            game::MonsterType type ,
+            const engine::Vec2& pos ,
+            const game::SpawnSpec& spec
+            ) {
+                game::SpawnSpec child = spec;
+                child.type = type;
+                child.x = pos.x;
+                child.y = pos.y;
+
+                RequestSpawnMonster ( child );
+        } );
+
+        const int id = mon->Id ( );
+        m_Monsters.push_back ( std::move ( mon ) );
+        return id;
+    }
+
+    int GameApp::RequestSpawnMonster ( const game::SpawnSpec& spec )
+    {
+        // 런타임(업데이트 루프) 중에는 벡터 재할당로 인한 이터레이터 무효화를 피하기 위해 큐에 넣고 나중에 처리
+        m_pendingMonsterSpawns.push_back ( spec );
+        return -1; // 실제 ID는 Flush 때 생성되므로 여기선 의미 없음
+    }
+
+    void GameApp::FlushPendingSpawns ( )
+    {
+        if ( m_pendingMonsterSpawns.empty ( ) ) return;
+        auto spawns = std::move ( m_pendingMonsterSpawns );
+        for ( const auto& s : spawns ) SpawnMonster ( s );
+    }
 
 
 

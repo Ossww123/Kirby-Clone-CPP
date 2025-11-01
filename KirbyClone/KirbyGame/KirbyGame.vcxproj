@@ -159,6 +159,7 @@
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="game\Ability.h" />
     <ClInclude Include="game\AnimCSV.h" />
+    <ClInclude Include="game\Apple.h" />
     <ClInclude Include="game\CombatTarget.h" />
     <ClInclude Include="game\CombatTypes.h" />
     <ClInclude Include="game\Damage.h" />
@@ -168,6 +169,7 @@
     <ClInclude Include="game\HitVolumeSystem.h" />
     <ClInclude Include="game\Monster.h" />
     <ClInclude Include="game\MonsterFactory.h" />
+    <ClInclude Include="game\MonsterTypes.h" />
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="game\PlayerFSM.h" />
@@ -179,6 +181,7 @@
     <ClInclude Include="game\WaddleDee.h" />
     <ClInclude Include="game\WaddleDoo.h" />
     <ClInclude Include="game\HotHead.h" />
+    <ClInclude Include="game\WhispyWoods.h" />
     <ClInclude Include="res\Resource.h" />
     <ClInclude Include="engine\WorldSystem.h" />
     <ClInclude Include="game\Sparky.h" />

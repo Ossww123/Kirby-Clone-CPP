@@ -12,6 +12,7 @@
 #include "game/Damage.h"
 #include "game/Ability.h"
 #include "game/CombatTypes.h"
+#include "game/MonsterTypes.h"
 
 namespace game {
     class Monster : public engine::Object {
@@ -25,6 +26,9 @@ namespace game {
         using SpawnHitVolumeFn = std::function<void ( const std::string& archetype ,
                                                     int ownerId , int facing ,
                                                     const engine::Vec2& anchor )>;
+        using SpawnMonsterFn = std::function<void ( MonsterType type ,
+                                                    const engine::Vec2 & pos ,
+                                                    const SpawnSpec & spec )>;
 
         struct Cfg {
             engine::PhysicsParams phys;
@@ -113,6 +117,7 @@ namespace game {
         void SetProjectileSpawnerId ( SpawnProjectileIdFn fn ) { m_spawnProjId = std::move ( fn ); }
         void SetTargetQuery ( QueryTargetPosFn fn ) { m_queryTarget = std::move ( fn ); }
         void SetHitVolumeSpawner ( SpawnHitVolumeFn fn ) { m_spawnHV = std::move ( fn ); }
+        void SetMonsterSpawner ( SpawnMonsterFn fn ) { m_spawnMonster = std::move ( fn ); }
         engine::Animator* Animator ( ) { return &m_anim; }
         const engine::Animator* Animator ( ) const { return &m_anim; }
 
@@ -176,6 +181,7 @@ namespace game {
         SpawnProjectileIdFn m_spawnProjId;
         QueryTargetPosFn  m_queryTarget;
         SpawnHitVolumeFn  m_spawnHV;
+        SpawnMonsterFn    m_spawnMonster;
 
     private:
         const engine::Tex2D* m_tex{ nullptr }; // enemies.png (GameApp 소유)

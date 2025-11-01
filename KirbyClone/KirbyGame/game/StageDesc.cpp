@@ -37,7 +37,37 @@ namespace game {
             it = m.suffix ( ).first;
         }
 
-        // 필수 키 검증 (배경은 선택)
+        // ---- 보스 아레나: "boss":{"arena":{"x":..,"y":..,"w":..,"h":..}} ----
+        // 중첩 오브젝트만 별도 정규식으로 추출
+        {
+            // boss.arena 블록의 내부 텍스트를 캡처
+            static const std::regex boss_re (
+                R"REGEX("boss"\s*:\s*\{[^}]*"arena"\s*:\s*\{([^}]*)\})REGEX" ,
+                std::regex::icase
+            );
+            std::smatch bm;
+            if ( std::regex_search ( s , bm , boss_re ) ) {
+                const std::string inner = bm[ 1 ].str ( ); // arena {...} 내부
+                auto find_int = [ & ] ( const char* k , int& outv )->bool {
+                    std::regex r ( std::string ( "\"" ) + k + R"("\s*:\s*([-+]?[0-9]+))" );
+                    std::smatch mm;
+                    if ( std::regex_search ( inner , mm , r ) ) { outv = std::stoi ( mm[ 1 ].str ( ) ); return true; }
+                    return false;
+                    };
+                int bx = 0 , by = 0 , bw = 0 , bh = 0;
+                const bool ok =
+                    find_int ( "x" , bx ) &&
+                    find_int ( "y" , by ) &&
+                    find_int ( "w" , bw ) &&
+                    find_int ( "h" , bh );
+                if ( ok ) {
+                    out.has_boss_arena = true;
+                    out.boss_x = bx; out.boss_y = by; out.boss_w = bw; out.boss_h = bh;
+                }
+            }
+        }
+
+        // 필수 키 검증
         if ( out.tileset.empty ( ) || out.tiledefs.empty ( ) || out.tilemap.empty ( )
             || out.monsters.empty ( ) || out.player_start.empty ( ) || out.background.empty ( ) )
             return false;

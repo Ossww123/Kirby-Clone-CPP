@@ -10,6 +10,10 @@ namespace game {
         std::string player_start;   // assets/stages/stage01/player_start.csv
         std::string background;     // assets/backgrounds/sky_day.png
         std::string doors;          // optional: assets/stages/stage01/doors.csv
+
+        // optional boss arena
+        bool   has_boss_arena = false;
+        int    boss_x = 0 , boss_y = 0 , boss_w = 0 , boss_h = 0;
     };
 
     // 평면 키 전용 초간단 파서: "key":"value" 또는 "key": 123/0.5

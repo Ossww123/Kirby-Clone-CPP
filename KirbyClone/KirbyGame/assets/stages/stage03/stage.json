@@ -1,0 +1,10 @@
+{
+  "tileset": "assets/tilesets/grasslands.png",
+  "tiledefs": "assets/tilesets/grasslands.tiledefs.csv",
+  "tilemap": "assets/stages/stage03/tilemap.csv",
+  "monsters": "assets/stages/stage03/monsters.csv",
+  "player_start": "assets/stages/stage03/player_start.csv",
+  "background": "assets/backgrounds/sky_day.png",
+  "doors":        "assets/stages/stage03/doors.csv",
+  "boss": { "arena": { "x": 512, "y": 256, "w": 960, "h": 640 } }
+}

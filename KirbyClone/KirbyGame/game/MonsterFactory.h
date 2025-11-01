@@ -3,25 +3,17 @@
 #include <unordered_map>
 #include <functional>
 #include "game/Monster.h"
+#include "game/MonsterTypes.h"
 
 // --- 몬스터 ---
 #include "game/WaddleDee.h"
 #include "game/WaddleDoo.h"
 #include "game/HotHead.h"
 #include "game/Sparky.h"
+#include "game/Apple.h"
+#include "game/WhispyWoods.h"
 
 namespace game {
-
-    enum class MonsterType { WaddleDee , WaddleDoo , HotHead, Sparky /* , ... */ };
-
-    struct SpawnSpec {
-        MonsterType type = MonsterType::WaddleDee;
-        float x = 0.f , y = 0.f;
-        int   dir = 1;     // -1,0,+1
-        int   attack = 1;  // 1/0
-        int   move = 1;    // 1/0
-    };
-
     class MonsterFactory {
     public:
         using Maker = std::function<std::unique_ptr<Monster> ( const RECT& ,
@@ -142,6 +134,40 @@ namespace game {
                     cfg.enableAttack = ( s.attack != 0 );
                     return std::make_unique<Sparky> ( b , col , cfg );
                 } );
+
+            // --- Apple (보스 드랍 오브젝트) ---
+            Register ( MonsterType::Apple ,
+              [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
+                             Apple::Config cfg;
+                             cfg.base.phys.accelRun = 2600.f;
+                             cfg.base.phys.decelRun = 2600.f;
+                             cfg.base.phys.maxSpeedRun = 120.f;
+                             cfg.base.phys.frictionGround = 650.f;
+                             cfg.base.phys.frictionAir = 40.f;
+                             cfg.base.phys.gravity = 1300.f;
+                             cfg.base.phys.termVel = 1100.f;
+                             cfg.base.ignoreOneWayUpward = false;
+                             cfg.telegraphMs = 0.6f;
+                             cfg.bounceVx = 140.f;
+                             cfg.bounceVy = 360.f;
+                             cfg.rollSpeed = 90.f;
+                             return std::make_unique<Apple> ( b , col , cfg , s.x , s.y );
+              } );
+
+            // --- WhispyWoods (보스) ---
+            Register ( MonsterType::WhispyWoods ,
+                [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
+                        WhispyWoods::Config cfg;
+                        // 고정형: 이동속도 0, 체력/아이프레임 상향
+                        cfg.base.phys.accelRun = 0.f; cfg.base.phys.decelRun = 0.f; cfg.base.phys.maxSpeedRun = 0.f;
+                        cfg.base.phys.frictionGround = 0.f; cfg.base.phys.frictionAir = 0.f; cfg.base.phys.gravity = 0.f; cfg.base.phys.termVel = 0.f;
+                        cfg.base.maxHp = 12; cfg.base.iFrameMs = 0.4f;
+                        cfg.puffVolleyCount = 3; cfg.puffIntervalMs = 0.33f; cfg.puffSpeed = 220.f; cfg.puffRestMs = 1.4f;
+                        cfg.appleRestMs = 2.8f; cfg.appleTelegraphMs = 0.65f; cfg.applesPerWave = 3; cfg.appleSpanPx = 240.f;
+                        return std::make_unique<WhispyWoods> ( b , col , cfg , /*x*/s.x , /*y*/s.y );
+                } );
+
+
         }
 
     private:
