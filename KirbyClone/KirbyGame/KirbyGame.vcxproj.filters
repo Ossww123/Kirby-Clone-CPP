@@ -239,7 +239,19 @@
     <ClCompile Include="game\StageDesc.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\PlaySession.cpp">
+    <ClCompile Include="game\PlaySession.Core.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\PlaySession.Stage.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\PlaySession.Combat.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\PlaySession.Render.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\PlaySession.Door.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

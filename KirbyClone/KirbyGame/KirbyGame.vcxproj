@@ -200,7 +200,11 @@
     <ClCompile Include="game\HitVolumeFactory.cpp" />
     <ClCompile Include="game\HitVolumeSystem.cpp" />
     <ClCompile Include="game\PlayerFSM.cpp" />
-    <ClCompile Include="game\PlaySession.cpp" />
+    <ClCompile Include="game\PlaySession.Combat.cpp" />
+    <ClCompile Include="game\PlaySession.Core.cpp" />
+    <ClCompile Include="game\PlaySession.Door.cpp" />
+    <ClCompile Include="game\PlaySession.Render.cpp" />
+    <ClCompile Include="game\PlaySession.Stage.cpp" />
     <ClCompile Include="game\ProjectileFactory.cpp" />
     <ClCompile Include="game\ProjectileSystem.cpp" />
     <ClCompile Include="game\StageCSV.cpp" />
