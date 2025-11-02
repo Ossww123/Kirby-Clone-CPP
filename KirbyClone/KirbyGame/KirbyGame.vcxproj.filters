@@ -165,6 +165,9 @@
     <ClInclude Include="game\WhispyWoods.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\PlaySession.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -234,6 +237,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\StageDesc.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\PlaySession.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

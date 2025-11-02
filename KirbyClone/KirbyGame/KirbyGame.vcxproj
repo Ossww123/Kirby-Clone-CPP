@@ -173,6 +173,7 @@
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="game\PlayerFSM.h" />
+    <ClInclude Include="game\PlaySession.h" />
     <ClInclude Include="game\Projectile.h" />
     <ClInclude Include="game\ProjectileFactory.h" />
     <ClInclude Include="game\ProjectileSystem.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="game\HitVolumeFactory.cpp" />
     <ClCompile Include="game\HitVolumeSystem.cpp" />
     <ClCompile Include="game\PlayerFSM.cpp" />
+    <ClCompile Include="game\PlaySession.cpp" />
     <ClCompile Include="game\ProjectileFactory.cpp" />
     <ClCompile Include="game\ProjectileSystem.cpp" />
     <ClCompile Include="game\StageCSV.cpp" />

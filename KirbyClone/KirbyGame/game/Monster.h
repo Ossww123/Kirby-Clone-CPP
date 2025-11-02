@@ -130,6 +130,16 @@ namespace game {
         const engine::Tex2D* TexturePtr ( ) const { return m_tex; }
         RECT SpriteSrc ( ) const { return m_src; }
 
+        // 임시 헬퍼
+        // === Convenience ===
+        engine::Vec2 Center ( ) const {
+            int x , y , w , h; m_body.GetBounds ( x , y , w , h );
+            return { x + w * 0.5f, y + h * 0.5f };
+        }
+        int Facing ( ) const {
+            return ( m_body.Velocity ( ).x >= 0.f ) ? +1 : -1; // 정지 시엔 +1 기준(필요시 향후 상태변수로 개선)
+        }
+
     protected:
         // 파생이 오버라이드: 이 프레임의 이동 의도/상태 결정(예: m_body.SetDesiredRunAxis(..))
         virtual void TickAI ( double fixedDt , const engine::Input& input ) = 0;
