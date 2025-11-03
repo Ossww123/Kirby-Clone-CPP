@@ -1,4 +1,6 @@
-﻿#include "game/PlaySession.h"
+﻿// PlaySession.Render.cpp
+
+#include "game/PlaySession.h"
 #include "engine/D3D11SpriteBatch.h"
 #include "game/GameConfig.h"
 #include <algorithm>
@@ -108,6 +110,13 @@ namespace game {
         for ( const auto& d : m_Doors ) {
             m_Debug->WorldRect ( d.x , d.y , d.w , d.h , ox , oy , RGB ( 0 , 200 , 255 ) );
         }
+        // Boss arena AABB (마젠타)
+        if ( m_hasBossArena ) {
+            const int w = m_bossArena.right - m_bossArena.left;
+            const int h = m_bossArena.bottom - m_bossArena.top;
+            if ( w > 0 && h > 0 ) m_Debug->WorldRect ( m_bossArena.left , m_bossArena.top , w , h , ox , oy , RGB ( 255 , 0 , 255 ) );
+        }
+
         m_Debug->Flush ( );
     }
 

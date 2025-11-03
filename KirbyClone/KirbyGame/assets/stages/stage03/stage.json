@@ -5,6 +5,5 @@
   "monsters": "assets/stages/stage03/monsters.csv",
   "player_start": "assets/stages/stage03/player_start.csv",
   "background": "assets/backgrounds/sky_day.png",
-  "doors":        "assets/stages/stage03/doors.csv",
   "boss": { "arena": { "x": 512, "y": 256, "w": 960, "h": 640 } }
 }

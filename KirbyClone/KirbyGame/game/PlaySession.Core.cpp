@@ -1,9 +1,16 @@
-﻿#include "game/PlaySession.h"
+﻿// PlaySession.Core.cpp
+
+#include <algorithm>
+#include <cmath>
+
+#include "game/PlaySession.h"
 #include "engine/D3D11Renderer.h"
 #include "engine/TextureLoader.h"
 #include "engine/StringConv.h"
 #include "game/AnimCSV.h"
 #include "game/GameConfig.h"
+
+#include "game/WhispyWoods.h"
 
 namespace game {
     PlaySession::~PlaySession ( ) = default;
@@ -76,6 +83,9 @@ namespace game {
         // 4) 애니/카메라/스폰
         if ( m_Player && m_Player->Animator ( ) ) m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
         if ( m_Player ) m_Cam.SetLookAt ( m_Player->Center ( ) );
+        // 보스 아레나 진입/해제 감지(보간 시작/유지/종료)
+        updateBossCameraLock ( );
+        applyCamRectBlend ( ( float ) fixedDt );
         m_Cam.Update ( fixedDt );
         flushPendingSpawns ( );
         updateTransition ( fixedDt );
@@ -88,6 +98,76 @@ namespace game {
                 m_fade.mode = Fade::None;
             }
         }
+    }
+
+    static int iLerp ( int a , int b , float t ) { return ( int ) std::lroundf ( a + ( b - a ) * t ); }
+    RECT PlaySession::LerpRect ( const RECT& A , const RECT& B , float t ) {
+        t = std::clamp ( t , 0.f , 1.f );
+        RECT r;
+        r.left = iLerp ( A.left , B.left , t );
+        r.top = iLerp ( A.top , B.top , t );
+        r.right = iLerp ( A.right , B.right , t );
+        r.bottom = iLerp ( A.bottom , B.bottom , t );
+        return r;
+    }
+
+    void PlaySession::applyCamRectBlend ( float dt )
+    {
+        if ( !m_camBlend.active ) return;
+        m_camBlend.t = std::min ( m_camBlend.t + dt , m_camBlend.dur );
+        float u = ( m_camBlend.dur > 0.f ) ? ( m_camBlend.t / m_camBlend.dur ) : 1.f;
+        // smoothstep
+        float s = u * u * ( 3.f - 2.f * u );
+        m_Cam.SetWorldRect ( LerpRect ( m_camBlend.from , m_camBlend.to , s ) );
+        if ( m_camBlend.t >= m_camBlend.dur ) m_camBlend.active = false;
+    }
+
+    // 풀월드에 패드 적용한 "현재 카메라 기준" rect 계산(보간 from 용도)
+    static RECT PaddedWorldRect ( const RECT& wr0 , int viewW , int viewH , int pad ) {
+        RECT wr = wr0;
+        const int wldW = wr.right - wr.left , wldH = wr.bottom - wr.top;
+        if ( wldW > viewW ) { wr.left += pad; wr.right -= pad; }
+        if ( wldH > viewH ) { wr.top += pad; wr.bottom -= pad; }
+        return wr;
+    }
+
+    void PlaySession::updateBossCameraLock ( )
+    {
+        if ( !m_hasBossArena || !m_Player ) return;
+        int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
+        RECT p{ px,py,px + pw,py + ph };
+        auto overl = [ ] ( const RECT& a , const RECT& b ) {
+            return !( a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom );
+            };
+        // 스크린 크기/패드 가져오기
+        const int sw = m_Renderer ? m_Renderer->GetBackbufferSize ( ).w : 0;
+        const int sh = m_Renderer ? m_Renderer->GetBackbufferSize ( ).h : 0;
+        const int padWorld = game::TILE_PX / 2;
+
+        if ( !m_bossCamLocked && overl ( p , m_bossArena ) ) {
+            // 진입: 풀월드(패드 적용) → 보스아레나 로 0.6s 보간
+            m_bossCamLocked = true;
+            m_camBlend.active = true; m_camBlend.t = 0.f; m_camBlend.dur = 0.6f;
+            m_camBlend.from = PaddedWorldRect ( m_worldRectFull , sw , sh , padWorld );
+            m_camBlend.to = m_bossArena;
+            // SnapImmediate() 제거 → 부드럽게 팬
+        }
+        if ( m_bossCamLocked && !isBossAlive ( ) ) {
+            // 해제: 보스아레나 → 풀월드(패드 적용) 로 0.6s 보간
+            m_bossCamLocked = false;
+            m_camBlend.active = true; m_camBlend.t = 0.f; m_camBlend.dur = 0.6f;
+            m_camBlend.from = m_bossArena;
+            m_camBlend.to = PaddedWorldRect ( m_worldRectFull , sw , sh , padWorld );
+        }
+    }
+
+    bool PlaySession::isBossAlive ( ) const
+    {
+        for ( const auto& up : m_Monsters ) {
+            if ( !up || !up->Alive ( ) ) continue;
+            if ( dynamic_cast< const WhispyWoods* >( up.get ( ) ) ) return true;
+        }
+        return false;
     }
 
     void PlaySession::DrainPlayerEvents ( std::vector<game::PlayerEvent>& out ) {

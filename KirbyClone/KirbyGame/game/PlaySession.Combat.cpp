@@ -1,4 +1,6 @@
-﻿#include "game/PlaySession.h"
+﻿// PlaySession.Combat.cpp
+
+#include "game/PlaySession.h"
 #include "game/Monster.h"
 #include "game/MonsterFactory.h"
 #include "game/ProjectileFactory.h"
@@ -147,6 +149,21 @@ namespace game {
             if ( !mon ) continue;
             if ( m_EnemiesTex.srv ) mon->SetSpriteSheet ( &m_EnemiesTex );
             mon->SetVisualSize ( 32.f , 32.f );
+
+            // ※ 런타임 스폰도 콜백을 동일하게 접속해야 보스(위스피)→사과 드랍/공기포가 실제 동작
+            mon->SetProjectileSpawnerId ( [ this ] ( const std::string& arche , const engine::Vec2& pos ,
+                const engine::Vec2& vel , game::ProjOwner owner ) {
+                    game::ProjectileSystem::SpawnDesc sd{}; sd.archetype = arche; sd.owner = owner;
+                    sd.pos = pos; sd.dirOrVel = vel; sd.treatAsDirection = false; m_projSys.Spawn ( sd );
+            } );
+            mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
+            mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche , int ownerId , int facing , const engine::Vec2& anchor ) {
+                game::HitVolumeSystem::SpawnDesc sd{ arche, ownerId, facing, anchor }; m_hitSys.Spawn ( sd );
+            } );
+            mon->SetMonsterSpawner ( [ this ] ( MonsterType t , const engine::Vec2& pos , const SpawnSpec& spec ) {
+                auto s2 = spec; s2.type = t; s2.x = pos.x; s2.y = pos.y; m_pendingMonsterSpawns.push_back ( s2 );
+            } );
+
             m_Monsters.push_back ( std::move ( mon ) );
         }
     }

@@ -127,6 +127,7 @@ namespace game {
         void SetSpriteSrc ( const RECT& r ) { m_src = r; }
         void SetVisualSize ( float w , float h ) { m_visW = w; m_visH = h; }
         void GetVisualSize ( float& w , float& h ) const { w = m_visW; h = m_visH; }
+        void SetSize ( float w , float h ) { m_body.SetSize ( w , h ); };
         const engine::Tex2D* TexturePtr ( ) const { return m_tex; }
         RECT SpriteSrc ( ) const { return m_src; }
 

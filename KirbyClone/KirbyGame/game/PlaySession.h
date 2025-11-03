@@ -99,6 +99,10 @@ namespace game {
         bool checkDoorInteract ( ); // Player AABB와 문 AABB 오버랩 감지
         void updateTransition ( double fixedDt );
 
+        // --- Boss Arena / Camera Lock ---
+        void updateBossCameraLock ( );
+        bool isBossAlive ( ) const;
+
     private:
         // 외부 제공 핸들(비소유)
         engine::IRenderer* m_Renderer = nullptr;
@@ -147,6 +151,23 @@ namespace game {
             float fadeOut = 0.25f;
             float fadeIn = 0.20f;
         } m_trans;
+
+        // --- Boss Arena / Camera Lock ---
+        bool m_hasBossArena = false;
+        RECT m_bossArena{ 0,0,0,0 };
+        bool m_bossCamLocked = false;
+        RECT m_worldRectFull{ 0,0,0,0 }; // 풀월드 경계 캐시(해제 시 복원)
+
+        // --- Camera rect blend (for smooth lock/unlock) ---
+        struct CamRectBlend {
+            bool  active = false;
+            float t = 0.f;       // 진행 시간
+            float dur = 0.6f;    // 보간 지속(초) - 취향껏 조절
+            RECT  from{ 0,0,0,0 };
+            RECT  to{ 0,0,0,0 };
+        } m_camBlend;
+        void applyCamRectBlend ( float dt );
+        static RECT LerpRect ( const RECT & a , const RECT & b , float t );
     };
 
 } // namespace game

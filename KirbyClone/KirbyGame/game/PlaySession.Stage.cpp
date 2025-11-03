@@ -1,4 +1,6 @@
-﻿#include "game/PlaySession.h"
+﻿// PlaySession.Stage.cpp
+
+#include "game/PlaySession.h"
 #include "engine/D3D11Renderer.h"
 #include "engine/TextureLoader.h"
 #include "engine/StringConv.h"
@@ -42,6 +44,17 @@ namespace game {
         }
         m_World.RebuildColliders ( );
 
+        // --- Boss Arena / 카메라 락 초기화 ---
+        m_worldRectFull = m_World.WorldRectPx ( );
+        m_hasBossArena = desc.has_boss_arena;
+        if ( m_hasBossArena ) {
+            m_bossArena = { desc.boss_x, desc.boss_y, desc.boss_x + desc.boss_w, desc.boss_y + desc.boss_h };
+        }
+        else {
+            m_bossArena = { 0,0,0,0 };
+        }
+        m_bossCamLocked = false;
+
         // ---- Background ----
         if ( !desc.background.empty ( ) ) {
             engine::Tex2D bg{};
@@ -83,6 +96,8 @@ namespace game {
                     else if ( t == "waddledoo" ) mt = game::MonsterType::WaddleDoo;
                     else if ( t == "hothead" )   mt = game::MonsterType::HotHead;
                     else if ( t == "sparky" )    mt = game::MonsterType::Sparky;
+                    else if ( t == "whispywoods" ) mt = game::MonsterType::WhispyWoods;
+                    else if ( t == "apple" )       mt = game::MonsterType::Apple;
                     else continue;
 
                     game::SpawnSpec spec{};
@@ -106,6 +121,13 @@ namespace game {
                     }
                     mon->SetSpriteSrc ( src );
 
+                    // --- WhispyWoods: 큰 고정형 보스 콜라이더 ---
+                    if ( mt == game::MonsterType::WhispyWoods ) {
+                        mon->SetSize ( 6.f * game::TILE_PX , 8.f * game::TILE_PX ); // 96x128px
+                        // 필요 시 비주얼 스케일도 함께 키우려면 아래 주석 해제
+                        // mon->SetVisualSize( 6.f * game::TILE_PX, 8.f * game::TILE_PX );
+                    }
+
                     // 몬스터 → 투사체/히트볼륨 스포너 콜백
                     mon->SetProjectileSpawnerId ( [ this ] ( const std::string& arche , const engine::Vec2& pos ,
                         const engine::Vec2& vel , game::ProjOwner owner ) {
@@ -117,6 +139,9 @@ namespace game {
                     mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche , int ownerId , int facing , const engine::Vec2& anchor ) {
                         game::HitVolumeSystem::SpawnDesc sd{ arche, ownerId, facing, anchor };
                         m_hitSys.Spawn ( sd );
+                    } );
+                    mon->SetMonsterSpawner ( [ this ] ( MonsterType t , const engine::Vec2& pos , const SpawnSpec& spec ) {
+                        auto s = spec; s.type = t; s.x = pos.x; s.y = pos.y; m_pendingMonsterSpawns.push_back ( s );
                     } );
 
                     m_Monsters.push_back ( std::move ( mon ) );
@@ -161,6 +186,12 @@ namespace game {
         const int wldW = wr.right - wr.left , wldH = wr.bottom - wr.top;
         if ( wldW > viewW_world ) { wr.left += padWorld; wr.right -= padWorld; }
         if ( wldH > viewH_world ) { wr.top += padWorld; wr.bottom -= padWorld; }
-        m_Cam.SetWorldRect ( wr );
+        // 보스 락 중이면 아레나로, 아니면 월드(패드 적용)
+        if ( m_bossCamLocked && m_hasBossArena ) {
+            m_Cam.SetWorldRect ( m_bossArena );
+        }
+        else {
+            m_Cam.SetWorldRect ( wr );
+        }
     }
 } // namespace game
