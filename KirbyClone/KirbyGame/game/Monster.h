@@ -30,11 +30,16 @@ namespace game {
                                                     const engine::Vec2 & pos ,
                                                     const SpawnSpec & spec )>;
 
+        // --- Knockback scale control ---
+        void SetKnockbackMul ( float k ) { m_cfg.knockbackMul = k; }
+        float KnockbackMul ( ) const { return m_cfg.knockbackMul; }
+
         struct Cfg {
             engine::PhysicsParams phys;
             bool ignoreOneWayUpward = true; // 공중 상승 중 원웨이 무시(보통 몬스터는 무시 안 함)
             int  maxHp = 2;               // 기본 체력
             float iFrameMs = 0.3f;        // 피격 후 무적 시간
+            float knockbackMul = 0.5f;
         };
 
         Monster ( const RECT& worldBounds ,
@@ -99,8 +104,8 @@ namespace game {
 
             // 넉백
             auto v = m_body.Velocity ( );
-            v.x += d.knockback.x * 0.5f;
-            v.y += d.knockback.y * 0.5f;
+            v.x += d.knockback.x * m_cfg.knockbackMul;
+            v.y += d.knockback.y * m_cfg.knockbackMul;
             m_body.SetVelocity ( v );
         }
 

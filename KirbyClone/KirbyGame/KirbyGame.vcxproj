@@ -150,6 +150,7 @@
     <ClInclude Include="engine\Math.h" />
     <ClInclude Include="engine\Object.h" />
     <ClInclude Include="engine\PhysicsBody.h" />
+    <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="engine\Scene.h" />
     <ClInclude Include="engine\StringConv.h" />
     <ClInclude Include="engine\Texture.h" />
@@ -157,6 +158,29 @@
     <ClInclude Include="engine\TileMap.h" />
     <ClInclude Include="engine\TileSet.h" />
     <ClInclude Include="engine\Time.h" />
+    <ClInclude Include="engine\util\Anim.h" />
+    <ClInclude Include="engine\WorldSystem.h" />
+    <ClInclude Include="engine\world\Camera.h" />
+    <ClInclude Include="engine\physics\Collision.h" />
+    <ClInclude Include="engine\render\D3D11DebugDraw.h" />
+    <ClInclude Include="engine\render\D3D11Renderer.h" />
+    <ClInclude Include="engine\render\D3D11Sprite.h" />
+    <ClInclude Include="engine\render\D3D11SpriteBatch.h" />
+    <ClInclude Include="engine\util\DebugDraw.h" />
+    <ClInclude Include="engine\render\DWriteText.h" />
+    <ClInclude Include="engine\core\GameApp.h" />
+    <ClInclude Include="engine\core\Input.h" />
+    <ClInclude Include="engine\render\IRenderer.h" />
+    <ClInclude Include="engine\util\Math.h" />
+    <ClInclude Include="engine\core\Object.h" />
+    <ClInclude Include="engine\physics\PhysicsBody.h" />
+    <ClInclude Include="engine\core\Scene.h" />
+    <ClInclude Include="engine\util\StringConv.h" />
+    <ClInclude Include="engine\render\Texture.h" />
+    <ClInclude Include="engine\render\TextureLoader.h" />
+    <ClInclude Include="engine\world\TileMap.h" />
+    <ClInclude Include="engine\world\TileSet.h" />
+    <ClInclude Include="engine\core\Time.h" />
     <ClInclude Include="game\Ability.h" />
     <ClInclude Include="game\AnimCSV.h" />
     <ClInclude Include="game\Apple.h" />
@@ -171,7 +195,7 @@
     <ClInclude Include="game\MonsterFactory.h" />
     <ClInclude Include="game\MonsterTypes.h" />
     <ClInclude Include="game\Player.h" />
-    <ClInclude Include="engine\RenderSystem.h" />
+    <ClInclude Include="engine\core\RenderSystem.h" />
     <ClInclude Include="game\PlayerFSM.h" />
     <ClInclude Include="game\PlaySession.h" />
     <ClInclude Include="game\Projectile.h" />
@@ -184,17 +208,17 @@
     <ClInclude Include="game\HotHead.h" />
     <ClInclude Include="game\WhispyWoods.h" />
     <ClInclude Include="res\Resource.h" />
-    <ClInclude Include="engine\WorldSystem.h" />
+    <ClInclude Include="engine\world\WorldSystem.h" />
     <ClInclude Include="game\Sparky.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\Collision.cpp" />
-    <ClCompile Include="engine\D3D11SpriteBatch.cpp" />
-    <ClCompile Include="engine\D3D11TextureLoader.cpp" />
-    <ClCompile Include="engine\GameApp.cpp" />
-    <ClCompile Include="engine\PhysicsBody.cpp" />
-    <ClCompile Include="engine\TileMap.cpp" />
-    <ClCompile Include="engine\TileSet.cpp" />
+    <ClCompile Include="engine\physics\Collision.cpp" />
+    <ClCompile Include="engine\render\D3D11SpriteBatch.cpp" />
+    <ClCompile Include="engine\render\D3D11TextureLoader.cpp" />
+    <ClCompile Include="engine\core\GameApp.cpp" />
+    <ClCompile Include="engine\physics\PhysicsBody.cpp" />
+    <ClCompile Include="engine\world\TileMap.cpp" />
+    <ClCompile Include="engine\world\TileSet.cpp" />
     <ClCompile Include="game\AnimCSV.cpp" />
     <ClCompile Include="game\HitVolume.cpp" />
     <ClCompile Include="game\HitVolumeFactory.cpp" />
@@ -213,8 +237,8 @@
     <ClCompile Include="game\WaddleDoo.cpp" />
     <ClCompile Include="game\HotHead.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
-    <ClCompile Include="engine\WorldSystem.cpp" />
-    <ClCompile Include="engine\RenderSystem.cpp" />
+    <ClCompile Include="engine\world\WorldSystem.cpp" />
+    <ClCompile Include="engine\core\RenderSystem.cpp" />
     <ClCompile Include="game\Sparky.cpp" />
   </ItemGroup>
   <ItemGroup>

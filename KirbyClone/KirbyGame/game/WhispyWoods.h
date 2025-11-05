@@ -6,7 +6,7 @@ namespace game {
     class WhispyWoods : public Monster {
     public:
         struct Config {
-            Monster::Cfg base{};
+            Monster::Cfg base{ .knockbackMul = 0.f };
             // 공기포(투사체) 패턴
             int   puffVolleyCount = 3;
             float puffIntervalMs = 0.33f;

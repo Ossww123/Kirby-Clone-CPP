@@ -18,76 +18,76 @@
     <ClInclude Include="res\Resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Time.h">
+    <ClInclude Include="engine\core\Time.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Input.h">
+    <ClInclude Include="engine\core\Input.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\GameApp.h">
+    <ClInclude Include="engine\core\GameApp.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Object.h">
+    <ClInclude Include="engine\core\Object.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Scene.h">
+    <ClInclude Include="engine\core\Scene.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="game\Player.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Math.h">
+    <ClInclude Include="engine\util\Math.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Camera.h">
+    <ClInclude Include="engine\world\Camera.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\DebugDraw.h">
+    <ClInclude Include="engine\util\DebugDraw.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\IRenderer.h">
+    <ClInclude Include="engine\render\IRenderer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\D3D11Renderer.h">
+    <ClInclude Include="engine\render\D3D11Renderer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\D3D11Sprite.h">
+    <ClInclude Include="engine\render\D3D11Sprite.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Anim.h">
+    <ClInclude Include="engine\util\Anim.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\D3D11DebugDraw.h">
+    <ClInclude Include="engine\render\D3D11DebugDraw.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\DWriteText.h">
+    <ClInclude Include="engine\render\DWriteText.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\D3D11SpriteBatch.h">
+    <ClInclude Include="engine\render\D3D11SpriteBatch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Collision.h">
+    <ClInclude Include="engine\physics\Collision.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Texture.h">
+    <ClInclude Include="engine\render\Texture.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\TextureLoader.h">
+    <ClInclude Include="engine\render\TextureLoader.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\TileSet.h">
+    <ClInclude Include="engine\world\TileSet.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\TileMap.h">
+    <ClInclude Include="engine\world\TileMap.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\PhysicsBody.h">
+    <ClInclude Include="engine\physics\PhysicsBody.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\WorldSystem.h">
+    <ClInclude Include="engine\world\WorldSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\RenderSystem.h">
+    <ClInclude Include="engine\core\RenderSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="game\PlayerFSM.h">
@@ -114,7 +114,7 @@
     <ClInclude Include="game\StageCSV.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\StringConv.h">
+    <ClInclude Include="engine\util\StringConv.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="game\AnimCSV.h">
@@ -168,36 +168,108 @@
     <ClInclude Include="game\PlaySession.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="engine\Anim.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Camera.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Collision.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\D3D11DebugDraw.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\D3D11Renderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\D3D11Sprite.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\D3D11SpriteBatch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\DebugDraw.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\DWriteText.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\GameApp.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Input.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\IRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Math.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Object.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\PhysicsBody.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\RenderSystem.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Scene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\StringConv.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Texture.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\TextureLoader.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\TileMap.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\TileSet.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Time.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\WorldSystem.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\D3D11TextureLoader.cpp">
+    <ClCompile Include="engine\render\D3D11TextureLoader.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Collision.cpp">
+    <ClCompile Include="engine\physics\Collision.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\TileMap.cpp">
+    <ClCompile Include="engine\world\TileMap.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\TileSet.cpp">
+    <ClCompile Include="engine\world\TileSet.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\PhysicsBody.cpp">
+    <ClCompile Include="engine\physics\PhysicsBody.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\GameApp.cpp">
+    <ClCompile Include="engine\core\GameApp.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\WorldSystem.cpp">
+    <ClCompile Include="engine\world\WorldSystem.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\RenderSystem.cpp">
+    <ClCompile Include="engine\core\RenderSystem.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\D3D11SpriteBatch.cpp">
+    <ClCompile Include="engine\render\D3D11SpriteBatch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\PlayerFSM.cpp">

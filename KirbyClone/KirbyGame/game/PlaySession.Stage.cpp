@@ -124,6 +124,7 @@ namespace game {
                     // --- WhispyWoods: 큰 고정형 보스 콜라이더 ---
                     if ( mt == game::MonsterType::WhispyWoods ) {
                         mon->SetSize ( 6.f * game::TILE_PX , 8.f * game::TILE_PX ); // 96x128px
+                        mon->SetKnockbackMul ( 0.f );
                         // 필요 시 비주얼 스케일도 함께 키우려면 아래 주석 해제
                         // mon->SetVisualSize( 6.f * game::TILE_PX, 8.f * game::TILE_PX );
                     }
@@ -194,4 +195,5 @@ namespace game {
             m_Cam.SetWorldRect ( wr );
         }
     }
+
 } // namespace game
