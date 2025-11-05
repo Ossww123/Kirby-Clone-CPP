@@ -6,7 +6,7 @@
     RenderSystem.h
     RenderSystem.cpp
     Scene.h
-    Time.h — Frame timing (variable dt + fixed-step) & FPS counter (QPC-backed)
+    Time.h/.cpp — Frame timing (variable dt + fixed-step) & FPS counter (QPC-backed)
     Input.h
     Object.h
   /render
