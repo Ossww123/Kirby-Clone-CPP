@@ -1,4 +1,6 @@
 ﻿#include "engine/TileMap.h"
+#include "engine/util/Types.h"
+#include "engine/platform/win32/RectUtil.h"
 #include <algorithm>
 
 namespace engine {
@@ -87,8 +89,8 @@ namespace engine {
         ty1 = std::min ( mapH , ( camOffY + screenH + tileH - 1 ) / tileH );
     }
 
-    static inline bool hasRect ( const RECT& r ) {
-        return ( r.right > r.left ) && ( r.bottom > r.top );
+    static inline bool hasRect ( const IntRect& r ) {
+        return ( r.r > r.l ) && ( r.b > r.t );
     }
 
     // src 선택: 1) 정의된 src 우선 2) id 기반 폴백(0/1-base) 3) 범위 밖이면 무시

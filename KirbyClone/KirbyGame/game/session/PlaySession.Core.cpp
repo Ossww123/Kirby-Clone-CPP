@@ -7,6 +7,7 @@
 #include "engine/D3D11Renderer.h"
 #include "engine/TextureLoader.h"
 #include "engine/StringConv.h"
+#include "engine/util/Types.h"
 #include "game/AnimCSV.h"
 #include "game/GameConfig.h"
 
@@ -101,13 +102,13 @@ namespace game {
     }
 
     static int iLerp ( int a , int b , float t ) { return ( int ) std::lroundf ( a + ( b - a ) * t ); }
-    RECT PlaySession::LerpRect ( const RECT& A , const RECT& B , float t ) {
+    engine::IntRect PlaySession::LerpRect ( const engine::IntRect& A , const engine::IntRect& B , float t ) {
         t = std::clamp ( t , 0.f , 1.f );
-        RECT r;
-        r.left = iLerp ( A.left , B.left , t );
-        r.top = iLerp ( A.top , B.top , t );
-        r.right = iLerp ( A.right , B.right , t );
-        r.bottom = iLerp ( A.bottom , B.bottom , t );
+        engine::IntRect r;
+        r.l = iLerp ( A.l , B.l , t );
+        r.t = iLerp ( A.t , B.t , t );
+        r.r = iLerp ( A.r , B.r , t );
+        r.b = iLerp ( A.b , B.b , t );
         return r;
     }
 
@@ -123,11 +124,11 @@ namespace game {
     }
 
     // 풀월드에 패드 적용한 "현재 카메라 기준" rect 계산(보간 from 용도)
-    static RECT PaddedWorldRect ( const RECT& wr0 , int viewW , int viewH , int pad ) {
-        RECT wr = wr0;
-        const int wldW = wr.right - wr.left , wldH = wr.bottom - wr.top;
-        if ( wldW > viewW ) { wr.left += pad; wr.right -= pad; }
-        if ( wldH > viewH ) { wr.top += pad; wr.bottom -= pad; }
+    static engine::IntRect PaddedWorldRect ( const engine::IntRect& wr0 , int viewW , int viewH , int pad ) {
+        engine::IntRect wr = wr0;
+        const int wldW = wr.r - wr.l , wldH = wr.b - wr.t;
+        if ( wldW > viewW ) { wr.l += pad; wr.r -= pad; }
+        if ( wldH > viewH ) { wr.t += pad; wr.b -= pad; }
         return wr;
     }
 
@@ -135,9 +136,9 @@ namespace game {
     {
         if ( !m_hasBossArena || !m_Player ) return;
         int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-        RECT p{ px,py,px + pw,py + ph };
-        auto overl = [ ] ( const RECT& a , const RECT& b ) {
-            return !( a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom );
+        engine::IntRect p{ px,py,px + pw,py + ph };
+        auto overl = [ ] ( const engine::IntRect& a , const engine::IntRect& b ) {
+            return !( a.r <= b.l || a.l >= b.r || a.b <= b.t || a.t >= b.b );
             };
         // 스크린 크기/패드 가져오기
         const int sw = m_Renderer ? m_Renderer->GetBackbufferSize ( ).w : 0;

@@ -4,6 +4,7 @@
 #include "engine/D3D11Renderer.h"
 #include "engine/TextureLoader.h"
 #include "engine/StringConv.h"
+#include "engine/util/Types.h"
 #include "game/StageCSV.h"
 #include "game/StageDesc.h"
 #include "game/MonsterFactory.h"
@@ -111,12 +112,12 @@ namespace game {
                     // 텍스처/비주얼 사이즈/소스 (기존 GameApp 구현 그대로)
                     if ( m_EnemiesTex.srv ) mon->SetSpriteSheet ( &m_EnemiesTex );
                     mon->SetVisualSize ( 32.f , 32.f );
-                    RECT src{};
+                    engine::IntRect src{};
                     switch ( mt ) {
-                    case game::MonsterType::WaddleDee: src = RECT{ 8, 8, 40, 40 };     break;
-                    case game::MonsterType::WaddleDoo: src = RECT{ 8, 40, 40, 72 };    break;
-                    case game::MonsterType::HotHead:   src = RECT{ 8, 136, 40, 168 };  break;
-                    case game::MonsterType::Sparky:    src = RECT{ 8, 168, 40, 200 };  break;
+                    case game::MonsterType::WaddleDee: src = engine::IntRect{ 8, 8, 40, 40 };     break;
+                    case game::MonsterType::WaddleDoo: src = engine::IntRect{ 8, 40, 40, 72 };    break;
+                    case game::MonsterType::HotHead:   src = engine::IntRect{ 8, 136, 40, 168 };  break;
+                    case game::MonsterType::Sparky:    src = engine::IntRect{ 8, 168, 40, 200 };  break;
                     default: break;
                     }
                     mon->SetSpriteSrc ( src );
@@ -177,16 +178,16 @@ namespace game {
     }
 
     void PlaySession::updateCameraBoundsForWorld ( int sw , int sh ) {
-        RECT wr0 = m_World.WorldRectPx ( );
-        if ( wr0.right <= wr0.left || wr0.bottom <= wr0.top ) return;
+        engine::IntRect wr0 = m_World.WorldRectPx ( );
+        if ( wr0.r <= wr0.l || wr0.b <= wr0.t ) return;
 
         const int viewW_world = sw;
         const int viewH_world = sh;
         const int padWorld = game::TILE_PX / 2;
-        RECT wr = wr0;
-        const int wldW = wr.right - wr.left , wldH = wr.bottom - wr.top;
-        if ( wldW > viewW_world ) { wr.left += padWorld; wr.right -= padWorld; }
-        if ( wldH > viewH_world ) { wr.top += padWorld; wr.bottom -= padWorld; }
+        engine::IntRect wr = wr0;
+        const int wldW = wr.r - wr.l , wldH = wr.b - wr.t;
+        if ( wldW > viewW_world ) { wr.l += padWorld; wr.r -= padWorld; }
+        if ( wldH > viewH_world ) { wr.t += padWorld; wr.b -= padWorld; }
         // 보스 락 중이면 아레나로, 아니면 월드(패드 적용)
         if ( m_bossCamLocked && m_hasBossArena ) {
             m_Cam.SetWorldRect ( m_bossArena );

@@ -1,5 +1,6 @@
 ﻿#include "engine/PhysicsBody.h"
 #include "engine/Collision.h"
+#include "engine/util/Types.h"
 #include <cmath>
 
 namespace engine {
@@ -55,7 +56,7 @@ namespace engine {
         if ( m_y > bottom ) { m_y = static_cast< float >( bottom );         m_vel.y = 0.f; m_grounded = true; }
     }
 
-    RECT PhysicsBody::ProposeAABB ( double fixedDt , int* outPrevBottom , float* outNX , float* outNY ) const {
+    IntRect PhysicsBody::ProposeAABB ( double fixedDt , int* outPrevBottom , float* outNX , float* outNY ) const {
         const float dt = ( float ) fixedDt;
         if ( outPrevBottom ) *outPrevBottom = ( int ) std::floor ( m_y + m_h );
 
@@ -69,25 +70,25 @@ namespace engine {
         const int t = ( int ) ny;
         const int w = ( int ) std::round ( m_w );
         const int h = ( int ) std::round ( m_h );
-        return RECT{ l, t, l + w, t + h };
+        return IntRect{ l, t, l + w, t + h };
     }
 
-    void PhysicsBody::ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter , bool grounded )
+    void PhysicsBody::ApplyCollisionResult ( const IntRect& aabbAfter , const Vec2& velAfter , bool grounded )
     {
-        m_x = static_cast< float >( aabbAfter.left );
-        m_y = static_cast< float >( aabbAfter.top );
+        m_x = static_cast< float >( aabbAfter.l );
+        m_y = static_cast< float >( aabbAfter.t );
         m_vel = velAfter;
         m_grounded = grounded;
         if ( m_grounded && m_vel.y > 0.f ) m_vel.y = 0.f;
     }
 
-    void PhysicsBody::ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter ,
+    void PhysicsBody::ApplyCollisionResult ( const IntRect& aabbAfter , const Vec2& velAfter ,
                                        const physics::CollisionReport& rep ,
                                        float proposedX , float proposedY )
     {
         // 충돌 있는 축만 정수 스냅, 없으면 예측 float 유지
-        m_x = rep.hitX ? ( float ) aabbAfter.left : proposedX;
-        m_y = ( rep.grounded || rep.hitY ) ? ( float ) aabbAfter.top : proposedY;
+        m_x = rep.hitX ? ( float ) aabbAfter.l : proposedX;
+        m_y = ( rep.grounded || rep.hitY ) ? ( float ) aabbAfter.t : proposedY;
 
         m_vel = velAfter;
         m_grounded = rep.grounded;

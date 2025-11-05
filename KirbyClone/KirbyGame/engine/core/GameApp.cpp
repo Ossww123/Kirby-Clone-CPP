@@ -25,6 +25,8 @@
 #include "engine/D3D11DebugDraw.h"
 #include "engine/DWriteText.h"
 #include "engine/D3D11SpriteBatch.h"
+#include "engine/util/Types.h"
+#include "engine/platform/win32/RectUtil.h"
 
 // === game ===
 #include "game/Player.h"

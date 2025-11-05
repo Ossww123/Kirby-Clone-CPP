@@ -159,6 +159,7 @@
     <ClInclude Include="engine\TileSet.h" />
     <ClInclude Include="engine\Time.h" />
     <ClInclude Include="engine\util\Anim.h" />
+    <ClInclude Include="engine\util\Types.h" />
     <ClInclude Include="engine\WorldSystem.h" />
     <ClInclude Include="engine\world\Camera.h" />
     <ClInclude Include="engine\physics\Collision.h" />
@@ -210,6 +211,7 @@
     <ClInclude Include="game\Monster.h" />
     <ClInclude Include="game\MonsterFactory.h" />
     <ClInclude Include="game\MonsterTypes.h" />
+    <ClInclude Include="engine\platform\win32\RectUtil.h" />
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="game\PlayerFSM.h" />
     <ClInclude Include="game\PlaySession.h" />

@@ -19,10 +19,10 @@ namespace engine {
 
     class PhysicsBody {
     public:
-        explicit PhysicsBody ( RECT worldBounds , const PhysicsParams& p = {} ) : m_bounds ( worldBounds ) , m_p ( p ) {}
+        explicit PhysicsBody ( IntRect worldBounds , const PhysicsParams& p = {} ) : m_bounds ( worldBounds ) , m_p ( p ) {}
 
         // ---- 설정/상태 쓰기
-        void SetBounds ( RECT b ) { m_bounds = b; }
+        void SetBounds ( IntRect b ) { m_bounds = b; }
         void SetSize ( float w , float h ) { m_w = w; m_h = h; }
         void SetPosition ( float x , float y ) { m_x = x; m_y = y; }
         void SetVelocity ( const Vec2& v ) { m_vel = v; }
@@ -40,13 +40,13 @@ namespace engine {
 
         // ---- 충돌 시스템 연동 경로
         // 1) 현재 상태에서 dt 후의 "제안 AABB" 계산 (충돌 검사에 사용)
-        RECT ProposeAABB ( double fixedDt , int* outPrevBottom ,
+        IntRect ProposeAABB ( double fixedDt , int* outPrevBottom ,
                      float* outNX = nullptr , float* outNY = nullptr ) const;
 
         // 2) 충돌 시스템 결과를 바디에 반영
-        void ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter , bool grounded );
+        void ApplyCollisionResult ( const IntRect& aabbAfter , const Vec2& velAfter , bool grounded );
         // 축별 스냅용 오버로드 (충돌 없는 축은 float 유지)
-        void ApplyCollisionResult ( const RECT& aabbAfter , const Vec2& velAfter ,
+        void ApplyCollisionResult ( const IntRect& aabbAfter , const Vec2& velAfter ,
                               const physics::CollisionReport& rep ,
                               float proposedX , float proposedY );
 
@@ -55,8 +55,8 @@ namespace engine {
             x = static_cast< int >( m_x ); y = static_cast< int >( m_y );
             w = static_cast< int >( m_w ); h = static_cast< int >( m_h );
         }
-        RECT BoundsRect ( ) const {
-            return RECT{ static_cast< LONG >( m_x ), static_cast< LONG >( m_y ),
+        IntRect BoundsRect ( ) const {
+            return IntRect{ static_cast< LONG >( m_x ), static_cast< LONG >( m_y ),
                          static_cast< LONG >( m_x + m_w ), static_cast< LONG >( m_y + m_h ) };
         }
         Vec2  Velocity ( )  const { return m_vel; }
@@ -80,7 +80,7 @@ namespace engine {
         float m_w = 56.f , m_h = 56.f;
         Vec2  m_vel{ 0.f, 0.f };
         bool  m_grounded = false;
-        RECT  m_bounds{};
+        IntRect  m_bounds{};
 
         // 입력/목표
         float m_axisX = 0.f;

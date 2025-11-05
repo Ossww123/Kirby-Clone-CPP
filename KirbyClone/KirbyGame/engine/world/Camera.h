@@ -5,9 +5,9 @@
 // Call-Context:   Main thread; Update() per frame; no allocations.
 //
 
-#include <windows.h> 
 #include <utility>          // std::pair
 #include "engine/Math.h"    // Vec2
+#include "engine/util/Types.h"  // IntRect
 
 namespace engine {
 
@@ -16,7 +16,7 @@ namespace engine {
     public:
         void SetScreenSize ( int w , int h );
         void SetWorldRect ( float l , float t , float r , float b );
-        void SetWorldRect ( const RECT& r );
+        void SetWorldRect ( const IntRect& r );
 
         void  SetSmoothSpeed ( float k );   // e.g., 10~15
         void  SetPixelSnap ( bool on );

@@ -2,7 +2,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <windows.h>
 
 #include "engine/IRenderer.h"
 #include "engine/D3D11SpriteBatch.h"
@@ -13,6 +12,7 @@
 #include "engine/Scene.h"
 #include "engine/Texture.h"
 #include "engine/Collision.h"
+#include "engine/util/Types.h"
 
 #include "game/Player.h"
 #include "game/PlayerFSM.h"
@@ -37,7 +37,7 @@ namespace game {
             engine::D3D11DebugDraw* debug = nullptr;
             engine::DWriteTextHUD* textHUD = nullptr;
             engine::Scene* scene = nullptr;   // to spawn Player
-            RECT                      rcClient{};           // initial client rect
+            engine::IntRect                      rcClient{};           // initial client rect
         };
 
         ~PlaySession ( );
@@ -65,7 +65,7 @@ namespace game {
         engine::Camera&         Camera ( )                { return m_Cam; }
         const engine::WorldSystem&  World ( )       const { return m_World; }
         engine::WorldSystem&        World ( )             { return m_World; }
-        RECT WorldRectPx ( )                        const { return m_World.WorldRectPx ( ); }
+        engine::IntRect WorldRectPx ( )             const { return m_World.WorldRectPx ( ); }
         int PlayerFacing ( )                        const { return m_PlayerFSM.Facing ( ); }
 
         // (임시) 플레이어 핸들
@@ -154,20 +154,20 @@ namespace game {
 
         // --- Boss Arena / Camera Lock ---
         bool m_hasBossArena = false;
-        RECT m_bossArena{ 0,0,0,0 };
+        engine::IntRect m_bossArena{ 0,0,0,0 };
         bool m_bossCamLocked = false;
-        RECT m_worldRectFull{ 0,0,0,0 }; // 풀월드 경계 캐시(해제 시 복원)
+        engine::IntRect m_worldRectFull{ 0,0,0,0 }; // 풀월드 경계 캐시(해제 시 복원)
 
         // --- Camera rect blend (for smooth lock/unlock) ---
         struct CamRectBlend {
             bool  active = false;
             float t = 0.f;       // 진행 시간
             float dur = 0.6f;    // 보간 지속(초) - 취향껏 조절
-            RECT  from{ 0,0,0,0 };
-            RECT  to{ 0,0,0,0 };
+            engine::IntRect  from{ 0,0,0,0 };
+            engine::IntRect  to{ 0,0,0,0 };
         } m_camBlend;
         void applyCamRectBlend ( float dt );
-        static RECT LerpRect ( const RECT & a , const RECT & b , float t );
+        static engine::IntRect LerpRect ( const engine::IntRect& a , const engine::IntRect& b , float t );
     };
 
 } // namespace game

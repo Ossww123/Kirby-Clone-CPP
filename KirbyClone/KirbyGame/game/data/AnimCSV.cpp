@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <cctype>
+#include "engine/util/Types.h"
 
 namespace {
     inline std::string trim ( const std::string& s ) {
@@ -60,7 +61,7 @@ namespace game {
                 auto& clip = clips[ name ];
                 clip.loop = loop; // 마지막 strip/프레임의 loop 값이 우선
                 for ( int i = 0; i < count; ++i ) {
-                    RECT r{ sx + i * fw, sy, sx + ( i + 1 ) * fw, sy + fh };
+                    engine::IntRect r{ sx + i * fw, sy, sx + ( i + 1 ) * fw, sy + fh };
                     clip.frames.push_back ( { r, dur } );
                 }
             }
@@ -75,7 +76,7 @@ namespace game {
 
                 auto& clip = clips[ name ];
                 clip.loop = loop;
-                RECT r{ sx, sy, sx + w, sy + h };
+                engine::IntRect r{ sx, sy, sx + w, sy + h };
                 clip.frames.push_back ( { r, dur } );
             }
             else {

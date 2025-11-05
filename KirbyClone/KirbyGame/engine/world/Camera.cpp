@@ -15,12 +15,12 @@ namespace engine {
         m_worldL = l; m_worldT = t; m_worldR = r; m_worldB = b;
     }
 
-    void Camera::SetWorldRect ( const RECT& r )
+    void Camera::SetWorldRect ( const IntRect& r )
     {
-        m_worldL = static_cast< float >( r.left );
-        m_worldT = static_cast< float >( r.top );
-        m_worldR = static_cast< float >( r.right );
-        m_worldB = static_cast< float >( r.bottom );
+        m_worldL = static_cast< float >( r.l );
+        m_worldT = static_cast< float >( r.t );
+        m_worldR = static_cast< float >( r.r );
+        m_worldB = static_cast< float >( r.b );
     }
 
     void Camera::SetSmoothSpeed ( float k )

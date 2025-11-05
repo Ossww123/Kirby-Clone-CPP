@@ -2,6 +2,7 @@
 
 #include "game/PlaySession.h"
 #include "engine/Collision.h"
+#include "engine/util/Types.h"
 
 namespace game {
     void PlaySession::StartTransitionTo ( const std::string& target , float o , float i )
@@ -20,10 +21,10 @@ namespace game {
         if ( !m_Player || m_Doors.empty ( ) ) return false;
 
         int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-        RECT paabb{ px,py,px + pw,py + ph };
+        engine::IntRect paabb{ px,py,px + pw,py + ph };
 
         for ( const auto& d : m_Doors ) {
-            RECT daabb{ d.x, d.y, d.x + d.w, d.y + d.h };
+            engine::IntRect daabb{ d.x, d.y, d.x + d.w, d.y + d.h };
             if ( engine::physics::Overlap ( paabb , daabb ) ) {
                 StartTransitionTo ( d.target );
                 return true;

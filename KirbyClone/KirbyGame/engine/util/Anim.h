@@ -5,15 +5,15 @@
 // Call-Context:   Main thread; Update() no allocations.
 //
 
-#include <windows.h>               // RECT
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "engine/util/Types.h"   // IntRect
 
 namespace engine {
 
     struct AnimFrame {
-        RECT  src;      // pixel rect in atlas
+        IntRect  src;      // pixel rect in atlas
         float duration; // seconds
     };
 
@@ -32,7 +32,7 @@ namespace engine {
         bool HasClip ( const std::string& name ) const;
         bool RemoveClip ( const std::string& name );
 
-        const RECT& CurrentSrc ( ) const;
+        const IntRect& CurrentSrc ( ) const;
         const std::string& CurrentName ( ) const { return m_curName; }
 
         static AnimClip MakeRowClip ( int startX , int startY , int cellW , int cellH ,

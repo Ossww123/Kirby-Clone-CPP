@@ -71,9 +71,9 @@ namespace engine {
         return true;
     }
 
-    const RECT& Animator::CurrentSrc ( ) const
+    const IntRect& Animator::CurrentSrc ( ) const
     {
-        static RECT kEmpty{ 0,0,0,0 };
+        static IntRect kEmpty{ 0,0,0,0 };
         return ( m_cur && !m_cur->frames.empty ( ) ) ? m_cur->frames[ m_idx ].src : kEmpty;
     }
 
@@ -84,7 +84,7 @@ namespace engine {
         const float dur = ( fps > 0.f ) ? 1.0f / fps : 0.1f;
         c.frames.reserve ( static_cast< size_t >( count ) );
         for ( int i = 0; i < count; ++i ) {
-            RECT r{ startX + i * cellW , startY ,
+            IntRect r{ startX + i * cellW , startY ,
                     startX + ( i + 1 ) * cellW , startY + cellH };
             c.frames.push_back ( { r , dur } );
         }

@@ -2,6 +2,7 @@
 
 #include "game/PlaySession.h"
 #include "engine/D3D11SpriteBatch.h"
+#include "engine/util/Types.h"
 #include "game/GameConfig.h"
 #include <algorithm>
 #include <cwchar>
@@ -35,13 +36,13 @@ namespace game {
         const int viewW_tex = sw / game::SCALE;
         const int viewH_tex = sh / game::SCALE;
 
-        RECT src{
+        engine::IntRect src{
             std::clamp ( srcLeft, 0, std::max ( 0, m_BgTex.width - viewW_tex ) ),
             std::clamp ( srcTop , 0, std::max ( 0, m_BgTex.height - viewH_tex ) ),
             0, 0
         };
-        src.right = src.left + viewW_tex;
-        src.bottom = src.top + viewH_tex;
+        src.r = src.l + viewW_tex;
+        src.b = src.t + viewH_tex;
 
         m_Batch->Draw ( m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src , 0xFFFFFFFF );
     }
@@ -58,9 +59,9 @@ namespace game {
                 float vw , vh;       m_Player->GetVisualSize ( vw , vh );
                 const float sx = ( ( px + pw * 0.5f ) - vw * 0.5f - ox );
                 const float sy = ( ( py + ph ) - vh - oy );
-                RECT src = m_Player->Animator ( )->CurrentSrc ( ); // 기존 GameApp 코드와 동일
+                engine::IntRect src = m_Player->Animator ( )->CurrentSrc ( ); // 기존 GameApp 코드와 동일
                 m_Batch->Draw ( tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
-                              ( src.right > src.left ) ? &src : nullptr , 0xFFFFFFFF );
+                              ( src.r > src.l ) ? &src : nullptr , 0xFFFFFFFF );
             }
         }
 
@@ -72,7 +73,7 @@ namespace game {
             float vw , vh;       m->GetVisualSize ( vw , vh );
             const float sx = ( ( mx + mw * 0.5f ) - vw * 0.5f - ox );
             const float sy = ( ( my + mh ) - vh - oy );
-            RECT src = m->SpriteSrc ( );
+            engine::IntRect src = m->SpriteSrc ( );
             m_Batch->Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE , &src , 0xFFFFFFFF );
         }
     }
@@ -112,9 +113,9 @@ namespace game {
         }
         // Boss arena AABB (마젠타)
         if ( m_hasBossArena ) {
-            const int w = m_bossArena.right - m_bossArena.left;
-            const int h = m_bossArena.bottom - m_bossArena.top;
-            if ( w > 0 && h > 0 ) m_Debug->WorldRect ( m_bossArena.left , m_bossArena.top , w , h , ox , oy , RGB ( 255 , 0 , 255 ) );
+            const int w = m_bossArena.r - m_bossArena.l;
+            const int h = m_bossArena.b - m_bossArena.t;
+            if ( w > 0 && h > 0 ) m_Debug->WorldRect ( m_bossArena.l , m_bossArena.t , w , h , ox , oy , RGB ( 255 , 0 , 255 ) );
         }
 
         m_Debug->Flush ( );
