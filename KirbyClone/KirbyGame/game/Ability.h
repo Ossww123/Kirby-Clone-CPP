@@ -1,6 +1,3 @@
-﻿#pragma once
-
-namespace game {
-	// ---- Thin ability enum (expand later) ----
-	enum class Ability { None , Fire , Spark , Beam };
-}
+﻿// game/Ability.h
+#pragma once
+#include "game/combat/Ability.h"

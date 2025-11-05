@@ -33,7 +33,7 @@
     <ClInclude Include="engine\core\Scene.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\Player.h">
+    <ClInclude Include="game\entities\player\Player.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="engine\util\Math.h">
@@ -90,82 +90,82 @@
     <ClInclude Include="engine\core\RenderSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\PlayerFSM.h">
+    <ClInclude Include="game\entities\player\PlayerFSM.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\Monster.h">
+    <ClInclude Include="game\entities\monsters\Monster.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\WaddleDee.h">
+    <ClInclude Include="game\entities\monsters\WaddleDee.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\MonsterFactory.h">
+    <ClInclude Include="game\entities\monsters\MonsterFactory.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\Damage.h">
+    <ClInclude Include="game\combat\Damage.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\Projectile.h">
+    <ClInclude Include="game\projectile\Projectile.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\WaddleDoo.h">
+    <ClInclude Include="game\entities\monsters\WaddleDoo.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\StageCSV.h">
+    <ClInclude Include="game\data\StageCSV.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="engine\util\StringConv.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\AnimCSV.h">
+    <ClInclude Include="game\data\AnimCSV.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\ProjectileFactory.h">
+    <ClInclude Include="game\projectile\ProjectileFactory.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\HotHead.h">
+    <ClInclude Include="game\entities\monsters\HotHead.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\Sparky.h">
+    <ClInclude Include="game\entities\monsters\Sparky.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\GameConfig.h">
+    <ClInclude Include="game\data\GameConfig.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\ProjectileSystem.h">
+    <ClInclude Include="game\projectile\ProjectileSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\HitVolume.h">
+    <ClInclude Include="game\combat\HitVolume.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\HitVolumeSystem.h">
+    <ClInclude Include="game\combat\HitVolumeSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\HitVolumeFactory.h">
+    <ClInclude Include="game\combat\HitVolumeFactory.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\CombatTarget.h">
+    <ClInclude Include="game\combat\CombatTarget.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\Ability.h">
+    <ClInclude Include="game\combat\Ability.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\CombatTypes.h">
+    <ClInclude Include="game\combat\CombatTypes.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\StageDesc.h">
+    <ClInclude Include="game\data\StageDesc.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\MonsterTypes.h">
+    <ClInclude Include="game\entities\monsters\MonsterTypes.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\Apple.h">
+    <ClInclude Include="game\entities\monsters\Apple.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\WhispyWoods.h">
+    <ClInclude Include="game\entities\monsters\WhispyWoods.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\PlaySession.h">
+    <ClInclude Include="game\session\PlaySession.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="engine\Anim.h">
@@ -240,6 +240,84 @@
     <ClInclude Include="engine\WorldSystem.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\PlaySession.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\StageDesc.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\StageCSV.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\AnimCSV.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\GameConfig.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Player.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\PlayerFSM.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Monster.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\MonsterTypes.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\MonsterFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\WaddleDee.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\WaddleDoo.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\HotHead.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Sparky.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Apple.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\WhispyWoods.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\CombatTypes.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\CombatTarget.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Damage.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Ability.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\HitVolume.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\HitVolumeFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\HitVolumeSystem.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\Projectile.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\ProjectileFactory.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\ProjectileSystem.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -272,58 +350,58 @@
     <ClCompile Include="engine\render\D3D11SpriteBatch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\PlayerFSM.cpp">
+    <ClCompile Include="game\entities\player\PlayerFSM.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\WaddleDee.cpp">
+    <ClCompile Include="game\entities\monsters\WaddleDee.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\WaddleDoo.cpp">
+    <ClCompile Include="game\entities\monsters\WaddleDoo.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\StageCSV.cpp">
+    <ClCompile Include="game\data\StageCSV.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\AnimCSV.cpp">
+    <ClCompile Include="game\data\AnimCSV.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\ProjectileFactory.cpp">
+    <ClCompile Include="game\projectile\ProjectileFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\HotHead.cpp">
+    <ClCompile Include="game\entities\monsters\HotHead.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\Sparky.cpp">
+    <ClCompile Include="game\entities\monsters\Sparky.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\ProjectileSystem.cpp">
+    <ClCompile Include="game\projectile\ProjectileSystem.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\HitVolume.cpp">
+    <ClCompile Include="game\combat\HitVolume.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\HitVolumeSystem.cpp">
+    <ClCompile Include="game\combat\HitVolumeSystem.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\HitVolumeFactory.cpp">
+    <ClCompile Include="game\combat\HitVolumeFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\StageDesc.cpp">
+    <ClCompile Include="game\data\StageDesc.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\PlaySession.Core.cpp">
+    <ClCompile Include="game\session\PlaySession.Core.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\PlaySession.Stage.cpp">
+    <ClCompile Include="game\session\PlaySession.Stage.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\PlaySession.Combat.cpp">
+    <ClCompile Include="game\session\PlaySession.Combat.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\PlaySession.Render.cpp">
+    <ClCompile Include="game\session\PlaySession.Render.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\PlaySession.Door.cpp">
+    <ClCompile Include="game\session\PlaySession.Door.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
