@@ -404,6 +404,9 @@
     <ClCompile Include="game\session\PlaySession.Door.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="engine\core\Time.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\KirbyGame.rc">
