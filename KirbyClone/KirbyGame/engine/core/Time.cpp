@@ -9,6 +9,11 @@ namespace engine {
         LARGE_INTEGER prev{};
     };
 
+    Time::Time ( ) = default;
+    Time::~Time ( ) = default;
+    Time::Time ( Time&& ) noexcept = default;
+    Time& Time::operator=( Time&& ) noexcept = default;
+
     void Time::Init ( )
     {
         m_impl = std::make_unique<Impl> ( );

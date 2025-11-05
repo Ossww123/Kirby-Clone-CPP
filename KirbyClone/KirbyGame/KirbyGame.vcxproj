@@ -239,6 +239,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\core\Input.cpp" />
+    <ClCompile Include="engine\core\Scene.cpp" />
     <ClCompile Include="engine\core\Time.cpp" />
     <ClCompile Include="engine\physics\Collision.cpp" />
     <ClCompile Include="engine\render\D3D11SpriteBatch.cpp" />

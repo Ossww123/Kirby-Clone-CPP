@@ -14,6 +14,14 @@ namespace engine {
     public:
         static constexpr double FIXED_DT = 1.0 / 60.0;
 
+        Time ( );                     // default ctor
+        ~Time ( );                    // out-of-line dtor
+
+        Time ( const Time& ) = delete;
+        Time& operator=( const Time& ) = delete;
+        Time ( Time&& ) noexcept;      // movable
+        Time& operator=( Time&& ) noexcept;
+
         void Init ( );             // reset clocks
         void TickFrame ( );        // call once per frame
 
