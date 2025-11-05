@@ -5,10 +5,10 @@
     GameApp.cpp
     RenderSystem.h
     RenderSystem.cpp
-    Scene.h/.cpp — Lightweight object container: spawn/update/render/clear.
+    Scene.h/.cpp — Object container: spawn/update/clear.
     Time.h/.cpp — Frame timing (variable dt + fixed-step) & FPS counter (QPC-backed)
     Input.h/.cpp — Win32 poll-based input (keyboard/mouse), edge flags, simple action/axis mapping.
-    Object.h — Base object: Id + virtual Update/Render hooks.
+    Object.h — Base object: Id + Update hook.
   /render
     IRenderer.h
     D3D11Renderer.h

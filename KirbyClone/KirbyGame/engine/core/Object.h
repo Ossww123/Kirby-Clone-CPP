@@ -1,11 +1,10 @@
 ﻿#pragma once
 //
-// Responsibility: Base game object; common Id; virtual Update/Render entry.
+// Responsibility: Base game object; common Id; virtual Update entry.
 // Non-Goals:      Ownership/lifetime, physics/render specifics.
-// Call-Context:   Main thread; Update(fixed dt), Render(between Begin/End).
+// Call-Context:   Main thread; Update(fixed dt).
 //
 
-#include <windows.h>
 #include <cstdint>
 #include <atomic>
 
@@ -28,7 +27,6 @@ namespace engine {
 
         // overridable hooks (no-op default)
         virtual void Update ( double fixedDt , const Input& input ) { ( void ) fixedDt; ( void ) input; }
-        virtual void Render ( HDC dc , int ox , int oy ) { ( void ) dc; ( void ) ox; ( void ) oy; }
 
         // id
         EntityId Id ( ) const noexcept { return m_id; }

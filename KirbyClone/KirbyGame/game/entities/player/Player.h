@@ -24,8 +24,6 @@ namespace game {
         // FSM이 입력/물리/충돌을 모두 처리하므로 여기서는 아무 것도 안 함
         void Update ( double /*fixedDt*/ , const engine::Input& /*input*/ ) override { /* FSM이 처리 */ }
 
-        void Render ( HDC dc , int ox , int oy ) override {}
-
         // 외부에서 월드/크기 조정 시 PhysicsBody에 위임
         void SetBounds ( RECT b ) { m_body.SetBounds ( b ); }
         void SetSize ( float w , float h ) { m_body.SetSize ( w , h ); }

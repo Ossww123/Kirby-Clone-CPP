@@ -4,7 +4,6 @@
 // Non-Goals:      Spatial queries, ordering, lifetime policies beyond Clear().
 // Call-Context:   Main thread; call Update/Render once per frame.
 //
-#include <windows.h>
 #include <vector>
 #include <memory>
 #include <utility>
@@ -18,7 +17,6 @@ namespace engine {
     {
     public:
         void Update ( double fixedDt , const Input& input );
-        void Render ( HDC dc , int ox , int oy );
 
         template <class T , class... Args>
         T* Spawn ( Args&&... args )

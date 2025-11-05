@@ -112,10 +112,6 @@ namespace game {
             }
         }
 
-        void Render ( HDC /*dc*/ , int /*ox*/ , int /*oy*/ ) override {
-            // Intentionally empty: visual handled by a sprite system or debug draw elsewhere.
-        }
-
         // ---- Queries / Controls ----
         [[nodiscard]] bool       Alive ( )   const noexcept { return m_alive; }
         [[nodiscard]] ProjOwner  Owner ( )   const noexcept { return m_owner; }

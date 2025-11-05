@@ -109,9 +109,6 @@ namespace game {
             m_body.SetVelocity ( v );
         }
 
-        // 추후 스프라이트로 교체
-        void Render ( HDC , int , int ) override {}
-
         // --- 공용 유틸 ---
         void SetPosition ( float x , float y ) { m_body.SetPosition ( x , y ); }
         engine::Vec2 Velocity ( ) const { return m_body.Velocity ( ); }
