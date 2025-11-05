@@ -34,10 +34,10 @@
     PhysicsBody.h
     PhysicsBody.cpp
   /util
-    Anim.h
-    Math.h
-    StringConv.h
-    DebugDraw.h
+    Anim.h/.cpp — Lightweight sprite animation (clips/frames), time stepping; no rendering.
+    Math.h — Vec2 + basic math constants/conversions (header-only).
+    StringConv.h — UTF-8↔UTF-16 helpers (Win32 MultiByte/WideChar); header hides Windows.
+    DebugDraw.h — Old GDI debug primitives (unused); deleted.
 
 /game
   /session

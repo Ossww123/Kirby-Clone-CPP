@@ -413,6 +413,12 @@
     <ClCompile Include="engine\core\Scene.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="engine\util\StringConv.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\util\Anim.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\KirbyGame.rc">

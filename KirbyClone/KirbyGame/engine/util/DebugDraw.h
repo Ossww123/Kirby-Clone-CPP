@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// 미사용
+
+#pragma once
 #include <windows.h>
 #include <vector>
 

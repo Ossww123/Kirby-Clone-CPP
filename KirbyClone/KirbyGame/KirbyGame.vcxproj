@@ -246,6 +246,8 @@
     <ClCompile Include="engine\render\D3D11TextureLoader.cpp" />
     <ClCompile Include="engine\core\GameApp.cpp" />
     <ClCompile Include="engine\physics\PhysicsBody.cpp" />
+    <ClCompile Include="engine\util\Anim.cpp" />
+    <ClCompile Include="engine\util\StringConv.cpp" />
     <ClCompile Include="engine\world\TileMap.cpp" />
     <ClCompile Include="engine\world\TileSet.cpp" />
     <ClCompile Include="game\data\AnimCSV.cpp" />
