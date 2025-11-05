@@ -21,7 +21,7 @@
     DWriteText.h
     D3D11DebugDraw.h
   /world
-    Camera.h
+    Camera.h — 2D follow camera with bounds clamp, pixel-snap, and decay-based screen shake.
     TileSet.h
     TileSet.cpp
     TileMap.h

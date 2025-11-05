@@ -248,6 +248,7 @@
     <ClCompile Include="engine\physics\PhysicsBody.cpp" />
     <ClCompile Include="engine\util\Anim.cpp" />
     <ClCompile Include="engine\util\StringConv.cpp" />
+    <ClCompile Include="engine\world\Camera.cpp" />
     <ClCompile Include="engine\world\TileMap.cpp" />
     <ClCompile Include="engine\world\TileSet.cpp" />
     <ClCompile Include="game\data\AnimCSV.cpp" />
