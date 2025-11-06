@@ -56,12 +56,12 @@
 
   /entities
     /player
-      Player.h
+      Player.* — 플레이어 물리/애니/텍스처 핸들(헤더 IntRect·RGBA8만 노출, 로직은 FSM 담당)
       PlayerFSM.h
       PlayerFSM.cpp
     /monsters
-      Monster.h
-      MonsterTypes.h
+      Monster.h - 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅, 헤더는 IntRect/RGBA8, 렌더디버그는 cpp)
+      MonsterTypes.h — 몬스터 타입/스폰 스펙 정의(열거 기반형 고정, 헤더 독립)
       MonsterFactory.h
       WaddleDee.h
       WaddleDee.cpp
@@ -75,10 +75,10 @@
       WhispyWoods.h
 
   /combat
-    CombatTypes.h
+    CombatTypes.h — 투사체 소유자 열거(피격 필터용, 기반형 고정)
     CombatTarget.h
-    Damage.h
-    Ability.h
+    Damage.h — 팀/피해종류·데미지/체력 유틸(경량 인라인, Vec2 의존)
+    Ability.h — 능력 열거(확장 여지, 기반형 고정)
     HitVolume.h
     HitVolume.cpp
     HitVolumeFactory.h

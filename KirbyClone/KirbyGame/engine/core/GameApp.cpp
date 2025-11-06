@@ -141,28 +141,25 @@ namespace engine {
         const int sh = d3d ? d3d->Height ( ) : 0;
 
         // frame begin
-        m_Renderer->BeginFrame ( { 0.09f, 0.11f, 0.125f, 1.0f } );
+        m_Render.Begin ( { 0.09f, 0.11f, 0.125f, 1.0f } );
 
         const auto [ox , oy] = m_Session ? m_Session->CameraOffsetInt ( ) : std::pair<int , int>{ 0,0 };
 
         if ( m_Batch ) {
-            m_Batch->Begin ( );
             if ( m_Session ) {
                 m_Session->RenderParallaxBG ( ox , oy , sw , sh );
                 m_Session->RenderWorld ( ox , oy , sw , sh );
                 m_Session->RenderOverlayFade ( sw , sh );
             }
-            m_Batch->End ( );
         }
 
-        if ( m_Session )
+        if ( m_Session ) {
             m_Session->RenderDebugGridAndColliders ( ox , oy , sw , sh , m_debugDrawEnabled );
-
-        if ( m_Session )
             m_Session->RenderHUD ( m_Time.FPS ( ) , m_Time.FixedDelta ( ) );
+        }
 
         // frame end
-        m_Renderer->EndFrame ( );
+        m_Render.End ( );
     }
 
     void GameApp::InitRendererUI ( HWND hWnd , int w , int h )

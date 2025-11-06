@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>     // std::min
-#include <windows.h>     // COLORREF (debug draw only)
 
 #include "engine/util/Types.h"  // IntRect
 #include "engine/util/Math.h"   // Vec2

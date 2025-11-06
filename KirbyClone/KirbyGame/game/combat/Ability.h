@@ -1,6 +1,9 @@
 ﻿#pragma once
-
+//
+// Responsibility: Thin ability enum (expandable).
+// Non-Goals:      Ability trees, data tables.
+// Call-Context:   Header-only.
+//
 namespace game {
-	// ---- Thin ability enum (expand later) ----
-	enum class Ability { None , Fire , Spark , Beam };
+    enum class Ability : int { None , Fire , Spark , Beam };
 }

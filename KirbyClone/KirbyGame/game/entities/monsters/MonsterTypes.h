@@ -1,10 +1,13 @@
 ﻿#pragma once
+//
+// Responsibility: Monster ids and simple spawn spec.
+// Non-Goals:      AI/behavior or factory logic.
+// Call-Context:   Header-only types; used across game.
+// Notes:          Fix enum underlying type for clean fwd-decl/ODR.
+//
 namespace game {
 
-    // 반드시 기반형을 고정해두면 전방선언/ODR 이슈가 깔끔해짐
-    enum class MonsterType : int {
-        WaddleDee , WaddleDoo , HotHead , Sparky , Apple , WhispyWoods
-    };
+    enum class MonsterType : int { WaddleDee , WaddleDoo , HotHead , Sparky , Apple , WhispyWoods };
 
     struct SpawnSpec {
         MonsterType type = MonsterType::WaddleDee;
