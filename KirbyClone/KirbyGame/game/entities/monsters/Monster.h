@@ -9,6 +9,7 @@
 #include "engine/Math.h"
 #include "engine/D3D11DebugDraw.h"
 #include "engine/Texture.h"
+#include "engine/platform/win32/ColorUtil.h"
 #include "game/Damage.h"
 #include "game/Ability.h"
 #include "game/CombatTypes.h"
@@ -74,11 +75,11 @@ namespace game {
         void RenderDebug ( engine::D3D11DebugDraw* dbg , int ox , int oy ) const {
             if ( !m_alive ) return;
             int x , y , w , h; m_body.GetBounds ( x , y , w , h );
-            dbg->WorldRect ( x , y , w , h , ox , oy , RGB ( 240 , 120 , 60 ) );
+            dbg->WorldRect ( x , y , w , h , ox , oy , engine::win32::RGBA8 ( 240 , 120 , 60 ) );
             // 체력 표시선(디버그)
             if ( m_health.hp < m_health.maxHp ) {
                 const int len = ( int ) ( ( float ) m_health.hp / m_health.maxHp * w );
-                dbg->WorldLine ( x , y - 2 , x + len , y - 2 , ox , oy , RGB ( 255 , 60 , 60 ) );
+                dbg->WorldLine ( x , y - 2 , x + len , y - 2 , ox , oy , engine::win32::RGBA8 ( 255 , 60 , 60 ) );
             }
         }
 

@@ -150,6 +150,7 @@
     <ClInclude Include="engine\Math.h" />
     <ClInclude Include="engine\Object.h" />
     <ClInclude Include="engine\PhysicsBody.h" />
+    <ClInclude Include="engine\platform\win32\ColorUtil.h" />
     <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="engine\Scene.h" />
     <ClInclude Include="engine\StringConv.h" />
@@ -243,6 +244,7 @@
     <ClCompile Include="engine\core\Scene.cpp" />
     <ClCompile Include="engine\core\Time.cpp" />
     <ClCompile Include="engine\physics\Collision.cpp" />
+    <ClCompile Include="engine\render\D3D11DebugDraw.cpp" />
     <ClCompile Include="engine\render\D3D11SpriteBatch.cpp" />
     <ClCompile Include="engine\render\D3D11TextureLoader.cpp" />
     <ClCompile Include="engine\core\GameApp.cpp" />

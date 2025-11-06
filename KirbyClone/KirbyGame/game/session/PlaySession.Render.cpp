@@ -4,6 +4,7 @@
 #include "engine/D3D11SpriteBatch.h"
 #include "engine/util/Types.h"
 #include "game/GameConfig.h"
+#include "engine/platform/win32/ColorUtil.h"
 #include <algorithm>
 #include <cwchar>
 
@@ -44,7 +45,7 @@ namespace game {
         src.r = src.l + viewW_tex;
         src.b = src.t + viewH_tex;
 
-        m_Batch->Draw ( m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src , 0xFFFFFFFF );
+        m_Batch->Draw ( m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src , engine::win32::RGBA8 ( 255 , 255 , 255 ) );
     }
 
     void PlaySession::RenderWorld ( int ox , int oy , int sw , int sh ) {
@@ -61,7 +62,7 @@ namespace game {
                 const float sy = ( ( py + ph ) - vh - oy );
                 engine::IntRect src = m_Player->Animator ( )->CurrentSrc ( ); // 기존 GameApp 코드와 동일
                 m_Batch->Draw ( tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
-                              ( src.r > src.l ) ? &src : nullptr , 0xFFFFFFFF );
+                              ( src.r > src.l ) ? &src : nullptr , engine::win32::RGBA8 ( 255 , 255 , 255 ) ) );
             }
         }
 
@@ -74,7 +75,7 @@ namespace game {
             const float sx = ( ( mx + mw * 0.5f ) - vw * 0.5f - ox );
             const float sy = ( ( my + mh ) - vh - oy );
             engine::IntRect src = m->SpriteSrc ( );
-            m_Batch->Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE , &src , 0xFFFFFFFF );
+            m_Batch->Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE , &src , engine::win32::RGBA8 ( 255 , 255 , 255 ) ) );
         }
     }
 
@@ -84,16 +85,18 @@ namespace game {
         const int GRID = game::GRID_PX;
         const int wx0 = ox , wy0 = oy , wx1 = ox + sw , wy1 = oy + sh;
         int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
-        for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , RGB ( 60 , 60 , 60 ) );
-        for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , RGB ( 60 , 60 , 60 ) );
+        for ( int x = gx; x <= wx1; x += GRID ) m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
+        for ( int y = gy; y <= wy1; y += GRID ) m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
 
         // 콜라이더 와이어(기존 코드) :contentReference[oaicite:3]{index=3}
-        m_World.Collision ( ).DebugDraw ( *m_Debug , ox , oy , RGB ( 255 , 60 , 60 ) , RGB ( 255 , 200 , 0 ) );
+        m_World.Collision ( ).DebugDraw ( *m_Debug , ox , oy ,
+                                      engine::win32::RGBA8 ( 255 , 60 , 60 ) ,   // solid
+                                      engine::win32::RGBA8 ( 255 , 200 , 0 ) );  // oneway
 
         // 플레이어 AABB
         if ( m_Player ) {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            m_Debug->WorldRect ( px , py , pw , ph , ox , oy , RGB ( 0 , 255 , 0 ) );
+            m_Debug->WorldRect ( px , py , pw , ph , ox , oy , engine::win32::RGBA8 ( 0 , 255 , 0 ) );
         }
 
         // 몬스터 디버그 (헬스바/바운딩 박스 등)
@@ -109,13 +112,16 @@ namespace game {
         m_hitSys.DebugDraw ( *m_Debug , ox , oy );
 
         for ( const auto& d : m_Doors ) {
-            m_Debug->WorldRect ( d.x , d.y , d.w , d.h , ox , oy , RGB ( 0 , 200 , 255 ) );
+            m_Debug->WorldRect ( d.x , d.y , d.w , d.h , ox , oy , engine::win32::RGBA8 ( 0 , 200 , 255 ) );
         }
+
         // Boss arena AABB (마젠타)
         if ( m_hasBossArena ) {
             const int w = m_bossArena.r - m_bossArena.l;
             const int h = m_bossArena.b - m_bossArena.t;
-            if ( w > 0 && h > 0 ) m_Debug->WorldRect ( m_bossArena.l , m_bossArena.t , w , h , ox , oy , RGB ( 255 , 0 , 255 ) );
+            if ( w > 0 && h > 0 )
+                m_Debug->WorldRect ( m_bossArena.l , m_bossArena.t , w , h , ox , oy ,
+                                   engine::win32::RGBA8 ( 255 , 0 , 255 ) );
         }
 
         m_Debug->Flush ( );
@@ -238,6 +244,12 @@ namespace game {
         float alpha = ( m_fade.mode == Fade::Out ) ? t : ( 1.f - t ); // Out: 0→1, In: 1→0
         uint8_t a = ( uint8_t ) std::lround ( alpha * 255.f );
 
-        m_Batch->Draw ( m_WhiteTex , 0.f , 0.f , ( float ) sw , ( float ) sh , nullptr , MakeARGB ( a , m_fade.rgb ) );
+        // m_fade.rgb is 0x00RRGGBB -> expand with alpha
+        const uint8_t r = ( uint8_t ) ( ( m_fade.rgb >> 16 ) & 0xFF );
+        const uint8_t g = ( uint8_t ) ( ( m_fade.rgb >> 8 ) & 0xFF );
+        const uint8_t b = ( uint8_t ) ( m_fade.rgb & 0xFF );
+
+        m_Batch->Draw ( m_WhiteTex , 0.f , 0.f , ( float ) sw , ( float ) sh , nullptr ,
+                      engine::win32::RGBA8 ( r , g , b , a ) );
     }
 } // namespace game

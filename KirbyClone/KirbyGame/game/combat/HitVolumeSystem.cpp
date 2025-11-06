@@ -1,4 +1,5 @@
-﻿#include "game/HitVolumeSystem.h"
+﻿#include "engine/platform/win32/ColorUtil.h"
+#include "game/HitVolumeSystem.h"
 #include "game/HitVolumeFactory.h"   // archetypes
 #include "game/Ability.h"
 
@@ -141,7 +142,7 @@ namespace game {
             COLORREF col = RGB ( 120 , 240 , 255 );
             switch ( hv.GetCfg ( ).shape ) {
             case HitShape::Box:
-                dbg.WorldRect ( box.left , box.top , box.right - box.left , box.bottom - box.top , ox , oy , col );
+                dbg.WorldRect ( box.left , box.top , box.right - box.left , box.bottom - box.top , ox , oy , engine::win32::RGBA8_FromCOLORREF ( col ) );
                 break;
             case HitShape::Circle:
                 drawCircleApprox ( { ( box.left + box.right ) * 0.5f, ( box.top + box.bottom ) * 0.5f } ,
@@ -149,7 +150,7 @@ namespace game {
                 break;
             case HitShape::Capsule: {
                 // 중심선
-                dbg.WorldLine ( ( int ) A.x , ( int ) A.y , ( int ) B.x , ( int ) B.y , ox , oy , col );
+                dbg.WorldLine ( ( int ) A.x , ( int ) A.y , ( int ) B.x , ( int ) B.y , ox , oy , engine::win32::RGBA8_FromCOLORREF ( col ) );
 
                 // 굵기 표현: 법선 벡터로 ±R 오프셋
                 engine::Vec2 d{ B.x - A.x, B.y - A.y };
@@ -163,8 +164,8 @@ namespace game {
                 engine::Vec2 B2{ B.x - n.x * R, B.y - n.y * R };
 
                 // 옆면 두 줄
-                dbg.WorldLine ( ( int ) A1.x , ( int ) A1.y , ( int ) B1.x , ( int ) B1.y , ox , oy , col );
-                dbg.WorldLine ( ( int ) A2.x , ( int ) A2.y , ( int ) B2.x , ( int ) B2.y , ox , oy , col );
+                dbg.WorldLine ( ( int ) A1.x , ( int ) A1.y , ( int ) B1.x , ( int ) B1.y , ox , oy , engine::win32::RGBA8_FromCOLORREF ( col ) );
+                dbg.WorldLine ( ( int ) A2.x , ( int ) A2.y , ( int ) B2.x , ( int ) B2.y , ox , oy , engine::win32::RGBA8_FromCOLORREF ( col ) );
 
                 // 끝단 반원 근사
                 drawCircleApprox ( A , R , 14 , col );

@@ -19,7 +19,7 @@
     TextureLoader.h
     D3D11TextureLoader.cpp
     DWriteText.h
-    D3D11DebugDraw.h
+    D3D11DebugDraw.h/.cpp — 선/사각형 디버그 오버레이(D3D11 라인리스트, 알파 블렌딩).
   /world
     Camera.h — 경계 클램프/픽셀 스냅/감쇠형 화면 흔들림을 지원하는 2D 추적 카메라.
     TileSet.h
@@ -40,6 +40,7 @@
     Types.h — 엔진 공용 IntRect 및 간단 헬퍼(헤더온리).
   /platform/win32
     RectUtil.h — Win32 RECT ↔ IntRect 변환 인라인 어댑터.
+    ColorUtil.h — COLORREF↔RGBA8 변환 유틸;
 
 /game
   /session

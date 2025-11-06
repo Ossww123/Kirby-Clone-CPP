@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// TODO : 액션 / 축 매핑을 game 으로 분리하면 좋음.
+
+#pragma once
 //
 // Responsibility: Poll keyboard/mouse; edge flags; simple action/axis map.
 // Non-Goals:      IME, text input, rebind UI, game-level semantics.

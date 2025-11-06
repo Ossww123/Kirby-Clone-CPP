@@ -1,5 +1,6 @@
 ﻿#include "game/ProjectileSystem.h"
 #include "engine/D3D11DebugDraw.h"
+#include "engine/platform/win32/ColorUtil.h"
 
 namespace game {
 
@@ -72,7 +73,7 @@ namespace game {
         for ( const auto& s : m_slots ) {
             if ( !s.pr || !s.pr->Alive ( ) ) continue;
             int x , y , w , h; s.pr->GetBounds ( x , y , w , h );
-            dbg.WorldRect ( x , y , w , h , ox , oy , RGB ( 255 , 230 , 0 ) );
+            dbg.WorldRect ( x , y , w , h , ox , oy , engine::win32::RGBA8 ( 255 , 230 , 0 ) );
         }
     }
 

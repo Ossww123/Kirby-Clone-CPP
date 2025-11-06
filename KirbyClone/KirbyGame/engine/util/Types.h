@@ -8,6 +8,7 @@
 namespace engine {
 
     struct IntRect { int l , t , r , b; };
+    struct Int2 { int x , y; };
 
     inline constexpr IntRect MakeIRectLTWH ( int x , int y , int w , int h )
     {
