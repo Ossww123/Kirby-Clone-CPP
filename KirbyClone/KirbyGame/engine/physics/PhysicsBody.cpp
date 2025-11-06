@@ -65,8 +65,8 @@ namespace engine {
 
         const int l = static_cast< int >( nx );
         const int t = static_cast< int >( ny );
-        const int w = static_cast< int >( std::round ( m_w ) );
-        const int h = static_cast< int >( std::round ( m_h ) );
+        const int w = std::max ( 1 , static_cast< int >( std::round ( m_w ) ) );
+        const int h = std::max ( 1 , static_cast< int >( std::round ( m_h ) ) );
         return IntRect{ l, t, l + w, t + h };
     }
 

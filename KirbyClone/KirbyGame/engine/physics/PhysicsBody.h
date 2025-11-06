@@ -9,6 +9,10 @@
 #include "engine/util/Math.h"   // Vec2
 #include "engine/util/Types.h"  // IntRect
 
+#ifndef ENGINE_PHYSICS_DEBUG_HELPERS
+#define ENGINE_PHYSICS_DEBUG_HELPERS 1
+#endif
+
 namespace engine { namespace physics { struct CollisionReport; } }
 
 namespace engine {
@@ -43,7 +47,10 @@ namespace engine {
         void AdvanceKinematics ( double fixedDt );
 
         // ---- quick path: integrate + clamp to world bounds (no collision system)
+#if ENGINE_PHYSICS_DEBUG_HELPERS
+        [[deprecated ( "Debug-only helper; use CollisionSystem for real gameplay" )]]
         void IntegrateAndClampNoCollision ( double fixedDt );
+#endif
 
         // ---- collision system integration
         // 1) propose AABB after dt (returns integer AABB)
