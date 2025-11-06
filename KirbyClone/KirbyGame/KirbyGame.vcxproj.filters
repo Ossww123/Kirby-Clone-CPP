@@ -431,6 +431,15 @@
     <ClCompile Include="engine\render\D3D11DebugDraw.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="engine\render\D3D11Renderer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\render\D3D11Sprite.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\render\DWriteText.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\KirbyGame.rc">

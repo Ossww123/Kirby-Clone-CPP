@@ -1,24 +1,30 @@
-﻿#include "engine/D3D11SpriteBatch.h"
+﻿#include "engine/render/D3D11SpriteBatch.h"
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <d3d11.h>
+#include <d3dcompiler.h>
+
+#pragma comment(lib, "d3dcompiler.lib")
 
 namespace engine {
 
-    static inline uint64_t packHi ( BlendMode b , SamplerMode s , int16_t z )
+    // pack [blend:8 | sampler:8 | z:16] into hi 32bits
+    static inline std::uint64_t packHi ( BlendMode b , SamplerMode s , int16_t z )
     {
-        // [ blend:8 | sampler:8 | z:16 | pad:32 ] (상위 32비트 사용)
-        uint64_t hi = 0;
-        hi |= ( uint64_t ( uint8_t ( b ) ) & 0xFFu ) << 56;
-        hi |= ( uint64_t ( uint8_t ( s ) ) & 0xFFu ) << 48;
-        hi |= ( uint64_t ( uint16_t ( z ) ) & 0xFFFFu ) << 32;
+        std::uint64_t hi = 0;
+        hi |= ( std::uint64_t ( std::uint8_t ( b ) ) & 0xFFu ) << 56;
+        hi |= ( std::uint64_t ( std::uint8_t ( s ) ) & 0xFFu ) << 48;
+        hi |= ( std::uint64_t ( std::uint16_t ( z ) ) & 0xFFFFu ) << 32;
         return hi;
     }
 
-    D3D11SpriteBatch::~D3D11SpriteBatch ( )
-    {
-        // ComPtr 자동 Release
-    }
+    D3D11SpriteBatch::~D3D11SpriteBatch ( ) = default;
 
     bool D3D11SpriteBatch::Initialize ( ID3D11Device* dev , ID3D11DeviceContext* ctx , int screenW , int screenH )
     {
@@ -26,16 +32,16 @@ namespace engine {
         if ( !CreatePipeline ( ) ) return false;
         CreateStates ( );
 
-        // 초기 버퍼 용량
+        // initial buffer capacity
         m_vbCapacity = 4096; // vertices
-        m_ibCapacity = 6144; // indices (6 per sprite)
+        m_ibCapacity = 6144; // indices (6 per quad)
 
         // VB
         D3D11_BUFFER_DESC vbd{};
         vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         vbd.Usage = D3D11_USAGE_DYNAMIC;
         vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        vbd.ByteWidth = UINT ( m_vbCapacity * sizeof ( SpriteVertex ) );
+        vbd.ByteWidth = static_cast< UINT >( m_vbCapacity * sizeof ( SpriteVertex ) );
         if ( FAILED ( m_dev->CreateBuffer ( &vbd , nullptr , &m_vb ) ) ) return false;
 
         // IB
@@ -43,7 +49,7 @@ namespace engine {
         ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
         ibd.Usage = D3D11_USAGE_DYNAMIC;
         ibd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        ibd.ByteWidth = UINT ( m_ibCapacity * sizeof ( uint16_t ) );
+        ibd.ByteWidth = static_cast< UINT >( m_ibCapacity * sizeof ( std::uint16_t ) );
         if ( FAILED ( m_dev->CreateBuffer ( &ibd , nullptr , &m_ib ) ) ) return false;
 
         SetProjection ( screenW , screenH );
@@ -52,8 +58,9 @@ namespace engine {
 
     void D3D11SpriteBatch::CreateStates ( )
     {
-        // Blend: Alpha
-        D3D11_BLEND_DESC bd{}; bd.RenderTarget[ 0 ].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        // Blend: Alpha (non-PMA)
+        D3D11_BLEND_DESC bd{};
+        bd.RenderTarget[ 0 ].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
         bd.RenderTarget[ 0 ].BlendEnable = TRUE;
         bd.RenderTarget[ 0 ].SrcBlend = D3D11_BLEND_SRC_ALPHA;
         bd.RenderTarget[ 0 ].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
@@ -68,14 +75,18 @@ namespace engine {
         m_dev->CreateBlendState ( &bd , &m_blendAdd );
 
         // Samplers
-        D3D11_SAMPLER_DESC sd{}; sd.AddressU = sd.AddressV = sd.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+        D3D11_SAMPLER_DESC sd{};
+        sd.AddressU = sd.AddressV = sd.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
         sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         m_dev->CreateSamplerState ( &sd , &m_sampLinear );
         sd.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
         m_dev->CreateSamplerState ( &sd , &m_sampPoint );
 
         // Rasterizer
-        D3D11_RASTERIZER_DESC rs{}; rs.FillMode = D3D11_FILL_SOLID; rs.CullMode = D3D11_CULL_NONE; rs.DepthClipEnable = TRUE;
+        D3D11_RASTERIZER_DESC rs{};
+        rs.FillMode = D3D11_FILL_SOLID;
+        rs.CullMode = D3D11_CULL_NONE;
+        rs.DepthClipEnable = TRUE;
         m_dev->CreateRasterizerState ( &rs , &m_rsCullNone );
     }
 
@@ -92,11 +103,14 @@ Texture2D tex0 : register(t0); SamplerState samp0 : register(s0);
 float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_Target {
     return tex0.Sample(samp0, uv) * col;
 })";
-        UINT flags = D3D11SpriteBatch::D3DCompileFlagsRowMajor ( );
+
+        const UINT flags = D3D11SpriteBatch::D3DCompileFlagsRowMajor ( );
 
         Microsoft::WRL::ComPtr<ID3DBlob> vsb , psb , err;
-        if ( FAILED ( D3DCompile ( VS_SRC , strlen ( VS_SRC ) , nullptr , nullptr , nullptr , "main" , "vs_5_0" , flags , 0 , &vsb , &err ) ) ) return false;
-        if ( FAILED ( D3DCompile ( PS_SRC , strlen ( PS_SRC ) , nullptr , nullptr , nullptr , "main" , "ps_5_0" , flags , 0 , &psb , &err ) ) ) return false;
+        if ( FAILED ( D3DCompile ( VS_SRC , std::strlen ( VS_SRC ) , nullptr , nullptr , nullptr ,
+            "main" , "vs_5_0" , flags , 0 , &vsb , &err ) ) ) return false;
+        if ( FAILED ( D3DCompile ( PS_SRC , std::strlen ( PS_SRC ) , nullptr , nullptr , nullptr ,
+            "main" , "ps_5_0" , flags , 0 , &psb , &err ) ) ) return false;
 
         if ( FAILED ( m_dev->CreateVertexShader ( vsb->GetBufferPointer ( ) , vsb->GetBufferSize ( ) , nullptr , &m_vs ) ) ) return false;
         if ( FAILED ( m_dev->CreatePixelShader ( psb->GetBufferPointer ( ) , psb->GetBufferSize ( ) , nullptr , &m_ps ) ) ) return false;
@@ -106,7 +120,9 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
             { "TEXCOORD",0, DXGI_FORMAT_R32G32_FLOAT,   0,  8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "COLOR",   0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
-        if ( FAILED ( m_dev->CreateInputLayout ( il , _countof ( il ) , vsb->GetBufferPointer ( ) , vsb->GetBufferSize ( ) , &m_layout ) ) )
+        if ( FAILED ( m_dev->CreateInputLayout ( il , _countof ( il ) ,
+            vsb->GetBufferPointer ( ) , vsb->GetBufferSize ( ) ,
+            &m_layout ) ) )
             return false;
 
         // Projection constant buffer (16 floats)
@@ -121,12 +137,12 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
 
     void D3D11SpriteBatch::SetProjection ( int w , int h )
     {
-        // 픽셀→NDC, y 뒤집기
-        float m[ 16 ] = {
-            2.0f / w,  0,         0,  0,
-            0,       -2.0f / h,   0,  0,
-            0,        0,          1,  0,
-           -1,        1,          0,  1
+        // Pixel -> NDC; flip Y
+        const float m[ 16 ] = {
+            2.0f / w,  0,          0, 0,
+            0,        -2.0f / h,   0, 0,
+            0,         0,          1, 0,
+           -1,         1,          0, 1
         };
         m_ctx->UpdateSubresource ( m_cbProj.Get ( ) , 0 , nullptr , m , 0 , 0 );
     }
@@ -139,12 +155,12 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         m_inBegin = true;
         m_seq = 0;
 
-        // 상태 캐시 리셋
+        // reset state cache
         m_boundTex = nullptr;
         m_boundBlend = static_cast< BlendMode >( 0xFF );
         m_boundSampler = static_cast< SamplerMode >( 0xFF );
 
-        // ★ 파이프라인 고정 바인드
+        // bind fixed pipeline
         m_ctx->IASetInputLayout ( m_layout.Get ( ) );
         m_ctx->IASetPrimitiveTopology ( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 
@@ -153,9 +169,11 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         m_ctx->VSSetConstantBuffers ( 0 , 1 , cbs );
 
         m_ctx->PSSetShader ( m_ps.Get ( ) , nullptr , 0 );
-        // 기본 샘플러/블렌드/래스터
+
+        // defaults: linear sampler, alpha blend, no cull
         ID3D11SamplerState* samp = m_sampLinear.Get ( );
         m_ctx->PSSetSamplers ( 0 , 1 , &samp );
+
         float bf[ 4 ] = { 1,1,1,1 };
         m_ctx->OMSetBlendState ( m_blendAlpha.Get ( ) , bf , 0xFFFFFFFF );
         m_ctx->RSSetState ( m_rsCullNone.Get ( ) );
@@ -166,16 +184,18 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         m_inBegin = false;
         if ( m_items.empty ( ) ) return;
 
-        // 정렬: 상위키(블렌드/샘플러/z) → 하위키(SRV 주소)
+        // sort: (blend/sampler/z) → texture → seq
         std::sort ( m_items.begin ( ) , m_items.end ( ) ,
-                  [ ] ( const SpriteItem& a , const SpriteItem& b ) {
-                          if ( a.sortKeyHi != b.sortKeyHi ) return a.sortKeyHi < b.sortKeyHi;
-                          return a.seq < b.seq;
-                  } );
+                 [ ] ( const SpriteItem& a , const SpriteItem& b ) {
+                     if ( a.sortKeyHi != b.sortKeyHi ) return a.sortKeyHi < b.sortKeyHi;
+                     if ( a.tex != b.tex )            return a.tex < b.tex; // better batching
+                     return a.seq < b.seq;
+                 } );
 
         flushBatches ( );
     }
 
+    // v1 (RECT) — simple path
     void D3D11SpriteBatch::Draw ( const Tex2D& tex ,
                                 float x , float y , float w , float h ,
                                 const RECT* srcPixels ,
@@ -208,78 +228,35 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         m_items.emplace_back ( it );
     }
 
-    void D3D11SpriteBatch::ensureVB ( size_t vertices )
-    {
-        if ( vertices <= m_vbCapacity ) return;
-        m_vbCapacity = std::max ( vertices , m_vbCapacity * 2 );
-        D3D11_BUFFER_DESC vbd{};
-        vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        vbd.Usage = D3D11_USAGE_DYNAMIC;
-        vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        vbd.ByteWidth = UINT ( m_vbCapacity * sizeof ( SpriteVertex ) );
-        m_vb.Reset ( );
-        m_dev->CreateBuffer ( &vbd , nullptr , &m_vb );
-    }
-
-    void D3D11SpriteBatch::ensureIB ( size_t indices )
-    {
-        if ( indices <= m_ibCapacity ) return;
-        m_ibCapacity = std::max ( indices , m_ibCapacity * 2 );
-        D3D11_BUFFER_DESC ibd{};
-        ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-        ibd.Usage = D3D11_USAGE_DYNAMIC;
-        ibd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        ibd.ByteWidth = UINT ( m_ibCapacity * sizeof ( uint16_t ) );
-        m_ib.Reset ( );
-        m_dev->CreateBuffer ( &ibd , nullptr , &m_ib );
-    }
-
-    // 회전/정점 생성
-    static inline void pushQuad ( std::vector<SpriteVertex>& verts ,
-                                std::vector<uint16_t>& idx ,
-                                const Tex2D& tex ,
-                                const RECT& src ,
+    // v2 (IntRect) — transition overloads
+    void D3D11SpriteBatch::Draw ( const Tex2D& tex ,
                                 float x , float y , float w , float h ,
-                                float rot , float ox , float oy ,
-                                uint32_t rgba )
+                                const IntRect* srcPixels ,
+                                uint32_t tintRGBA ,
+                                float rotation , float originX , float originY )
     {
-        const float cx = x + ox;
-        const float cy = y + oy;
-        const float lx = -ox , rx = w - ox;
-        const float ty = -oy , by = h - oy;
-
-        auto tf = [ & ] ( float px , float py , float& oxo , float& oyo ) {
-            if ( rot == 0.f ) { oxo = cx + px; oyo = cy + py; }
-            else {
-                const float c = std::cos ( rot ) , s = std::sin ( rot );
-                oxo = cx + ( px * c - py * s );
-                oyo = cy + ( px * s + py * c );
-            }
-            };
-
-        float x0 , y0 , x1 , y1 , x2 , y2 , x3 , y3;
-        tf ( lx , ty , x0 , y0 );
-        tf ( rx , ty , x1 , y1 );
-        tf ( rx , by , x2 , y2 );
-        tf ( lx , by , x3 , y3 );
-
-        const float u0 = float ( src.left ) / tex.width;
-        const float v0 = float ( src.top ) / tex.height;
-        const float u1 = float ( src.right ) / tex.width;
-        const float v1 = float ( src.bottom ) / tex.height;
-
-        const uint16_t base = ( uint16_t ) verts.size ( );
-        verts.push_back ( { x0,y0,u0,v0,rgba } );
-        verts.push_back ( { x1,y1,u1,v0,rgba } );
-        verts.push_back ( { x2,y2,u1,v1,rgba } );
-        verts.push_back ( { x3,y3,u0,v1,rgba } );
-        idx.push_back ( base + 0 ); idx.push_back ( base + 1 ); idx.push_back ( base + 2 );
-        idx.push_back ( base + 0 ); idx.push_back ( base + 2 ); idx.push_back ( base + 3 );
+        RECT r{};
+        if ( srcPixels ) r = RECT{ srcPixels->l, srcPixels->t, srcPixels->r, srcPixels->b };
+        Draw ( tex , x , y , w , h , srcPixels ? &r : nullptr , tintRGBA , rotation , originX , originY );
     }
 
+    void D3D11SpriteBatch::Draw ( const Tex2D& tex ,
+                                float x , float y , float w , float h ,
+                                const IntRect* srcPixels ,
+                                uint32_t tintRGBA ,
+                                float rotation , float originX , float originY ,
+                                int16_t zSort , BlendMode blend , SamplerMode sampler )
+    {
+        RECT r{};
+        if ( srcPixels ) r = RECT{ srcPixels->l, srcPixels->t, srcPixels->r, srcPixels->b };
+        Draw ( tex , x , y , w , h , srcPixels ? &r : nullptr , tintRGBA ,
+             rotation , originX , originY , zSort , blend , sampler );
+    }
+
+    // build & flush one batch group
     void D3D11SpriteBatch::flushBatches ( )
     {
-        // 그룹 키: (blend, sampler, tex) 변경 시 플러시
+        // group key = (blend, sampler, tex) change
         BlendMode   curBlend = BlendMode::Alpha;
         SamplerMode curSamp = SamplerMode::Point;
         const Tex2D* curTex = nullptr;
@@ -293,37 +270,79 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
             ensureVB ( m_vertices.size ( ) );
             ensureIB ( m_indices.size ( ) );
 
-            // VB 업데이트
+            // VB
             D3D11_MAPPED_SUBRESOURCE map{};
             if ( SUCCEEDED ( m_ctx->Map ( m_vb.Get ( ) , 0 , D3D11_MAP_WRITE_DISCARD , 0 , &map ) ) ) {
                 std::memcpy ( map.pData , m_vertices.data ( ) , m_vertices.size ( ) * sizeof ( SpriteVertex ) );
                 m_ctx->Unmap ( m_vb.Get ( ) , 0 );
             }
-
-            // IB 업데이트
+            // IB
             if ( SUCCEEDED ( m_ctx->Map ( m_ib.Get ( ) , 0 , D3D11_MAP_WRITE_DISCARD , 0 , &map ) ) ) {
-                std::memcpy ( map.pData , m_indices.data ( ) , m_indices.size ( ) * sizeof ( uint16_t ) );
+                std::memcpy ( map.pData , m_indices.data ( ) , m_indices.size ( ) * sizeof ( std::uint16_t ) );
                 m_ctx->Unmap ( m_ib.Get ( ) , 0 );
             }
 
-            // 상태/텍스처 바인드
+            // bind states & texture
             applyBlend ( curBlend );
             applySampler ( curSamp );
             applyTexture ( curTex );
 
-            // IA & Draw (Begin에서 VS/PS/IL/CB는 바인드됨)
+            // IA & draw
             UINT stride = sizeof ( SpriteVertex ) , offset = 0;
             ID3D11Buffer* vb = m_vb.Get ( );
             m_ctx->IASetVertexBuffers ( 0 , 1 , &vb , &stride , &offset );
             m_ctx->IASetIndexBuffer ( m_ib.Get ( ) , DXGI_FORMAT_R16_UINT , 0 );
             m_ctx->IASetPrimitiveTopology ( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-            m_ctx->DrawIndexed ( ( UINT ) m_indices.size ( ) , 0 , 0 );
+            m_ctx->DrawIndexed ( static_cast< UINT >( m_indices.size ( ) ) , 0 , 0 );
 
             m_vertices.clear ( );
             m_indices.clear ( );
             };
 
-        for ( size_t i = 0; i < m_items.size ( ); ++i ) {
+        // local quad builder
+        auto pushQuad = [ ] ( std::vector<SpriteVertex>& verts ,
+                            std::vector<std::uint16_t>& idx ,
+                            const Tex2D& tex , const RECT& src ,
+                            float x , float y , float w , float h ,
+                            float rot , float ox , float oy ,
+                            std::uint32_t rgba )
+            {
+                const float cx = x + ox;
+                const float cy = y + oy;
+                const float lx = -ox , rx = w - ox;
+                const float ty = -oy , by = h - oy;
+
+                auto tf = [ & ] ( float px , float py , float& oxo , float& oyo ) {
+                    if ( rot == 0.f ) { oxo = cx + px; oyo = cy + py; }
+                    else {
+                        const float c = std::cos ( rot ) , s = std::sin ( rot );
+                        oxo = cx + ( px * c - py * s );
+                        oyo = cy + ( px * s + py * c );
+                    }
+                    };
+
+                float x0 , y0 , x1 , y1 , x2 , y2 , x3 , y3;
+                tf ( lx , ty , x0 , y0 );
+                tf ( rx , ty , x1 , y1 );
+                tf ( rx , by , x2 , y2 );
+                tf ( lx , by , x3 , y3 );
+
+                const float u0 = float ( src.left ) / tex.width;
+                const float v0 = float ( src.top ) / tex.height;
+                const float u1 = float ( src.right ) / tex.width;
+                const float v1 = float ( src.bottom ) / tex.height;
+
+                const std::uint16_t base = static_cast< std::uint16_t >( verts.size ( ) );
+                verts.push_back ( { x0,y0,u0,v0,rgba } );
+                verts.push_back ( { x1,y1,u1,v0,rgba } );
+                verts.push_back ( { x2,y2,u1,v1,rgba } );
+                verts.push_back ( { x3,y3,u0,v1,rgba } );
+
+                idx.push_back ( base + 0 ); idx.push_back ( base + 1 ); idx.push_back ( base + 2 );
+                idx.push_back ( base + 0 ); idx.push_back ( base + 2 ); idx.push_back ( base + 3 );
+            };
+
+        for ( std::size_t i = 0; i < m_items.size ( ); ++i ) {
             const auto& it = m_items[ i ];
             BlendMode   b = static_cast< BlendMode >( ( it.sortKeyHi >> 56 ) & 0xFF );
             SamplerMode s = static_cast< SamplerMode >( ( it.sortKeyHi >> 48 ) & 0xFF );
@@ -334,16 +353,41 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
 
             curBlend = b; curSamp = s; curTex = t;
 
-            // 누적
             pushQuad ( m_vertices , m_indices , *t , it.src ,
                      it.x , it.y , it.w , it.h , it.rotation , it.originX , it.originY , it.rgba );
         }
         flushGroup ( );
 
-        // 캐시 리셋
+        // cache reset
         m_boundTex = nullptr;
         m_boundBlend = static_cast< BlendMode >( 0xFF );
         m_boundSampler = static_cast< SamplerMode >( 0xFF );
+    }
+
+    void D3D11SpriteBatch::ensureVB ( std::size_t vertices )
+    {
+        if ( vertices <= m_vbCapacity ) return;
+        m_vbCapacity = std::max ( vertices , m_vbCapacity * 2 );
+        D3D11_BUFFER_DESC vbd{};
+        vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        vbd.Usage = D3D11_USAGE_DYNAMIC;
+        vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        vbd.ByteWidth = static_cast< UINT >( m_vbCapacity * sizeof ( SpriteVertex ) );
+        m_vb.Reset ( );
+        m_dev->CreateBuffer ( &vbd , nullptr , &m_vb );
+    }
+
+    void D3D11SpriteBatch::ensureIB ( std::size_t indices )
+    {
+        if ( indices <= m_ibCapacity ) return;
+        m_ibCapacity = std::max ( indices , m_ibCapacity * 2 );
+        D3D11_BUFFER_DESC ibd{};
+        ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+        ibd.Usage = D3D11_USAGE_DYNAMIC;
+        ibd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        ibd.ByteWidth = static_cast< UINT >( m_ibCapacity * sizeof ( std::uint16_t ) );
+        m_ib.Reset ( );
+        m_dev->CreateBuffer ( &ibd , nullptr , &m_ib );
     }
 
     void D3D11SpriteBatch::applyBlend ( BlendMode m )
@@ -377,10 +421,9 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
 #if defined(_DEBUG)
         f |= ( D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION );
 #endif
-        f |= ( D3DCOMPILE_ENABLE_STRICTNESS);
+        f |= D3DCOMPILE_ENABLE_STRICTNESS;
         f |= D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
         return f;
     }
-
 
 } // namespace engine

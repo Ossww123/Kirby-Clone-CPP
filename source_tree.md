@@ -10,15 +10,14 @@
     Input.h/.cpp — Win32 폴링 입력(키보드/마우스), 에지 플래그, 단순 액션/축 매핑.
     Object.h — 기본 오브젝트: Id + Update 훅.
   /render
-    IRenderer.h
-    D3D11Renderer.h
-    D3D11Sprite.h
-    D3D11SpriteBatch.h
-    D3D11SpriteBatch.cpp
-    Texture.h
-    TextureLoader.h
-    D3D11TextureLoader.cpp
-    DWriteText.h
+    IRenderer.h — 렌더러 공통 인터페이스(초기화·리사이즈·프레임 관리, 백버퍼 크기/핸들 질의).
+    D3D11Renderer.h/.cpp — D3D11 스왑체인·RTV·뷰포트 제어를 제공하는 렌더러 클래스 선언. 디바이스/스왑체인 생성, 프레임 시작/종료, 리사이즈 구현.
+    D3D11Sprite.h/.cpp — D3D11 단일 사각형 스프라이트 드로우(픽셀 투영, IntRect 소스, RGBA8 틴트)
+    D3D11SpriteBatch.h/.cpp — D3D11 스프라이트 일괄 렌더(정렬/버퍼 업로드/상태 버킷), RECT·IntRect 모두 지원
+    Texture.h — D3D11 SRV와 픽셀 크기를 보관하는 경량 2D 텍스처 핸들.
+    TextureLoader.h — WIC 파일 로드·1x1 단색 생성 등을 제공하는 Tex2D 로드 API.
+    D3D11TextureLoader.cpp — WIC으로 RGBA8 디코드 후 D3D11 텍스처/SRV 생성 구현.
+    DWriteText.h — D3D11 스왑체인 위에 D2D/DirectWrite로 텍스트 HUD(엔진 Color, 가벼운 헤더)
     D3D11DebugDraw.h/.cpp — 선/사각형 디버그 오버레이(D3D11 라인리스트, 알파 블렌딩).
   /world
     Camera.h — 경계 클램프/픽셀 스냅/감쇠형 화면 흔들림을 지원하는 2D 추적 카메라.

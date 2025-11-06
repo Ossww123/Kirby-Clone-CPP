@@ -245,10 +245,13 @@
     <ClCompile Include="engine\core\Time.cpp" />
     <ClCompile Include="engine\physics\Collision.cpp" />
     <ClCompile Include="engine\render\D3D11DebugDraw.cpp" />
+    <ClCompile Include="engine\render\D3D11Renderer.cpp" />
+    <ClCompile Include="engine\render\D3D11Sprite.cpp" />
     <ClCompile Include="engine\render\D3D11SpriteBatch.cpp" />
     <ClCompile Include="engine\render\D3D11TextureLoader.cpp" />
     <ClCompile Include="engine\core\GameApp.cpp" />
     <ClCompile Include="engine\physics\PhysicsBody.cpp" />
+    <ClCompile Include="engine\render\DWriteText.cpp" />
     <ClCompile Include="engine\util\Anim.cpp" />
     <ClCompile Include="engine\util\StringConv.cpp" />
     <ClCompile Include="engine\world\Camera.cpp" />

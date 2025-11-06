@@ -1,36 +1,49 @@
 ﻿#pragma once
+//
+// Responsibility: Batched 2D sprite rendering on D3D11 (sorting + state bucketing).
+// Non-Goals: Depth/MSAA, instancing, texture atlasing, command buffering across frames.
+// Call-Context: Main thread; non-PMA RGBA pipeline assumed (SRC_ALPHA / INV_SRC_ALPHA).
+//
+
 #include <vector>
 #include <cstdint>
-#include <memory>
-#include <wrl/client.h>
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#pragma comment(lib, "d3dcompiler.lib")
+#include <wrl/client.h>   // ComPtr
+#include "engine/render/Texture.h"   // Tex2D (srv + size)
+#include "engine/util/Types.h"       // IntRect (for gradual RECT->IntRect transition)
 
-#include "engine/Texture.h" // Tex2D (srv: ComPtr)
+// Forward decls (keep header focused)
+struct ID3D11Device;
+struct ID3D11DeviceContext;
+struct ID3D11VertexShader;
+struct ID3D11PixelShader;
+struct ID3D11InputLayout;
+struct ID3D11Buffer;
+struct ID3D11BlendState;
+struct ID3D11SamplerState;
+struct ID3D11RasterizerState;
 
 namespace engine {
 
-    // 간단 프리셋
-    enum class BlendMode : uint8_t { Alpha = 0 , Additive = 1 };
-    enum class SamplerMode : uint8_t { Linear = 0 , Point = 1 };
+    // Presets
+    enum class BlendMode : std::uint8_t { Alpha = 0 , Additive = 1 };
+    enum class SamplerMode : std::uint8_t { Linear = 0 , Point = 1 };
 
-    // 정점 포맷
+    // Vertex layout
     struct SpriteVertex {
-        float x , y;     // screen space
-        float u , v;
-        uint32_t rgba;  // 0xAARRGGBB
+        float    x , y;      // screen space (pixels, Y flipped by projection)
+        float    u , v;      // normalized UV
+        uint32_t rgba;      // 0xAARRGGBB
     };
 
-    // 수집 커맨드(정렬 키 포함)
+    // Submission item (with sort key)
     struct SpriteItem {
-        uint64_t sortKeyHi = 0;    // [blend:8 | sampler:8 | z:16 | pad:32]
-        uint64_t seq = 0;          // 제출 순서(안정 타이브레이커)
+        std::uint64_t sortKeyHi = 0;  // [blend:8 | sampler:8 | z:16 | pad:32]
+        std::uint64_t seq = 0;        // submission order (stable tie-breaker)
         const Tex2D* tex = nullptr;
-        RECT   src{ 0,0,0,0 };
-        float  x = 0 , y = 0 , w = 0 , h = 0;
-        float  rotation = 0 , originX = 0 , originY = 0;
-        uint32_t rgba = 0xFFFFFFFF;
+        RECT          src{ 0,0,0,0 };   // kept for backward compat (see IntRect overload)
+        float         x = 0 , y = 0 , w = 0 , h = 0;
+        float         rotation = 0 , originX = 0 , originY = 0;
+        uint32_t      rgba = 0xFFFFFFFF;
     };
 
     class D3D11SpriteBatch {
@@ -41,18 +54,18 @@ namespace engine {
         bool Initialize ( ID3D11Device* dev , ID3D11DeviceContext* ctx , int screenW , int screenH );
         void OnResize ( int w , int h ) { SetProjection ( w , h ); }
 
-        // 수집 시작/끝
-        void Begin ( );              // 파이프라인(VS/PS/IL/CB/샘플러/블렌드/래스터) 바인드 포함
-        void End ( );                // 수집 정렬/그룹화/버퍼업로드/드로우
+        // Collect / flush
+        void Begin ( );   // binds fixed pipeline (VS/PS/IL/CB/sampler/blend/rasterizer)
+        void End ( );     // sort, bucket, upload, draw
 
-        // 기존 시그니처 유지
+        // v1: legacy RECT path — kept for source compatibility
         void Draw ( const Tex2D& tex ,
                   float x , float y , float w , float h ,
                   const RECT* srcPixels = nullptr ,
                   uint32_t tintRGBA = 0xFFFFFFFF ,
                   float rotation = 0.f , float originX = 0.f , float originY = 0.f );
 
-        // v2: z/블렌드/샘플러 지정
+        // v2: extended (z/blend/sampler)
         void Draw ( const Tex2D& tex ,
                   float x , float y , float w , float h ,
                   const RECT* srcPixels ,
@@ -63,19 +76,36 @@ namespace engine {
                   BlendMode blend = BlendMode::Alpha ,
                   SamplerMode sampler = SamplerMode::Point );
 
-        // 기본 프리셋
+        // NEW: IntRect overloads for gradual RECT->IntRect transition
+        void Draw ( const Tex2D& tex ,
+                  float x , float y , float w , float h ,
+                  const IntRect* srcPixels ,
+                  uint32_t tintRGBA = 0xFFFFFFFF ,
+                  float rotation = 0.f , float originX = 0.f , float originY = 0.f );
+
+        void Draw ( const Tex2D& tex ,
+                  float x , float y , float w , float h ,
+                  const IntRect* srcPixels ,
+                  uint32_t tintRGBA ,
+                  float rotation ,
+                  float originX , float originY ,
+                  int16_t zSort ,
+                  BlendMode blend = BlendMode::Alpha ,
+                  SamplerMode sampler = SamplerMode::Point );
+
+        // Defaults
         void SetDefaultBlend ( BlendMode m ) { m_defaultBlend = m; }
         void SetDefaultSampler ( SamplerMode m ) { m_defaultSampler = m; }
 
     private:
-        // 파이프라인/상수
+        // Pipeline / constants
         bool CreatePipeline ( );
         void CreateStates ( );
         void SetProjection ( int w , int h );
 
-        // 내부 도우미
-        void ensureVB ( size_t vertices );
-        void ensureIB ( size_t indices );
+        // Helpers
+        void ensureVB ( std::size_t vertices );
+        void ensureIB ( std::size_t indices );
         void flushBatches ( );
 
         void applyBlend ( BlendMode );
@@ -85,45 +115,45 @@ namespace engine {
         static UINT D3DCompileFlagsRowMajor ( );
 
     private:
-        // 디바이스/컨텍스트
+        // Device/Context (non-owning)
         ID3D11Device* m_dev = nullptr;
         ID3D11DeviceContext* m_ctx = nullptr;
 
-        // 셰이더/IL/상수
-        Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vs;
-        Microsoft::WRL::ComPtr<ID3D11PixelShader>  m_ps;
-        Microsoft::WRL::ComPtr<ID3D11InputLayout>  m_layout;
-        Microsoft::WRL::ComPtr<ID3D11Buffer>       m_cbProj; // 4x4
+        // Shaders / IL / constants
+        Microsoft::WRL::ComPtr<ID3D11VertexShader>    m_vs;
+        Microsoft::WRL::ComPtr<ID3D11PixelShader>     m_ps;
+        Microsoft::WRL::ComPtr<ID3D11InputLayout>     m_layout;
+        Microsoft::WRL::ComPtr<ID3D11Buffer>          m_cbProj; // 4x4
 
-        // 상태
-        Microsoft::WRL::ComPtr<ID3D11BlendState>   m_blendAlpha;
-        Microsoft::WRL::ComPtr<ID3D11BlendState>   m_blendAdd;
-        Microsoft::WRL::ComPtr<ID3D11SamplerState> m_sampLinear;
-        Microsoft::WRL::ComPtr<ID3D11SamplerState> m_sampPoint;
+        // States
+        Microsoft::WRL::ComPtr<ID3D11BlendState>      m_blendAlpha;
+        Microsoft::WRL::ComPtr<ID3D11BlendState>      m_blendAdd;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>    m_sampLinear;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>    m_sampPoint;
         Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rsCullNone;
 
-        // 버퍼
+        // Buffers
         Microsoft::WRL::ComPtr<ID3D11Buffer> m_vb; // DYNAMIC
         Microsoft::WRL::ComPtr<ID3D11Buffer> m_ib; // DYNAMIC
-        size_t m_vbCapacity = 0; // vertices
-        size_t m_ibCapacity = 0; // indices
+        std::size_t m_vbCapacity = 0; // vertices
+        std::size_t m_ibCapacity = 0; // indices
 
-        // 수집/작업 버퍼
-        std::vector<SpriteItem>    m_items;
-        std::vector<SpriteVertex>  m_vertices;
-        std::vector<uint16_t>      m_indices;
+        // Collections
+        std::vector<SpriteItem>   m_items;
+        std::vector<SpriteVertex> m_vertices;
+        std::vector<std::uint16_t> m_indices;
 
-        // 상태 캐시
+        // State cache
         const Tex2D* m_boundTex = nullptr;
         BlendMode    m_boundBlend = static_cast< BlendMode >( 0xFF );
         SamplerMode  m_boundSampler = static_cast< SamplerMode >( 0xFF );
 
-        // 기본 모드
+        // Defaults
         BlendMode    m_defaultBlend = BlendMode::Alpha;
         SamplerMode  m_defaultSampler = SamplerMode::Point;
 
-        bool m_inBegin = false;
-        uint64_t m_seq = 0;
+        bool      m_inBegin = false;
+        std::uint64_t m_seq = 0;
     };
 
 } // namespace engine
