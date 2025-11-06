@@ -1,37 +1,35 @@
 ﻿#pragma once
-#include <windows.h>
+//
+// Responsibility: App bootstrap + main loop. Owns input/time/scene and wires renderer & session.
+// Non-Goals:      Direct gameplay logic or low-level D3D state; those live in subsystems.
+// Call-Context:   Win32 windowed app (single-threaded game loop).
+//
+
 #include <memory>
-#include <cwchar>
-#include <vector>
-#include <string>
 
-// === engine / core ===
-#include "engine/Time.h"
-#include "engine/Input.h"
-#include "engine/Scene.h"
-#include "engine/Math.h"
+// Win32 HWND forward decl to keep header light
+struct HWND__;
+using HWND = HWND__*;
 
-// === anim / texture ===
-#include "engine/Anim.h"
-#include "engine/Texture.h"
+// Engine core
+#include "engine/core/RenderSystem.h"   // value member → 필요 헤더
 
-// === renderer / utils ===
-#include "engine/IRenderer.h"
-#include "engine/RenderSystem.h"
-#include "engine/D3D11Renderer.h"
-#include "engine/D3D11DebugDraw.h"
-#include "engine/DWriteText.h"
-#include "engine/D3D11SpriteBatch.h"
+namespace engine {
 
-#include "game/PlaySession.h"
+    // fwd (pointers only in this header)
+    class IRenderer;
+    class D3D11SpriteBatch;
+    class D3D11DebugDraw;
+    class DWriteTextHUD;
 
-namespace game { struct MonsterCSV; }
+} // namespace engine
+
+namespace game { class PlaySession; }
 
 namespace engine {
 
     class GameApp {
     public:
-        // 소멸자 정의는 .cpp에서 (unique_ptr default_delete가 완전형을 보게 하기 위함)
         ~GameApp ( );
 
         void Init ( HWND hWnd );
@@ -40,31 +38,33 @@ namespace engine {
         bool DoOneFrame ( );
 
     private:
-        void FixedUpdate ( double fixedDt ); // physics / collider / jump orchestration
-        void RenderFrame ( );               // tile / player / HUD / debug render
+        void FixedUpdate ( double fixedDt );  // physics / gameplay tick
+        void RenderFrame ( );                // tile / player / HUD / debug
 
-        // ---- Init/teardown helpers ----
+        // init helpers
         void InitBindings ( );
         void InitRendererUI ( HWND hWnd , int w , int h );
 
     private:
-        // --- Window/Core ---
+        // Window/Core
         HWND   m_hWnd{};
-        Time   m_Time{};
-        Input  m_Input{};
-        Scene  m_Scene{};
+        class Time   m_Time {};
+        class Input  m_Input {};
+        class Scene  m_Scene {};
 
-        // --- Rendering ---
-        std::unique_ptr<IRenderer>          m_Renderer;  // D3D11Renderer
-        std::unique_ptr<D3D11SpriteBatch>   m_Batch;     // 스프라이트 일괄 렌더
-        std::unique_ptr<D3D11DebugDraw>     m_Debug;     // 라인/박스 디버그 드로우
-        std::unique_ptr<DWriteTextHUD>      m_TextHUD;   // DirectWrite HUD
-        RenderSystem m_Render{};
+        // Rendering
+        std::unique_ptr<IRenderer>        m_Renderer;  // e.g., D3D11Renderer
+        std::unique_ptr<D3D11SpriteBatch> m_Batch;     // sprites
+        std::unique_ptr<D3D11DebugDraw>   m_Debug;     // lines/rects
+        std::unique_ptr<DWriteTextHUD>    m_TextHUD;   // HUD text
+        RenderSystem                      m_Render{};  // high-level facade
 
-        // --- ect ---
-        bool m_comInitialized = false;  // CoInitializeEx 성공 여부
+        // Misc
+        bool m_comInitialized = false;   // CoInitializeEx succeeded?
         bool m_debugDrawEnabled = true;
 
+        // Game
         std::unique_ptr<game::PlaySession> m_Session;
     };
+
 } // namespace engine
