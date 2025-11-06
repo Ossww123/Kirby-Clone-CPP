@@ -1,5 +1,5 @@
 ﻿#include "engine/physics/Collision.h"
-#include "engine/render/D3D11DebugDraw.h"
+#include "engine/physics/AABB.h"
 
 namespace engine::physics {
 
@@ -22,7 +22,8 @@ namespace engine::physics {
                                          engine::Vec2& vel ,
                                          CollisionReport* out ,
                                          bool ignoreOneWay ,
-                                         int prevBottom ) const
+                                         int prevBottom ,
+                                         const CollisionParams& params ) const
     {
         CollisionReport rep{};
 
@@ -69,11 +70,10 @@ namespace engine::physics {
         }
 
         // 3) Optional ground snap on solid tops (1px tolerance)
-        if ( !rep.grounded && vel.y >= 0.f ) {
-            constexpr int SNAP_EPS = 1;
+        if ( params.enableGroundSnap && !rep.grounded && vel.y >= 0.f && params.groundSnapPx > 0 ) {
             for ( const IntRect& s : m_static ) {
                 const bool overlapX = ( aabb.r > s.l && aabb.l < s.r );
-                const bool nearTop = ( aabb.b <= s.t ) && ( s.t - aabb.b <= SNAP_EPS );
+                const bool nearTop = ( aabb.b <= s.t ) && ( s.t - aabb.b <= params.groundSnapPx );
                 if ( overlapX && nearTop ) {
                     const int dy = s.t - aabb.b;
                     aabb.t += dy; aabb.b += dy;
@@ -84,16 +84,6 @@ namespace engine::physics {
         }
 
         if ( out ) *out = rep;
-    }
-
-    void CollisionSystem::DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy ,
-                                    std::uint32_t solid , std::uint32_t oneway ) const {
-    {
-        for ( const IntRect& r : m_static )
-            dbg.WorldRect ( r.l , r.t , r.r - r.l , r.b - r.t , ox , oy , solid );
-
-        for ( const IntRect& r : m_oneway )
-            dbg.WorldRect ( r.l , r.t , r.r - r.l , r.b - r.t , ox , oy , oneway );
     }
 
 } // namespace engine::physics

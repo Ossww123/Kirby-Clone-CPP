@@ -28,7 +28,9 @@
     WorldSystem.h
     WorldSystem.cpp
   /physics
-    Collision.* — AABB 충돌/해결(정적+원웨이 플랫폼, 지면 스냅 포함) 및 디버그 와이어 렌더
+    AABB.h — AABB 겹침/MTV 유틸(정수 좌표)
+    Collision.* — 정적/원웨이 충돌 해결 + 스냅 파라미터화
+    CollisionDebugDraw.* — 충돌 시스템 와이어 드로우 어댑터(D3D11DebugDraw 사용)
     PhysicsBody.* — 캐릭터용 가속/마찰/중력과 AABB 제안·적용(월드 클램프 보조)
   /util
     Anim.* — 경량 스프라이트 애니메이션(클립/프레임), 시간 진행; 렌더링 없음.
