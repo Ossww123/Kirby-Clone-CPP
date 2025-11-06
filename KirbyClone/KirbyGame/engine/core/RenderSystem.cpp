@@ -1,86 +1,71 @@
-﻿#include "engine/RenderSystem.h"
-#include "engine/D3D11Renderer.h"  // Width/Height/Device/Context
+﻿#include "engine/core/RenderSystem.h"
+#include "engine/render/D3D11SpriteBatch.h"
+#include "engine/render/D3D11DebugDraw.h"
+#include "engine/render/Texture.h"
+#include "engine/world/Camera.h"
 
 namespace engine {
 
     bool RenderSystem::Init ( IRenderer* renderer ) {
         m_renderer = renderer;
+        if ( !m_renderer ) return false;
 
         ID3D11Device* dev = nullptr;
         ID3D11DeviceContext* ctx = nullptr;
         if ( !m_renderer->GetD3D11Handles ( &dev , &ctx ) ) return false;
 
-        auto sz = m_renderer->GetBackbufferSize ( );
+        const auto bb = m_renderer->GetBackbufferSize ( );
 
         m_batch = std::make_unique<D3D11SpriteBatch> ( );
-        if ( !m_batch->Initialize ( dev , ctx , sz.w , sz.h ) ) return false;
+        if ( !m_batch->Initialize ( dev , ctx , bb.w , bb.h ) ) return false;
 
         m_dbg = std::make_unique<D3D11DebugDraw> ( );
-        if ( !m_dbg->Initialize ( dev , ctx , sz.w , sz.h ) ) return false;
+        if ( !m_dbg->Initialize ( dev , ctx , bb.w , bb.h ) ) return false;
 
         m_curBlend = 0xFF; m_curSampler = 0xFF;
         return true;
     }
 
-    void RenderSystem::OnResize ( int w , int h )
-    {
+    void RenderSystem::OnResize ( int w , int h ) {
         if ( m_batch ) m_batch->OnResize ( w , h );
         if ( m_dbg )   m_dbg->OnResize ( w , h );
     }
 
-    void RenderSystem::Begin ( const Color& clear )
-    {
-        // 프레임 시작
-        m_renderer->BeginFrame ( clear );
-
-        // 디버그 & 배치 시작
+    void RenderSystem::Begin ( const Color& clear ) {
+        if ( m_renderer ) m_renderer->BeginFrame ( clear );
         if ( m_dbg )   m_dbg->BeginFrame ( );
         if ( m_batch ) m_batch->Begin ( );
 
-        // 상태 캐시 리셋
+        // reset caches
         m_curBlend = 0xFF;
         m_curSampler = 0xFF;
     }
 
-    void RenderSystem::End ( )
-    {
+    void RenderSystem::End ( ) {
         if ( m_batch ) m_batch->End ( );
         if ( m_dbg )   m_dbg->Flush ( );
-        m_renderer->EndFrame ( );
+        if ( m_renderer ) m_renderer->EndFrame ( );
     }
 
-    void RenderSystem::SetConfig ( const RenderConfig& cfg )
-    {
+    void RenderSystem::SetConfig ( const RenderConfig& cfg ) {
         m_cfg = cfg;
-        // (확장 지점) 샘플러/블렌드 상태 전환을 여기에서 즉시 반영할 수 있음.
+        // hook: sampler/blend switching can be applied here if needed
     }
 
-    void RenderSystem::SetBlendMode ( uint8_t mode )
-    {
-        // (확장) SpriteBatch가 블렌드 그룹화를 지원하면 커맨드 키에 반영
-        // 지금은 캐시만 갱신해두고 Begin/End 사이에 필요 시 사용할 수 있게 둠.
-        m_curBlend = mode;
-    }
+    void RenderSystem::SetBlendMode ( uint8_t mode ) { m_curBlend = mode; }
+    void RenderSystem::SetSamplerMode ( uint8_t mode ) { m_curSampler = mode; }
 
-    void RenderSystem::SetSamplerMode ( uint8_t mode )
-    {
-        // (확장) 포인트/선형 샘플러 전환을 SpriteBatch 내부 혹은 Renderer 상태로 적용
-        m_curSampler = mode;
-    }
-
-    std::pair<float , float> RenderSystem::ToScreen ( float wx , float wy ) const
-    {
+    std::pair<float , float> RenderSystem::ToScreen ( float wx , float wy ) const {
         int ox = 0 , oy = 0;
         if ( m_cam ) {
             auto off = m_cam->OffsetInt ( );
             ox = off.first; oy = off.second;
         }
 
-        auto* d3d = dynamic_cast< D3D11Renderer* >( m_renderer );
-        const float cx = d3d ? ( float ) d3d->Width ( ) * 0.5f : 0.f;
-        const float cy = d3d ? ( float ) d3d->Height ( ) * 0.5f : 0.f;
+        const auto bb = m_renderer ? m_renderer->GetBackbufferSize ( ) : BackbufferSize{ 0,0 };
+        const float cx = static_cast< float >( bb.w ) * 0.5f;
+        const float cy = static_cast< float >( bb.h ) * 0.5f;
 
-        // 화면 중심 기준 스케일 → 오프셋(줌)
         const float z = ( m_cfg.zoom > 0.f ) ? m_cfg.zoom : 1.f;
         const float sx = ( wx - ox - cx ) * z + cx;
         const float sy = ( wy - oy - cy ) * z + cy;
@@ -89,7 +74,7 @@ namespace engine {
 
     void RenderSystem::DrawSprite ( const Tex2D& tex ,
                                   float wx , float wy , float w , float h ,
-                                  const RECT* src ,
+                                  const IntRect* src ,
                                   uint32_t rgba ,
                                   float rotation ,
                                   float originX , float originY ,
@@ -97,20 +82,22 @@ namespace engine {
     {
         if ( !m_batch ) return;
 
-        // 월드→스크린
+        // world → screen
         auto [sx , sy] = ToScreen ( wx , wy );
 
-        // 크기에 줌 반영
+        // apply zoom
         const float z = ( m_cfg.zoom > 0.f ) ? m_cfg.zoom : 1.f;
         const float sw = w * z;
         const float sh = h * z;
 
-        // 현재는 블렌드/샘플러 그룹 정렬을 SpriteBatch가 직접 지원하지 않는다고 가정
-        // 필요 시 SpriteBatch에 확장된 DrawZ/키 지정 API를 연결하면 됨.
+        // SpriteBatch v2 (IntRect) path
         m_batch->Draw ( tex , sx , sy , sw , sh , src , rgba , rotation , originX , originY );
     }
 
-    int RenderSystem::BackbufferWidth ( )  const { return m_renderer->GetBackbufferSize ( ).w; }
-    int RenderSystem::BackbufferHeight ( ) const { return m_renderer->GetBackbufferSize ( ).h; }
+    D3D11SpriteBatch& RenderSystem::Batch ( ) { return *m_batch; }
+    D3D11DebugDraw& RenderSystem::Debug ( ) { return *m_dbg; }
+
+    int RenderSystem::BackbufferWidth ( )  const { return m_renderer ? m_renderer->GetBackbufferSize ( ).w : 0; }
+    int RenderSystem::BackbufferHeight ( ) const { return m_renderer ? m_renderer->GetBackbufferSize ( ).h : 0; }
 
 } // namespace engine

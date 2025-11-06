@@ -3,8 +3,7 @@
   /core
     GameApp.h
     GameApp.cpp
-    RenderSystem.h
-    RenderSystem.cpp
+    RenderSystem.* — 프레임 시작/종료, 카메라 변환, 배치·디버그 드로우 오케스트레이션
     Scene.* — 오브젝트 컨테이너: 생성/업데이트/정리.
     Time.* — 프레임 타이밍(가변 dt + 고정 스텝) 및 FPS 카운터(QPC 기반).
     Input.* — Win32 폴링 입력(키보드/마우스), 에지 플래그, 단순 액션/축 매핑.
@@ -23,8 +22,7 @@
     Camera.h — 경계 클램프/픽셀 스냅/감쇠형 화면 흔들림을 지원하는 2D 추적 카메라.
     TileSet.* — 타일 아틀라스/셀 슬라이싱 및 타일 메타데이터 관리(IntRect 기반)
     TileMap.* — 타일 ID 그리드 보관/가시 영역 렌더링 및 정적·원웨이 콜라이더 생성
-    WorldSystem.h
-    WorldSystem.cpp
+    WorldSystem.* — 타일셋·타일맵·충돌을 묶어 관리하고, 가시 타일 렌더링/월드 픽셀 크기 제공
   /physics
     AABB.h — AABB 겹침/MTV 유틸(정수 좌표)
     Collision.* — 정적/원웨이 충돌 해결 + 스냅 파라미터화
