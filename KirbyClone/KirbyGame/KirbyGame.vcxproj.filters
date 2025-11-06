@@ -461,6 +461,12 @@
     <ClCompile Include="game\entities\monsters\MonsterDebugDraw.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="game\entities\monsters\WhispyWoods.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\entities\monsters\Apple.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\KirbyGame.rc">

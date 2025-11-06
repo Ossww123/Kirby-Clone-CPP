@@ -62,6 +62,10 @@ namespace game {
         bool  Alive ( ) const { return m_alive; }
         void  Kill ( ) { m_alive = false; }
 
+        // last frame collision flags
+        bool HitX ( ) const { return m_lastHitX; }
+        bool HitY ( ) const { return m_lastHitY; }
+
         // inhale metadata
         virtual bool    Inhalable ( )   const { return true; }
         virtual Ability AbilityGift ( ) const; // default: Ability::None
@@ -111,6 +115,11 @@ namespace game {
         QueryTargetPosFn    m_queryTarget;
         SpawnHitVolumeFn    m_spawnHV;
         SpawnMonsterFn      m_spawnMonster;
+
+    private:
+        bool  m_lastHitX{ false };
+        bool  m_lastHitY{ false };
+
     };
 
 } // namespace game

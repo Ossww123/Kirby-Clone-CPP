@@ -1,12 +1,17 @@
 ﻿#pragma once
-#include "game/Monster.h"
+//
+// Responsibility: HotHead — patrol + fire breath (projectile burst) FSM.
+// Non-Goals:      Rendering; data-driven VFX ownership.
+// Call-Context:   Main thread; fixed update via Monster.
+//
+#include "game/entities/monsters/Monster.h"
 
 namespace game {
 
     class HotHead : public Monster {
     public:
-        struct Config {
-            // Common
+        struct Cfg {
+            // Base
             Monster::Cfg base{};
 
             // Movement
@@ -14,26 +19,28 @@ namespace game {
             bool  turnOnHitX = true;
             bool  turnAtEdge = true;
 
-            // Attack ( Fire )
-            float wakeRange = 260.f;      // 감지 거리
-            float windupMs = 0.25f;      // 텔레그래프
-            float breathMs = 0.55f;      // 분사 지속
-            float fireIntervalMs = 0.06f; // 분사 중 탄 생성 간격
-            float bulletSpeed = 360.f;    // 화염탄 속도
-            bool  stopDuringWindup = true; // 윈드업/분사 중 정지
-            float firePeriod = 1.1f;
+            // Attack (Fire)
+            float wakeRange = 260.f;   // detection range
+            float windupMs = 0.25f;   // telegraph
+            float breathMs = 0.55f;   // breath duration
+            float fireIntervalMs = 0.06f;   // pellet interval during breath
+            float bulletSpeed = 360.f;   // projectile speed
+            bool  stopDuringWindup = true; // stop during windup/breath
+            float firePeriod = 1.1f;    // cooldown
 
-            // Instance flag
+            // Instance flags
             bool  enableMove = true;
             bool  enableAttack = true;
         };
 
-        HotHead ( const RECT& worldBounds ,
+        HotHead ( const engine::IntRect& worldBounds ,
                 const engine::physics::CollisionSystem* col ,
-                const Config& cfg = {} )
+                const Cfg& cfg = {} )
             : Monster ( worldBounds , col , cfg.base )
-            , m_cfg ( cfg ) , m_dir ( cfg.dir )
-            , m_turnOnHitX ( cfg.turnOnHitX ) , m_turnAtEdge ( cfg.turnAtEdge ) {}
+            , m_cfg ( cfg )
+            , m_dir ( cfg.dir )
+            , m_turnOnHitX ( cfg.turnOnHitX )
+            , m_turnAtEdge ( cfg.turnAtEdge ) {}
 
         void TickAI ( double fixedDt , const engine::Input& ) override;
 
@@ -43,20 +50,20 @@ namespace game {
     private:
         enum class AState { Idle , Windup , Breathing , Cooldown };
 
-        // 이동
+        // movement
         int   m_dir = 1;
         bool  m_turnOnHitX = true;
         bool  m_turnAtEdge = true;
 
-        // 공격 상태
+        // attack state
         AState m_state{ AState::Idle };
-        float  m_cd = 0.f;        // 쿨다운
-        float  m_windupT = 0.f;   // 텔레그래프 잔여
-        float  m_breathT = 0.f;   // 분사 잔여
-        float  m_emitT = 0.f;     // 다음 탄까지 간격
-        int    m_face = +1;       // 공격 페이싱(윈드업~분사 동안 고정)
+        float  m_cd = 0.f;
+        float  m_windupT = 0.f;
+        float  m_breathT = 0.f;
+        float  m_emitT = 0.f;
+        int    m_face = +1;
 
-        Config m_cfg{};
+        Cfg    m_cfg{};
     };
 
 } // namespace game

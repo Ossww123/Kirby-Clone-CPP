@@ -64,16 +64,12 @@
       MonsterTypes.h — 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅)
       MonsterFactory.h
       MonsterDebugDraw.* — 몬스터 디버그 드로우 어댑터(바운딩/HP 바)
-      WaddleDee.h
-      WaddleDee.cpp
-      WaddleDoo.h
-      WaddleDoo.cpp
-      HotHead.h
-      HotHead.cpp
-      Sparky.h
-      Sparky.cpp
-      Apple.h
-      WhispyWoods.h
+      WaddleDee.* — 단순 순찰 AI(에지/벽 턴, 이동축 설정)
+      WaddleDoo.* — 순찰 + 빔 공격 FSM(윈드업/쿨다운, 타깃 감지)
+      HotHead.* — 순찰 + 화염 분사 프로젝타일 FSM(윈드업/분사/쿨다운)
+      Sparky.* — 점프 기반 이동 + 스파크 오라 FSM(지상 시작, 휴식 타이머)
+      Apple.* — 텔레그래프→낙하→단발 바운스→구르기 FSM
+      WhispyWoods.* — 보스 AI(공기포 연사↔사과 낙하 교대, 정지형)
 
   /combat
     CombatTypes.h — 투사체 소유자 열거(피격 필터용, 기반형 고정)

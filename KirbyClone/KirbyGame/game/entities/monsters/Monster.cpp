@@ -88,6 +88,10 @@ namespace game {
         engine::physics::CollisionReport rep{};
         m_col->MoveAndCollide ( aabb , vel , &rep , m_ignoreOneWay , prevBottom );
         m_body.ApplyCollisionResult ( aabb , vel , rep , nx , ny );
+
+        // expose minimal collision info to derived classes
+        m_lastHitX = rep.hitX;
+        m_lastHitY = rep.hitY;
     }
 
     bool Monster::HasGroundAhead ( int dir ) const {

@@ -265,8 +265,10 @@
     <ClCompile Include="game\combat\HitVolume.cpp" />
     <ClCompile Include="game\combat\HitVolumeFactory.cpp" />
     <ClCompile Include="game\combat\HitVolumeSystem.cpp" />
+    <ClCompile Include="game\entities\monsters\Apple.cpp" />
     <ClCompile Include="game\entities\monsters\Monster.cpp" />
     <ClCompile Include="game\entities\monsters\MonsterDebugDraw.cpp" />
+    <ClCompile Include="game\entities\monsters\WhispyWoods.cpp" />
     <ClCompile Include="game\entities\player\Player.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.cpp" />
     <ClCompile Include="game\session\PlaySession.Combat.cpp" />
