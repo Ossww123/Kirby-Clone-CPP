@@ -1,6 +1,9 @@
-﻿#include "engine/TileMap.h"
-#include "engine/util/Types.h"
-#include "engine/platform/win32/RectUtil.h"
+﻿#include "engine/world/TileMap.h"
+#include "engine/world/TileSet.h"
+#include "engine/render/D3D11SpriteBatch.h"
+#include "engine/physics/Collision.h"
+#include "engine/util/Types.h" // IntRect
+
 #include <algorithm>
 
 namespace engine {
@@ -28,12 +31,12 @@ namespace engine {
         const int th = tiles.TileH ( );
         int added = 0;
 
-        // ---- SOLID: 세로 방향 그리디 병합 ----
+        // ---- SOLID: vertical greedy merge ----
         for ( int x = 0; x < m_w; ++x ) {
             int y = 0;
             while ( y < m_h ) {
-                int y0 = y;
-                // 연속된 SOLID 런 탐색
+                const int y0 = y;
+                // find a solid run on column x
                 for ( ; y < m_h; ++y ) {
                     const int id = m_ids[ y * m_w + x ];
                     const TileDef* d = tiles.Get ( id );
@@ -41,10 +44,10 @@ namespace engine {
                 }
                 const int y1 = y; // exclusive
                 if ( y1 > y0 ) {
-                    const float px = float ( x * tw );
-                    const float py = float ( y0 * th );
-                    const float pw = float ( tw );
-                    const float ph = float ( ( y1 - y0 ) * th );
+                    const int px = x * tw;
+                    const int py = y0 * th;
+                    const int pw = tw;
+                    const int ph = ( y1 - y0 ) * th;
                     sys.AddStaticBox ( px , py , pw , ph );
                     ++added;
                 }
@@ -52,17 +55,17 @@ namespace engine {
             }
         }
 
-        // ---- ONEWAY: 타일 단위(엔진 정책에 따라 높이 조정 가능) ----
+        // ---- ONEWAY: per-tile (height policy can be adjusted) ----
         for ( int y = 0; y < m_h; ++y ) {
             for ( int x = 0; x < m_w; ++x ) {
                 const int id = m_ids[ y * m_w + x ];
                 const TileDef* d = tiles.Get ( id );
                 if ( !( d && d->oneway ) ) continue;
 
-                const float px = float ( x * tw );
-                const float py = float ( y * th );
-                const float pw = float ( tw );
-                const float ph = float ( th ); // 필요 시 얇은 두께로 변경
+                const int px = x * tw;
+                const int py = y * th;
+                const int pw = tw;
+                const int ph = th; // can be tightened by policy
                 sys.AddOneWayBox ( px , py , pw , ph );
                 ++added;
             }
@@ -89,21 +92,18 @@ namespace engine {
         ty1 = std::min ( mapH , ( camOffY + screenH + tileH - 1 ) / tileH );
     }
 
-    static inline bool hasRect ( const IntRect& r ) {
-        return ( r.r > r.l ) && ( r.b > r.t );
-    }
-
-    // src 선택: 1) 정의된 src 우선 2) id 기반 폴백(0/1-base) 3) 범위 밖이면 무시
-    static inline bool pickSrcRect ( const TileSet& tiles , const TileDef* def , int id , RECT& out )
+    // src pick order:
+    // 1) explicit src in TileDef
+    // 2) atlas index by id (0-based)
+    // 3) atlas index by (id-1) as 1-based fallback
+    static inline bool pickSrcRect ( const TileSet& tiles , const TileDef* def , int id , IntRect& out )
     {
-        if ( def && !TileSet::IsEmptyRect ( def->src ) ) {
+        if ( def && !TileSet::IsEmpty ( def->src ) ) {
             out = def->src;
             return true;
         }
-        // 0-based 인덱스 시도
-        if ( tiles.TrySrcFromIndex ( id , &out ) ) return true;
-        // 1-based 보정 시도
-        if ( tiles.TrySrcFromIndex ( id - 1 , &out ) ) return true;
+        if ( tiles.TrySrcFromIndex ( id , &out ) ) return true;       // 0-based
+        if ( tiles.TrySrcFromIndex ( id - 1 , &out ) ) return true;   // 1-based fallback
         return false;
     }
 
@@ -111,13 +111,13 @@ namespace engine {
     // Render (1x)
     // -----------------------------
     void TileMap::Render ( D3D11SpriteBatch& batch , const TileSet& tiles ,
-                           int camOffX , int camOffY , int screenW , int screenH ) const
+                         int camOffX , int camOffY , int screenW , int screenH ) const
     {
         if ( !tiles.Atlas ( ).srv ) return;
         if ( m_w <= 0 || m_h <= 0 ) return;
         if ( tiles.TileW ( ) <= 0 || tiles.TileH ( ) <= 0 ) return;
 
-        const int tw = tiles.TileW ( );   // 월드 타일 크기 (예: 64)
+        const int tw = tiles.TileW ( );
         const int th = tiles.TileH ( );
 
         int tx0 , ty0 , tx1 , ty1;
@@ -130,7 +130,7 @@ namespace engine {
                 if ( id < 0 ) continue;
 
                 const TileDef* def = tiles.Get ( id );
-                RECT src{ 0,0,0,0 };
+                IntRect src{ 0,0,0,0 };
                 if ( !pickSrcRect ( tiles , def , id , src ) ) continue;
 
                 const float px = float ( x * tw - camOffX );
@@ -144,14 +144,14 @@ namespace engine {
     // RenderScaled (dst integer scale)
     // -----------------------------
     void TileMap::RenderScaled ( D3D11SpriteBatch& batch , const TileSet& tiles ,
-                                 int camOffX , int camOffY , int screenW , int screenH , int scale ) const
+                               int camOffX , int camOffY , int screenW , int screenH , int scale ) const
     {
         if ( !tiles.Atlas ( ).srv ) return;
         if ( m_w <= 0 || m_h <= 0 ) return;
         if ( tiles.TileW ( ) <= 0 || tiles.TileH ( ) <= 0 ) return;
         if ( scale <= 0 ) return;
 
-        const int tw = tiles.TileW ( );   // 월드 타일 크기 (예: 64)
+        const int tw = tiles.TileW ( );
         const int th = tiles.TileH ( );
 
         int tx0 , ty0 , tx1 , ty1;
@@ -167,11 +167,11 @@ namespace engine {
                 if ( id < 0 ) continue;
 
                 const TileDef* def = tiles.Get ( id );
-                RECT src{ 0,0,0,0 };
+                IntRect src{ 0,0,0,0 };
                 if ( !pickSrcRect ( tiles , def , id , src ) ) continue;
 
-                const float px = float ( x * tw - camOffX ) * scale;
-                const float py = float ( y * th - camOffY ) * scale;
+                const float px = float ( ( x * tw - camOffX ) * scale );
+                const float py = float ( ( y * th - camOffY ) * scale );
                 batch.Draw ( tiles.Atlas ( ) , px , py , dw , dh , &src , 0xFFFFFFFF );
             }
         }

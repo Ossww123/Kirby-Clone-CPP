@@ -21,10 +21,8 @@
     D3D11DebugDraw.* — 선/사각형 디버그 오버레이(D3D11 라인리스트, 알파 블렌딩).
   /world
     Camera.h — 경계 클램프/픽셀 스냅/감쇠형 화면 흔들림을 지원하는 2D 추적 카메라.
-    TileSet.h
-    TileSet.cpp
-    TileMap.h
-    TileMap.cpp
+    TileSet.* — 타일 아틀라스/셀 슬라이싱 및 타일 메타데이터 관리(IntRect 기반)
+    TileMap.* — 타일 ID 그리드 보관/가시 영역 렌더링 및 정적·원웨이 콜라이더 생성
     WorldSystem.h
     WorldSystem.cpp
   /physics
