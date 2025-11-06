@@ -20,7 +20,8 @@ namespace engine {
         std::uint64_t hi = 0;
         hi |= ( std::uint64_t ( std::uint8_t ( b ) ) & 0xFFu ) << 56;
         hi |= ( std::uint64_t ( std::uint8_t ( s ) ) & 0xFFu ) << 48;
-        hi |= ( std::uint64_t ( std::uint16_t ( z ) ) & 0xFFFFu ) << 32;
+        const uint16_t zb = static_cast< uint16_t >( static_cast< int >( z ) + 32768 );
+        hi |= ( uint64_t ( zb ) & 0xFFFFu ) << 32;
         return hi;
     }
 
@@ -171,7 +172,8 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         m_ctx->PSSetShader ( m_ps.Get ( ) , nullptr , 0 );
 
         // defaults: linear sampler, alpha blend, no cull
-        ID3D11SamplerState* samp = m_sampLinear.Get ( );
+        ID3D11SamplerState* samp =
+            ( m_defaultSampler == SamplerMode::Point ) ? m_sampPoint.Get ( ) : m_sampLinear.Get ( );
         m_ctx->PSSetSamplers ( 0 , 1 , &samp );
 
         float bf[ 4 ] = { 1,1,1,1 };
@@ -195,10 +197,11 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         flushBatches ( );
     }
 
-    // v1 (RECT) — simple path
+
+    // (IntRect) — transition overloads
     void D3D11SpriteBatch::Draw ( const Tex2D& tex ,
                                 float x , float y , float w , float h ,
-                                const RECT* srcPixels ,
+                                const IntRect* srcPixels ,
                                 uint32_t tintRGBA ,
                                 float rotation , float originX , float originY )
     {
@@ -208,7 +211,7 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
 
     void D3D11SpriteBatch::Draw ( const Tex2D& tex ,
                                 float x , float y , float w , float h ,
-                                const RECT* srcPixels ,
+                                const IntRect* srcPixels ,
                                 uint32_t tintRGBA ,
                                 float rotation , float originX , float originY ,
                                 int16_t zSort , BlendMode blend , SamplerMode sampler )
@@ -217,7 +220,9 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
 
         SpriteItem it{};
         it.tex = &tex;
-        it.src = srcPixels ? *srcPixels : RECT{ 0,0,tex.width, tex.height };
+        if ( srcPixels ) it.src = *srcPixels;
+        else           it.src = IntRect{ 0,0,tex.width, tex.height };
+
         it.x = x; it.y = y; it.w = w; it.h = h;
         it.rotation = rotation; it.originX = originX; it.originY = originY;
         it.rgba = tintRGBA;
@@ -228,35 +233,10 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
         m_items.emplace_back ( it );
     }
 
-    // v2 (IntRect) — transition overloads
-    void D3D11SpriteBatch::Draw ( const Tex2D& tex ,
-                                float x , float y , float w , float h ,
-                                const IntRect* srcPixels ,
-                                uint32_t tintRGBA ,
-                                float rotation , float originX , float originY )
-    {
-        RECT r{};
-        if ( srcPixels ) r = RECT{ srcPixels->l, srcPixels->t, srcPixels->r, srcPixels->b };
-        Draw ( tex , x , y , w , h , srcPixels ? &r : nullptr , tintRGBA , rotation , originX , originY );
-    }
-
-    void D3D11SpriteBatch::Draw ( const Tex2D& tex ,
-                                float x , float y , float w , float h ,
-                                const IntRect* srcPixels ,
-                                uint32_t tintRGBA ,
-                                float rotation , float originX , float originY ,
-                                int16_t zSort , BlendMode blend , SamplerMode sampler )
-    {
-        RECT r{};
-        if ( srcPixels ) r = RECT{ srcPixels->l, srcPixels->t, srcPixels->r, srcPixels->b };
-        Draw ( tex , x , y , w , h , srcPixels ? &r : nullptr , tintRGBA ,
-             rotation , originX , originY , zSort , blend , sampler );
-    }
-
     // build & flush one batch group
     void D3D11SpriteBatch::flushBatches ( )
     {
-        // group key = (blend, sampler, tex) change
+        // group key = (blend, sampler, tex)
         BlendMode   curBlend = BlendMode::Alpha;
         SamplerMode curSamp = SamplerMode::Point;
         const Tex2D* curTex = nullptr;
@@ -299,10 +279,10 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
             m_indices.clear ( );
             };
 
-        // local quad builder
+        // quad builder for IntRect
         auto pushQuad = [ ] ( std::vector<SpriteVertex>& verts ,
                             std::vector<std::uint16_t>& idx ,
-                            const Tex2D& tex , const RECT& src ,
+                            const Tex2D& tex , const IntRect& src ,
                             float x , float y , float w , float h ,
                             float rot , float ox , float oy ,
                             std::uint32_t rgba )
@@ -327,10 +307,10 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
                 tf ( rx , by , x2 , y2 );
                 tf ( lx , by , x3 , y3 );
 
-                const float u0 = float ( src.left ) / tex.width;
-                const float v0 = float ( src.top ) / tex.height;
-                const float u1 = float ( src.right ) / tex.width;
-                const float v1 = float ( src.bottom ) / tex.height;
+                const float u0 = float ( src.l ) / tex.width;
+                const float v0 = float ( src.t ) / tex.height;
+                const float u1 = float ( src.r ) / tex.width;
+                const float v1 = float ( src.b ) / tex.height;
 
                 const std::uint16_t base = static_cast< std::uint16_t >( verts.size ( ) );
                 verts.push_back ( { x0,y0,u0,v0,rgba } );
@@ -356,7 +336,7 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
             pushQuad ( m_vertices , m_indices , *t , it.src ,
                      it.x , it.y , it.w , it.h , it.rotation , it.originX , it.originY , it.rgba );
         }
-        flushGroup ( );
+        flushBatches ( );
 
         // cache reset
         m_boundTex = nullptr;

@@ -39,8 +39,8 @@ namespace engine {
     struct SpriteItem {
         std::uint64_t sortKeyHi = 0;  // [blend:8 | sampler:8 | z:16 | pad:32]
         std::uint64_t seq = 0;        // submission order (stable tie-breaker)
-        const Tex2D* tex = nullptr;
-        RECT          src{ 0,0,0,0 };   // kept for backward compat (see IntRect overload)
+        const Tex2D*  tex = nullptr;
+        IntRect       src{ 0,0,0,0 };   // kept for backward compat (see IntRect overload)
         float         x = 0 , y = 0 , w = 0 , h = 0;
         float         rotation = 0 , originX = 0 , originY = 0;
         uint32_t      rgba = 0xFFFFFFFF;
@@ -58,25 +58,7 @@ namespace engine {
         void Begin ( );   // binds fixed pipeline (VS/PS/IL/CB/sampler/blend/rasterizer)
         void End ( );     // sort, bucket, upload, draw
 
-        // v1: legacy RECT path — kept for source compatibility
-        void Draw ( const Tex2D& tex ,
-                  float x , float y , float w , float h ,
-                  const RECT* srcPixels = nullptr ,
-                  uint32_t tintRGBA = 0xFFFFFFFF ,
-                  float rotation = 0.f , float originX = 0.f , float originY = 0.f );
-
-        // v2: extended (z/blend/sampler)
-        void Draw ( const Tex2D& tex ,
-                  float x , float y , float w , float h ,
-                  const RECT* srcPixels ,
-                  uint32_t tintRGBA ,
-                  float rotation ,
-                  float originX , float originY ,
-                  int16_t zSort ,
-                  BlendMode blend = BlendMode::Alpha ,
-                  SamplerMode sampler = SamplerMode::Point );
-
-        // NEW: IntRect overloads for gradual RECT->IntRect transition
+        // IntRect overloads for gradual RECT->IntRect transition
         void Draw ( const Tex2D& tex ,
                   float x , float y , float w , float h ,
                   const IntRect* srcPixels ,
