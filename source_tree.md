@@ -61,8 +61,9 @@
       PlayerFSM.cpp
     /monsters
       Monster.h - 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅, 헤더는 IntRect/RGBA8, 렌더디버그는 cpp)
-      MonsterTypes.h — 몬스터 타입/스폰 스펙 정의(열거 기반형 고정, 헤더 독립)
+      MonsterTypes.h — 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅)
       MonsterFactory.h
+      MonsterDebugDraw.* — 몬스터 디버그 드로우 어댑터(바운딩/HP 바)
       WaddleDee.h
       WaddleDee.cpp
       WaddleDoo.h

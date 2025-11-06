@@ -330,6 +330,9 @@
     <ClInclude Include="engine\physics\CollisionDebugDraw.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\entities\monsters\MonsterDebugDraw.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -453,6 +456,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\entities\monsters\Monster.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\entities\monsters\MonsterDebugDraw.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

@@ -5,11 +5,13 @@
 //
 
 #include "game/entities/player/Player.h"
+#include "engine/render/Texture.h"   // concrete type only in .cpp
 
 #include "engine/util/Types.h"   // IntRect
 #include "engine/util/Math.h"    // Vec2
 #include "engine/core/Input.h"   // Update signature requires complete type
 #include "engine/core/Object.h"  // GenEntityId()
+
 
 namespace game {
 
@@ -47,7 +49,7 @@ namespace game {
     engine::Animator* Player::Animator ( ) { return &m_anim; }
     const engine::Animator* Player::Animator ( ) const { return &m_anim; }
 
-    void Player::SetTexture ( const engine::Tex2D& t ) { m_tex = t; }
-    const engine::Tex2D& Player::Texture ( ) const { return m_tex; }
+    void Player::SetTexture ( const engine::Tex2D* t ) { m_tex = t; }
+    const engine::Tex2D* Player::TexturePtr ( ) const { return m_tex; }
 
 } // namespace game

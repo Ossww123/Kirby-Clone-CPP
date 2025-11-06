@@ -201,6 +201,7 @@
     <ClInclude Include="game\combat\HitVolumeFactory.h" />
     <ClInclude Include="game\combat\HitVolumeSystem.h" />
     <ClInclude Include="game\entities\monsters\Monster.h" />
+    <ClInclude Include="game\entities\monsters\MonsterDebugDraw.h" />
     <ClInclude Include="game\entities\monsters\MonsterFactory.h" />
     <ClInclude Include="game\entities\monsters\MonsterTypes.h" />
     <ClInclude Include="game\entities\player\Player.h" />
@@ -265,6 +266,7 @@
     <ClCompile Include="game\combat\HitVolumeFactory.cpp" />
     <ClCompile Include="game\combat\HitVolumeSystem.cpp" />
     <ClCompile Include="game\entities\monsters\Monster.cpp" />
+    <ClCompile Include="game\entities\monsters\MonsterDebugDraw.cpp" />
     <ClCompile Include="game\entities\player\Player.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.cpp" />
     <ClCompile Include="game\session\PlaySession.Combat.cpp" />

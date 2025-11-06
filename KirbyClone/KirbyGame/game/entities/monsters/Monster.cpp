@@ -1,19 +1,18 @@
 ﻿//
-// Responsibility: Monster base implementation — AI hook, physics/collision, health & debug.
-// Non-Goals:      Per-spec assets or rendering policy.
+// Responsibility: Monster base impl — AI hook, physics/collision, health.
+// Non-Goals:      Rendering/Debug draw (handled by external adapters).
 // Call-Context:   Main thread.
 //
 
 #include "game/entities/monsters/Monster.h"
 
+#include "engine/core/Object.h"             // GenEntityId()
 #include "engine/core/Input.h"
-#include "engine/util/Math.h"
-#include "engine/util/Types.h"                 // RGBA8, IntRect
-#include "engine/physics/Collision.h"          // CollisionSystem, Overlap, CollisionReport
-#include "engine/render/D3D11DebugDraw.h"      // debug draw (cpp-only dep)
-#include "engine/platform/win32/ColorUtil.h"
+#include "engine/util/Math.h"               // Vec2
+#include "engine/util/Types.h"              // IntRect
+#include "engine/physics/Collision.h"       // CollisionSystem/Report, Overlap
 
-#include "game/combat/Ability.h"               // Ability default
+#include "game/combat/Ability.h"            // Ability default
 
 namespace game {
 
@@ -44,19 +43,6 @@ namespace game {
 
         // 4) Invulnerability timer
         m_health.Tick ( static_cast< float >( fixedDt ) );
-    }
-
-    void Monster::RenderDebug ( engine::D3D11DebugDraw* dbg , int ox , int oy ) const {
-        if ( !dbg || !m_alive ) return;
-
-        int x , y , w , h; m_body.GetBounds ( x , y , w , h );
-        dbg->WorldRect ( x , y , w , h , ox , oy , engine::win32::RGBA8 ( 240 , 120 , 60 ) );
-
-        // hp bar (debug)
-        if ( m_health.hp < m_health.maxHp && m_health.maxHp > 0 ) {
-            const int len = static_cast< int >( ( static_cast< float >( m_health.hp ) / m_health.maxHp ) * w );
-            dbg->WorldLine ( x , y - 2 , x + len , y - 2 , ox , oy , engine::win32::RGBA8 ( 255 , 60 , 60 ) );
-        }
     }
 
     void Monster::OnHit ( const Damage& d ) {

@@ -9,12 +9,12 @@
 #include "engine/core/Object.h"         // base (complete type needed)
 #include "engine/physics/PhysicsBody.h"    // member by value
 #include "engine/util/Anim.h"           // member by value
-#include "engine/render/Texture.h"        // member by value
 
 namespace engine {
     struct IntRect;    // bounds (header stays Windows-free)
     struct Vec2;       // Center() return
     class  Input;      // Update() param
+    struct Tex2D;      // fwd decl (pointer-only ownership)
 }
 
 namespace game {
@@ -49,13 +49,13 @@ namespace game {
         engine::Animator* Animator ( );
         const engine::Animator* Animator ( ) const;
 
-        void                       SetTexture ( const engine::Tex2D& t );
-        const engine::Tex2D& Texture ( ) const;
+        void                 SetTexture ( const engine::Tex2D* t );
+        const engine::Tex2D* TexturePtr ( ) const;
 
     private:
         engine::PhysicsBody m_body;
         engine::Animator    m_anim{};
-        engine::Tex2D       m_tex{};
+        const engine::Tex2D* m_tex{ nullptr };
         float               m_visW{ 16.f } , m_visH{ 16.f };
     };
 
