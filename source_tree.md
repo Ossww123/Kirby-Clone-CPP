@@ -48,13 +48,10 @@
     PlaySession.Door.cpp
 
   /data
-    StageDesc.h
-    StageDesc.cpp
-    StageCSV.h
-    StageCSV.cpp
-    AnimCSV.h
-    AnimCSV.cpp
-    GameConfig.h
+    StageDesc.* — 스테이지 리소스 경로를 담은 단순 JSON(평면 키) 로더 및 데이터 구조
+    StageCSV.* — 스테이지 CSV 로더(플레이어 시작/몬스터/타일정의/문/타일맵) 단순 파서 & 벡터 채움
+    AnimCSV.* — 애니메이션 CSV( strip/frame ) 파싱 후 Animator에 클립 등록(옵션 초기화 지원)
+    GameConfig.h — 전역 해상도/스케일 상수와 기본 월드 단위(타일/충돌 AABB) 정의
 
   /entities
     /player

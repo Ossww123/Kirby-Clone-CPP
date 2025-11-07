@@ -195,7 +195,7 @@
     <ClInclude Include="game\combat\HitVolumeGeom.h" />
     <ClInclude Include="game\Damage.h" />
     <ClInclude Include="game\data\AnimCSV.h" />
-    <ClInclude Include="game\debug\HitVolumeDebugDraw.h" />
+    <ClInclude Include="game\debugdraw\HitVolumeDebugDraw.h" />
     <ClInclude Include="game\entities\monsters\Apple.h" />
     <ClInclude Include="game\combat\CombatTarget.h" />
     <ClInclude Include="game\combat\CombatTypes.h" />
@@ -205,7 +205,7 @@
     <ClInclude Include="game\combat\HitVolumeFactory.h" />
     <ClInclude Include="game\combat\HitVolumeSystem.h" />
     <ClInclude Include="game\entities\monsters\Monster.h" />
-    <ClInclude Include="game\debug\MonsterDebugDraw.h" />
+    <ClInclude Include="game\debugdraw\MonsterDebugDraw.h" />
     <ClInclude Include="game\entities\monsters\MonsterFactory.h" />
     <ClInclude Include="game\entities\monsters\MonsterTypes.h" />
     <ClInclude Include="game\entities\player\Player.h" />
@@ -271,10 +271,10 @@
     <ClCompile Include="game\combat\HitVolume.cpp" />
     <ClCompile Include="game\combat\HitVolumeFactory.cpp" />
     <ClCompile Include="game\combat\HitVolumeSystem.cpp" />
-    <ClCompile Include="game\debug\HitVolumeDebugDraw.cpp" />
+    <ClCompile Include="game\debugdraw\HitVolumeDebugDraw.cpp" />
     <ClCompile Include="game\entities\monsters\Apple.cpp" />
     <ClCompile Include="game\entities\monsters\Monster.cpp" />
-    <ClCompile Include="game\debug\MonsterDebugDraw.cpp" />
+    <ClCompile Include="game\debugdraw\MonsterDebugDraw.cpp" />
     <ClCompile Include="game\entities\monsters\WhispyWoods.cpp" />
     <ClCompile Include="game\entities\player\Player.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.Action.cpp" />
