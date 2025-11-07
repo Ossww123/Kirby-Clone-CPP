@@ -154,6 +154,8 @@
     <ClInclude Include="engine\physics\CollisionDebugDraw.h" />
     <ClInclude Include="engine\platform\win32\ColorUtil.h" />
     <ClInclude Include="engine\RenderSystem.h" />
+    <ClInclude Include="engine\render\D3D11DebugDrawAdapter.h" />
+    <ClInclude Include="engine\render\IDebugDraw.h" />
     <ClInclude Include="engine\Scene.h" />
     <ClInclude Include="engine\StringConv.h" />
     <ClInclude Include="engine\Texture.h" />
@@ -190,8 +192,10 @@
     <ClInclude Include="game\CombatTarget.h" />
     <ClInclude Include="game\CombatTypes.h" />
     <ClInclude Include="game\combat\Ability.h" />
+    <ClInclude Include="game\combat\HitVolumeGeom.h" />
     <ClInclude Include="game\Damage.h" />
     <ClInclude Include="game\data\AnimCSV.h" />
+    <ClInclude Include="game\debug\HitVolumeDebugDraw.h" />
     <ClInclude Include="game\entities\monsters\Apple.h" />
     <ClInclude Include="game\combat\CombatTarget.h" />
     <ClInclude Include="game\combat\CombatTypes.h" />
@@ -201,7 +205,7 @@
     <ClInclude Include="game\combat\HitVolumeFactory.h" />
     <ClInclude Include="game\combat\HitVolumeSystem.h" />
     <ClInclude Include="game\entities\monsters\Monster.h" />
-    <ClInclude Include="game\entities\monsters\MonsterDebugDraw.h" />
+    <ClInclude Include="game\debug\MonsterDebugDraw.h" />
     <ClInclude Include="game\entities\monsters\MonsterFactory.h" />
     <ClInclude Include="game\entities\monsters\MonsterTypes.h" />
     <ClInclude Include="game\entities\player\Player.h" />
@@ -249,6 +253,7 @@
     <ClCompile Include="engine\physics\Collision.cpp" />
     <ClCompile Include="engine\physics\CollisionDebugDraw.cpp" />
     <ClCompile Include="engine\render\D3D11DebugDraw.cpp" />
+    <ClCompile Include="engine\render\D3D11DebugDrawAdapter.cpp" />
     <ClCompile Include="engine\render\D3D11Renderer.cpp" />
     <ClCompile Include="engine\render\D3D11Sprite.cpp" />
     <ClCompile Include="engine\render\D3D11SpriteBatch.cpp" />
@@ -261,13 +266,15 @@
     <ClCompile Include="engine\world\Camera.cpp" />
     <ClCompile Include="engine\world\TileMap.cpp" />
     <ClCompile Include="engine\world\TileSet.cpp" />
+    <ClCompile Include="game\combat\HitVolumeGeom.cpp" />
     <ClCompile Include="game\data\AnimCSV.cpp" />
     <ClCompile Include="game\combat\HitVolume.cpp" />
     <ClCompile Include="game\combat\HitVolumeFactory.cpp" />
     <ClCompile Include="game\combat\HitVolumeSystem.cpp" />
+    <ClCompile Include="game\debug\HitVolumeDebugDraw.cpp" />
     <ClCompile Include="game\entities\monsters\Apple.cpp" />
     <ClCompile Include="game\entities\monsters\Monster.cpp" />
-    <ClCompile Include="game\entities\monsters\MonsterDebugDraw.cpp" />
+    <ClCompile Include="game\debug\MonsterDebugDraw.cpp" />
     <ClCompile Include="game\entities\monsters\WhispyWoods.cpp" />
     <ClCompile Include="game\entities\player\Player.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.Action.cpp" />

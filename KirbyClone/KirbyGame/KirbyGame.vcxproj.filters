@@ -330,7 +330,19 @@
     <ClInclude Include="engine\physics\CollisionDebugDraw.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="game\entities\monsters\MonsterDebugDraw.h">
+    <ClInclude Include="game\debug\MonsterDebugDraw.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\render\IDebugDraw.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\render\D3D11DebugDrawAdapter.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\debug\HitVolumeDebugDraw.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\combat\HitVolumeGeom.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -455,7 +467,7 @@
     <ClCompile Include="game\entities\monsters\Monster.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\entities\monsters\MonsterDebugDraw.cpp">
+    <ClCompile Include="game\debug\MonsterDebugDraw.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\entities\monsters\WhispyWoods.cpp">
@@ -474,6 +486,15 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\entities\player\PlayerFSM.Overlay.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\render\D3D11DebugDrawAdapter.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\debug\HitVolumeDebugDraw.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\combat\HitVolumeGeom.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

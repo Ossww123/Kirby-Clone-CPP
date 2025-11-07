@@ -1,56 +1,62 @@
-﻿#pragma once
+﻿//
+// Responsibility: Manage lifetimes, owner-following, collision tests, and events for HitVolumes.
+// Non-Goals:      Rendering logic beyond optional debug draw; persistence; multithread sync.
+// Call-Context:   Main thread only; fixed-step update.
 //
-// Responsibility: Manage multiple HitVolume instances end-to-end:
-//                 - Spawn from archetypes (via HitVolumeFactory)
-//                 - Follow owners (anchor & facing)
-//                 - Overlap tests vs entity AABBs (circle/box/capsule approximations)
-//                 - Emit hit/despawn events, enforce per-target gating
-// Non-Goals:      - World tile collision; Projectile rendering/logic
-//                 - Resource loading (only optional debug draw)
-// Call-Context:   - Main thread only; fixed update loop
-//
+#pragma once
 
 #include <vector>
 #include <memory>
 #include <string>
 #include <functional>
-#include <windows.h>
-#include "engine/Math.h"
-#include "engine/D3D11DebugDraw.h"
-#include "game/HitVolume.h"
-#include "game/CombatTarget.h"      // CombatTarget
+
+#include "engine/util/Types.h"          // IntRect
+#include "engine/util/Math.h"           // Vec2
+#include "engine/core/Object.h"         // engine::Object base (Update signature)
+#include "game/combat/HitVolume.h"      // HitVolume, HitPayload, enums
+#include "game/combat/CombatTarget.h"   // CombatTarget (Target alias)
+
+namespace engine { 
+    class D3D11DebugDraw;
+    class IDebugDraw;
+}
 
 namespace game {
 
-    class HitVolumeFactory; // fwd
+    class HitVolumeFactory;
 
     class HitVolumeSystem {
     public:
         using Target = CombatTarget;
 
         struct HitEvent {
-            int        targetId = -1;
-            int        volumeId = -1;
-            int        ownerId  = -1;
+            int        targetId{ -1 };
+            int        volumeId{ -1 };
+            int        ownerId{ -1 };
             HitPayload payload{};
-
-            bool       isCapture{ false };
             Ability    gift{ Ability::None };
         };
 
         struct DespawnEvent {
-            int  volumeId = -1;
-            bool natural = true; // ttl or manual kill
+            int  volumeId{ -1 };
+            bool natural{ true }; // ttl or manual kill
         };
 
         struct SpawnDesc {
-            std::string archetype;  // e.g., "SparkAura" / "BeamSweep"
-            int         ownerId = -1;
-            int         ownerFacing = +1;
-            engine::Vec2 worldAnchor{ 0.f,0.f }; // initial anchor (will be updated by locator if attached)
+            std::string  archetype;              // "SparkAura", "BeamSweep", "InhaleField", ...
+            int          ownerId{ -1 };
+            int          ownerFacing{ +1 };
+            engine::Vec2 worldAnchor{ 0.f, 0.f };
+
+            // --- Optional overrides (position policy) ---
+            bool         overrideOffset{ false };
+            engine::Vec2 localOffset{};          // if overrideOffset==true, replaces cfg.localOffset
+
+            bool         overrideFollowFacing{ false };
+            bool         followFacing{ true };   // if overrideFollowFacing==true, replaces cfg.followFacing
         };
 
-        // The system calls this to ask: where is the owner now? what's its facing?
+        // System asks the world: where is the owner? what is its facing?
         using OwnerLocatorFn = std::function<bool ( int ownerId , engine::Vec2& outAnchor , int& outFacing )>;
 
     public:
@@ -68,7 +74,7 @@ namespace game {
 
         void Clear ( ) { Initialize ( ); }
 
-        int Spawn ( const SpawnDesc& s ); // returns volume id or -1
+        [[nodiscard]] int Spawn ( const SpawnDesc& s ); // returns volume id or -1
 
         void Step ( double fixedDt , const std::vector<Target>& targets );
 
@@ -81,41 +87,25 @@ namespace game {
             m_despawns.clear ( );
         }
 
-        void DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy ) const;
+        void DebugDraw ( engine::IDebugDraw& dbg , int ox , int oy ) const;
 
     private:
         struct Slot {
-            int id = -1;
+            int id{ -1 };
             std::unique_ptr<HitVolume> hv;
-            // cached params for fast sweep (Beam)
+            // cached params for swept capsule (Beam)
             engine::Vec2 prevA{} , prevB{};
             float prevR{ 0.f };
             bool  hasPrev{ false };
         };
 
-        // Geometry helpers
-        static bool Overlap_RectCircle ( const RECT& r , const engine::Vec2& c , float rad );
-        static bool Overlap_SegmentAABB ( const engine::Vec2& p0 , const engine::Vec2& p1 , const RECT& aabb );
-        static bool Overlap_RectCapsule ( const RECT& r , const engine::Vec2& p0 , const engine::Vec2& p1 , float radius );
-
-        // Build world-shape for this volume at current time
-        void BuildShape ( const HitVolume& hv , /*out*/ RECT& outBox ,
-                        /*out*/ engine::Vec2& segA , /*out*/ engine::Vec2& segB ,
-                        /*out*/ float& outRadius ) const;
-
-        inline void EmitCapture ( int volId , int ownerId , const Target& t , const HitVolume::Cfg& cfg ) {
-            HitEvent e{ t.id, volId, ownerId, cfg.payload, /*isCapture*/true, cfg.payload.gift };
-            if ( e.gift == Ability::None ) e.gift = t.abilityGift;
-            m_hits.push_back ( e );
-        }
-
     private:
-        std::vector<Slot> m_vols;
-        std::vector<HitEvent> m_hits;
+        std::vector<Slot>        m_vols;
+        std::vector<HitEvent>    m_hits;
         std::vector<DespawnEvent> m_despawns;
-        int m_nextId = 1;
+        int                      m_nextId{ 1 };
 
-        OwnerLocatorFn m_locateOwner;
+        OwnerLocatorFn           m_locateOwner;
     };
 
 } // namespace game

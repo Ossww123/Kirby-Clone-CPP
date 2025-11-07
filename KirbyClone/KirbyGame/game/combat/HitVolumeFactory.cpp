@@ -1,10 +1,18 @@
-﻿#include "game/HitVolumeFactory.h"
+﻿//
+// Responsibility: Registry implementation for HitVolume presets.
+// Non-Goals:      External synchronization; file I/O; editor tooling.
+// Call-Context:   Main thread only.
+//
+#include "game/combat/HitVolumeFactory.h"
+#include <unordered_map>
 
 namespace game {
-
-    std::unordered_map<std::string , HitVolume::Cfg>& HitVolumeFactory::Registry ( ) {
-        static std::unordered_map<std::string , HitVolume::Cfg> R;
-        return R;
+    namespace {
+        using RegistryMap = std::unordered_map<std::string , HitVolume::Cfg>;
+        RegistryMap& Registry ( ) {
+            static RegistryMap r;
+            return r;
+        }
     }
 
     void HitVolumeFactory::Register ( const std::string& id , const HitVolume::Cfg& cfg ) {
@@ -13,9 +21,9 @@ namespace game {
     }
 
     const HitVolume::Cfg* HitVolumeFactory::Find ( const std::string& id ) {
-        auto& R = Registry ( );
-        auto it = R.find ( id );
-        return ( it == R.end ( ) ) ? nullptr : &it->second;
+        auto& r = Registry ( );
+        auto it = r.find ( id );
+        return ( it == r.end ( ) ) ? nullptr : &it->second;
     }
 
     void HitVolumeFactory::RegisterDefaults ( ) {
@@ -35,7 +43,7 @@ namespace game {
             c.payload.knockback = { 80.f, -60.f };
             c.perTargetOnce = false;
             c.excludeOwner = true;
-            Register ( "SparkAura" , c );
+            HitVolumeFactory::Register ( "SparkAura" , c );
         }
 
         // Beam sweep: capsule sweeping from -40deg to +55deg over ~0.28s
@@ -48,33 +56,35 @@ namespace game {
             c.startDeg = -40.f;
             c.endDeg = +55.f;
             c.sweepDuration = 0.28f;
-            c.ttl = 0.30f;  // little margin beyond sweep
+            c.ttl = 0.30f;   // margin beyond sweep
             c.armTime = 0.04f;
             c.followFacing = true;
-            c.localOffset = { 10.f, -6.f }; // from player's hand, tweak later
+            // c.localOffset = { 10.f, -6.f }; // from player's hand (tweakable)
+            c.localOffset = { 0.f, 0.f };   // neutral; hand offset comes from SpawnDesc
             c.payload.effect = HitEffect::Damage;
             c.payload.damage = 2;
             c.payload.knockback = { 260.f, -90.f };
-            c.perTargetOnce = true; // single hit per swing
+            c.perTargetOnce = true;       // single hit per swing
             c.excludeOwner = true;
-            Register ( "BeamSweep" , c );
+            HitVolumeFactory::Register ( "BeamSweep" , c );
         }
 
-        // Inhale field: attached box at Kirby's mouth; capture-only; short-lived (재스폰 전제)
+        // Inhale field: short-lived attached box at Kirby's mouth; capture-only
         {
             HitVolume::Cfg c{};
             c.behavior = HitBehavior::Attached;
             c.shape = HitShape::Box;
             c.w = 48.f; c.h = 20.f;
-            c.ttl = 0.08f;      // 흡입 중 프레임마다 스폰해도 누적 안 됨
+            c.ttl = 0.08f;      // respawned every frame while inhaling
             c.armTime = 0.f;
             c.followFacing = true;
-            c.localOffset = { 18.f, -2.f }; // 입 위치(튜닝 지점)
+            // c.localOffset = { 18.f, -2.f }; // mouth position (tuning point)
+            c.localOffset = { 0.f, 0.f };   // neutral; mouth offset via SpawnDesc
             c.payload.effect = HitEffect::Capture;
-            c.payload.gift = Ability::None;  // 선물은 타깃 메타에서 결정
-            c.perTargetOnce = true;          // 한 번만 캡처
-            c.excludeOwner = true;          // 자가 히트 방지
-            Register ( "InhaleField" , c );
+            c.payload.gift = Ability::None; // gift chosen from target meta if None
+            c.perTargetOnce = true;
+            c.excludeOwner = true;
+            HitVolumeFactory::Register ( "InhaleField" , c );
         }
     }
 

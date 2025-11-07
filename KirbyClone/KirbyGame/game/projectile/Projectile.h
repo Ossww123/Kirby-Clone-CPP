@@ -1,16 +1,4 @@
 ﻿#pragma once
-//
-// Responsibility: Manage a single projectile instance (lifecycle, physics integration, TTL) and
-//                 apply world collision responses using engine::physics::CollisionSystem.
-// Non-Goals:      - Resource loading or sprite/animation selection
-//                 - Archetype/CSV registry (see ProjectileFactory)
-//                 - Spawn patterns (burst/spread/fan), pooling, multi-instance management
-//                 - Damage application to other entities (only stores optional payload)
-// Call-Context:   - Main thread / fixed update loop only
-//                 - No dynamic allocation in Update()/Render()
-//                 - CollisionSystem pointer is read-only and must outlive this object
-//
-
 #include <memory>
 #include <string>
 #include <cmath>

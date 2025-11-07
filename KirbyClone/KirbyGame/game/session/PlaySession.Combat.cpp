@@ -118,7 +118,7 @@ namespace game {
     void PlaySession::applyHitVolumeHits ( const std::vector<game::HitVolumeSystem::HitEvent>& hvHits ) {
         for ( const auto& ev : hvHits ) {
             const bool ownerIsPlayer = ( m_Player && ev.ownerId == m_Player->Id ( ) );
-            if ( ev.isCapture ) { // 빨아들이기 캡쳐
+            if ( ev.payload.effect == game::HitEffect::Capture ) { // 빨아들이기 캡쳐
                 if ( ownerIsPlayer ) {
                     for ( auto it = m_Monsters.begin ( ); it != m_Monsters.end ( ); ++it ) {
                         if ( *it && ( *it )->Id ( ) == ev.targetId ) {

@@ -29,7 +29,7 @@ namespace engine {
         // Queries
         virtual BackbufferSize GetBackbufferSize ( ) const = 0;
 
-        // Optional: expose D3D11 handles when available
+        // expose D3D11 handles when available
         // Default returns false (not provided by a backend).
         virtual bool GetD3D11Handles ( ID3D11Device** dev , ID3D11DeviceContext** ctx ) { return false; }
     };
