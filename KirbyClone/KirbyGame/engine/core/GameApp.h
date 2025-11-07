@@ -12,7 +12,7 @@ struct HWND__;
 using HWND = HWND__*;
 
 // Engine core
-#include "engine/core/RenderSystem.h"   // value member → 필요 헤더
+#include "engine/core/RenderSystem.h"
 
 namespace engine {
 

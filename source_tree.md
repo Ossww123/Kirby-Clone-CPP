@@ -57,8 +57,11 @@
   /entities
     /player
       Player.* — 플레이어 물리/애니/텍스처 핸들(헤더 IntRect·RGBA8만 노출, 로직은 FSM 담당)
-      PlayerFSM.h
-      PlayerFSM.cpp
+      PlayerFSM.h — 플레이어 FSM 선언(3트랙 상태/이벤트/튜닝 상수)
+      PlayerFSM.Core.cpp — FSM 코어(초기화/스텝/충돌적분/전이/스냅샷)
+      PlayerFSM.Action.cpp — 플레이어 액션 상태 로직(흡입/입가득/별뱉기/공기포/능력공격).
+      PlayerFSM.Move.cpp — 플레이어 이동 상태 로직(Idle/Walk/Run/Crouch/Slide/Jump/Fall/Inflated/Ladder).
+      PlayerFSM.Overlay.cpp — 플레이어 오버레이 상태 로직(피격/사망/문 입장/댄스/게임오버 및 상호작용).
     /monsters
       Monster.h - 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅, 헤더는 IntRect/RGBA8, 렌더디버그는 cpp)
       MonsterTypes.h — 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅)

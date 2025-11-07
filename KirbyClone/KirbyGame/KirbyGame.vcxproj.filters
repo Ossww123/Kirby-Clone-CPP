@@ -365,9 +365,6 @@
     <ClCompile Include="engine\render\D3D11SpriteBatch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\entities\player\PlayerFSM.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="game\entities\monsters\WaddleDee.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -465,6 +462,18 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\entities\monsters\Apple.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\entities\player\PlayerFSM.Core.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\entities\player\PlayerFSM.Move.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\entities\player\PlayerFSM.Action.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\entities\player\PlayerFSM.Overlay.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
