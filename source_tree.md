@@ -83,13 +83,12 @@
     HitVolumeGeom.* — 히트볼륨 월드 형상 빌더(박스/원/캡슐), 전투 도메인 전용
 
   /projectile
-    Projectile.h
-    ProjectileFactory.h
-    ProjectileFactory.cpp
-    ProjectileSystem.h
-    ProjectileSystem.cpp
+    Projectile.* — 투사체 객체 인터페이스(물리 바디·소유자·수명·페이로드 관리)
+    ProjectileFactory.* -— 투사체 아키타입 정의와 스폰 인터페이스. 레지스트리, CSV 로드, 인스턴스 생성
+    ProjectileSystem.* 투사체 업데이트·충돌 판정·히트 이벤트 발행 인터페이스
 
-  /debug
-    MonsterDebugDraw.* — 몬스터 디버그 드로우 어댑터(바운딩/HP 바)
-    HitVolumeDebugDraw.* — 히트 볼륨 디버그 드로우(엔진 인터페이스 의존)
+  /debugdraw
+    MonsterDebugDraw.* — 몬스터 디버그 드로우 어댑터
+    HitVolumeDebugDraw.* — 히트 볼륨 디버그 드로우 어댑터
+    ProjectileDebugDraw.* - 투사체 디버그 드로우 어댑터
 ```

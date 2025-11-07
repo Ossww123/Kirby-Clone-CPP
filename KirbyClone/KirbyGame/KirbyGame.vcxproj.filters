@@ -345,6 +345,9 @@
     <ClInclude Include="game\combat\HitVolumeGeom.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\debugdraw\ProjectileDebugDraw.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -495,6 +498,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\combat\HitVolumeGeom.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\projectile\Projectile.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\debugdraw\ProjectileDebugDraw.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

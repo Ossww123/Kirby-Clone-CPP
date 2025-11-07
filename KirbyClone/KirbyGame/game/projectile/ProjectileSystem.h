@@ -1,60 +1,53 @@
 ﻿#pragma once
-//
-// Responsibility: Manage multiple projectile instances end-to-end:
-//                 - Spawn from archetypes (via ProjectileFactory)
-//                 - Fixed-step update and world collision (delegates to each Projectile)
-//                 - Entity overlap tests and hit event emission
-//                 - Lifetime & cleanup
-// Non-Goals:      - Resource loading / rendering (only optional debug draw)
-//                 - Hit resolution on victims (we only emit events)
-//                 - Melee/Hitbox management (separate HitVolumeSystem later)
-// Call-Context:   - Main thread only; fixed update loop
-//                 - Avoid per-step heap churn if possible (reserve vectors); Create() may allocate
-//
+// Responsibility: Manage lifetime/update of projectiles and emit hit events against targets.
+// Non-Goals    : Rendering, pooling, or asset/animation concerns.
+// Call-Context : Stepped by the game session each fixed tick; targets provided by game layer.
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "game/Projectile.h"
-#include "game/ProjectileFactory.h"
-#include "engine/Collision.h"      // Overlap()
-#include "engine/Math.h"
-#include "game/CombatTarget.h"      // CombatTarget
+#include "engine/util/Types.h"         // engine::IntRect
+#include "engine/util/Math.h"          // engine::Vec2
+#include "game/combat/CombatTypes.h"   // ProjOwner
+#include "game/projectile/Projectile.h"// ProjPayload (event payload needs full type)
 
-namespace engine { class D3D11DebugDraw; }
+namespace engine { class IDebugDraw; }                // fwd (render)
+namespace engine::physics { class CollisionSystem; }      // fwd (world collision)
+namespace game { struct CombatTarget; }                   // fwd (target list)
+namespace game { class Projectile; class ProjectileFactory; } // fwd
 
 namespace game {
 
     class ProjectileSystem {
     public:
-        // One “victim candidate” the system can test against.
-        // Game layer가 각 프레임마다 대상 목록을 만들어 전달.
+        // One “victim candidate” the system can test against (provided by game layer per frame).
         using Target = CombatTarget;
 
         // Emitted when a projectile overlaps a valid target.
         struct HitEvent {
-            int          targetId = -1;
-            int          projectileId = -1; // system-local handle (unique per spawn)
-            ProjOwner    owner = ProjOwner::Player;
-            ProjPayload  payload{};         // damage/knockback
-            engine::Vec2 incomingDir{ 0,0 };  // projectile velocity at hit
-            RECT         projectileAabb{ 0,0,0,0 };
+            int                targetId = -1;
+            int                projectileId = -1;              // system-local handle (unique per spawn)
+            ProjOwner          owner = ProjOwner::Player;
+            ProjPayload        payload{};                        // damage/knockback
+            engine::Vec2       incomingDir{ 0, 0 };              // projectile velocity at hit
+            engine::IntRect    projectileAabb{ 0,0,0,0 };
         };
 
         // Optional: spawn convenience descriptor (archetype-driven)
         struct SpawnDesc {
-            std::string     archetype;      // e.g., "Star"
-            ProjOwner       owner = ProjOwner::Player;
-            engine::Vec2    pos{ 0,0 };
-            engine::Vec2    dirOrVel{ 1,0 };  // if not normalized, treated as raw velocity
-            bool            treatAsDirection = true; // true: dir * speed, false: use as velocity
+            std::string  archetype;                 // e.g., "Star"
+            ProjOwner    owner = ProjOwner::Player;
+            engine::Vec2 pos{ 0, 0 };
+            engine::Vec2 dirOrVel{ 1, 0 };          // if not normalized, treated as raw velocity
+            bool         treatAsDirection = true;   // true: dir * speed, false: use as velocity
         };
 
     public:
         ProjectileSystem ( ) = default;
 
-        void Initialize ( const RECT& world , const engine::physics::CollisionSystem* col ) {
+        void Initialize ( const engine::IntRect& world ,
+                          const engine::physics::CollisionSystem* col ) {
             m_world = world;
             m_col = col;
             m_slots.clear ( );
@@ -70,7 +63,7 @@ namespace game {
         }
 
         // Spawn from archetype (via ProjectileFactory). Returns a system-local projectile id; -1 on failure.
-        int Spawn ( const SpawnDesc& s );
+        int  Spawn ( const SpawnDesc& s );
 
         // Fixed-step tick: updates all projectiles and performs entity overlap tests.
         void Step ( double fixedDt , const std::vector<Target>& targets );
@@ -82,7 +75,7 @@ namespace game {
         }
 
         // Optional debug draw: draw projectile AABBs
-        void DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy ) const;
+        void DebugDraw ( engine::IDebugDraw& dbg , int ox , int oy ) const;
 
         // Stats / queries
         int  ActiveCount ( ) const { return static_cast< int >( m_slots.size ( ) ); }
@@ -96,11 +89,11 @@ namespace game {
         // Helpers
         static bool TeamAllowsHit ( ProjOwner owner , bool targetIsPlayer ) {
             if ( owner == ProjOwner::Player ) return !targetIsPlayer; // player shots hit enemies
-            return  targetIsPlayer;                                  // enemy shots hit player
+            return  targetIsPlayer;                                   // enemy shots hit player
         }
 
     private:
-        RECT m_world{ 0,0,0,0 };
+        engine::IntRect m_world{ 0,0,0,0 };
         const engine::physics::CollisionSystem* m_col = nullptr;
 
         std::vector<Slot>     m_slots;

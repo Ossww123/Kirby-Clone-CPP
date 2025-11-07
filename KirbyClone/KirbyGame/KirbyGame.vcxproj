@@ -196,6 +196,7 @@
     <ClInclude Include="game\Damage.h" />
     <ClInclude Include="game\data\AnimCSV.h" />
     <ClInclude Include="game\debugdraw\HitVolumeDebugDraw.h" />
+    <ClInclude Include="game\debugdraw\ProjectileDebugDraw.h" />
     <ClInclude Include="game\entities\monsters\Apple.h" />
     <ClInclude Include="game\combat\CombatTarget.h" />
     <ClInclude Include="game\combat\CombatTypes.h" />
@@ -272,6 +273,7 @@
     <ClCompile Include="game\combat\HitVolumeFactory.cpp" />
     <ClCompile Include="game\combat\HitVolumeSystem.cpp" />
     <ClCompile Include="game\debugdraw\HitVolumeDebugDraw.cpp" />
+    <ClCompile Include="game\debugdraw\ProjectileDebugDraw.cpp" />
     <ClCompile Include="game\entities\monsters\Apple.cpp" />
     <ClCompile Include="game\entities\monsters\Monster.cpp" />
     <ClCompile Include="game\debugdraw\MonsterDebugDraw.cpp" />
@@ -281,6 +283,7 @@
     <ClCompile Include="game\entities\player\PlayerFSM.Core.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.Move.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.Overlay.cpp" />
+    <ClCompile Include="game\projectile\Projectile.cpp" />
     <ClCompile Include="game\session\PlaySession.Combat.cpp" />
     <ClCompile Include="game\session\PlaySession.Core.cpp" />
     <ClCompile Include="game\session\PlaySession.Door.cpp" />

@@ -1,8 +1,23 @@
-﻿#include "game/ProjectileSystem.h"
-#include "engine/D3D11DebugDraw.h"
+﻿// Responsibility: Implementation of projectile update, hit detection and debug draw.
+// Non-Goals    : Rendering sprites or audio; pooling.
+// Call-Context : Used by PlaySession fixed-step.
+
+#include "game/projectile/ProjectileSystem.h"
+#include "game/projectile/ProjectileFactory.h"
+#include "game/debugdraw/ProjectileDebugDraw.h"
+#include "engine/render/IDebugDraw.h"
 #include "engine/platform/win32/ColorUtil.h"
+#include "engine/core/Input.h"
+#include "game/combat/CombatTarget.h"   // target fields for Step()
+
+#include <algorithm>
 
 namespace game {
+
+    // local AABB overlap for IntRect
+    static inline bool OverlapIR ( const engine::IntRect& a , const engine::IntRect& b ) noexcept {
+        return !( a.r <= b.l || a.l >= b.r || a.b <= b.t || a.t >= b.b );
+    }
 
     int ProjectileSystem::Spawn ( const SpawnDesc& s ) {
         auto p = ProjectileFactory::Create ( s.archetype , m_world , m_col , s.owner );
@@ -12,7 +27,7 @@ namespace game {
         if ( s.treatAsDirection ) {
             // dirOrVel is direction; scale by archetype speed
             const float spd = p->GetCfg ( ).speed;
-            vel = { s.dirOrVel.x * spd, s.dirOrVel.y * spd };
+            vel = { s.dirOrVel.x * spd , s.dirOrVel.y * spd };
         }
 
         p->Fire ( s.pos , vel );
@@ -26,10 +41,11 @@ namespace game {
     }
 
     void ProjectileSystem::Step ( double fixedDt , const std::vector<Target>& targets ) {
+        static engine::Input kNullInput{};
+
         // 1) Update
         for ( auto& s : m_slots ) {
-            s.pr->Update ( fixedDt , /*input*/ *( engine::Input* )nullptr ); // Projectile ignores Input
-            // NOTE: 위 캐스트는 Update 시그니처 요구 충족용. 내부에서 Input 사용 안 함.
+            s.pr->Update ( fixedDt , kNullInput ); // ← 캐스트 제거, 참조 안전
         }
 
         // 2) Entity overlap hits
@@ -38,13 +54,13 @@ namespace game {
             if ( !pr.Alive ( ) ) continue;
 
             int x , y , w , h; pr.GetBounds ( x , y , w , h );
-            RECT prBox{ x,y,x + w,y + h };
+            engine::IntRect prBox{ x , y , x + w , y + h };
 
             for ( const auto& t : targets ) {
                 if ( !t.alive ) continue;
                 if ( !TeamAllowsHit ( pr.Owner ( ) , t.isPlayer ) ) continue;
 
-                if ( engine::physics::Overlap ( prBox , t.aabb ) ) {
+                if ( OverlapIR ( prBox , t.aabb ) ) {
                     // Emit event; Game layer applies damage/knockback
                     HitEvent ev;
                     ev.targetId = t.id;
@@ -69,11 +85,10 @@ namespace game {
             m_slots.end ( ) );
     }
 
-    void ProjectileSystem::DebugDraw ( engine::D3D11DebugDraw& dbg , int ox , int oy ) const {
+    void ProjectileSystem::DebugDraw ( engine::IDebugDraw & dbg , int ox , int oy ) const {
         for ( const auto& s : m_slots ) {
             if ( !s.pr || !s.pr->Alive ( ) ) continue;
-            int x , y , w , h; s.pr->GetBounds ( x , y , w , h );
-            dbg.WorldRect ( x , y , w , h , ox , oy , engine::win32::RGBA8 ( 255 , 230 , 0 ) );
+            ProjectileDebugDraw::Draw ( *s.pr , &dbg , ox , oy );
         }
     }
 

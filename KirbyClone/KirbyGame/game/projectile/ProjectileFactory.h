@@ -1,21 +1,18 @@
 ﻿#pragma once
-//
-// Responsibility: Data-driven projectile archetype registry and instance creation.
-//                 - Keep a map<string, ProjDef> of projectile presets (CSV/JSON or code-registered)
-//                 - Map ProjDef -> Projectile::Cfg and construct a single Projectile instance
-// Non-Goals:      - Runtime update/render of multiple projectiles (use ProjectileSystem or caller)
-//                 - Spawn patterns (burst/spread/fan), pooling, resource loading
-//                 - Direct sprite/animation handling (store only keys if needed)
-// Call-Context:   - Main thread only
-//                 - No dynamic allocation inside tight per-frame loops except Create() by design
-//
+// Responsibility: Define projectile archetypes and create Projectile instances by id.
+// Non-Goals    : Rendering, pooling, or asset loading.
+// Call-Context : Gameplay systems register/lookup archetypes and spawn projectiles.
 
 #include <memory>
 #include <string>
 #include <unordered_map>
 
-#include "game/Projectile.h"
-#include "engine/Collision.h"
+#include "engine/util/Types.h"      // engine::IntRect
+#include "engine/util/Math.h"       // engine::Vec2
+#include "game/combat/CombatTypes.h"// game::ProjOwner (fixed underlying type)
+
+namespace engine::physics { class CollisionSystem; } // fwd
+namespace game { class Projectile; }                  // fwd
 
 namespace game {
 
@@ -43,7 +40,7 @@ namespace game {
         int   damage = 1;
         engine::Vec2 knockback{ 0.f, 0.f };
 
-        // Visual keys (optional; kept as IDs only, real loading is outside)
+        // Visual keys (optional; ids only)
         // std::string spriteSheetId;
         // std::string animClipName;
     };
@@ -60,7 +57,7 @@ namespace game {
         // Create a single projectile instance from an archetype id
         static std::unique_ptr<Projectile> Create (
             const std::string& id ,
-            const RECT& worldRect ,
+            const engine::IntRect& worldRect ,
             const engine::physics::CollisionSystem* col ,
             ProjOwner owner
         );

@@ -1,4 +1,10 @@
-﻿#include "game/ProjectileFactory.h"
+﻿// Responsibility: Implement registry, CSV load, and instance creation.
+// Non-Goals    : Asset management or rendering.
+// Call-Context : Linked with gameplay module.
+
+#include "game/projectile/ProjectileFactory.h"
+#include "game/projectile/Projectile.h"     // ctor + payload
+#include "engine/physics/Collision.h"       // engine::physics::CollisionSystem
 
 #include <fstream>
 #include <sstream>
@@ -8,7 +14,7 @@
 
 namespace game {
 
-    // ---------- internal helpers ----------
+    // ---------- internal helpers (kept as-is) ----------
     namespace {
         inline void ltrim ( std::string& s ) {
             s.erase ( s.begin ( ) , std::find_if ( s.begin ( ) , s.end ( ) ,
@@ -91,8 +97,7 @@ namespace game {
         inline T getOr ( const std::vector<std::string>& row , int idx , T def ) {
             if ( idx < 0 || idx >= ( int ) row.size ( ) || row[ idx ].empty ( ) ) return def;
             std::istringstream is ( row[ idx ] );
-            T v{};
-            is >> v;
+            T v{}; is >> v;
             if ( !is.fail ( ) ) return v;
             return def;
         }
@@ -147,7 +152,7 @@ namespace game {
     // ---------- creation ----------
     std::unique_ptr<Projectile> ProjectileFactory::Create (
         const std::string& id ,
-        const RECT& worldRect ,
+        const engine::IntRect& worldRect ,
         const engine::physics::CollisionSystem* col ,
         ProjOwner owner )
     {
@@ -189,9 +194,10 @@ namespace game {
         if ( !fs.is_open ( ) ) return false;
 
         std::string line;
+
+        // header (allow comments)
         if ( !std::getline ( fs , line ) ) return false;
         if ( startsWithHash ( line ) ) {
-            // Skip comment header; find the actual header line
             bool gotHeader = false;
             while ( std::getline ( fs , line ) ) {
                 if ( startsWithHash ( line ) ) continue;
@@ -201,16 +207,12 @@ namespace game {
             if ( !gotHeader ) return false;
         }
 
-        // Parse header
         auto headerCols = splitCSVLine ( line );
         for ( auto& c : headerCols ) trim ( c );
         HeaderIndex hi = buildHeaderIndex ( headerCols );
-        if ( hi.id < 0 ) {
-            // We require at least 'id' column.
-            return false;
-        }
+        if ( hi.id < 0 ) return false; // must have id
 
-        // Rows
+        // rows
         while ( std::getline ( fs , line ) ) {
             if ( line.empty ( ) || startsWithHash ( line ) ) continue;
 
@@ -221,24 +223,24 @@ namespace game {
             trim ( id );
             if ( id.empty ( ) ) continue;
 
-            ProjDef d; // start from defaults
+            ProjDef d;
 
-            if ( hi.width >= 0 )         d.width = getOr<float> ( cols , hi.width , d.width );
-            if ( hi.height >= 0 )        d.height = getOr<float> ( cols , hi.height , d.height );
-            if ( hi.speed >= 0 )         d.speed = getOr<float> ( cols , hi.speed , d.speed );
-            if ( hi.ttl >= 0 )           d.ttl = getOr<float> ( cols , hi.ttl , d.ttl );
+            if ( hi.width >= 0 ) d.width = getOr<float> ( cols , hi.width , d.width );
+            if ( hi.height >= 0 ) d.height = getOr<float> ( cols , hi.height , d.height );
+            if ( hi.speed >= 0 ) d.speed = getOr<float> ( cols , hi.speed , d.speed );
+            if ( hi.ttl >= 0 ) d.ttl = getOr<float> ( cols , hi.ttl , d.ttl );
 
-            if ( hi.gravity >= 0 )       d.gravity = getOr<float> ( cols , hi.gravity , d.gravity );
-            if ( hi.frictionAir >= 0 )   d.frictionAir = getOr<float> ( cols , hi.frictionAir , d.frictionAir );
-            if ( hi.frictionGround >= 0 )d.frictionGround = getOr<float> ( cols , hi.frictionGround , d.frictionGround );
-            if ( hi.termVel >= 0 )       d.termVel = getOr<float> ( cols , hi.termVel , d.termVel );
+            if ( hi.gravity >= 0 ) d.gravity = getOr<float> ( cols , hi.gravity , d.gravity );
+            if ( hi.frictionAir >= 0 ) d.frictionAir = getOr<float> ( cols , hi.frictionAir , d.frictionAir );
+            if ( hi.frictionGround >= 0 ) d.frictionGround = getOr<float> ( cols , hi.frictionGround , d.frictionGround );
+            if ( hi.termVel >= 0 ) d.termVel = getOr<float> ( cols , hi.termVel , d.termVel );
 
             if ( hi.dieOnAnyWorldHit >= 0 ) d.dieOnAnyWorldHit = getOrBool ( cols , hi.dieOnAnyWorldHit , d.dieOnAnyWorldHit );
-            if ( hi.ignoreOneWay >= 0 )     d.ignoreOneWay = getOrBool ( cols , hi.ignoreOneWay , d.ignoreOneWay );
+            if ( hi.ignoreOneWay >= 0 ) d.ignoreOneWay = getOrBool ( cols , hi.ignoreOneWay , d.ignoreOneWay );
 
-            if ( hi.damage >= 0 )        d.damage = getOr<int> ( cols , hi.damage , d.damage );
-            if ( hi.knockbackX >= 0 )    d.knockback.x = getOr<float> ( cols , hi.knockbackX , d.knockback.x );
-            if ( hi.knockbackY >= 0 )    d.knockback.y = getOr<float> ( cols , hi.knockbackY , d.knockback.y );
+            if ( hi.damage >= 0 ) d.damage = getOr<int> ( cols , hi.damage , d.damage );
+            if ( hi.knockbackX >= 0 ) d.knockback.x = getOr<float> ( cols , hi.knockbackX , d.knockback.x );
+            if ( hi.knockbackY >= 0 ) d.knockback.y = getOr<float> ( cols , hi.knockbackY , d.knockback.y );
 
             Register ( id , d );
         }
