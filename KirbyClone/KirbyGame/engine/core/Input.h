@@ -38,7 +38,7 @@ namespace engine {
         void BeginFrame ( );
 
         // optional Win32 hook (wheel/focus)
-        LRESULT OnWndMessage ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam );
+        std::intptr_t OnWndMessage ( HWND hWnd , unsigned msg , std::uintptr_t wParam , std::intptr_t lParam );
         void    OnFocusLost ( );
 
         // key query

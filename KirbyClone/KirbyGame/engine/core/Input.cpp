@@ -1,4 +1,5 @@
 ﻿#include "engine/core/Input.h"
+#include <windows.h>
 
 namespace engine {
 
@@ -35,16 +36,20 @@ namespace engine {
         }
     }
 
-    LRESULT Input::OnWndMessage ( HWND , UINT msg , WPARAM wParam , LPARAM )
+    std::intptr_t Input::OnWndMessage ( HWND /*hWnd*/ , unsigned msg , std::uintptr_t wParam , std::intptr_t /*lParam*/ )
     {
         switch ( msg ) {
-        case WM_MOUSEWHEEL:
-            m_wheelAccum += GET_WHEEL_DELTA_WPARAM ( wParam ) / WHEEL_DELTA; // +/-1 notches
+        case WM_MOUSEWHEEL: {
+            // GET_WHEEL_DELTA_WPARAM 은 WPARAM 필요 → 캐스팅해서 사용
+            const int notches = GET_WHEEL_DELTA_WPARAM ( static_cast< WPARAM >( wParam ) ) / WHEEL_DELTA; // +/-1
+            m_wheelAccum += notches;
             return 0;
-        case WM_ACTIVATE:
-            if ( LOWORD ( wParam ) == WA_INACTIVE )
+        }
+        case WM_ACTIVATE: {
+            if ( LOWORD ( static_cast< WPARAM >( wParam ) ) == WA_INACTIVE )
                 OnFocusLost ( );
             return 0;
+        }
         default:
             break;
         }

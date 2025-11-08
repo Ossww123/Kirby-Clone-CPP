@@ -6,6 +6,7 @@
 //
 
 #include <memory>
+#include <cstdint>
 
 // Win32 HWND forward decl to keep header light
 struct HWND__;
@@ -17,6 +18,10 @@ using HWND = HWND__*;
 namespace engine {
 
     // fwd (pointers only in this header)
+    class Time;
+    class Input;
+    class Scene;
+
     class IRenderer;
     class D3D11SpriteBatch;
     class D3D11DebugDraw;
@@ -33,7 +38,11 @@ namespace engine {
         ~GameApp ( );
 
         void Init ( HWND hWnd );
-        LRESULT OnWndMessage ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam );
+        std::intptr_t OnWndMessage ( HWND hWnd ,
+                                    unsigned msg ,
+                                    std::uintptr_t wParam ,
+                                    std::intptr_t lParam );
+
         void OnResize ( int w , int h );
         bool DoOneFrame ( );
 
@@ -48,9 +57,9 @@ namespace engine {
     private:
         // Window/Core
         HWND   m_hWnd{};
-        class Time   m_Time {};
-        class Input  m_Input {};
-        class Scene  m_Scene {};
+        std::unique_ptr<Time>  m_Time;
+        std::unique_ptr<Input> m_Input;
+        std::unique_ptr<Scene> m_Scene;
 
         // Rendering
         std::unique_ptr<IRenderer>        m_Renderer;  // e.g., D3D11Renderer

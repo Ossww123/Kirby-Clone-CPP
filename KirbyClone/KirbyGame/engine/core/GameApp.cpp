@@ -40,8 +40,12 @@ namespace engine {
     void GameApp::Init ( HWND hWnd )
     {
         m_hWnd = hWnd;
-        m_Time.Init ( );
-        m_Input.Init ( hWnd );
+        // pointer-based ownership
+        m_Time = std::make_unique<Time> ( );
+        m_Time->Init ( );
+        m_Input = std::make_unique<Input> ( );
+        m_Input->Init ( hWnd );
+        m_Scene = std::make_unique<Scene> ( );
         InitBindings ( );
 
         // window size
@@ -61,13 +65,13 @@ namespace engine {
         m_Session = std::make_unique<game::PlaySession> ( );
         auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
         ( void ) d3d; // may be unused in release
-        m_Session->Initialize ( { m_Renderer.get ( ), m_Batch.get ( ), m_Debug.get ( ), m_TextHUD.get ( ), &m_Scene, engine::win32::FromRECT(rc) } );
+        m_Session->Initialize ( { m_Renderer.get ( ), m_Batch.get ( ), m_Debug.get ( ), m_TextHUD.get ( ), m_Scene.get ( ), engine::win32::FromRECT ( rc ) } );
         m_Session->LoadStage ( "assets/stages/stage01/stage.json" );
     }
 
-    LRESULT GameApp::OnWndMessage ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam )
+    std::intptr_t GameApp::OnWndMessage ( HWND hWnd , unsigned msg , std::uintptr_t wParam , std::intptr_t lParam )
     {
-        return m_Input.OnWndMessage ( hWnd , msg , wParam , lParam );
+        return m_Input ? m_Input->OnWndMessage ( hWnd , msg , wParam , lParam ) : 0;
     }
 
     void GameApp::OnResize ( int w , int h )
@@ -90,22 +94,22 @@ namespace engine {
 
     bool GameApp::DoOneFrame ( )
     {
-        m_Time.TickFrame ( );
-        m_Input.BeginFrame ( );
+        m_Time->TickFrame ( );
+        m_Input->BeginFrame ( );
 
-        if ( m_Input.ActionPressed ( "Quit" ) || m_Input.Pressed ( VK_ESCAPE ) ) {
+        if ( m_Input->ActionPressed ( "Quit" ) || m_Input->Pressed ( VK_ESCAPE ) ) {
             ::PostQuitMessage ( 0 );
             return false;
         }
-        if ( m_Input.ActionPressed ( "ToggleDebug" ) ) m_debugDrawEnabled = !m_debugDrawEnabled;
-        if ( m_Input.ActionPressed ( "Reload" ) && m_Session ) {
+        if ( m_Input->ActionPressed ( "ToggleDebug" ) ) m_debugDrawEnabled = !m_debugDrawEnabled;
+        if ( m_Input->ActionPressed ( "Reload" ) && m_Session ) {
             m_Session->ReloadStage ( );
         }
 
-        m_Time.CapAccumulator ( 5 );
-        while ( m_Time.ShouldFixedUpdate ( ) ) {
-            FixedUpdate ( m_Time.FixedDelta ( ) );
-            m_Time.ConsumeFixedStep ( );
+        m_Time->CapAccumulator ( 5 );
+        while ( m_Time->ShouldFixedUpdate ( ) ) {
+            FixedUpdate ( m_Time->FixedDelta ( ) );
+            m_Time->ConsumeFixedStep ( );
         }
 
         RenderFrame ( );
@@ -115,23 +119,23 @@ namespace engine {
     void GameApp::InitBindings ( )
     {
         // Actions
-        m_Input.BindAction ( "Quit" , VK_F10 );
-        m_Input.BindAction ( "Jump" , 'Z' );
-        m_Input.BindAction ( "Attack" , 'X' );
-        m_Input.BindAction ( "Interact" , VK_UP );
-        m_Input.BindAction ( "ToggleDebug" , VK_F1 );
-        m_Input.BindAction ( "Reload" , VK_F5 );
+        m_Input->BindAction ( "Quit" , VK_F10 );
+        m_Input->BindAction ( "Jump" , 'Z' );
+        m_Input->BindAction ( "Attack" , 'X' );
+        m_Input->BindAction ( "Interact" , VK_UP );
+        m_Input->BindAction ( "ToggleDebug" , VK_F1 );
+        m_Input->BindAction ( "Reload" , VK_F5 );
 
         // Axes
-        m_Input.BindAxis ( "MoveX" , { .positiveVK = VK_RIGHT, .negativeVK = VK_LEFT, .scale = 1.f } );
-        m_Input.BindAxis ( "MoveX" , { .positiveVK = 'D',      .negativeVK = 'A',     .scale = 1.f } );
-        m_Input.BindAxis ( "MoveY" , { .positiveVK = VK_UP,    .negativeVK = VK_DOWN, .scale = 1.f } );
-        m_Input.BindAxis ( "MoveY" , { .positiveVK = 'W',      .negativeVK = 'S',     .scale = 1.f } );
+        m_Input->BindAxis ( "MoveX" , { .positiveVK = VK_RIGHT, .negativeVK = VK_LEFT, .scale = 1.f } );
+        m_Input->BindAxis ( "MoveX" , { .positiveVK = 'D',      .negativeVK = 'A',     .scale = 1.f } );
+        m_Input->BindAxis ( "MoveY" , { .positiveVK = VK_UP,    .negativeVK = VK_DOWN, .scale = 1.f } );
+        m_Input->BindAxis ( "MoveY" , { .positiveVK = 'W',      .negativeVK = 'S',     .scale = 1.f } );
     }
 
     void GameApp::FixedUpdate ( double fixedDt )
     {
-        if ( m_Session ) m_Session->FixedUpdate ( fixedDt , m_Input );
+        if ( m_Session ) m_Session->FixedUpdate ( fixedDt , *m_Input );
     }
 
     void GameApp::RenderFrame ( )
@@ -155,7 +159,7 @@ namespace engine {
 
         if ( m_Session ) {
             m_Session->RenderDebugGridAndColliders ( ox , oy , sw , sh , m_debugDrawEnabled );
-            m_Session->RenderHUD ( m_Time.FPS ( ) , m_Time.FixedDelta ( ) );
+            m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) );
         }
 
         // frame end

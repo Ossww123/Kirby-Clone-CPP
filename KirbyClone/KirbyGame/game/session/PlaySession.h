@@ -1,31 +1,41 @@
 ﻿#pragma once
+//
+// Responsibility: Run-time game session that orchestrates world/camera, player FSM, combat, monsters, and debug/HUD rendering.
+// Non-Goals    : Asset loading policy, renderer creation, or editor/runtime switching.
+// Call-Context : Owned by GameApp; initialized once per stage, ticked on fixed update and rendered between Begin/EndFrame.
+//
+
 #include <memory>
 #include <vector>
 #include <string>
 
-#include "engine/IRenderer.h"
-#include "engine/D3D11SpriteBatch.h"
-#include "engine/D3D11DebugDraw.h"
-#include "engine/DWriteText.h"
-#include "engine/WorldSystem.h"
-#include "engine/Camera.h"
-#include "engine/Scene.h"
-#include "engine/Texture.h"
-#include "engine/Collision.h"
-#include "engine/util/Types.h"
+// === Forward decls to keep header light ===
+namespace engine {
+    class IRenderer;
+    class D3D11SpriteBatch;
+    class D3D11DebugDraw;
+    class DWriteTextHUD;
+    class Scene;
+    class Input;
+    struct Tex2D;
+}
 
-#include "game/Player.h"
-#include "game/PlayerFSM.h"
-#include "game/StageDesc.h"
-#include "game/StageCSV.h"
+namespace game {
+    class Player;
+    class Monster;
+    struct PlayerEvent;
+}
 
-// Combat / Monster
-#include "game/ProjectileSystem.h"
-#include "game/ProjectileFactory.h"
-#include "game/HitVolumeSystem.h"
-#include "game/HitVolumeFactory.h"
-#include "game/Monster.h"
-#include "game/MonsterFactory.h"
+// === Required full defs (by-value members) ===
+#include "engine/world/WorldSystem.h"
+#include "engine/world/Camera.h"
+#include "engine/render/Texture.h"
+#include "engine/util/Types.h"                 // engine::IntRect
+#include "game/entities/player/PlayerFSM.h"    // PlayerFSM is a by-value member
+#include "game/projectile/ProjectileSystem.h"  // by-value member
+#include "game/combat/HitVolumeSystem.h"       // by-value member
+#include "game/entities/monsters/MonsterTypes.h"
+#include "game/data/StageCSV.h" // DoorCSV
 
 namespace game {
 
@@ -37,66 +47,66 @@ namespace game {
             engine::D3D11DebugDraw* debug = nullptr;
             engine::DWriteTextHUD* textHUD = nullptr;
             engine::Scene* scene = nullptr;   // to spawn Player
-            engine::IntRect                      rcClient{};           // initial client rect
+            engine::IntRect           rcClient{};          // initial client rect
         };
 
         ~PlaySession ( );
 
-        // 1) 수명/초기화
+        // 1) Lifetime / init
         void Initialize ( const CreateDesc& d );
         void OnResize ( int sw , int sh );
 
-        // 2) 스테이지 로드(월드/배경/플레이어 위치/카메라 경계)
+        // 2) Stage load (world/bg/player start/camera bounds)
         bool LoadStage ( const char* jsonPath );
         bool ReloadStage ( ) { return LoadStage ( m_stageJsonPath.c_str ( ) ); }
 
-        // 3) (후속 단계에서 확장) 고정 업데이트/전투/도어/페이드
-        void FixedUpdate ( double fixedDt , const engine::Input& input ); // FSM/전투/몬스터/카메라
+        // 3) Fixed update (FSM/combat/monsters/camera)
+        void FixedUpdate ( double fixedDt , const engine::Input& input );
 
-        // 4) 렌더 (GameApp Begin/EndFrame 사이에서 호출)
+        // 4) Render (called between GameApp Begin/EndFrame)
         void RenderParallaxBG ( int ox , int oy , int sw , int sh );
         void RenderWorld ( int ox , int oy , int sw , int sh );
         void RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh , bool drawEnabled );
         void RenderHUD ( int fps , double fixedDt );
-        void RenderOverlayFade ( int sw , int sh ); // (후속 단계) 페이드 이동 예정
+        void RenderOverlayFade ( int sw , int sh ); // (later) fade may move out
 
-        // 5) 카메라/월드 헬퍼
-        std::pair<int , int>    CameraOffsetInt ( ) const { return m_Cam.OffsetInt ( ); }
-        engine::Camera&         Camera ( )                { return m_Cam; }
-        const engine::WorldSystem&  World ( )       const { return m_World; }
-        engine::WorldSystem&        World ( )             { return m_World; }
-        engine::IntRect WorldRectPx ( )             const { return m_World.WorldRectPx ( ); }
-        int PlayerFacing ( )                        const { return m_PlayerFSM.Facing ( ); }
+        // 5) Camera/world helpers
+        std::pair<int , int>         CameraOffsetInt ( ) const { return m_Cam.OffsetInt ( ); }
+        engine::Camera& Camera ( ) { return m_Cam; }
+        const engine::WorldSystem& World ( )          const { return m_World; }
+        engine::WorldSystem& World ( ) { return m_World; }
+        engine::IntRect            WorldRectPx ( )     const { return m_World.WorldRectPx ( ); }
+        int                        PlayerFacing ( )     const { return m_PlayerFSM.Facing ( ); }
 
-        // (임시) 플레이어 핸들
+        // (temp) player handle
         game::Player* Player ( ) const { return m_Player; }
 
-        // (임시) GameApp이 필요하면 플레이어 이벤트를 외부로 전달할 수도 있음
-        void DrainPlayerEvents ( std::vector<game::PlayerEvent>&out );
+        // (temp) expose player events to GameApp if needed
+        void DrainPlayerEvents ( std::vector<game::PlayerEvent>& out );
 
         // --- Fade API ---
         void StartFadeIn ( float seconds , uint32_t rgb = 0xFFFFFFu );
         void StartFadeOut ( float seconds , uint32_t rgb = 0xFFFFFFu );
         bool IsFading ( ) const { return m_fade.mode != Fade::None; }
-        
-        // ---- Door / Transition API ----
-        void StartTransitionTo ( const std::string & target , float fadeOutSec = 0.25f , float fadeInSec = 0.20f );
 
+        // ---- Door / Transition API ----
+        void StartTransitionTo ( const std::string& target ,
+                                 float fadeOutSec = 0.25f , float fadeInSec = 0.20f );
 
     private:
-        // 내부 유틸
-        void initPlayerAndCamera ( const RECT& rcClient );
+        // Internals
+        void initPlayerAndCamera ( const engine::IntRect& rcClient );
         void updateCameraBoundsForWorld ( int sw , int sh );
         void registerDefaultFactories ( );
         void initCombatSystems ( );
         void updateMonsters ( double fixedDt , const engine::Input& input );
         void handlePlayerEvents ( const std::vector<game::PlayerEvent>& evs );
         void buildTargets ( std::vector<game::ProjectileSystem::Target>& projT ,
-                          std::vector<game::HitVolumeSystem::Target>& hvT );
+                                             std::vector<game::HitVolumeSystem::Target>& hvT );
         void applyProjectileHits ( const std::vector<game::ProjectileSystem::HitEvent>& phits );
         void applyHitVolumeHits ( const std::vector<game::HitVolumeSystem::HitEvent>& hvHits );
         void flushPendingSpawns ( );
-        bool checkDoorInteract ( ); // Player AABB와 문 AABB 오버랩 감지
+        bool checkDoorInteract ( ); // Player AABB vs Door AABB overlap
         void updateTransition ( double fixedDt );
 
         // --- Boss Arena / Camera Lock ---
@@ -104,47 +114,47 @@ namespace game {
         bool isBossAlive ( ) const;
 
     private:
-        // 외부 제공 핸들(비소유)
+        // Provided handles (non-owning)
         engine::IRenderer* m_Renderer = nullptr;
         engine::D3D11SpriteBatch* m_Batch = nullptr;
         engine::D3D11DebugDraw* m_Debug = nullptr;
         engine::DWriteTextHUD* m_TextHUD = nullptr;
         engine::Scene* m_Scene = nullptr;
 
-        // 런타임 상태(세션 소유)
+        // Session-owned runtime
         engine::WorldSystem m_World;
         engine::Camera      m_Cam;
 
         game::Player* m_Player = nullptr;
-        game::PlayerFSM     m_PlayerFSM;
-        game::PlayerFSM::Cfg m_playerFsmCfg{ .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
+        game::PlayerFSM        m_PlayerFSM;
+        game::PlayerFSM::Cfg   m_playerFsmCfg{ .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
 
-        // 리소스
+        // Resources
         engine::Tex2D m_PlayerTex{};
         engine::Tex2D m_EnemiesTex{};
         engine::Tex2D m_WhiteTex{};
         engine::Tex2D m_BgTex{};
 
-        // 옵션
+        // Options
         std::string m_stageJsonPath{ "assets/stages/stage01/stage.json" };
 
-        // ---- 전투/몬스터 런타임 ----
+        // ---- Combat / monsters ----
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
-        std::vector<game::SpawnSpec> m_pendingMonsterSpawns;
-        game::ProjectileSystem m_projSys;
-        game::HitVolumeSystem  m_hitSys;
-        std::vector<game::PlayerEvent> m_pendingPlayerEvents;
+        std::vector<game::SpawnSpec>                m_pendingMonsterSpawns;
+        game::ProjectileSystem                      m_projSys;
+        game::HitVolumeSystem                       m_hitSys;
+        std::vector<game::PlayerEvent>              m_pendingPlayerEvents;
 
         // --- Fade Effect ---
         struct Fade {
             enum Mode { None , In , Out } mode = None;
-            float t = 0.f;       // 진행 시간
-            float dur = 0.f;     // 총 길이
-            uint32_t rgb = 0xFFFFFFu; // 색상(밝은 흰색 기본)
+            float    t = 0.f;           // elapsed
+            float    dur = 0.f;           // total duration
+            uint32_t rgb = 0xFFFFFFu;     // color (white default)
         } m_fade;
 
         // ---- Door / Transition ----
-        std::vector<game::DoorCSV> m_Doors; // StageCSV 포맷 그대로 사용
+        std::vector<game::DoorCSV> m_Doors; // StageCSV format as-is
         struct Transition {
             enum State { Idle , FadingOut , Loading , FadingIn } state = Idle;
             std::string target;
@@ -153,21 +163,24 @@ namespace game {
         } m_trans;
 
         // --- Boss Arena / Camera Lock ---
-        bool m_hasBossArena = false;
-        engine::IntRect m_bossArena{ 0,0,0,0 };
-        bool m_bossCamLocked = false;
-        engine::IntRect m_worldRectFull{ 0,0,0,0 }; // 풀월드 경계 캐시(해제 시 복원)
+        bool             m_hasBossArena = false;
+        engine::IntRect  m_bossArena{ 0,0,0,0 };
+        bool             m_bossCamLocked = false;
+        engine::IntRect  m_worldRectFull{ 0,0,0,0 }; // full-world cached bounds (restore on unlock)
 
         // --- Camera rect blend (for smooth lock/unlock) ---
         struct CamRectBlend {
-            bool  active = false;
-            float t = 0.f;       // 진행 시간
-            float dur = 0.6f;    // 보간 지속(초) - 취향껏 조절
-            engine::IntRect  from{ 0,0,0,0 };
-            engine::IntRect  to{ 0,0,0,0 };
+            bool            active = false;
+            float           t = 0.f;
+            float           dur = 0.6f;           // seconds
+            engine::IntRect from{ 0,0,0,0 };
+            engine::IntRect to{ 0,0,0,0 };
         } m_camBlend;
+
         void applyCamRectBlend ( float dt );
-        static engine::IntRect LerpRect ( const engine::IntRect& a , const engine::IntRect& b , float t );
+        static engine::IntRect LerpRect ( const engine::IntRect& a ,
+                                          const engine::IntRect& b ,
+                                          float t );
     };
 
 } // namespace game

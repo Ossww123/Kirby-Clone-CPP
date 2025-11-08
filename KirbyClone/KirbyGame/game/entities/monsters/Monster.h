@@ -20,6 +20,7 @@ namespace engine {
     struct Vec2;
     class  Input;
     namespace physics { class CollisionSystem; }
+    struct Tex2D;
 }
 
 namespace game {
@@ -95,6 +96,14 @@ namespace game {
         engine::Animator* Animator ( ) { return &m_anim; }
         const engine::Animator* Animator ( ) const { return &m_anim; }
 
+        // rendering handle (세션이 소유하는 텍스처를 비소유 포인터로 전달받아 보관)
+        void SetTexture ( const engine::Tex2D * t ) noexcept { m_tex = t; }
+        const engine::Tex2D * TexturePtr ( ) const noexcept { return m_tex; }
+        
+        // sprite sourc
+        virtual engine::IntRect SpriteSrc ( ) const { return m_anim.CurrentSrc ( ); }
+
+
     protected:
         virtual void TickAI ( double fixedDt , const engine::Input& input ) = 0; // derived AI hook
         void        StepPhysics ( double fixedDt );                              // shared physics step
@@ -104,6 +113,7 @@ namespace game {
         engine::PhysicsBody m_body;
         const engine::physics::CollisionSystem* m_col{};
         engine::Animator    m_anim{};
+        const engine::Tex2D* m_tex{ nullptr };
 
         bool   m_ignoreOneWay = false;
         Health m_health{};

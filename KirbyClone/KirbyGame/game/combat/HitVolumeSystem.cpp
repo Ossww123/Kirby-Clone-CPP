@@ -10,7 +10,7 @@
 #include "engine/render/IDebugDraw.h"
 #include "engine/physics/AABB.h"           // Overlap*, Expand, etc.
 #include "game/combat/HitVolumeGeom.h"
-#include "game/debug/HitVolumeDebugDraw.h"
+#include "game/debugdraw/HitVolumeDebugDraw.h"
 #include "game/combat/HitVolumeSystem.h"
 #include "game/combat/HitVolumeFactory.h"        // archetypes
 #include "game/combat/Ability.h"

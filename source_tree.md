@@ -40,12 +40,12 @@
 
 /game
   /session
-    PlaySession.h
-    PlaySession.Core.cpp
-    PlaySession.Render.cpp
-    PlaySession.Stage.cpp
-    PlaySession.Combat.cpp
-    PlaySession.Door.cpp
+    PlaySession.h — 세션 런타임 오케스트레이션(월드·카메라·플레이어 FSM·전투·디버그/HUD 렌더)
+    PlaySession.Core.cpp — 세션 초기화·고정틱 코어 로직(플레이어/몬스터/전투/카메라/페이드)
+    PlaySession.Render.cpp — 세션 렌더 경로(패럴럭스 BG·월드·디버그·HUD·페이드)
+    PlaySession.Stage.cpp — 스테이지 로드·월드 재구성(타일·배경·플레이어 시작·카메라 경계·몬스터/도어 스폰)
+    PlaySession.Combat.cpp — 전투 시스템 초기화·타깃 빌드·플레이어 이벤트 처리·데미지 적용·런타임 스폰
+    PlaySession.Door.cpp — 문 오버랩 감지 및 페이드 기반 스테이지 전환 상태 머신
 
   /data
     StageDesc.* — 스테이지 리소스 경로를 담은 단순 JSON(평면 키) 로더 및 데이터 구조

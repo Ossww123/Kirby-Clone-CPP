@@ -36,7 +36,7 @@ namespace game {
             // --- WaddleDee 기본 등록 ---
             Register ( MonsterType::WaddleDee ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                    WaddleDee::Config cfg;
+                    WaddleDee::Cfg cfg;
                     // fixed
                     cfg.base.phys.accelRun = 1400.f; cfg.base.phys.decelRun = 1600.f;
                     cfg.base.phys.maxSpeedRun = 70.f; cfg.base.phys.frictionGround = 500.f;
@@ -53,7 +53,7 @@ namespace game {
             // --- WaddleDoo ---
             Register ( MonsterType::WaddleDoo ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                    WaddleDoo::Config cfg;
+                    WaddleDoo::Cfg cfg;
                     // fixed
                     cfg.base.phys.accelRun = 1400.f; cfg.base.phys.decelRun = 1600.f;
                     cfg.base.phys.maxSpeedRun = 65.f; cfg.base.phys.frictionGround = 500.f;
@@ -73,7 +73,7 @@ namespace game {
             // --- HotHead ---
             Register ( MonsterType::HotHead ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                    HotHead::Config cfg;
+                    HotHead::Cfg cfg;
                     // 타입 고정 튜닝
                     cfg.base.phys.accelRun = 1200.f;
                     cfg.base.phys.decelRun = 1500.f;
@@ -104,7 +104,7 @@ namespace game {
             // --- Sparky ---
             Register ( MonsterType::Sparky ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                    Sparky::Config cfg;
+                    Sparky::Cfg cfg;
                     // 타입 고정 튜닝
                     cfg.base.phys.accelRun = 1400.f;
                     cfg.base.phys.decelRun = 1600.f;
@@ -138,7 +138,7 @@ namespace game {
             // --- Apple (보스 드랍 오브젝트) ---
             Register ( MonsterType::Apple ,
               [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                             Apple::Config cfg;
+                             Apple::Cfg cfg;
                              cfg.base.phys.accelRun = 2600.f;
                              cfg.base.phys.decelRun = 2600.f;
                              cfg.base.phys.maxSpeedRun = 120.f;
@@ -157,7 +157,7 @@ namespace game {
             // --- WhispyWoods (보스) ---
             Register ( MonsterType::WhispyWoods ,
                 [ ] ( const RECT& b , const engine::physics::CollisionSystem* col , const SpawnSpec& s ) {
-                        WhispyWoods::Config cfg;
+                        WhispyWoods::Cfg cfg;
                         // 고정형: 이동속도 0, 체력/아이프레임 상향
                         cfg.base.phys.accelRun = 0.f; cfg.base.phys.decelRun = 0.f; cfg.base.phys.maxSpeedRun = 0.f;
                         cfg.base.phys.frictionGround = 0.f; cfg.base.phys.frictionAir = 0.f; cfg.base.phys.gravity = 0.f; cfg.base.phys.termVel = 0.f;

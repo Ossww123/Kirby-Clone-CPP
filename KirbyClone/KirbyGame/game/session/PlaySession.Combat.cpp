@@ -1,12 +1,22 @@
 ﻿// PlaySession.Combat.cpp
+//
+// Responsibility: Combat systems init, target building, player event handling,
+//                 damage application, and runtime monster spawns.
+// Non-Goals    : Rendering, asset policy.
+// Call-Context : Called by PlaySession during init and fixed update.
 
-#include "game/PlaySession.h"
-#include "game/Monster.h"
-#include "game/MonsterFactory.h"
-#include "game/ProjectileFactory.h"
-#include "game/HitVolumeFactory.h"
+#include "game/session/PlaySession.h"
+#include "game/entities/monsters/Monster.h"
+#include "game/entities/monsters/MonsterFactory.h"
+#include "game/entities/player/Player.h"
+#include "game/projectile/ProjectileFactory.h"
+#include "game/combat/HitVolumeFactory.h"
+#include "game/combat/Damage.h"
+
+#include <algorithm>
 
 namespace game {
+
     void PlaySession::registerDefaultFactories ( ) {
         game::MonsterFactory::RegisterDefaults ( );
         game::ProjectileFactory::RegisterDefaults ( );
@@ -29,31 +39,42 @@ namespace game {
 
     void PlaySession::handlePlayerEvents ( const std::vector<game::PlayerEvent>& evs ) {
         for ( auto& e : evs ) switch ( e.type ) {
-        case game::PlayerEvent::DoorInteract: {
-            checkDoorInteract ( ); break;
-        }
+        case game::PlayerEvent::DoorInteract:
+            checkDoorInteract ( );
+            break;
+
         case game::PlayerEvent::InhaleVolume: {
             game::HitVolumeSystem::SpawnDesc sd{ "InhaleField", m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
-            m_hitSys.Spawn ( sd ); break;
+            m_hitSys.Spawn ( sd );
+            break;
         }
+
         case game::PlayerEvent::SpitStar: {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
             game::ProjectileSystem::SpawnDesc sd{};
-            sd.archetype = "Star"; sd.owner = game::ProjOwner::Player;
+            sd.archetype = "Star";
+            sd.owner = game::ProjOwner::Player;
             sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
-                       float ( py + ph * 0.5f - 4.f ) };
-            sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f }; sd.treatAsDirection = true;
-            m_projSys.Spawn ( sd ); break;
+                             float ( py + ph * 0.5f - 4.f ) };
+            sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f };
+            sd.treatAsDirection = true;
+            m_projSys.Spawn ( sd );
+            break;
         }
+
         case game::PlayerEvent::AirPuffShot: {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
             game::ProjectileSystem::SpawnDesc sd{};
-            sd.archetype = "AirPuff"; sd.owner = game::ProjOwner::Player;
+            sd.archetype = "AirPuff";
+            sd.owner = game::ProjOwner::Player;
             sd.pos = { ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 8.f,
-                       float ( py + ph * 0.5f - 4.f ) };
-            sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f }; sd.treatAsDirection = true;
-            m_projSys.Spawn ( sd ); break;
+                             float ( py + ph * 0.5f - 4.f ) };
+            sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ), 0.f };
+            sd.treatAsDirection = true;
+            m_projSys.Spawn ( sd );
+            break;
         }
+
         case game::PlayerEvent::AbilityFire: {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
             const float x = ( m_PlayerFSM.Facing ( ) > 0 ) ? float ( px + pw ) : float ( px ) - 10.f;
@@ -61,51 +82,86 @@ namespace game {
             for ( int i = 0; i < 3; ++i ) {
                 const float base = 360.f , jitter = 40.f * ( i - 1 );
                 game::ProjectileSystem::SpawnDesc sd{};
-                sd.archetype = "FirePellet"; sd.owner = game::ProjOwner::Player;
-                sd.pos = { x, y };
-                sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ) * ( base + jitter ), 0.f };
-                sd.treatAsDirection = false; // ← 속도 벡터로 취급
+                sd.archetype = "FirePellet";
+                sd.owner = game::ProjOwner::Player;
+                sd.pos = { x , y };
+                sd.dirOrVel = { float ( m_PlayerFSM.Facing ( ) ) * ( base + jitter ) , 0.f };
+                sd.treatAsDirection = false; // use as velocity
                 m_projSys.Spawn ( sd );
             }
             break;
         }
+
         case game::PlayerEvent::AbilitySpark: {
             game::HitVolumeSystem::SpawnDesc sd{ "SparkAura", m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
-            m_hitSys.Spawn ( sd ); break;
+            m_hitSys.Spawn ( sd );
+            break;
         }
+
         case game::PlayerEvent::AbilityBeam: {
             game::HitVolumeSystem::SpawnDesc sd{ "BeamSweep", m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
-            m_hitSys.Spawn ( sd ); break;
+            m_hitSys.Spawn ( sd );
+            break;
         }
+
         default: break;
         }
     }
 
     void PlaySession::buildTargets ( std::vector<game::ProjectileSystem::Target>& projT ,
-                               std::vector<game::HitVolumeSystem::Target>& hvT ) {
+                                     std::vector<game::HitVolumeSystem::Target>& hvT ) {
         projT.clear ( ); hvT.clear ( );
         projT.reserve ( m_Monsters.size ( ) + 1 );
         hvT.reserve ( m_Monsters.size ( ) + 1 );
+
+        // Monsters
         for ( auto& m : m_Monsters ) if ( m && m->Alive ( ) ) {
             int mx , my , mw , mh; m->GetBounds ( mx , my , mw , mh );
-            projT.push_back ( { m->Id ( ), RECT{mx,my,mx + mw,my + mh}, true, /*isPlayer*/false } );
-            game::HitVolumeSystem::Target t{};
-            t.id = m->Id ( ); t.aabb = RECT{ mx,my,mx + mw,my + mh }; t.alive = true; t.isPlayer = false;
-            t.inhalable = m->Inhalable ( ); t.abilityGift = m->AbilityGift ( );
-            hvT.push_back ( t );
+
+            // Projectile target
+            game::ProjectileSystem::Target pt{};
+            pt.id = m->Id ( );
+            pt.aabb = engine::IntRect{ mx , my , mx + mw , my + mh };
+            pt.alive = true;
+            pt.isPlayer = false;
+            projT.push_back ( pt );
+
+            // HitVolume target
+            game::HitVolumeSystem::Target ht{};
+            ht.id = m->Id ( );
+            ht.aabb = engine::IntRect{ mx , my , mx + mw , my + mh };
+            ht.alive = true;
+            ht.isPlayer = false;
+            ht.inhalable = m->Inhalable ( );
+            ht.abilityGift = m->AbilityGift ( );
+            hvT.push_back ( ht );
         }
+
+        // Player
         if ( m_Player ) {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            projT.push_back ( { m_Player->Id ( ), RECT{px,py,px + pw,py + ph}, true, /*isPlayer*/true } );
-            game::HitVolumeSystem::Target pt{}; pt.id = m_Player->Id ( ); pt.aabb = { px,py,px + pw,py + ph };
-            pt.alive = true; pt.isPlayer = true; pt.inhalable = false; pt.abilityGift = game::Ability::None;
-            hvT.push_back ( pt );
+
+            game::ProjectileSystem::Target pt{};
+            pt.id = m_Player->Id ( );
+            pt.aabb = engine::IntRect{ px , py , px + pw , py + ph };
+            pt.alive = true;
+            pt.isPlayer = true;
+            projT.push_back ( pt );
+
+            game::HitVolumeSystem::Target ht{};
+            ht.id = m_Player->Id ( );
+            ht.aabb = engine::IntRect{ px , py , px + pw , py + ph };
+            ht.alive = true;
+            ht.isPlayer = true;
+            ht.inhalable = false;
+            ht.abilityGift = game::Ability::None;
+            hvT.push_back ( ht );
         }
     }
 
     void PlaySession::applyProjectileHits ( const std::vector<game::ProjectileSystem::HitEvent>& phits ) {
         for ( const auto& ev : phits ) {
-            game::Damage dmg{ ev.payload.damage, ev.payload.knockback };
+            game::Damage dmg{ ev.payload.damage , ev.payload.knockback };
             if ( ev.owner == game::ProjOwner::Player ) {
                 for ( auto& m : m_Monsters ) if ( m && m->Id ( ) == ev.targetId ) { m->OnHit ( dmg ); break; }
             }
@@ -118,7 +174,9 @@ namespace game {
     void PlaySession::applyHitVolumeHits ( const std::vector<game::HitVolumeSystem::HitEvent>& hvHits ) {
         for ( const auto& ev : hvHits ) {
             const bool ownerIsPlayer = ( m_Player && ev.ownerId == m_Player->Id ( ) );
-            if ( ev.payload.effect == game::HitEffect::Capture ) { // 빨아들이기 캡쳐
+
+            // Capture (inhale)
+            if ( ev.payload.effect == game::HitEffect::Capture ) {
                 if ( ownerIsPlayer ) {
                     for ( auto it = m_Monsters.begin ( ); it != m_Monsters.end ( ); ++it ) {
                         if ( *it && ( *it )->Id ( ) == ev.targetId ) {
@@ -131,7 +189,9 @@ namespace game {
                 }
                 continue;
             }
-            game::Damage dmg{ ev.payload.damage, ev.payload.knockback };
+
+            // Normal damage
+            game::Damage dmg{ ev.payload.damage , ev.payload.knockback };
             if ( ownerIsPlayer ) {
                 for ( auto& m : m_Monsters ) if ( m && m->Id ( ) == ev.targetId ) { m->OnHit ( dmg ); break; }
             }
@@ -143,22 +203,26 @@ namespace game {
 
     void PlaySession::flushPendingSpawns ( ) {
         if ( m_pendingMonsterSpawns.empty ( ) ) return;
+
         auto spawns = std::move ( m_pendingMonsterSpawns );
         for ( const auto& s : spawns ) {
             auto mon = game::MonsterFactory::Create ( s.type , m_World.WorldRectPx ( ) , &m_World.Collision ( ) , s );
             if ( !mon ) continue;
+
             if ( m_EnemiesTex.srv ) mon->SetSpriteSheet ( &m_EnemiesTex );
             mon->SetVisualSize ( 32.f , 32.f );
 
-            // ※ 런타임 스폰도 콜백을 동일하게 접속해야 보스(위스피)→사과 드랍/공기포가 실제 동작
+            // Connect the same spawners for runtime monsters
             mon->SetProjectileSpawnerId ( [ this ] ( const std::string& arche , const engine::Vec2& pos ,
                 const engine::Vec2& vel , game::ProjOwner owner ) {
-                    game::ProjectileSystem::SpawnDesc sd{}; sd.archetype = arche; sd.owner = owner;
-                    sd.pos = pos; sd.dirOrVel = vel; sd.treatAsDirection = false; m_projSys.Spawn ( sd );
+                    game::ProjectileSystem::SpawnDesc sd{};
+                    sd.archetype = arche; sd.owner = owner; sd.pos = pos; sd.dirOrVel = vel; sd.treatAsDirection = false;
+                    m_projSys.Spawn ( sd );
             } );
             mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
             mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche , int ownerId , int facing , const engine::Vec2& anchor ) {
-                game::HitVolumeSystem::SpawnDesc sd{ arche, ownerId, facing, anchor }; m_hitSys.Spawn ( sd );
+                game::HitVolumeSystem::SpawnDesc sd{ arche , ownerId , facing , anchor };
+                m_hitSys.Spawn ( sd );
             } );
             mon->SetMonsterSpawner ( [ this ] ( MonsterType t , const engine::Vec2& pos , const SpawnSpec& spec ) {
                 auto s2 = spec; s2.type = t; s2.x = pos.x; s2.y = pos.y; m_pendingMonsterSpawns.push_back ( s2 );
@@ -167,4 +231,5 @@ namespace game {
             m_Monsters.push_back ( std::move ( mon ) );
         }
     }
+
 } // namespace game

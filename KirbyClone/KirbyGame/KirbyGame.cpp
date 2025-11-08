@@ -1,4 +1,5 @@
 ﻿#include <windows.h>
+#include <cstdint>
 #include "engine/GameApp.h"
 #include "game/GameConfig.h"
 
@@ -9,7 +10,15 @@ static engine::GameApp gApp;
 // 윈도우 프로시저: 윈도우로 전달되는 메시지를 처리하는 콜백 함수
 LRESULT CALLBACK WndProc ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam )
 {
-    gApp.OnWndMessage ( hWnd , msg , wParam , lParam );
+    // 1) GameApp으로 메시지 브릿지 (플랫폼 중립 시그니처에 맞춰 캐스팅)
+    const auto r = gApp.OnWndMessage (
+        hWnd ,
+        static_cast< unsigned >( msg ) ,
+        static_cast< std::uintptr_t >( wParam ) ,
+        static_cast< std::intptr_t >( lParam )
+    );
+    if ( r != 0 )                                     // 2) GameApp/Input이 처리했다면 그대로 반환
+        return static_cast< LRESULT >( r );
 
     switch ( msg )
     {
