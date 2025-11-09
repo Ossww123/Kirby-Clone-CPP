@@ -64,7 +64,7 @@
     /monsters
       Monster.h - 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅, 헤더는 IntRect/RGBA8, 렌더디버그는 cpp)
       MonsterTypes.h — 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅)
-      MonsterFactory.h
+      MonsterFactory.* — 몬스터 타입→Maker 레지스트리와 SpawnSpec/충돌 컨텍스트를 받아 인스턴스를 생성하는 팩토리.
       WaddleDee.* — 단순 순찰 AI(에지/벽 턴, 이동축 설정)
       WaddleDoo.* — 순찰 + 빔 공격 FSM(윈드업/쿨다운, 타깃 감지)
       HotHead.* — 순찰 + 화염 분사 프로젝타일 FSM(윈드업/분사/쿨다운)
