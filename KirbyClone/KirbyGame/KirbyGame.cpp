@@ -1,6 +1,14 @@
 ﻿#include <windows.h>
 #include <cstdint>
 #include "engine/GameApp.h"
+#include "game/session/PlaySession.h"
+#include "engine/core/Time.h"
+#include "engine/core/Input.h"
+#include "engine/core/Scene.h"
+#include "engine/render/IRenderer.h"
+#include "engine/render/D3D11SpriteBatch.h"
+#include "engine/render/D3D11DebugDraw.h"
+#include "engine/render/DWriteText.h"
 #include "game/GameConfig.h"
 
 static int gClientW = game::CLIENT_W;  // 240*4 = 960

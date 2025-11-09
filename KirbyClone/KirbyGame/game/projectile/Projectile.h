@@ -6,7 +6,7 @@
 #include "engine/core/Object.h"          // base class (needs full type)
 #include "engine/physics/PhysicsBody.h"     // member by value (needs full type)
 #include "engine/util/Math.h"            // engine::Vec2
-#include "engine/util/Types.h"         // engine::IntRect (no Windows RECT)
+#include "engine/util/Types.h"         // engine::IntRect
 #include "game/combat/CombatTypes.h"       // game::ProjOwner
 
 // Forward decls to minimize header coupling.

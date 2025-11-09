@@ -4,6 +4,7 @@
 // Call-Context:   Main thread.
 //
 #include "game/entities/monsters/WaddleDee.h"
+#include "game/combat/Ability.h" // Ability
 
 namespace game {
 
@@ -23,6 +24,16 @@ namespace game {
             m_dir *= -1;
             m_body.SetDesiredRunAxis ( static_cast< float >( m_dir ) );
         }
+    }
+
+    bool WaddleDee::Inhalable ( ) const
+    {
+        return true;
+    }
+
+    Ability WaddleDee::AbilityGift ( ) const
+    {
+        return Ability::None;
     }
 
 } // namespace game

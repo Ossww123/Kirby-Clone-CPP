@@ -12,6 +12,7 @@
 #include "game/projectile/ProjectileFactory.h"
 #include "game/combat/HitVolumeFactory.h"
 #include "game/combat/Damage.h"
+#include "engine/platform/win32/RectUtil.h"
 
 #include <algorithm>
 
@@ -44,8 +45,11 @@ namespace game {
             break;
 
         case game::PlayerEvent::InhaleVolume: {
-            game::HitVolumeSystem::SpawnDesc sd{ "InhaleField", m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
-            m_hitSys.Spawn ( sd );
+            constexpr const char* k = "InhaleField";
+            if ( m_playerHVActive.find ( k ) == m_playerHVActive.end ( ) ) {
+                game::HitVolumeSystem::SpawnDesc sd{ k, m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
+                if ( int id = m_hitSys.Spawn ( sd ); id > 0 ) m_playerHVActive.emplace ( k , id );
+            }
             break;
         }
 
@@ -93,14 +97,20 @@ namespace game {
         }
 
         case game::PlayerEvent::AbilitySpark: {
-            game::HitVolumeSystem::SpawnDesc sd{ "SparkAura", m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
-            m_hitSys.Spawn ( sd );
+            constexpr const char* k = "SparkAura";
+            if ( m_playerHVActive.find ( k ) == m_playerHVActive.end ( ) ) {
+                game::HitVolumeSystem::SpawnDesc sd{ k, m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
+                if ( int id = m_hitSys.Spawn ( sd ); id > 0 ) m_playerHVActive.emplace ( k , id );
+            }
             break;
         }
 
         case game::PlayerEvent::AbilityBeam: {
-            game::HitVolumeSystem::SpawnDesc sd{ "BeamSweep", m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
-            m_hitSys.Spawn ( sd );
+            constexpr const char* k = "BeamSweep";
+            if ( m_playerHVActive.find ( k ) == m_playerHVActive.end ( ) ) {
+                game::HitVolumeSystem::SpawnDesc sd{ k, m_Player->Id ( ), m_PlayerFSM.Facing ( ), m_Player->Center ( ) };
+                if ( int id = m_hitSys.Spawn ( sd ); id > 0 ) m_playerHVActive.emplace ( k , id );
+            }
             break;
         }
 
@@ -201,6 +211,16 @@ namespace game {
         }
     }
 
+    void PlaySession::handleHitVolumeDespawns ( const std::vector<game::HitVolumeSystem::DespawnEvent>& devs ) {
+        if ( m_playerHVActive.empty ( ) ) return;
+        for ( const auto& ev : devs ) {
+            for ( auto it = m_playerHVActive.begin ( ); it != m_playerHVActive.end ( ); ) {
+                if ( it->second == ev.volumeId ) it = m_playerHVActive.erase ( it );
+                else ++it;
+            }
+        }
+    }
+
     void PlaySession::flushPendingSpawns ( ) {
         if ( m_pendingMonsterSpawns.empty ( ) ) return;
 
@@ -209,7 +229,7 @@ namespace game {
             auto mon = game::MonsterFactory::Create ( s.type , m_World.WorldRectPx ( ) , &m_World.Collision ( ) , s );
             if ( !mon ) continue;
 
-            if ( m_EnemiesTex.srv ) mon->SetSpriteSheet ( &m_EnemiesTex );
+            if ( m_EnemiesTex.srv ) mon->SetTexture ( &m_EnemiesTex );
             mon->SetVisualSize ( 32.f , 32.f );
 
             // Connect the same spawners for runtime monsters

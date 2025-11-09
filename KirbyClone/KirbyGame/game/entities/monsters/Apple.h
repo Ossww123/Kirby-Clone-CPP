@@ -29,8 +29,8 @@ namespace game {
             m_phaseT = m_cfg.telegraphMs;
         }
 
-        bool    Inhalable ( ) const override { return true; }
-        Ability AbilityGift ( ) const override { return Ability::None; }
+        bool    Inhalable ( ) const override;
+        Ability AbilityGift ( ) const override;
 
         void TickAI ( double dt , const engine::Input& ) override;
 

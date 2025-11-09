@@ -277,6 +277,7 @@
     <ClCompile Include="game\entities\monsters\Apple.cpp" />
     <ClCompile Include="game\entities\monsters\Monster.cpp" />
     <ClCompile Include="game\debugdraw\MonsterDebugDraw.cpp" />
+    <ClCompile Include="game\entities\monsters\MonsterFactory.cpp" />
     <ClCompile Include="game\entities\monsters\WhispyWoods.cpp" />
     <ClCompile Include="game\entities\player\Player.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.Action.cpp" />

@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdlib>
 #include "engine/util/Math.h"
+#include "game/combat/Ability.h" // Ability
 
 namespace game {
 
@@ -112,6 +113,16 @@ namespace game {
             if ( m_cd <= 0.f ) m_state = AState::Idle;
             break;
         }
+    }
+
+    bool Sparky::Inhalable ( ) const
+    {
+        return true;
+    }
+
+    Ability Sparky::AbilityGift ( ) const
+    {
+        return Ability::Spark;
     }
 
 } // namespace game

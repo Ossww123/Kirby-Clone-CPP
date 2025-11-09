@@ -37,8 +37,8 @@ namespace game {
 
         void TickAI ( double fixedDt , const engine::Input& input ) override;
 
-        bool    Inhalable ( ) const override { return true; }
-        Ability AbilityGift ( ) const override { return Ability::None; }
+        bool    Inhalable ( ) const override;
+        Ability AbilityGift ( ) const override;
 
     private:
         int  m_dir = 1;

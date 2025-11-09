@@ -13,9 +13,11 @@
 #include "engine/util/StringConv.h"
 #include "engine/util/Types.h"
 #include "engine/world/TileSet.h"                 // engine::TileDef
+#include "engine/core/Scene.h"
 #include "game/data/StageCSV.h"
 #include "game/data/StageDesc.h"
 #include "game/entities/monsters/MonsterFactory.h"
+#include "game/entities/player/Player.h"
 #include "game/data/GameConfig.h"
 
 namespace game {
@@ -31,7 +33,7 @@ namespace game {
         if ( !d3d ) return false;
 
         // ---- Tile/Map define ----
-        m_World.LoadTileset ( d3d->Device ( ) , ToWide ( desc.tileset ).c_str ( ) , 16 , 16 );
+        m_World.LoadTileset ( d3d->Device ( ) , engine::ToWide ( desc.tileset ).c_str ( ) , 16 , 16 );
         m_World.SetWorldTileSize ( game::TILE_PX , game::TILE_PX );
 
         int mw = 0 , mh = 0; std::vector<int> ids;
@@ -66,7 +68,7 @@ namespace game {
         // ---- Background ----
         if ( !desc.background.empty ( ) ) {
             engine::Tex2D bg{};
-            if ( engine::LoadTextureWIC ( d3d->Device ( ) , ToWide ( desc.background ).c_str ( ) , &bg ) ) {
+            if ( engine::LoadTextureWIC ( d3d->Device ( ) , engine::ToWide ( desc.background ).c_str ( ) , &bg ) ) {
                 m_BgTex = bg;
             }
             else {
@@ -118,7 +120,7 @@ namespace game {
                     if ( !mon ) continue;
 
                     // Texture/visual size/source
-                    if ( m_EnemiesTex.srv ) mon->SetSpriteSheet ( &m_EnemiesTex );
+                    if ( m_EnemiesTex.srv ) mon->SetTexture ( &m_EnemiesTex );
                     mon->SetVisualSize ( 32.f , 32.f );
                     engine::IntRect src{};
                     switch ( mt ) {
@@ -148,7 +150,7 @@ namespace game {
                     mon->SetTargetQuery ( [ this ] ( ) { return m_Player ? m_Player->Center ( ) : engine::Vec2{}; } );
                     mon->SetHitVolumeSpawner ( [ this ] ( const std::string& arche , int ownerId , int facing , const engine::Vec2& anchor ) {
                         game::HitVolumeSystem::SpawnDesc sd{ arche , ownerId , facing , anchor };
-                        m_hitSys.Spawn ( sd );
+                        [[maybe_unused]] const int hvId = m_hitSys.Spawn ( sd );
                     } );
                     mon->SetMonsterSpawner ( [ this ] ( MonsterType t , const engine::Vec2& pos , const SpawnSpec& spec ) {
                         auto s = spec; s.type = t; s.x = pos.x; s.y = pos.y; m_pendingMonsterSpawns.push_back ( s );

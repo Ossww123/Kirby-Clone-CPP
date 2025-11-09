@@ -84,6 +84,11 @@ namespace game {
         if ( !phits.empty ( ) ) applyProjectileHits ( phits );
         if ( !hvHits.empty ( ) ) applyHitVolumeHits ( hvHits );
 
+        // HitVolume despawn
+        std::vector<game::HitVolumeSystem::DespawnEvent> hvDes;
+        m_hitSys.DrainDespawnEvents ( hvDes );
+        if ( !hvDes.empty ( ) ) handleHitVolumeDespawns ( hvDes );
+
         // 4) Anim / camera / spawns / transition
         if ( m_Player && m_Player->Animator ( ) ) m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
         if ( m_Player ) m_Cam.SetLookAt ( m_Player->Center ( ) );

@@ -5,10 +5,11 @@
 // Call-Context: Header-only POD.
 //
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <d3d11.h>          // ComPtr<ID3D11ShaderResourceView> needs complete type (Release)
 #include <wrl/client.h>
-
-// Forward decl only (no d3d headers here)
-struct ID3D11ShaderResourceView;
 
 namespace engine {
 

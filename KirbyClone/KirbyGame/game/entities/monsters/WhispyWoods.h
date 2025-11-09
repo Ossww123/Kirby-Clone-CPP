@@ -37,8 +37,8 @@ namespace game {
             m_timer = 0.5f; // short delay before first action
         }
 
-        bool    Inhalable ( ) const override { return false; } // boss cannot be inhaled
-        Ability AbilityGift ( ) const override { return Ability::None; }
+        bool    Inhalable ( ) const override;
+        Ability AbilityGift ( ) const override;
 
         void TickAI ( double dt , const engine::Input& ) override;
 

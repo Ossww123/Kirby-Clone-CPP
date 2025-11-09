@@ -6,16 +6,15 @@
 //
 
 #include <string>
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <d2d1.h>     // ID2D1Factory, ID2D1RenderTarget, ID2D1SolidColorBrush
+#include <dwrite.h>   // IDWriteFactory, IDWriteTextFormat
 #include <wrl/client.h>
 #include "engine/render/IRenderer.h" // engine::Color
 
-// Forward decls (keep header light)
 struct IDXGISwapChain;
-struct ID2D1Factory;
-struct IDWriteFactory;
-struct IDWriteTextFormat;
-struct ID2D1RenderTarget;
-struct ID2D1SolidColorBrush;
 
 namespace engine {
 

@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 // === Forward decls to keep header light ===
 namespace engine {
@@ -34,6 +35,7 @@ namespace game {
 #include "game/entities/player/PlayerFSM.h"    // PlayerFSM is a by-value member
 #include "game/projectile/ProjectileSystem.h"  // by-value member
 #include "game/combat/HitVolumeSystem.h"       // by-value member
+#include "game/entities/monsters/Monster.h"
 #include "game/entities/monsters/MonsterTypes.h"
 #include "game/data/StageCSV.h" // DoorCSV
 
@@ -105,6 +107,7 @@ namespace game {
                                              std::vector<game::HitVolumeSystem::Target>& hvT );
         void applyProjectileHits ( const std::vector<game::ProjectileSystem::HitEvent>& phits );
         void applyHitVolumeHits ( const std::vector<game::HitVolumeSystem::HitEvent>& hvHits );
+        void handleHitVolumeDespawns ( const std::vector<game::HitVolumeSystem::DespawnEvent>& devs );
         void flushPendingSpawns ( );
         bool checkDoorInteract ( ); // Player AABB vs Door AABB overlap
         void updateTransition ( double fixedDt );
@@ -144,6 +147,7 @@ namespace game {
         game::ProjectileSystem                      m_projSys;
         game::HitVolumeSystem                       m_hitSys;
         std::vector<game::PlayerEvent>              m_pendingPlayerEvents;
+        std::unordered_map<std::string , int>        m_playerHVActive;
 
         // --- Fade Effect ---
         struct Fade {

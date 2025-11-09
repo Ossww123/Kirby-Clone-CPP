@@ -9,9 +9,17 @@
 #include "engine/util/Math.h"                     // Vec2::Length()
 #include "game/combat/CombatTypes.h"              // ProjOwner
 #include "game/entities/monsters/MonsterTypes.h"  // MonsterType, SpawnSpec
+#include "game/combat/Ability.h"                  // Ability
 
 namespace game {
-
+    bool WhispyWoods::Inhalable ( ) const
+    {
+        return false;
+    } // boss cannot be inhaled
+    Ability WhispyWoods::AbilityGift ( ) const
+    {
+        return Ability::None;
+    }
     void WhispyWoods::TickAI ( double dt , const engine::Input& ) {
         // stationary: never walks
         m_body.SetDesiredRunAxis ( 0.f );

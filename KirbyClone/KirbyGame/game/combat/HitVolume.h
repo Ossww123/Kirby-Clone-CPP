@@ -75,7 +75,7 @@ namespace game {
         [[nodiscard]] int          Owner ( )   const noexcept { return m_owner; }
         [[nodiscard]] int          Facing ( )  const noexcept { return m_facing; }
         [[nodiscard]] engine::Vec2 Anchor ( )  const noexcept { return m_anchor; }
-        [[nodiscard]] const Cfg& GetCfg ( )  const noexcept { return m_cfg; }
+        [[nodiscard]] const Cfg&   GetCfg ( )  const noexcept { return m_cfg; }
 
         void SetFacing ( int f ) noexcept { m_facing = ( f >= 0 ) ? +1 : -1; }
         void SetAnchor ( const engine::Vec2& p ) noexcept { m_anchor = p; }

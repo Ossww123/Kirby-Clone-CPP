@@ -7,6 +7,7 @@
 #include "game/session/PlaySession.h"
 #include "engine/render/D3D11SpriteBatch.h"
 #include "engine/render/D3D11DebugDraw.h"
+#include "engine/render/D3D11DebugDrawAdapter.h"
 #include "engine/render/DWriteText.h"
 #include "engine/util/Types.h"
 #include "game/data/GameConfig.h"
@@ -132,8 +133,9 @@ namespace game {
         }
 
         // Projectile / HitVolume debug
-        m_projSys.DebugDraw ( *m_Debug , ox , oy );
-        m_hitSys.DebugDraw ( *m_Debug , ox , oy );
+        engine::D3D11DebugDrawAdapter idbg ( m_Debug );
+        m_projSys.DebugDraw ( idbg , ox , oy );
+        m_hitSys.DebugDraw ( idbg , ox , oy );
 
         // Doors
         for ( const auto& d : m_Doors ) {

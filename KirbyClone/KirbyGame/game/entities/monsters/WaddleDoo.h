@@ -41,8 +41,8 @@ namespace game {
 
         void TickAI ( double fixedDt , const engine::Input& ) override;
 
-        bool    Inhalable ( ) const override { return true; }
-        Ability AbilityGift ( ) const override { return Ability::Beam; }
+        bool    Inhalable ( ) const override;
+        Ability AbilityGift ( ) const override;
 
     private:
         enum class AState { Idle , Windup , Cooldown };

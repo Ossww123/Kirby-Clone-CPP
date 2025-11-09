@@ -7,8 +7,18 @@
 
 #include <algorithm>
 #include "engine/util/Math.h" // Vec2
+#include "game/combat/Ability.h" // Ability
 
 namespace game {
+    bool Apple::Inhalable() const
+    {
+        return true;
+    }
+
+    Ability Apple::AbilityGift() const
+    {
+        return Ability::None;
+    }
 
     void Apple::TickAI ( double dt , const engine::Input& ) {
         switch ( m_phase ) {

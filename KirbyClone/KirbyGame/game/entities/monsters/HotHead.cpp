@@ -9,6 +9,7 @@
 #include <cmath>
 #include "engine/util/Math.h"
 #include "game/combat/CombatTypes.h" // ProjOwner
+#include "game/combat/Ability.h" // Ability
 
 namespace game {
 
@@ -84,6 +85,16 @@ namespace game {
             if ( m_cd <= 0.f ) m_state = AState::Idle;
             break;
         }
+    }
+
+    bool HotHead::Inhalable() const
+    {
+        return true;
+    }
+
+    Ability HotHead::AbilityGift() const
+    {
+        return Ability::Fire;
     }
 
 } // namespace game

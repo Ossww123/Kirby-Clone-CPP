@@ -19,7 +19,7 @@
 #include "game/combat/Damage.h"         // Team / HitKind / Damage / Health
 #include "game/combat/Ability.h"
 
-class Animator;
+namespace engine { class Animator; }
 
 namespace game {
 
