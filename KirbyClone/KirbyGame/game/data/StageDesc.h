@@ -9,13 +9,15 @@
 namespace game {
 
     struct StageDesc {
-        std::string tileset;      // assets/tilesets/grasslands.png
-        std::string tiledefs;     // assets/tilesets/grasslands.tiledefs.csv
-        std::string tilemap;      // assets/stages/stage01/tilemap.csv
-        std::string monsters;     // assets/stages/stage01/monsters.csv
-        std::string player_start; // assets/stages/stage01/player_start.csv
-        std::string background;   // assets/backgrounds/sky_day.png
-        std::string doors;        // optional: assets/stages/stage01/doors.csv
+        std::string id;          
+        std::string hub_spawn;   
+        std::string tileset;     
+        std::string tiledefs;    
+        std::string tilemap;     
+        std::string monsters;    
+        std::string player_start;
+        std::string background;  
+        std::string doors;       
 
         // optional boss arena
         bool has_boss_arena{ false };

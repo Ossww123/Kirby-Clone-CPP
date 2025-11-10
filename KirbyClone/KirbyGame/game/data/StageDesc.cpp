@@ -11,7 +11,6 @@
 #include <string>
 
 namespace {
-    // Read whole file into a string (binary to preserve bytes)
     bool read_file ( const char* path , std::string& out ) {
         std::ifstream ifs ( path , std::ios::in | std::ios::binary );
         if ( !ifs ) return false;
@@ -19,7 +18,7 @@ namespace {
         out = oss.str ( );
         return true;
     }
-} // namespace
+}
 
 namespace game {
 
@@ -38,7 +37,9 @@ namespace game {
             const std::string key = m[ 1 ].str ( );
             const bool isString = m[ 2 ].matched;
 
-            if ( key == "tileset" && isString ) out.tileset = m[ 2 ].str ( );
+            if ( key == "id" && isString ) out.id = m[ 2 ].str ( );
+            else if ( key == "hub_spawn" && isString ) out.hub_spawn = m[ 2 ].str ( );
+            else if ( key == "tileset" && isString ) out.tileset = m[ 2 ].str ( );
             else if ( key == "tiledefs" && isString ) out.tiledefs = m[ 2 ].str ( );
             else if ( key == "tilemap" && isString ) out.tilemap = m[ 2 ].str ( );
             else if ( key == "monsters" && isString ) out.monsters = m[ 2 ].str ( );
@@ -49,7 +50,7 @@ namespace game {
             it = m.suffix ( ).first;
         }
 
-        // Optional nested: "boss": { ... "arena": { "x":..,"y":..,"w":..,"h":.. } }
+        // Optional nested: boss.arena {x,y,w,h}
         {
             static const std::regex boss_re (
                 R"REGEX("boss"\s*:\s*\{[^}]*"arena"\s*:\s*\{([^}]*)\})REGEX" ,
@@ -75,9 +76,10 @@ namespace game {
 
         // Required keys
         if ( out.tileset.empty ( ) || out.tiledefs.empty ( ) || out.tilemap.empty ( )
-            || out.monsters.empty ( ) || out.player_start.empty ( ) || out.background.empty ( ) )
+          || out.monsters.empty ( ) || out.player_start.empty ( ) || out.background.empty ( ) )
             return false;
 
+        // id is strongly recommended for flow; if absent, keep empty (caller may inject)
         return true;
     }
 
