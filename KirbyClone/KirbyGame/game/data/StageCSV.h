@@ -39,14 +39,24 @@ namespace game {
         std::string target;         // stage path to travel to
     };
 
+    struct SpawnCSV {
+        std::string name;
+        float x{ 0.f } , y{ 0.f };
+        int   dir{ +1 };  // -1 or +1
+    };
+
+    struct UnlockCSV {
+        std::string require;  // stageId to be cleared, e.g., "t1/s1/m1"
+        int tx{ 0 } , ty{ 0 } , w{ 0 } , h{ 0 }; // tile-rect on cover layer
+    };
+
     // ---- Loaders ----
     bool LoadPlayerStartCSV ( const char* path , PlayerStartCSV& out );
     bool LoadMonstersCSV ( const char* path , std::vector<MonsterCSV>& out );
     bool LoadTileDefsCSV ( const char* path , std::vector<TileDefCSV>& out );
-    bool LoadDoorsCSV ( const char* path , std::vector<DoorCSV>& out );
-
-    // TileMap grid loader (numeric grid only; no header; comments #/; allowed).
-    // Returns true iff outW*outH == outIds.size().
     bool LoadTileMapCSV ( const char* path , int& outW , int& outH , std::vector<int>& outIds );
+    bool LoadDoorsCSV ( const char* path , std::vector<DoorCSV>& out );
+    bool LoadSpawnsCSV ( const char* path , std::vector<SpawnCSV>& out );
+    bool LoadUnlocksCSV ( const char* path , std::vector<UnlockCSV>& out );
 
 } // namespace game

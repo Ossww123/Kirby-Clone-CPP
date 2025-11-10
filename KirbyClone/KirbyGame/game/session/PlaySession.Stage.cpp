@@ -3,22 +3,27 @@
 // Responsibility: Stage loading and world setup (tiles/monsters/background/player/camera bounds).
 // Non-Goals    : Renderer creation, gameplay rules beyond initial spawn.
 // Call-Context : Called by PlaySession to (re)load a stage and rebuild systems.
+//
 
 #include <algorithm>
 #include <cctype>
 
 #include "game/session/PlaySession.h"
+
 #include "engine/render/D3D11Renderer.h"
 #include "engine/render/TextureLoader.h"
 #include "engine/util/StringConv.h"
 #include "engine/util/Types.h"
-#include "engine/world/TileSet.h"                 // engine::TileDef
+#include "engine/world/TileSet.h"
 #include "engine/core/Scene.h"
+
 #include "game/data/StageCSV.h"
 #include "game/data/StageDesc.h"
 #include "game/entities/monsters/MonsterFactory.h"
 #include "game/entities/player/Player.h"
 #include "game/data/GameConfig.h"
+#include "game/session/SpawnSelector.h"
+#include "game/session/HubCoverUnlock.h"
 
 namespace game {
 
@@ -28,6 +33,8 @@ namespace game {
 
         game::StageDesc desc{};
         if ( !game::LoadStageDesc ( m_stageJsonPath.c_str ( ) , desc ) ) return false;
+
+        m_stageId = desc.id;
 
         auto* d3d = dynamic_cast< engine::D3D11Renderer* >( m_Renderer );
         if ( !d3d ) return false;
@@ -52,7 +59,26 @@ namespace game {
                 m_World.DefineTile ( r.id , d );
             }
         }
-        m_World.RebuildColliders ( );
+
+        // ---- Cover layer (hub blockers) ----
+        bool rebuilt = false;
+        if ( !desc.cover_tilemap.empty ( ) ) {
+            int cw = 0 , ch = 0; std::vector<int> cids;
+            if ( game::LoadTileMapCSV ( desc.cover_tilemap.c_str ( ) , cw , ch , cids ) ) {
+                m_World.SetCoverFromMemory ( cw , ch , cids.data ( ) );
+            }
+        }
+
+        // ---- Hub unlocks (erase cover tiles for cleared stages) ----
+        if ( m_Session && desc.id == "t1/hub" ) {
+            game::ApplyHubCoverUnlocks ( desc , &m_Session->Data ( ) , m_World ); // 내부에서 RebuildColliders() 호출
+            rebuilt = true;
+        }
+
+        if ( !rebuilt ) {
+            m_World.RebuildColliders ( );
+        }
+
 
         // --- Boss Arena / Camera lock ---
         m_worldRectFull = m_World.WorldRectPx ( );
@@ -79,17 +105,22 @@ namespace game {
             m_BgTex = {};
         }
 
-        // ---- Player start ----
-        game::PlayerStartCSV ps{};
-        if ( game::LoadPlayerStartCSV ( desc.player_start.c_str ( ) , ps ) && m_Player ) {
-            m_Player->SetPosition ( ps.x , ps.y );
-            m_Player->Body ( ).SetVelocity ( { 0.f , 0.f } );
-            updateCameraBoundsForWorld (
-                m_Renderer ? m_Renderer->GetBackbufferSize ( ).w : 0 ,
-                m_Renderer ? m_Renderer->GetBackbufferSize ( ).h : 0
-            );
-            m_Cam.SetLookAt ( { ps.x , ps.y } );
-            m_Cam.SnapImmediate ( );
+        // ---- Spawn resolve (override → spawns.csv → save.lastSpawn → default → player_start.csv) ----
+        if ( m_Player ) {
+            game::ResolvedSpawn rs{};
+            const char* ov = m_trans.spawn.empty ( ) ? nullptr : m_trans.spawn.c_str ( );
+            if ( game::ResolveSpawn ( desc , ov , m_Session ? &m_Session->Data ( ) : nullptr , rs ) ) {
+                m_Player->SetPosition ( rs.x , rs.y );
+                m_Player->Body ( ).SetVelocity ( { 0.f, 0.f } );
+                m_PlayerFSM.SetFacing ( rs.dir );
+
+                updateCameraBoundsForWorld (
+                    m_Renderer ? m_Renderer->GetBackbufferSize ( ).w : 0 ,
+                    m_Renderer ? m_Renderer->GetBackbufferSize ( ).h : 0
+                );
+                m_Cam.SetLookAt ( { rs.x, rs.y } );
+                m_Cam.SnapImmediate ( );
+            }
         }
 
         // ---- Load monsters ----

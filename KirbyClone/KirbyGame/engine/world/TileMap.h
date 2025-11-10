@@ -37,6 +37,10 @@ namespace engine {
         void RenderScaled ( D3D11SpriteBatch& batch , const TileSet& tiles ,
                           int camOffX , int camOffY , int screenW , int screenH , int scale ) const;
 
+        // Mutators (used by cover-layer editing)
+        bool SetAt ( int x , int y , int id );
+        void FillRect ( int tx , int ty , int w , int h , int id );
+
         // Accessors
         [[nodiscard]] int W ( ) const { return m_w; }
         [[nodiscard]] int H ( ) const { return m_h; }

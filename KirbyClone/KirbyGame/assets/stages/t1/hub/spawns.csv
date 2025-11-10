@@ -1,0 +1,7 @@
+name,x,y,dir
+default,  64,  64, 1
+door_m1, 480, 128, 1
+door_m2, 920, 128, 1
+door_m3,1360, 128, 1
+door_m4,1800, 128, 1
+door_m5,2240, 128, 1

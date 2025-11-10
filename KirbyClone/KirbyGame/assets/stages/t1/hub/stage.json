@@ -1,12 +1,14 @@
 {
-  "id": "t1/s1/m1",
+  "id": "t1/hub",
   "tileset": "assets/tilesets/grasslands.png",
   "tiledefs": "assets/tilesets/grasslands.tiledefs.csv",
   "tilemap": "assets/stages/t1/s1/m1/tilemap.csv",
   "monsters": "assets/stages/t1/s1/m1/monsters.csv",
   "background": "assets/backgrounds/sky_day.png",
   "doors": "assets/stages/t1/s1/m1/doors.csv",
-  "spawns": "assets/stages/t1/s1/m1/spawns.csv",
+  "cover_tilemap": "assets/stages/t1/hub/cover.csv",
+  "unlocks": "assets/stages/t1/hub/unlocks.csv",
+  "spawns": "assets/stages/t1/hub/spawns.csv",
   "player_start": "assets/stages/t1/s1/m1/player_start.csv",
   "boss": { "arena": { "x":0,"y":0,"w":0,"h":0 } }
 }

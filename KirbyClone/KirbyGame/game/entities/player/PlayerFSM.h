@@ -150,6 +150,9 @@ namespace game {
         int    Facing ( ) const { return m_facing; }
         DebugInfo GetDebug ( ) const { return m_dbg; }
 
+        // setting
+        void SetFacing ( int dir ) { m_facing = ( dir < 0 ? -1 : +1 ); m_dbg.facing = m_facing; };
+
         // damage in
         bool ApplyDamage ( const Damage& d );
 
@@ -173,8 +176,6 @@ namespace game {
         // overlay control
         void BeginDoorEnter ( );
         void EndDoorEnter ( );
-
-        // clear flow overlay API
         void BeginDance ( );   // enter Z_Dance
         void EndDance ( );     // back to Z_None
 

@@ -4,7 +4,6 @@
 // Call-Context:   Main thread.
 //
 #include "game/data/StageDesc.h"
-
 #include <fstream>
 #include <sstream>
 #include <regex>
@@ -23,22 +22,23 @@ namespace {
 namespace game {
 
     bool LoadStageDesc ( const char* jsonPath , StageDesc& out ) {
-        std::string s;
-        if ( !jsonPath || !read_file ( jsonPath , s ) ) return false;
+        std::string s; if ( !jsonPath || !read_file ( jsonPath , s ) ) return false;
 
         // Flat pairs: "key":"value"  |  "key": number
         static const std::regex kv_re (
             R"REGEX("([A-Za-z0-9_]+)"\s*:\s*(?:"([^"]*)"|([-+]?[0-9]*\.?[0-9]+)))REGEX"
         );
 
-        std::smatch m;
-        auto it = s.cbegin ( );
+        std::smatch m; auto it = s.cbegin ( );
         while ( std::regex_search ( it , s.cend ( ) , m , kv_re ) ) {
-            const std::string key = m[ 1 ].str ( );
-            const bool isString = m[ 2 ].matched;
-
+            const std::string key = m[ 1 ].str ( ); const bool isString = m[ 2 ].matched;
+            // identity + spawns
             if ( key == "id" && isString ) out.id = m[ 2 ].str ( );
-            else if ( key == "hub_spawn" && isString ) out.hub_spawn = m[ 2 ].str ( );
+            else if ( key == "spawns" && isString ) out.spawns = m[ 2 ].str ( );
+            // hub-only
+            else if ( key == "cover_tilemap" && isString ) out.cover_tilemap = m[ 2 ].str ( );
+            else if ( key == "unlocks" && isString ) out.unlocks = m[ 2 ].str ( );
+            // core assets
             else if ( key == "tileset" && isString ) out.tileset = m[ 2 ].str ( );
             else if ( key == "tiledefs" && isString ) out.tiledefs = m[ 2 ].str ( );
             else if ( key == "tilemap" && isString ) out.tilemap = m[ 2 ].str ( );
@@ -50,36 +50,29 @@ namespace game {
             it = m.suffix ( ).first;
         }
 
-        // Optional nested: boss.arena {x,y,w,h}
+        // boss.arena {x,y,w,h}
         {
-            static const std::regex boss_re (
-                R"REGEX("boss"\s*:\s*\{[^}]*"arena"\s*:\s*\{([^}]*)\})REGEX" ,
-                std::regex::icase
-            );
+            static const std::regex boss_re ( R"REGEX("boss"\s*:\s*\{[^}]*"arena"\s*:\s*\{([^}]*)\})REGEX" , std::regex::icase );
             std::smatch bm;
             if ( std::regex_search ( s , bm , boss_re ) ) {
                 const std::string inner = bm[ 1 ].str ( );
                 auto find_int = [ & ] ( const char* k , int& dst )->bool {
-                    std::regex r ( std::string ( "\"" ) + k + R"("\s*:\s*([-+]?[0-9]+))" );
-                    std::smatch mm;
+                    std::regex r ( std::string ( "\"" ) + k + R"("\s*:\s*([-+]?[0-9]+))" ); std::smatch mm;
                     if ( std::regex_search ( inner , mm , r ) ) { dst = std::stoi ( mm[ 1 ].str ( ) ); return true; }
                     return false;
                     };
                 int bx = 0 , by = 0 , bw = 0 , bh = 0;
-                const bool ok = find_int ( "x" , bx ) && find_int ( "y" , by ) && find_int ( "w" , bw ) && find_int ( "h" , bh );
-                if ( ok ) {
-                    out.has_boss_arena = true;
-                    out.boss_x = bx; out.boss_y = by; out.boss_w = bw; out.boss_h = bh;
+                if ( find_int ( "x" , bx ) && find_int ( "y" , by ) && find_int ( "w" , bw ) && find_int ( "h" , bh ) ) {
+                    out.has_boss_arena = true; out.boss_x = bx; out.boss_y = by; out.boss_w = bw; out.boss_h = bh;
                 }
             }
         }
 
-        // Required keys
+        // Required keys (core)
         if ( out.tileset.empty ( ) || out.tiledefs.empty ( ) || out.tilemap.empty ( )
           || out.monsters.empty ( ) || out.player_start.empty ( ) || out.background.empty ( ) )
             return false;
 
-        // id is strongly recommended for flow; if absent, keep empty (caller may inject)
         return true;
     }
 

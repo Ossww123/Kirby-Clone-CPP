@@ -50,11 +50,12 @@
     PlaySession.Stage.cpp — 스테이지 로드·월드 재구성(타일·배경·플레이어 시작·카메라 경계·몬스터/도어 스폰)
     PlaySession.Combat.cpp — 전투 시스템 초기화·타깃 빌드·플레이어 이벤트 처리·데미지 적용·런타임 스폰
     PlaySession.Door.cpp — 문 오버랩 감지 및 페이드 기반 스테이지 전환 상태 머신
+    PlaySession.ClearFlow.cpp — 클리어 뒤 연출→세이브→허브 전환까지 “한 FSM”에서 책임지고, 세이브 타이밍을 페이드 아웃 완료 시점으로 고정.
     SessionState.* — 현재 슬롯과 세이브 데이터를 보관·저장하는 런타임 세션 컨테이너.
 
   /data
     StageDesc.* — 스테이지 정보(JSON) 로더.
-    StageCSV.* — 스테이지 CSV 로더(플레이어 시작/몬스터/타일정의/문/타일맵) 단순 파서 & 벡터 채움
+    StageCSV.* — 스테이지 CSV 로더(플레이어 시작/몬스터/타일정의/문/타일맵/문/허브-스폰/허브-언락).
     AnimCSV.* — 애니메이션 CSV( strip/frame ) 파싱 후 Animator에 클립 등록(옵션 초기화 지원)
     GameConfig.h — 전역 해상도/스케일 상수와 기본 월드 단위(타일/충돌 AABB) 정의
 
@@ -66,6 +67,7 @@
       PlayerFSM.AState.cpp — 플레이어 액션 상태 로직(흡입/입가득/별뱉기/공기포/능력공격).
       PlayerFSM.MState.cpp — 플레이어 이동 상태 로직(Idle/Walk/Run/Crouch/Slide/Jump/Fall/Inflated/Ladder).
       PlayerFSM.ZState.cpp — 플레이어 오버레이 상태 로직(피격/사망/문 입장/댄스/게임오버 및 상호작용).
+      PlayerFSM.OverlayControl.cpp - 플레이어 오버레이(ZState) 상태를 전환하는 외부 api.
     /monsters
       Monster.h - 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅, 헤더는 IntRect/RGBA8, 렌더디버그는 cpp)
       MonsterTypes.h — 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅)

@@ -169,7 +169,6 @@ namespace game {
         // Options
         std::string m_stageJsonPath{ "assets/stages/stage01/stage.json" };
         std::string m_stageId{};
-        std::string m_stageHubSpawn{};
 
         // ---- Combat / monsters ----
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;

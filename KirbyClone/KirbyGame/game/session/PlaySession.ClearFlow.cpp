@@ -29,10 +29,9 @@ namespace game {
         m_clear = {};
         m_clear.st = ClearState::Emblem;
         m_clear.t = 0.f;
-
         m_clear.stageId = m_stageId;
-        m_clear.hubSpawnKey = m_stageHubSpawn.empty ( ) ? DeriveDoorKeyFromStageId ( m_clear.stageId )
-            : m_stageHubSpawn;
+
+        m_clear.hubSpawnKey = DeriveDoorKeyFromStageId ( m_clear.stageId );
 
         // (stop directing for gaining Emblem)
     }

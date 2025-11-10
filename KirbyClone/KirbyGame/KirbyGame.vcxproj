@@ -228,6 +228,7 @@
     <ClInclude Include="game\Projectile.h" />
     <ClInclude Include="game\ProjectileFactory.h" />
     <ClInclude Include="game\ProjectileSystem.h" />
+    <ClInclude Include="game\session\HubCoverUnlock.h" />
     <ClInclude Include="game\session\PlaySession.h" />
     <ClInclude Include="game\projectile\Projectile.h" />
     <ClInclude Include="game\projectile\ProjectileFactory.h" />
@@ -239,6 +240,7 @@
     <ClInclude Include="game\entities\monsters\HotHead.h" />
     <ClInclude Include="game\entities\monsters\WhispyWoods.h" />
     <ClInclude Include="game\session\SessionState.h" />
+    <ClInclude Include="game\session\SpawnSelector.h" />
     <ClInclude Include="game\Sparky.h" />
     <ClInclude Include="game\StageCSV.h" />
     <ClInclude Include="game\StageDesc.h" />
@@ -304,6 +306,7 @@
     <ClCompile Include="game\entities\monsters\WaddleDoo.cpp" />
     <ClCompile Include="game\entities\monsters\HotHead.cpp" />
     <ClCompile Include="game\session\SessionState.cpp" />
+    <ClCompile Include="game\session\SpawnSelector.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
     <ClCompile Include="engine\world\WorldSystem.cpp" />
     <ClCompile Include="engine\core\RenderSystem.cpp" />

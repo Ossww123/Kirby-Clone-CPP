@@ -263,4 +263,69 @@ namespace game {
         return ( outW > 0 && outH > 0 && static_cast< int >( outIds.size ( ) ) == outW * outH );
     }
 
+    bool LoadSpawnsCSV ( const char* path , std::vector<SpawnCSV>& out ) {
+        std::ifstream f ( path ); if ( !f ) return false;
+
+        std::vector<std::string> hdr; if ( !read_header ( f , hdr ) ) return false;
+        const int in = findIdx ( hdr , "name" );
+        const int ix = findIdx ( hdr , "x" );
+        const int iy = findIdx ( hdr , "y" );
+        const int id = findIdx ( hdr , "dir" );
+        if ( in < 0 || ix < 0 || iy < 0 || id < 0 ) return false;
+
+        std::string line;
+        out.reserve ( out.size ( ) + 16 );
+        while ( std::getline ( f , line ) ) {
+            line.erase ( std::remove ( line.begin ( ) , line.end ( ) , '\r' ) , line.end ( ) );
+            line = trim ( line );
+            if ( line.empty ( ) || line[ 0 ] == '#' || line[ 0 ] == ';' ) continue;
+
+            const auto row = splitCSV ( line );
+            if ( static_cast< int >( row.size ( ) ) <= std::max ( { in,ix,iy,id } ) ) continue;
+
+            SpawnCSV s{};
+            s.name = row[ in ];
+            s.x = to<float> ( row[ ix ] , 0.f );
+            s.y = to<float> ( row[ iy ] , 0.f );
+            s.dir = to<int> ( row[ id ] , +1 );
+            if ( s.dir != -1 ) s.dir = +1;
+
+            out.push_back ( std::move ( s ) );
+        }
+        return true;
+    }
+
+    bool LoadUnlocksCSV ( const char* path , std::vector<UnlockCSV>& out ) {
+        std::ifstream f ( path ); if ( !f ) return false;
+
+        std::vector<std::string> hdr; if ( !read_header ( f , hdr ) ) return false;
+        const int ir = findIdx ( hdr , "require" );
+        const int itx = findIdx ( hdr , "tx" );
+        const int ity = findIdx ( hdr , "ty" );
+        const int iw = findIdx ( hdr , "w" );
+        const int ih = findIdx ( hdr , "h" );
+        if ( ir < 0 || itx < 0 || ity < 0 || iw < 0 || ih < 0 ) return false;
+
+        std::string line;
+        out.reserve ( out.size ( ) + 16 );
+        while ( std::getline ( f , line ) ) {
+            line.erase ( std::remove ( line.begin ( ) , line.end ( ) , '\r' ) , line.end ( ) );
+            line = trim ( line );
+            if ( line.empty ( ) || line[ 0 ] == '#' || line[ 0 ] == ';' ) continue;
+
+            const auto row = splitCSV ( line );
+            if ( static_cast< int >( row.size ( ) ) <= std::max ( { ir,itx,ity,iw,ih } ) ) continue;
+
+            UnlockCSV u{};
+            u.require = row[ ir ];
+            u.tx = to<int> ( row[ itx ] , 0 );
+            u.ty = to<int> ( row[ ity ] , 0 );
+            u.w = to<int> ( row[ iw ] , 0 );
+            u.h = to<int> ( row[ ih ] , 0 );
+
+            out.push_back ( u );
+        }
+        return true;
+    }
+
 } // namespace game
