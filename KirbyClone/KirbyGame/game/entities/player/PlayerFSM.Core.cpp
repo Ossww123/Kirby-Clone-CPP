@@ -198,8 +198,6 @@ namespace game {
     }
 
     void PlayerFSM::OnMouthCatch ( Ability gift ) { m_mouthFull = true; m_caughtGift = gift; }
-    void PlayerFSM::BeginDoorEnter ( ) { RequestOver ( std::make_unique<Z_DoorEnter> ( ) , ZState::DoorEnter ); }
-    void PlayerFSM::EndDoorEnter ( ) { RequestOver ( std::make_unique<Z_None> ( ) , ZState::None ); }
 
     PlayerFSM::Persistent PlayerFSM::SnapshotPersistent ( ) const {
         Persistent s{}; s.hp = m_health.hp; s.ability = m_ability; s.facing = m_facing; s.mouthFull = m_mouthFull; return s;

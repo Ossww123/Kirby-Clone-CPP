@@ -31,25 +31,27 @@ namespace game {
 #include "engine/world/WorldSystem.h"
 #include "engine/world/Camera.h"
 #include "engine/render/Texture.h"
-#include "engine/util/Types.h"                 // engine::IntRect
-#include "game/entities/player/PlayerFSM.h"    // PlayerFSM is a by-value member
-#include "game/projectile/ProjectileSystem.h"  // by-value member
-#include "game/combat/HitVolumeSystem.h"       // by-value member
+#include "engine/util/Types.h"                  // engine::IntRect
+#include "game/entities/player/PlayerFSM.h"     // PlayerFSM is a by-value member
+#include "game/projectile/ProjectileSystem.h"   // by-value member
+#include "game/combat/HitVolumeSystem.h"        // by-value member
 #include "game/entities/monsters/Monster.h"
 #include "game/entities/monsters/MonsterTypes.h"
-#include "game/data/StageCSV.h" // DoorCSV
+#include "game/data/StageCSV.h"                 // DoorCSV
+#include "game/session/SessionState.h"          // SessionState
 
 namespace game {
 
     class PlaySession {
     public:
         struct CreateDesc {
-            engine::IRenderer* renderer = nullptr;   // for size queries
-            engine::D3D11SpriteBatch* batch = nullptr;
-            engine::D3D11DebugDraw* debug = nullptr;
-            engine::DWriteTextHUD* textHUD = nullptr;
-            engine::Scene* scene = nullptr;   // to spawn Player
-            engine::IntRect           rcClient{};          // initial client rect
+            engine::IRenderer*          renderer = nullptr;     // for size queries
+            engine::D3D11SpriteBatch*   batch = nullptr;
+            engine::D3D11DebugDraw*     debug = nullptr;
+            engine::DWriteTextHUD*      textHUD = nullptr;
+            engine::Scene*              scene = nullptr;        // to spawn Player
+            engine::IntRect             rcClient{};             // initial client rect
+            game::SessionState*         session = nullptr;
         };
 
         ~PlaySession ( );
@@ -59,7 +61,7 @@ namespace game {
         void OnResize ( int sw , int sh );
 
         // 2) Stage load (world/bg/player start/camera bounds)
-        bool LoadStage ( const char* jsonPath );
+        bool LoadStage ( const char* jsonPath /*stage.json path*/ );
         bool ReloadStage ( ) { return LoadStage ( m_stageJsonPath.c_str ( ) ); }
 
         // 3) Fixed update (FSM/combat/monsters/camera)
@@ -73,12 +75,12 @@ namespace game {
         void RenderOverlayFade ( int sw , int sh ); // (later) fade may move out
 
         // 5) Camera/world helpers
-        std::pair<int , int>         CameraOffsetInt ( ) const { return m_Cam.OffsetInt ( ); }
-        engine::Camera& Camera ( ) { return m_Cam; }
-        const engine::WorldSystem& World ( )          const { return m_World; }
-        engine::WorldSystem& World ( ) { return m_World; }
-        engine::IntRect            WorldRectPx ( )     const { return m_World.WorldRectPx ( ); }
-        int                        PlayerFacing ( )     const { return m_PlayerFSM.Facing ( ); }
+        std::pair<int , int> CameraOffsetInt ( ) const { return m_Cam.OffsetInt ( ); }
+        engine::Camera& Camera ( )                     { return m_Cam; }
+        const engine::WorldSystem& World ( )     const { return m_World; }
+        engine::WorldSystem& World ( )                 { return m_World; }
+        engine::IntRect WorldRectPx ( )          const { return m_World.WorldRectPx ( ); }
+        int PlayerFacing ( )                     const { return m_PlayerFSM.Facing ( ); }
 
         // (temp) player handle
         game::Player* Player ( ) const { return m_Player; }
@@ -93,7 +95,13 @@ namespace game {
 
         // ---- Door / Transition API ----
         void StartTransitionTo ( const std::string& target ,
-                                 float fadeOutSec = 0.25f , float fadeInSec = 0.20f );
+                                 float fadeOutSec = 0.25f ,
+                                 float fadeInSec = 0.20f ,
+                                 const char* spawnOverride = nullptr );
+
+        // ---- Clear Flow (public trigger/query) ----
+        void BeginClearSequence ( );
+        bool IsClearSequenceActive ( ) const;
 
     private:
         // Internals
@@ -112,25 +120,45 @@ namespace game {
         bool checkDoorInteract ( ); // Player AABB vs Door AABB overlap
         void updateTransition ( double fixedDt );
 
+        // --- Clear Flow ---
+        enum class ClearState { Idle , Emblem , AutoPilot , Dance , FadeOut , SaveAndHub , FadeIn };
+        struct ClearCtx {
+            ClearState st{ ClearState::Idle };
+            float t{ 0.f };
+            // durations
+            float tEmblem{ 1.0f };
+            float tAuto{ 1.0f };
+            float tDance{ 2.5f };
+            float tFade{ 0.6f };
+            // ids
+            std::string stageId;
+            std::string hubSpawnKey;
+        } m_clear;
+
+        void updateClearFlow ( double dt );
+
         // --- Boss Arena / Camera Lock ---
         void updateBossCameraLock ( );
         bool isBossAlive ( ) const;
 
     private:
         // Provided handles (non-owning)
-        engine::IRenderer* m_Renderer = nullptr;
-        engine::D3D11SpriteBatch* m_Batch = nullptr;
-        engine::D3D11DebugDraw* m_Debug = nullptr;
-        engine::DWriteTextHUD* m_TextHUD = nullptr;
-        engine::Scene* m_Scene = nullptr;
+        engine::IRenderer*          m_Renderer = nullptr;
+        engine::D3D11SpriteBatch*   m_Batch = nullptr;
+        engine::D3D11DebugDraw*     m_Debug = nullptr;
+        engine::DWriteTextHUD*      m_TextHUD = nullptr;
+        engine::Scene*              m_Scene = nullptr;
+
+        // SessionState
+        game::SessionState*         m_Session = nullptr;
 
         // Session-owned runtime
-        engine::WorldSystem m_World;
-        engine::Camera      m_Cam;
+        engine::WorldSystem         m_World;
+        engine::Camera              m_Cam;
 
-        game::Player* m_Player = nullptr;
-        game::PlayerFSM        m_PlayerFSM;
-        game::PlayerFSM::Cfg   m_playerFsmCfg{ .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
+        game::Player*               m_Player = nullptr;
+        game::PlayerFSM             m_PlayerFSM;
+        game::PlayerFSM::Cfg        m_playerFsmCfg{ .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
 
         // Resources
         engine::Tex2D m_PlayerTex{};
@@ -140,6 +168,8 @@ namespace game {
 
         // Options
         std::string m_stageJsonPath{ "assets/stages/stage01/stage.json" };
+        std::string m_stageId{};
+        std::string m_stageHubSpawn{};
 
         // ---- Combat / monsters ----
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;
@@ -162,8 +192,9 @@ namespace game {
         struct Transition {
             enum State { Idle , FadingOut , Loading , FadingIn } state = Idle;
             std::string target;
-            float fadeOut = 0.25f;
-            float fadeIn = 0.20f;
+            float       fadeOut = 0.25f;
+            float       fadeIn = 0.20f;
+            std::string spawn;
         } m_trans;
 
         // --- Boss Arena / Camera Lock ---

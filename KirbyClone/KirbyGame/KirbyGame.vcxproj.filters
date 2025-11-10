@@ -491,13 +491,13 @@
     <ClCompile Include="game\entities\player\PlayerFSM.Core.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\entities\player\PlayerFSM.Move.cpp">
+    <ClCompile Include="game\entities\player\PlayerFSM.MState.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\entities\player\PlayerFSM.Action.cpp">
+    <ClCompile Include="game\entities\player\PlayerFSM.AState.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="game\entities\player\PlayerFSM.Overlay.cpp">
+    <ClCompile Include="game\entities\player\PlayerFSM.ZState.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="engine\render\D3D11DebugDrawAdapter.cpp">
@@ -522,6 +522,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\session\SessionState.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\entities\player\PlayerFSM.OverlayControl.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\session\PlaySession.ClearFlow.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

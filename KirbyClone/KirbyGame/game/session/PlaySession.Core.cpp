@@ -89,6 +89,9 @@ namespace game {
         m_hitSys.DrainDespawnEvents ( hvDes );
         if ( !hvDes.empty ( ) ) handleHitVolumeDespawns ( hvDes );
 
+        // 3.5) Clear flow — before transition
+        updateClearFlow ( static_cast< float >( fixedDt ) );
+
         // 4) Anim / camera / spawns / transition
         if ( m_Player && m_Player->Animator ( ) ) m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
         if ( m_Player ) m_Cam.SetLookAt ( m_Player->Center ( ) );

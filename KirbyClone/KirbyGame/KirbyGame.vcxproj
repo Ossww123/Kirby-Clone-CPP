@@ -284,11 +284,13 @@
     <ClCompile Include="game\entities\monsters\MonsterFactory.cpp" />
     <ClCompile Include="game\entities\monsters\WhispyWoods.cpp" />
     <ClCompile Include="game\entities\player\Player.cpp" />
-    <ClCompile Include="game\entities\player\PlayerFSM.Action.cpp" />
+    <ClCompile Include="game\entities\player\PlayerFSM.AState.cpp" />
     <ClCompile Include="game\entities\player\PlayerFSM.Core.cpp" />
-    <ClCompile Include="game\entities\player\PlayerFSM.Move.cpp" />
-    <ClCompile Include="game\entities\player\PlayerFSM.Overlay.cpp" />
+    <ClCompile Include="game\entities\player\PlayerFSM.MState.cpp" />
+    <ClCompile Include="game\entities\player\PlayerFSM.OverlayControl.cpp" />
+    <ClCompile Include="game\entities\player\PlayerFSM.ZState.cpp" />
     <ClCompile Include="game\projectile\Projectile.cpp" />
+    <ClCompile Include="game\session\PlaySession.ClearFlow.cpp" />
     <ClCompile Include="game\session\PlaySession.Combat.cpp" />
     <ClCompile Include="game\session\PlaySession.Core.cpp" />
     <ClCompile Include="game\session\PlaySession.Door.cpp" />

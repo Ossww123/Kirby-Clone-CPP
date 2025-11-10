@@ -53,7 +53,7 @@
     SessionState.* — 현재 슬롯과 세이브 데이터를 보관·저장하는 런타임 세션 컨테이너.
 
   /data
-    StageDesc.* — 스테이지 리소스 경로를 담은 단순 JSON(평면 키) 로더 및 데이터 구조
+    StageDesc.* — 스테이지 정보(JSON) 로더.
     StageCSV.* — 스테이지 CSV 로더(플레이어 시작/몬스터/타일정의/문/타일맵) 단순 파서 & 벡터 채움
     AnimCSV.* — 애니메이션 CSV( strip/frame ) 파싱 후 Animator에 클립 등록(옵션 초기화 지원)
     GameConfig.h — 전역 해상도/스케일 상수와 기본 월드 단위(타일/충돌 AABB) 정의
@@ -63,9 +63,9 @@
       Player.* — 플레이어 물리/애니/텍스처 핸들(헤더 IntRect·RGBA8만 노출, 로직은 FSM 담당)
       PlayerFSM.h — 플레이어 FSM 선언(3트랙 상태/이벤트/튜닝 상수)
       PlayerFSM.Core.cpp — FSM 코어(초기화/스텝/충돌적분/전이/스냅샷)
-      PlayerFSM.Action.cpp — 플레이어 액션 상태 로직(흡입/입가득/별뱉기/공기포/능력공격).
-      PlayerFSM.Move.cpp — 플레이어 이동 상태 로직(Idle/Walk/Run/Crouch/Slide/Jump/Fall/Inflated/Ladder).
-      PlayerFSM.Overlay.cpp — 플레이어 오버레이 상태 로직(피격/사망/문 입장/댄스/게임오버 및 상호작용).
+      PlayerFSM.AState.cpp — 플레이어 액션 상태 로직(흡입/입가득/별뱉기/공기포/능력공격).
+      PlayerFSM.MState.cpp — 플레이어 이동 상태 로직(Idle/Walk/Run/Crouch/Slide/Jump/Fall/Inflated/Ladder).
+      PlayerFSM.ZState.cpp — 플레이어 오버레이 상태 로직(피격/사망/문 입장/댄스/게임오버 및 상호작용).
     /monsters
       Monster.h - 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅, 헤더는 IntRect/RGBA8, 렌더디버그는 cpp)
       MonsterTypes.h — 몬스터 베이스(물리/충돌·체력/넉백·스폰 훅)

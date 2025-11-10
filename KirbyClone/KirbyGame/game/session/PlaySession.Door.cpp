@@ -16,7 +16,7 @@ namespace {
 
 namespace game {
 
-    void PlaySession::StartTransitionTo ( const std::string& target , float o , float i )
+    void PlaySession::StartTransitionTo ( const std::string& target , float o , float i , const char* spawnOverride )
     {
         if ( target.empty ( ) ) return;
         m_trans = {};
@@ -24,11 +24,14 @@ namespace game {
         m_trans.target = target;
         m_trans.fadeOut = o;
         m_trans.fadeIn = i;
+        if ( spawnOverride && *spawnOverride ) m_trans.spawn = spawnOverride;
         StartFadeOut ( o );
     }
 
     bool PlaySession::checkDoorInteract ( )
     {
+        if ( IsClearSequenceActive ( ) ) return false;
+
         if ( m_trans.state != Transition::Idle ) return false; // ignore while transitioning
         if ( !m_Player || m_Doors.empty ( ) ) return false;
 

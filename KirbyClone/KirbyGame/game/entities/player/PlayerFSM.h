@@ -174,6 +174,10 @@ namespace game {
         void BeginDoorEnter ( );
         void EndDoorEnter ( );
 
+        // clear flow overlay API
+        void BeginDance ( );   // enter Z_Dance
+        void EndDance ( );     // back to Z_None
+
         // persistence I/O
         Persistent SnapshotPersistent ( ) const;
         void       RestorePersistent ( const Persistent& s );
