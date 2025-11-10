@@ -348,6 +348,15 @@
     <ClInclude Include="game\debugdraw\ProjectileDebugDraw.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="protocol\SaveSchema.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\save\SaveStorage.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\session\SessionState.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">
@@ -507,6 +516,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="game\entities\monsters\MonsterFactory.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\save\SaveStorage.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="game\session\SessionState.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

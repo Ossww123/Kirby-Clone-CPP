@@ -1,4 +1,6 @@
 ```
+/protocol
+  SaveSchema.h — 게임/엔진 전 계층이 공유하는 세이브 데이터 스키마와 유틸(계약 계층).
 /engine
   /core
     GameApp.* — 앱 루프·입력/타이밍 관리·렌더/세션 초기화와 오케스트레이션
@@ -34,6 +36,8 @@
     Math.h — Vec2 및 기본 수학 상수/변환(헤더 온리).
     StringConv.h — UTF-8↔UTF-16 헬퍼(Win32 MultiByte/WideChar 사용); 헤더에서 Win32 의존 감춤.
     Types.h — 엔진 공용 IntRect 및 간단 헬퍼(헤더온리).
+  /save
+    SaveStorage.* — 세이브 데이터 파일을 간단한 k=v 텍스트로 로드/세이브하는 엔진 I/O 계층.
   /platform/win32
     RectUtil.h — Win32 RECT ↔ IntRect 변환 인라인 어댑터.
     ColorUtil.h — COLORREF↔RGBA8 변환 유틸;
@@ -46,6 +50,7 @@
     PlaySession.Stage.cpp — 스테이지 로드·월드 재구성(타일·배경·플레이어 시작·카메라 경계·몬스터/도어 스폰)
     PlaySession.Combat.cpp — 전투 시스템 초기화·타깃 빌드·플레이어 이벤트 처리·데미지 적용·런타임 스폰
     PlaySession.Door.cpp — 문 오버랩 감지 및 페이드 기반 스테이지 전환 상태 머신
+    SessionState.* — 현재 슬롯과 세이브 데이터를 보관·저장하는 런타임 세션 컨테이너.
 
   /data
     StageDesc.* — 스테이지 리소스 경로를 담은 단순 JSON(평면 키) 로더 및 데이터 구조

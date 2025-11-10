@@ -156,6 +156,7 @@
     <ClInclude Include="engine\RenderSystem.h" />
     <ClInclude Include="engine\render\D3D11DebugDrawAdapter.h" />
     <ClInclude Include="engine\render\IDebugDraw.h" />
+    <ClInclude Include="engine\save\SaveStorage.h" />
     <ClInclude Include="engine\Scene.h" />
     <ClInclude Include="engine\StringConv.h" />
     <ClInclude Include="engine\Texture.h" />
@@ -237,12 +238,14 @@
     <ClInclude Include="game\entities\monsters\WaddleDoo.h" />
     <ClInclude Include="game\entities\monsters\HotHead.h" />
     <ClInclude Include="game\entities\monsters\WhispyWoods.h" />
+    <ClInclude Include="game\session\SessionState.h" />
     <ClInclude Include="game\Sparky.h" />
     <ClInclude Include="game\StageCSV.h" />
     <ClInclude Include="game\StageDesc.h" />
     <ClInclude Include="game\WaddleDee.h" />
     <ClInclude Include="game\WaddleDoo.h" />
     <ClInclude Include="game\WhispyWoods.h" />
+    <ClInclude Include="protocol\SaveSchema.h" />
     <ClInclude Include="res\Resource.h" />
     <ClInclude Include="engine\world\WorldSystem.h" />
     <ClInclude Include="game\entities\monsters\Sparky.h" />
@@ -262,6 +265,7 @@
     <ClCompile Include="engine\core\GameApp.cpp" />
     <ClCompile Include="engine\physics\PhysicsBody.cpp" />
     <ClCompile Include="engine\render\DWriteText.cpp" />
+    <ClCompile Include="engine\save\SaveStorage.cpp" />
     <ClCompile Include="engine\util\Anim.cpp" />
     <ClCompile Include="engine\util\StringConv.cpp" />
     <ClCompile Include="engine\world\Camera.cpp" />
@@ -297,6 +301,7 @@
     <ClCompile Include="game\entities\monsters\WaddleDee.cpp" />
     <ClCompile Include="game\entities\monsters\WaddleDoo.cpp" />
     <ClCompile Include="game\entities\monsters\HotHead.cpp" />
+    <ClCompile Include="game\session\SessionState.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
     <ClCompile Include="engine\world\WorldSystem.cpp" />
     <ClCompile Include="engine\core\RenderSystem.cpp" />
