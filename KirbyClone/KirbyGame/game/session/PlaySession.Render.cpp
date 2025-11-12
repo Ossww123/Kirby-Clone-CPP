@@ -62,10 +62,14 @@ namespace game {
         src.r = src.l + viewW_tex;
         src.b = src.t + viewH_tex;
 
-        m_RenderSys->Batch ( ).Draw (
+        m_RenderSys->DrawSprite (
             m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src ,
-            engine::win32::RGBA8 ( 255 , 255 , 255 )
-        );
+            engine::win32::RGBA8 ( 255 , 255 , 255 ) ,
+            0.f , 0.f , 0.f ,
+            /*zSort*/ -30000 ,
+            engine::BlendMode::Alpha ,
+            engine::SamplerMode::Linear
+         );
     }
 
     void PlaySession::RenderWorld ( int ox , int oy , int sw , int sh ) {
@@ -268,9 +272,13 @@ namespace game {
         const uint8_t g = ( uint8_t ) ( ( m_fade.rgb >> 8 ) & 0xFF );
         const uint8_t b = ( uint8_t ) ( m_fade.rgb & 0xFF );
 
-        m_RenderSys->Batch ( ).Draw (
+        m_RenderSys->DrawSprite (
             m_WhiteTex , 0.f , 0.f , ( float ) sw , ( float ) sh , nullptr ,
-            engine::win32::RGBA8 ( r , g , b , a ) 
+            engine::win32::RGBA8 ( r , g , b , a ) ,
+            0.f , 0.f , 0.f ,
+            /*zSort*/ +30000 ,
+            engine::BlendMode::Alpha ,
+            engine::SamplerMode::Linear
         );
     }
 

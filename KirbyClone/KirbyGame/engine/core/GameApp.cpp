@@ -198,19 +198,23 @@ namespace engine {
 
         m_Render.Begin ( { 0.05f, 0.00f, 0.10f, 1.0f } );
 
-        if ( m_mode == AppMode::Front && m_Front ) {
-            m_Front->Render ( );
-        }
-        else if ( m_Session ) {
+        if ( m_mode == AppMode::Session && m_Session ) {
             const auto [ox , oy] = m_Session->CameraOffsetInt ( );
             m_Session->RenderParallaxBG ( ox , oy , sw , sh );
             m_Session->RenderWorld ( ox , oy , sw , sh );
             m_Session->RenderOverlayFade ( sw , sh );
             m_Session->RenderDebugGridAndColliders ( ox , oy , sw , sh , m_debugDrawEnabled );
-            m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) ); // DWrite
         }
 
         m_Render.End ( );
+
+        if ( m_mode == AppMode::Front && m_Front ) {
+            m_Front->Render ( ); // DWrite Text
+        }
+        else if ( m_Session ) {
+            m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) ); // DWrite Text
+        }
+        m_Render.Present ( );
     }
 
 

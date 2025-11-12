@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <utility>
+#include <cstdint>
 #include "engine/render/IRenderer.h" // Color, IRenderer
 
 namespace engine {
@@ -17,6 +18,10 @@ namespace engine {
     class Camera;
     struct Tex2D;
     struct IntRect;
+
+    // forward declare enums defined in D3D11SpriteBatch.h
+    enum class BlendMode : std::uint8_t;
+    enum class SamplerMode : std::uint8_t;
 
     struct RenderConfig {
         bool  usePixelSnap = true;          // handled in Camera
@@ -37,6 +42,7 @@ namespace engine {
         // Frame lifecycle
         void Begin ( const Color& clear );
         void End ( );
+        void Present ( );
 
         // Policy / state
         void SetConfig ( const RenderConfig& cfg );
@@ -61,6 +67,16 @@ namespace engine {
                         float rotation = 0.f ,
                         float originX = 0.f , float originY = 0.f ,
                         float z = 0.f , uint8_t sortBlend = 0 );
+
+        // zSort/Blend/Sampler
+        void DrawSprite ( const Tex2D & tex ,
+                        float wx , float wy , float w , float h ,
+                        const IntRect * src ,
+                        uint32_t rgba ,
+                        float rotation , float originX , float originY ,
+                        std::int16_t zSort ,
+                        BlendMode blend ,
+                        SamplerMode sampler );
 
         // Low-level access (world/tile renderers use these directly)
         D3D11SpriteBatch& Batch ( );

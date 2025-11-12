@@ -44,6 +44,10 @@ namespace engine {
     void RenderSystem::End ( ) {
         if ( m_batch ) m_batch->End ( );
         if ( m_dbg )   m_dbg->Flush ( );
+    }
+
+    void RenderSystem::Present ( )
+    {
         if ( m_renderer ) m_renderer->EndFrame ( );
     }
 
@@ -92,6 +96,24 @@ namespace engine {
 
         // SpriteBatch v2 (IntRect) path
         m_batch->Draw ( tex , sx , sy , sw , sh , src , rgba , rotation , originX , originY );
+    }
+
+    void RenderSystem::DrawSprite ( const Tex2D& tex ,
+                              float wx , float wy , float w , float h ,
+                              const IntRect* src ,
+                              uint32_t rgba ,
+                              float rotation , float originX , float originY ,
+                              std::int16_t zSort , BlendMode blend , SamplerMode sampler )
+    {
+        if ( !m_batch ) return;
+
+        auto [sx , sy] = ToScreen ( wx , wy );
+        const float z = ( m_cfg.zoom > 0.f ) ? m_cfg.zoom : 1.f;
+        const float sw = w * z;
+        const float sh = h * z;
+
+        m_batch->Draw ( tex , sx , sy , sw , sh , src , rgba , rotation , originX , originY ,
+                        zSort , blend , sampler );
     }
 
     D3D11SpriteBatch& RenderSystem::Batch ( ) { return *m_batch; }
