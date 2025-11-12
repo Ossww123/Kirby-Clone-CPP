@@ -17,8 +17,7 @@ inline void DBGLOG ( const wchar_t* msg ) { ::OutputDebugStringW ( msg ); ::Outp
 namespace game {
 
     void FrontFlow::Initialize ( const FrontFlowCreate& d ) {
-        m_Renderer = d.renderer; m_Batch = d.batch; m_Text = d.text;
-        m_Input = d.input; m_Save = d.save; m_State = d.state;
+        m_Text = d.text; m_Input = d.input; m_Save = d.save; m_State = d.state;
         m_sw = d.screenW; m_sh = d.screenH;
         m_focus = 0; m_slotFocus = 0; m_navCd = 0.f; m_selectedSlot = 1;
         refreshSlotInfos ( );

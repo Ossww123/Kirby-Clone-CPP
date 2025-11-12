@@ -7,6 +7,7 @@
 #include "game/session/PlaySession.h"
 #include "engine/render/D3D11SpriteBatch.h"
 #include "engine/render/D3D11DebugDraw.h"
+#include "engine/core/RenderSystem.h"
 #include "engine/render/D3D11DebugDrawAdapter.h"
 #include "engine/render/DWriteText.h"
 #include "engine/util/Types.h"
@@ -61,13 +62,15 @@ namespace game {
         src.r = src.l + viewW_tex;
         src.b = src.t + viewH_tex;
 
-        m_Batch->Draw ( m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src ,
-                        engine::win32::RGBA8 ( 255 , 255 , 255 ) );
+        m_RenderSys->Batch ( ).Draw (
+            m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src ,
+            engine::win32::RGBA8 ( 255 , 255 , 255 )
+        );
     }
 
     void PlaySession::RenderWorld ( int ox , int oy , int sw , int sh ) {
         // 1) Tiles
-        m_World.RenderVisible ( *m_Batch , ox , oy , sw , sh );
+        m_World.RenderVisible ( m_RenderSys->Batch ( ) , ox , oy , sw , sh );
 
         // 2) Player
         if ( m_Player ) {
@@ -79,7 +82,7 @@ namespace game {
                 const float sy = ( ( py + ph ) - vh - oy );
                 engine::IntRect src{};
                 if ( auto* a = m_Player->Animator ( ) ) src = a->CurrentSrc ( );
-                m_Batch->Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
+                m_RenderSys->Batch ( ).Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
                                 ( src.r > src.l ) ? &src : nullptr ,
                                 engine::win32::RGBA8 ( 255 , 255 , 255 ) );
             }
@@ -94,27 +97,28 @@ namespace game {
             const float sx = ( ( mx + mw * 0.5f ) - vw * 0.5f - ox );
             const float sy = ( ( my + mh ) - vh - oy );
             engine::IntRect src = m->SpriteSrc ( );
-            m_Batch->Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
+            m_RenderSys->Batch ( ).Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
                             &src , engine::win32::RGBA8 ( 255 , 255 , 255 ) );
         }
     }
 
     void PlaySession::RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh , bool drawEnabled ) {
-        if ( !drawEnabled || !m_Debug ) return;
+        if ( !drawEnabled || !m_RenderSys ) return;
+
+        auto& dbg = m_RenderSys->Debug ( );
 
         const int GRID = game::GRID_PX;
         const int wx0 = ox , wy0 = oy , wx1 = ox + sw , wy1 = oy + sh;
         int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
         for ( int x = gx; x <= wx1; x += GRID )
-            m_Debug->WorldLine ( x , wy0 , x , wy1 , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
+            dbg.WorldLine ( x , wy0 , x , wy1 , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
         for ( int y = gy; y <= wy1; y += GRID )
-            m_Debug->WorldLine ( wx0 , y , wx1 , y , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
+            dbg.WorldLine ( wx0 , y , wx1 , y , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
 
         // World colliders (via adapter)
         engine::physics::DebugDraw (
             m_World.Collision ( ) ,
-            *m_Debug ,
-            ox , oy ,
+            dbg, ox , oy ,
             engine::win32::RGBA8 ( 255 , 60 , 60 ) ,   // solid
             engine::win32::RGBA8 ( 255 , 200 , 0 )    // oneway
         );
@@ -122,24 +126,24 @@ namespace game {
         // Player AABB
         if ( m_Player ) {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            m_Debug->WorldRect ( px , py , pw , ph , ox , oy , engine::win32::RGBA8 ( 0 , 255 , 0 ) );
+            dbg.WorldRect ( px , py , pw , ph , ox , oy , engine::win32::RGBA8 ( 0 , 255 , 0 ) );
         }
 
         // Monsters debug (bounds + HP) via adapter
         for ( const auto& m : m_Monsters ) {
             if ( m && m->Alive ( ) ) {
-                game::MonsterDebugDraw::Draw ( *m , m_Debug , ox , oy );
+                game::MonsterDebugDraw::Draw ( *m , &dbg , ox , oy );
             }
         }
 
         // Projectile / HitVolume debug
-        engine::D3D11DebugDrawAdapter idbg ( m_Debug );
+        engine::D3D11DebugDrawAdapter idbg ( &dbg );
         m_projSys.DebugDraw ( idbg , ox , oy );
         m_hitSys.DebugDraw ( idbg , ox , oy );
 
         // Doors
         for ( const auto& d : m_Doors ) {
-            m_Debug->WorldRect ( d.x , d.y , d.w , d.h , ox , oy , engine::win32::RGBA8 ( 0 , 200 , 255 ) );
+            dbg.WorldRect ( d.x , d.y , d.w , d.h , ox , oy , engine::win32::RGBA8 ( 0 , 200 , 255 ) );
         }
 
         // Boss arena AABB (magenta)
@@ -147,12 +151,10 @@ namespace game {
             const int w = m_bossArena.r - m_bossArena.l;
             const int h = m_bossArena.b - m_bossArena.t;
             if ( w > 0 && h > 0 ) {
-                m_Debug->WorldRect ( m_bossArena.l , m_bossArena.t , w , h , ox , oy ,
+                dbg.WorldRect ( m_bossArena.l , m_bossArena.t , w , h , ox , oy ,
                                      engine::win32::RGBA8 ( 255 , 0 , 255 ) );
             }
         }
-
-        m_Debug->Flush ( );
     }
 
     void PlaySession::RenderHUD ( int fps , double fixedDt ) {
@@ -255,7 +257,7 @@ namespace game {
     }
 
     void PlaySession::RenderOverlayFade ( int sw , int sh ) {
-        if ( !m_Batch || !m_WhiteTex.srv ) return;
+        if ( !m_RenderSys || !m_WhiteTex.srv ) return;
         if ( m_fade.mode == Fade::None || m_fade.dur <= 0.f ) return;
 
         const float t = std::clamp ( m_fade.t / std::max ( 0.0001f , m_fade.dur ) , 0.f , 1.f );
@@ -266,8 +268,10 @@ namespace game {
         const uint8_t g = ( uint8_t ) ( ( m_fade.rgb >> 8 ) & 0xFF );
         const uint8_t b = ( uint8_t ) ( m_fade.rgb & 0xFF );
 
-        m_Batch->Draw ( m_WhiteTex , 0.f , 0.f , ( float ) sw , ( float ) sh , nullptr ,
-                        engine::win32::RGBA8 ( r , g , b , a ) );
+        m_RenderSys->Batch ( ).Draw (
+            m_WhiteTex , 0.f , 0.f , ( float ) sw , ( float ) sh , nullptr ,
+            engine::win32::RGBA8 ( r , g , b , a ) 
+        );
     }
 
 } // namespace game

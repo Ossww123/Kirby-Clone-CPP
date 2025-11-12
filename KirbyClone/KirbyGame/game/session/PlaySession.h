@@ -13,8 +13,7 @@
 // === Forward decls to keep header light ===
 namespace engine {
     class IRenderer;
-    class D3D11SpriteBatch;
-    class D3D11DebugDraw;
+    class RenderSystem;
     class DWriteTextHUD;
     class Scene;
     class Input;
@@ -46,8 +45,7 @@ namespace game {
     public:
         struct CreateDesc {
             engine::IRenderer*          renderer = nullptr;     // for size queries
-            engine::D3D11SpriteBatch*   batch = nullptr;
-            engine::D3D11DebugDraw*     debug = nullptr;
+            engine::RenderSystem*       renderSys = nullptr;
             engine::DWriteTextHUD*      textHUD = nullptr;
             engine::Scene*              scene = nullptr;        // to spawn Player
             engine::IntRect             rcClient{};             // initial client rect
@@ -144,8 +142,7 @@ namespace game {
     private:
         // Provided handles (non-owning)
         engine::IRenderer*          m_Renderer = nullptr;
-        engine::D3D11SpriteBatch*   m_Batch = nullptr;
-        engine::D3D11DebugDraw*     m_Debug = nullptr;
+        engine::RenderSystem*       m_RenderSys = nullptr;
         engine::DWriteTextHUD*      m_TextHUD = nullptr;
         engine::Scene*              m_Scene = nullptr;
 

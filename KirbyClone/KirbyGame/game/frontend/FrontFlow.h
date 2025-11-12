@@ -9,14 +9,12 @@
 #include <string>
 #include "protocol/SaveSchema.h"
 
-namespace engine { class IRenderer; class D3D11SpriteBatch; class DWriteTextHUD; class Input; class SaveStorage; }
+namespace engine { class DWriteTextHUD; class Input; class SaveStorage; }
 
 namespace game {
     class SessionState;
 
     struct FrontFlowCreate {
-        engine::IRenderer* renderer{};
-        engine::D3D11SpriteBatch* batch{};
         engine::DWriteTextHUD* text{};
         engine::Input* input{};
         engine::SaveStorage* save{};
@@ -43,8 +41,6 @@ namespace game {
         };
 
         // deps
-        engine::IRenderer* m_Renderer{};
-        engine::D3D11SpriteBatch* m_Batch{};
         engine::DWriteTextHUD* m_Text{};
         engine::Input* m_Input{};
         engine::SaveStorage* m_Save{};

@@ -336,7 +336,7 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
             pushQuad ( m_vertices , m_indices , *t , it.src ,
                      it.x , it.y , it.w , it.h , it.rotation , it.originX , it.originY , it.rgba );
         }
-        flushBatches ( );
+        flushGroup ( );
 
         // cache reset
         m_boundTex = nullptr;

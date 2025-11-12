@@ -23,8 +23,6 @@ namespace engine {
     class Scene;
 
     class IRenderer;
-    class D3D11SpriteBatch;
-    class D3D11DebugDraw;
     class DWriteTextHUD;
 } // namespace engine
 
@@ -59,8 +57,6 @@ namespace engine {
 
         // Rendering
         std::unique_ptr<IRenderer>        m_Renderer;
-        std::unique_ptr<D3D11SpriteBatch> m_Batch;
-        std::unique_ptr<D3D11DebugDraw>   m_Debug;
         std::unique_ptr<DWriteTextHUD>    m_TextHUD;
         RenderSystem                      m_Render{};
 

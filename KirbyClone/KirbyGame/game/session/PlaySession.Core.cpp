@@ -9,8 +9,7 @@
 
 #include "game/session/PlaySession.h"
 #include "engine/render/D3D11Renderer.h"
-#include "engine/render/D3D11SpriteBatch.h"
-#include "engine/render/D3D11DebugDraw.h"
+#include "engine/core/RenderSystem.h"
 #include "engine/render/TextureLoader.h"
 #include "engine/util/Types.h"
 #include "game/data/AnimCSV.h"
@@ -24,8 +23,7 @@ namespace game {
 
     void PlaySession::Initialize ( const CreateDesc& d ) {
         m_Renderer = d.renderer;
-        m_Batch = d.batch;
-        m_Debug = d.debug;
+        m_RenderSys = d.renderSys;
         m_TextHUD = d.textHUD;
         m_Scene = d.scene;
 
@@ -60,8 +58,9 @@ namespace game {
         updateCameraBoundsForWorld ( sw , sh );
         m_Cam.SnapImmediate ( );
 
-        if ( m_Batch ) m_Batch->OnResize ( sw , sh );
-        if ( m_Debug ) m_Debug->OnResize ( sw , sh );
+        if ( m_RenderSys ) {
+            m_RenderSys->OnResize ( sw , sh );
+        }
     }
 
     void PlaySession::FixedUpdate ( double fixedDt , const engine::Input& input ) {

@@ -74,8 +74,7 @@ namespace engine {
         const int sw = d3d ? d3d->Width ( ) : w;
         const int sh = d3d ? d3d->Height ( ) : h;
         m_Front->Initialize ( {
-            m_Renderer.get ( ), m_Batch.get ( ), m_TextHUD.get ( ), m_Input.get ( ),
-            &m_Save, &m_State, sw, sh
+            m_TextHUD.get ( ), m_Input.get ( ),& m_Save,& m_State, sw, sh
         } );
 
         DBGLOG ( L"[Init] FrontFlow initialized" );
@@ -96,8 +95,8 @@ namespace engine {
             auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
             RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
             m_Session->Initialize ( {
-                m_Renderer.get ( ), m_Batch.get ( ), m_Debug.get ( ), m_TextHUD.get ( ),
-                m_Scene.get ( ), engine::win32::FromRECT ( rc )
+                m_Renderer.get ( ),& m_Render, m_TextHUD.get ( ),
+                m_Scene.get ( ), engine::win32::FromRECT ( rc ), & m_State
             } );
             m_Session->LoadStage ( stageJson.c_str ( ) );
 
@@ -129,9 +128,7 @@ namespace engine {
         // 3) propagate to render helpers & game
         m_Render.OnResize ( sw , sh );
 
-        if ( m_TextHUD ) {
-            m_TextHUD->Initialize(d3d->SwapChain()); // ← 없다면 이 라인으로 대체
-        }
+        if ( m_TextHUD ) m_TextHUD->Initialize ( d3d->SwapChain ( ) );
 
         if ( m_mode == AppMode::Front && m_Front ) m_Front->OnResize ( sw , sh );
         if ( m_mode == AppMode::Session && m_Session ) m_Session->OnResize ( sw , sh );
@@ -206,13 +203,11 @@ namespace engine {
         }
         else if ( m_Session ) {
             const auto [ox , oy] = m_Session->CameraOffsetInt ( );
-            if ( m_Batch ) {
-                m_Session->RenderParallaxBG ( ox , oy , sw , sh );
-                m_Session->RenderWorld ( ox , oy , sw , sh );
-                m_Session->RenderOverlayFade ( sw , sh );
-            }
+            m_Session->RenderParallaxBG ( ox , oy , sw , sh );
+            m_Session->RenderWorld ( ox , oy , sw , sh );
+            m_Session->RenderOverlayFade ( sw , sh );
             m_Session->RenderDebugGridAndColliders ( ox , oy , sw , sh , m_debugDrawEnabled );
-            m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) );
+            m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) ); // DWrite
         }
 
         m_Render.End ( );
@@ -221,31 +216,20 @@ namespace engine {
 
     void GameApp::InitRendererUI ( HWND hWnd , int w , int h )
     {
-        // renderer
+        // 1) renderer
         m_Renderer = std::make_unique<D3D11Renderer> ( );
-        if ( !m_Renderer->Initialize ( hWnd , w , h , /*vsync=*/false ) ) {
-            ::PostQuitMessage ( -1 );
-            return;
-        }
+        if ( !m_Renderer->Initialize ( hWnd , w , h , /*vsync=*/false ) ) { ::PostQuitMessage ( -1 ); return; }
         auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
 
-        // sprite batch
-        m_Batch = std::make_unique<engine::D3D11SpriteBatch> ( );
-        m_Batch->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
-
-        // HUD text
+        // 2) HUD text (DWrite)
         m_TextHUD = std::make_unique<engine::DWriteTextHUD> ( );
         m_TextHUD->Initialize ( d3d->SwapChain ( ) );
 
-        // debug draw
-        m_Debug = std::make_unique<engine::D3D11DebugDraw> ( );
-        m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
-
-        bool okHud = m_TextHUD && m_TextHUD->Initialize ( d3d->SwapChain ( ) );
-        DBGLOG ( okHud ? L"[InitRendererUI] TextHUD Initialize OK" : L"[InitRendererUI] TextHUD Initialize FAIL" );
-
+        // 3) RenderSystem (여기서 내부 batch/debug를 생성함)
         m_Render.Init ( m_Renderer.get ( ) );
         m_Render.OnResize ( w , h );
+
+        DBGLOG ( L"[InitRendererUI] TextHUD Initialize OK" );
     }
 
 } // namespace engine
