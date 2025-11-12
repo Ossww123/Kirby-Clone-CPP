@@ -6,7 +6,7 @@
 //
 
 #include <utility>          // std::pair
-#include "engine/Math.h"    // Vec2
+#include "engine/util/Math.h"    // Vec2
 #include "engine/util/Types.h"  // IntRect
 
 namespace engine {

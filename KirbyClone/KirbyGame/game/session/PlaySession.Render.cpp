@@ -111,22 +111,6 @@ namespace game {
     }
 
     void PlaySession::RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh , bool drawEnabled ) {
-        // ===== MUST-VISIBLE MARKER (screen-space, sprite path) =====
-        if ( m_RenderSys && m_WhiteTex.srv ) {
-            const float boxX = 12.f , boxY = 12.f;       // 화면 좌상단 여백
-            const float boxW = 160.f , boxH = 48.f;      // 충분히 눈에 띄게
-            m_RenderSys->Batch ( ).Draw (
-                m_WhiteTex ,
-                boxX , boxY , boxW , boxH ,
-                /*src*/ nullptr ,
-                /*RGBA*/ engine::win32::RGBA8 ( 255 , 0 , 255 , 180 ) ,   // 반투명 마젠타
-                /*rot*/ 0.f , /*ox*/ 0.f , /*oy*/ 0.f ,
-                /*zSort*/ +32000 ,
-                engine::BlendMode::Alpha ,
-                engine::SamplerMode::Point
-            );
-        }
-
         if ( !drawEnabled || !m_RenderSys ) return;
 
         auto* dbg = &m_RenderSys->Debug ( );

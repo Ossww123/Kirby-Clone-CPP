@@ -9,10 +9,10 @@
 
 #include <windows.h>
 #include <cstdint>
-#include "engine/GameApp.h"
+#include "engine/core/GameApp.h"
 #include "game/session/PlaySession.h"
 #include "game/frontend/FrontFlow.h"
-#include "game/GameConfig.h"
+#include "game/data/GameConfig.h"
 #include "engine/core/Time.h"
 #include "engine/core/Input.h"
 #include "engine/core/Scene.h"
