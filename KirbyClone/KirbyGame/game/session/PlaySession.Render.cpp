@@ -26,6 +26,10 @@ namespace {
     inline uint32_t MakeARGB ( uint8_t a , uint32_t rgb ) {
         return ( uint32_t ( a ) << 24 ) | ( rgb & 0x00FFFFFFu );
     }
+
+    inline uint32_t ARGB ( uint8_t a , uint8_t r , uint8_t g , uint8_t b ) {
+        return ( uint32_t ( a ) << 24 ) | ( uint32_t ( r ) << 16 ) | ( uint32_t ( g ) << 8 ) | uint32_t ( b );
+    }
 }
 
 namespace game {
@@ -107,47 +111,67 @@ namespace game {
     }
 
     void PlaySession::RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh , bool drawEnabled ) {
+        // ===== MUST-VISIBLE MARKER (screen-space, sprite path) =====
+        if ( m_RenderSys && m_WhiteTex.srv ) {
+            const float boxX = 12.f , boxY = 12.f;       // 화면 좌상단 여백
+            const float boxW = 160.f , boxH = 48.f;      // 충분히 눈에 띄게
+            m_RenderSys->Batch ( ).Draw (
+                m_WhiteTex ,
+                boxX , boxY , boxW , boxH ,
+                /*src*/ nullptr ,
+                /*RGBA*/ engine::win32::RGBA8 ( 255 , 0 , 255 , 180 ) ,   // 반투명 마젠타
+                /*rot*/ 0.f , /*ox*/ 0.f , /*oy*/ 0.f ,
+                /*zSort*/ +32000 ,
+                engine::BlendMode::Alpha ,
+                engine::SamplerMode::Point
+            );
+        }
+
         if ( !drawEnabled || !m_RenderSys ) return;
 
-        auto& dbg = m_RenderSys->Debug ( );
+        auto* dbg = &m_RenderSys->Debug ( );
+
+        dbg->WorldLine ( ox + 40.5f , oy + 40.5f ,
+               ox + 300.5f , oy + 40.5f ,
+               ox , oy , engine::win32::RGBA8 ( 255 , 0 , 0 , 255 ) );
 
         const int GRID = game::GRID_PX;
         const int wx0 = ox , wy0 = oy , wx1 = ox + sw , wy1 = oy + sh;
         int gx = ( wx0 / GRID ) * GRID , gy = ( wy0 / GRID ) * GRID;
         for ( int x = gx; x <= wx1; x += GRID )
-            dbg.WorldLine ( x , wy0 , x , wy1 , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
+            dbg->WorldLine ( x , wy0 , x , wy1 , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
         for ( int y = gy; y <= wy1; y += GRID )
-            dbg.WorldLine ( wx0 , y , wx1 , y , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
+            dbg->WorldLine ( wx0 , y , wx1 , y , ox , oy , engine::win32::RGBA8 ( 60 , 60 , 60 ) );
 
         // World colliders (via adapter)
         engine::physics::DebugDraw (
             m_World.Collision ( ) ,
-            dbg, ox , oy ,
-            engine::win32::RGBA8 ( 255 , 60 , 60 ) ,   // solid
-            engine::win32::RGBA8 ( 255 , 200 , 0 )    // oneway
+            *dbg, ox , oy ,
+            engine::win32::RGBA8 ( 255 , 60 , 60 ) ,    // solid
+            engine::win32::RGBA8 ( 255 , 200 , 0 )     // oneway
         );
 
         // Player AABB
         if ( m_Player ) {
             int px , py , pw , ph; m_Player->GetBounds ( px , py , pw , ph );
-            dbg.WorldRect ( px , py , pw , ph , ox , oy , engine::win32::RGBA8 ( 0 , 255 , 0 ) );
+            dbg->WorldRect ( px , py , pw , ph , ox , oy , engine::win32::RGBA8 ( 0 , 255 , 0 ) );
         }
 
         // Monsters debug (bounds + HP) via adapter
         for ( const auto& m : m_Monsters ) {
             if ( m && m->Alive ( ) ) {
-                game::MonsterDebugDraw::Draw ( *m , &dbg , ox , oy );
+                game::MonsterDebugDraw::Draw ( *m , dbg , ox , oy );
             }
         }
 
         // Projectile / HitVolume debug
-        engine::D3D11DebugDrawAdapter idbg ( &dbg );
+        engine::D3D11DebugDrawAdapter idbg ( dbg );
         m_projSys.DebugDraw ( idbg , ox , oy );
         m_hitSys.DebugDraw ( idbg , ox , oy );
 
         // Doors
         for ( const auto& d : m_Doors ) {
-            dbg.WorldRect ( d.x , d.y , d.w , d.h , ox , oy , engine::win32::RGBA8 ( 0 , 200 , 255 ) );
+            dbg->WorldRect ( d.x , d.y , d.w , d.h , ox , oy , engine::win32::RGBA8 ( 0 , 200 , 255 ) );
         }
 
         // Boss arena AABB (magenta)
@@ -155,8 +179,7 @@ namespace game {
             const int w = m_bossArena.r - m_bossArena.l;
             const int h = m_bossArena.b - m_bossArena.t;
             if ( w > 0 && h > 0 ) {
-                dbg.WorldRect ( m_bossArena.l , m_bossArena.t , w , h , ox , oy ,
-                                     engine::win32::RGBA8 ( 255 , 0 , 255 ) );
+                dbg->WorldRect ( m_bossArena.l , m_bossArena.t , w , h , ox , oy , engine::win32::RGBA8 ( 255 , 0 , 255 ) );
             }
         }
     }

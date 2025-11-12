@@ -72,7 +72,7 @@ float4 main(float4 pos:SV_Position, float4 col:COLOR) : SV_Target { return col; 
 
             D3D11_INPUT_ELEMENT_DESC il[ ] = {
                 { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-                { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UINT,  0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+                { "COLOR",    0, DXGI_FORMAT_R32_UINT,  0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             };
             if ( FAILED ( dev->CreateInputLayout ( il , 2 , vsb->GetBufferPointer ( ) , vsb->GetBufferSize ( ) , &layout ) ) ) return false;
 
