@@ -26,6 +26,14 @@
 
 // game
 #include "game/session/PlaySession.h"
+#include "game/frontend/FrontFlow.h"
+#include "game/data/StagePath.h" // StageJsonPathFromId
+
+#ifndef DBGLOG
+#include <string>
+#include <windows.h>
+inline void DBGLOG ( const wchar_t* msg ) { ::OutputDebugStringW ( msg ); ::OutputDebugStringW ( L"\n" ); }
+#endif
 
 namespace engine {
 
@@ -41,32 +49,63 @@ namespace engine {
     {
         m_hWnd = hWnd;
         // pointer-based ownership
-        m_Time = std::make_unique<Time> ( );
-        m_Time->Init ( );
-        m_Input = std::make_unique<Input> ( );
-        m_Input->Init ( hWnd );
+        m_Time = std::make_unique<Time> ( );   m_Time->Init ( );
+        m_Input = std::make_unique<Input> ( ); m_Input->Init ( hWnd );
         m_Scene = std::make_unique<Scene> ( );
         InitBindings ( );
-
-        // window size
-        RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
-        const int w = rc.right - rc.left;
-        const int h = rc.bottom - rc.top;
-
-        InitRendererUI ( hWnd , w , h );
 
         // COM for WIC/DirectWrite users (idempotent)
         if ( !m_comInitialized ) {
             const HRESULT cohr = ::CoInitializeEx ( nullptr , COINIT_MULTITHREADED );
+            DBGLOG ( SUCCEEDED ( cohr ) ? L"[Init] CoInitializeEx OK" : L"[Init] CoInitializeEx FAIL" );
             if ( SUCCEEDED ( cohr ) ) m_comInitialized = true;
         }
 
-        // Create/boot session
-        m_Session = std::make_unique<game::PlaySession> ( );
+        // window size
+        RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
+        const int w = rc.right - rc.left, h = rc.bottom - rc.top;
+        InitRendererUI ( hWnd , w , h );
+        DBGLOG ( L"[Init] InitRendererUI done" );
+
+        // === FrontFlow 부팅 ===
+        m_mode = AppMode::Front;
+        m_Front = std::make_unique<game::FrontFlow> ( );
         auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
-        ( void ) d3d; // may be unused in release
-        m_Session->Initialize ( { m_Renderer.get ( ), m_Batch.get ( ), m_Debug.get ( ), m_TextHUD.get ( ), m_Scene.get ( ), engine::win32::FromRECT ( rc ) } );
-        m_Session->LoadStage ( "assets/stages/stage01/stage.json" );
+        const int sw = d3d ? d3d->Width ( ) : w;
+        const int sh = d3d ? d3d->Height ( ) : h;
+        m_Front->Initialize ( {
+            m_Renderer.get ( ), m_Batch.get ( ), m_TextHUD.get ( ), m_Input.get ( ),
+            &m_Save, &m_State, sw, sh
+        } );
+
+        DBGLOG ( L"[Init] FrontFlow initialized" );
+
+        // Front→Session convert callback
+        m_Front->onStartSolo = [ this ] ( int slot ) {
+            // 1) save slot + load disk
+            m_State.SetActiveSlot ( slot );
+            ( void ) m_State.LoadFromDisk ( );
+            const auto& sd = m_State.Data ( );
+
+            // 2) Stage ID -> file path
+            const std::string hubId = ( sd.lastHub.empty ( ) ? std::string ( "t1/hub" ) : sd.lastHub );
+            const std::string stageJson = game::StageJsonPathFromId ( hubId );
+
+            // 3) PlaySession init + load hub
+            m_Session = std::make_unique<game::PlaySession> ( );
+            auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
+            RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
+            m_Session->Initialize ( {
+                m_Renderer.get ( ), m_Batch.get ( ), m_Debug.get ( ), m_TextHUD.get ( ),
+                m_Scene.get ( ), engine::win32::FromRECT ( rc )
+            } );
+            m_Session->LoadStage ( stageJson.c_str ( ) );
+
+            // 4) convert mode
+            m_mode = AppMode::Session;
+            m_Front.reset ( );
+            };
+
     }
 
     std::intptr_t GameApp::OnWndMessage ( HWND hWnd , unsigned msg , std::uintptr_t wParam , std::intptr_t lParam )
@@ -89,7 +128,13 @@ namespace engine {
 
         // 3) propagate to render helpers & game
         m_Render.OnResize ( sw , sh );
-        if ( m_Session ) m_Session->OnResize ( sw , sh );
+
+        if ( m_TextHUD ) {
+            m_TextHUD->Initialize(d3d->SwapChain()); // ← 없다면 이 라인으로 대체
+        }
+
+        if ( m_mode == AppMode::Front && m_Front ) m_Front->OnResize ( sw , sh );
+        if ( m_mode == AppMode::Session && m_Session ) m_Session->OnResize ( sw , sh );
     }
 
     bool GameApp::DoOneFrame ( )
@@ -112,7 +157,9 @@ namespace engine {
             m_Time->ConsumeFixedStep ( );
         }
 
+        DBGLOG ( L"[DoOneFrame] RenderFrame about to be called" );
         RenderFrame ( );
+        DBGLOG ( L"[DoOneFrame] RenderFrame returned" );
         return true;
     }
 
@@ -126,6 +173,11 @@ namespace engine {
         m_Input->BindAction ( "ToggleDebug" , VK_F1 );
         m_Input->BindAction ( "Reload" , VK_F5 );
 
+        // === Confirm/Back for FrontFlow ===
+        m_Input->BindAction ( "Confirm" , VK_RETURN );
+        m_Input->BindAction ( "Confirm" , VK_SPACE );
+        m_Input->BindAction ( "Back" , VK_BACK );
+
         // Axes
         m_Input->BindAxis ( "MoveX" , { .positiveVK = VK_RIGHT, .negativeVK = VK_LEFT, .scale = 1.f } );
         m_Input->BindAxis ( "MoveX" , { .positiveVK = 'D',      .negativeVK = 'A',     .scale = 1.f } );
@@ -133,8 +185,11 @@ namespace engine {
         m_Input->BindAxis ( "MoveY" , { .positiveVK = 'W',      .negativeVK = 'S',     .scale = 1.f } );
     }
 
-    void GameApp::FixedUpdate ( double fixedDt )
-    {
+    void GameApp::FixedUpdate ( double fixedDt ) {
+        if ( m_mode == AppMode::Front ) {
+            if ( m_Front ) m_Front->Update ( fixedDt );
+            return;
+        }
         if ( m_Session ) m_Session->FixedUpdate ( fixedDt , *m_Input );
     }
 
@@ -144,27 +199,25 @@ namespace engine {
         const int sw = d3d ? d3d->Width ( ) : 0;
         const int sh = d3d ? d3d->Height ( ) : 0;
 
-        // frame begin
-        m_Render.Begin ( { 0.09f, 0.11f, 0.125f, 1.0f } );
+        m_Render.Begin ( { 0.05f, 0.00f, 0.10f, 1.0f } );
 
-        const auto [ox , oy] = m_Session ? m_Session->CameraOffsetInt ( ) : std::pair<int , int>{ 0,0 };
-
-        if ( m_Batch ) {
-            if ( m_Session ) {
+        if ( m_mode == AppMode::Front && m_Front ) {
+            m_Front->Render ( );
+        }
+        else if ( m_Session ) {
+            const auto [ox , oy] = m_Session->CameraOffsetInt ( );
+            if ( m_Batch ) {
                 m_Session->RenderParallaxBG ( ox , oy , sw , sh );
                 m_Session->RenderWorld ( ox , oy , sw , sh );
                 m_Session->RenderOverlayFade ( sw , sh );
             }
-        }
-
-        if ( m_Session ) {
             m_Session->RenderDebugGridAndColliders ( ox , oy , sw , sh , m_debugDrawEnabled );
             m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) );
         }
 
-        // frame end
         m_Render.End ( );
     }
+
 
     void GameApp::InitRendererUI ( HWND hWnd , int w , int h )
     {
@@ -187,6 +240,12 @@ namespace engine {
         // debug draw
         m_Debug = std::make_unique<engine::D3D11DebugDraw> ( );
         m_Debug->Initialize ( d3d->Device ( ) , d3d->Context ( ) , d3d->Width ( ) , d3d->Height ( ) );
+
+        bool okHud = m_TextHUD && m_TextHUD->Initialize ( d3d->SwapChain ( ) );
+        DBGLOG ( okHud ? L"[InitRendererUI] TextHUD Initialize OK" : L"[InitRendererUI] TextHUD Initialize FAIL" );
+
+        m_Render.Init ( m_Renderer.get ( ) );
+        m_Render.OnResize ( w , h );
     }
 
 } // namespace engine

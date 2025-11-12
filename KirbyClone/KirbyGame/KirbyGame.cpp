@@ -11,6 +11,8 @@
 #include <cstdint>
 #include "engine/GameApp.h"
 #include "game/session/PlaySession.h"
+#include "game/frontend/FrontFlow.h"
+#include "game/GameConfig.h"
 #include "engine/core/Time.h"
 #include "engine/core/Input.h"
 #include "engine/core/Scene.h"
@@ -18,7 +20,6 @@
 #include "engine/render/D3D11SpriteBatch.h"
 #include "engine/render/D3D11DebugDraw.h"
 #include "engine/render/DWriteText.h"
-#include "game/GameConfig.h"
 
 static int gClientW = game::CLIENT_W;  // 240*4 = 960
 static int gClientH = game::CLIENT_H;  // 160*4 = 640

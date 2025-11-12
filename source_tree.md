@@ -52,12 +52,15 @@
     PlaySession.Door.cpp — 문 오버랩 감지 및 페이드 기반 스테이지 전환 상태 머신
     PlaySession.ClearFlow.cpp — 클리어 뒤 연출→세이브→허브 전환까지 “한 FSM”에서 책임지고, 세이브 타이밍을 페이드 아웃 완료 시점으로 고정.
     SessionState.* — 현재 슬롯과 세이브 데이터를 보관·저장하는 런타임 세션 컨테이너.
+    SpawnSelector.* — 전환 오버라이드/세이브/스폰 테이블 기반으로 “이번에 어디서 시작할지”를 결정.
+    HubCoverUnlock.h — 세이브 플래그를 읽어 허브 커버 타일을 지우고 충돌을 갱신.
 
   /data
     StageDesc.* — 스테이지 정보(JSON) 로더.
     StageCSV.* — 스테이지 CSV 로더(플레이어 시작/몬스터/타일정의/문/타일맵/문/허브-스폰/허브-언락).
     AnimCSV.* — 애니메이션 CSV( strip/frame ) 파싱 후 Animator에 클립 등록(옵션 초기화 지원)
     GameConfig.h — 전역 해상도/스케일 상수와 기본 월드 단위(타일/충돌 AABB) 정의
+    StagePath.h — stage.json 경로를 만들어줌
 
   /entities
     /player
@@ -97,5 +100,8 @@
   /debugdraw
     MonsterDebugDraw.* — 몬스터 디버그 드로우 어댑터
     HitVolumeDebugDraw.* — 히트 볼륨 디버그 드로우 어댑터
-    ProjectileDebugDraw.* - 투사체 디버그 드로우 어댑터
+    ProjectileDebugDraw.* — 투사체 디버그 드로우 어댑터
+
+  /frontend
+    FrontFlow.* — 부팅~시작까지의 메뉴 상태머신.
 ```
