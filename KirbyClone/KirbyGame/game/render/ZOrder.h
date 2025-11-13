@@ -9,4 +9,6 @@ namespace game::Z {
     inline constexpr int16_t BG             = -20000;  // parallax/tile BG
     inline constexpr int16_t UnderActors    = -100;    // underlay (boss flicker/fade)
     inline constexpr int16_t OverlayTop     = +30000;  // topmost white fade
+
+    inline constexpr int16_t OverlayPanel = OverlayTop - 10;
 }

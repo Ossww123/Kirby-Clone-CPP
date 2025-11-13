@@ -82,6 +82,13 @@ namespace game {
             m_waitTitleToSave = false;
         }
 
+        if ( m_waitModeToStartSolo && !m_fade.Active ( ) ) {
+            m_waitModeToStartSolo = false;
+            if ( onStartSolo ) {
+                onStartSolo ( m_selectedSlot );
+            }
+        }
+
         switch ( m_scr ) {
             case Screen::Title:      updateTitle ( fixedDt ); break;
             case Screen::SaveSelect: updateSave ( fixedDt );  break;
@@ -461,11 +468,13 @@ namespace game {
     // ---- ModeSelect ----
     void FrontFlow::updateMode ( double ) {
         if ( !m_Input ) return;
+        if ( m_waitModeToStartSolo ) return;
 
         const float ay = m_Input->GetAxis ( "MoveY" );
         if ( m_navCd <= 0.f ) {
             if ( ay < -0.5f || ay > 0.5f ) { 
-                m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0; m_navCd = 0.14f; 
+                m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0;
+                m_navCd = 0.14f; 
             }
         }
 
@@ -474,7 +483,10 @@ namespace game {
         if ( m_Input->ActionPressed ( "Confirm" ) ) {
             if ( m_modeFocus == 0 ) {
                 // Solo
-                if ( onStartSolo ) onStartSolo ( m_selectedSlot );
+                if ( !m_fade.Active ( ) ) {
+                    startFadeOut ( 0.6f , 0xFFFFFFu , game::Z::OverlayTop );
+                    m_waitModeToStartSolo = true;
+                }
             }
             else {
                 // Co-op (coming soon)
@@ -552,7 +564,7 @@ namespace game {
             nullptr ,
             0xFFFFFFFFu ,
             0.f , 0.f , 0.f ,
-            /*z*/ game::Z::OverlayTop ,
+            /*z*/ game::Z::OverlayPanel ,
             engine::BlendMode::Alpha ,
             engine::SamplerMode::Point
         );

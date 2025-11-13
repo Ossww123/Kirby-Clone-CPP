@@ -74,6 +74,7 @@ namespace game {
         engine::Animator    m_titleAnim{};
         game::Fade2D        m_fade;
         bool                m_waitTitleToSave{ false };
+        bool                m_waitModeToStartSolo{ false };
 
         // save select resources
         engine::Tex2D       m_fileBG{};                           // file_select_background
