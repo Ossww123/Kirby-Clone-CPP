@@ -219,6 +219,12 @@
     <ClInclude Include="game\data\StagePath.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="game\render\ZOrder.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="game\effects\Fade2D.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KirbyGame.cpp">

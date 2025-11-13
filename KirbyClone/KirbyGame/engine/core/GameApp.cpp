@@ -48,64 +48,77 @@ namespace engine {
     void GameApp::Init ( HWND hWnd )
     {
         m_hWnd = hWnd;
-        // pointer-based ownership
+
+        // Core singletons
         m_Time = std::make_unique<Time> ( );   m_Time->Init ( );
-        m_Input = std::make_unique<Input> ( ); m_Input->Init ( hWnd );
+        m_Input = std::make_unique<Input> ( );  m_Input->Init ( hWnd );
         m_Scene = std::make_unique<Scene> ( );
         InitBindings ( );
 
-        // COM for WIC/DirectWrite users (idempotent)
+        // COM for WIC / DWrite
         if ( !m_comInitialized ) {
             const HRESULT cohr = ::CoInitializeEx ( nullptr , COINIT_MULTITHREADED );
             DBGLOG ( SUCCEEDED ( cohr ) ? L"[Init] CoInitializeEx OK" : L"[Init] CoInitializeEx FAIL" );
             if ( SUCCEEDED ( cohr ) ) m_comInitialized = true;
         }
 
-        // window size
+        // Window size
         RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
-        const int w = rc.right - rc.left, h = rc.bottom - rc.top;
+        const int w = rc.right - rc.left;
+        const int h = rc.bottom - rc.top;
+
+        // Renderer + HUD + RenderSystem
         InitRendererUI ( hWnd , w , h );
         DBGLOG ( L"[Init] InitRendererUI done" );
 
-        // === FrontFlow 부팅 ===
+        // === Boot FrontFlow (Title → SaveSelect → ModeSelect) ===
         m_mode = AppMode::Front;
         m_Front = std::make_unique<game::FrontFlow> ( );
+
         auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
         const int sw = d3d ? d3d->Width ( ) : w;
         const int sh = d3d ? d3d->Height ( ) : h;
-        m_Front->Initialize ( {
-            m_TextHUD.get ( ), m_Input.get ( ),& m_Save,& m_State, sw, sh
-        } );
 
+        // inject renderer & render system so FrontFlow can load textures and draw sprites
+        game::FrontFlowCreate fc{};
+        fc.text = m_TextHUD.get ( );
+        fc.input = m_Input.get ( );
+        fc.save = &m_Save;
+        fc.state = &m_State;
+        fc.renderer = m_Renderer.get ( );
+        fc.renderSys = &m_Render;
+        fc.screenW = sw;
+        fc.screenH = sh;
+
+        m_Front->Initialize ( fc );
         DBGLOG ( L"[Init] FrontFlow initialized" );
 
-        // Front→Session convert callback
+        // Front → Session handoff
         m_Front->onStartSolo = [ this ] ( int slot ) {
-            // 1) save slot + load disk
+            // 1) activate slot + load
             m_State.SetActiveSlot ( slot );
             ( void ) m_State.LoadFromDisk ( );
             const auto& sd = m_State.Data ( );
 
-            // 2) Stage ID -> file path
-            const std::string hubId = ( sd.lastHub.empty ( ) ? std::string ( "t1/hub" ) : sd.lastHub );
+            // 2) resolve stage path (hub)
+            const std::string hubId = sd.lastHub.empty ( ) ? std::string ( "t1/hub" ) : sd.lastHub;
             const std::string stageJson = game::StageJsonPathFromId ( hubId );
 
-            // 3) PlaySession init + load hub
+            // 3) create session and load stage
             m_Session = std::make_unique<game::PlaySession> ( );
-            auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
             RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
             m_Session->Initialize ( {
-                m_Renderer.get ( ),& m_Render, m_TextHUD.get ( ),
-                m_Scene.get ( ), engine::win32::FromRECT ( rc ), & m_State
+                m_Renderer.get ( ), &m_Render, m_TextHUD.get ( ),
+                m_Scene.get ( ), engine::win32::FromRECT ( rc ), &m_State
             } );
             m_Session->LoadStage ( stageJson.c_str ( ) );
 
-            // 4) convert mode
+            // 4) switch mode
             m_mode = AppMode::Session;
             m_Front.reset ( );
-            };
-
+        };
     }
+
 
     std::intptr_t GameApp::OnWndMessage ( HWND hWnd , unsigned msg , std::uintptr_t wParam , std::intptr_t lParam )
     {
@@ -192,13 +205,21 @@ namespace engine {
 
     void GameApp::RenderFrame ( )
     {
-        auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
-        const int sw = d3d ? d3d->Width ( ) : 0;
-        const int sh = d3d ? d3d->Height ( ) : 0;
+        // Backbuffer size from RenderSystem (no platform cast)
+        const int sw = m_Render.BackbufferWidth ( );
+        const int sh = m_Render.BackbufferHeight ( );
 
+        // 1) Begin frame (sprite batch starts here)
         m_Render.Begin ( { 0.05f, 0.00f, 0.10f, 1.0f } );
 
-        if ( m_mode == AppMode::Session && m_Session ) {
+        // 2) Mode-specific sprite rendering (must be BETWEEN Begin/End)
+        if ( m_mode == AppMode::Front && m_Front )
+        {
+            // FrontFlow draws background/logo/overlay sprites (and may draw text too)
+            m_Front->Render ( );
+        }
+        else if ( m_mode == AppMode::Session && m_Session )
+        {
             const auto [ox , oy] = m_Session->CameraOffsetInt ( );
             m_Session->RenderParallaxBG ( ox , oy , sw , sh );
             m_Session->RenderWorld ( ox , oy , sw , sh );
@@ -206,16 +227,19 @@ namespace engine {
             m_Session->RenderDebugGridAndColliders ( ox , oy , sw , sh , m_debugDrawEnabled );
         }
 
+        // 3) End sprite batch
         m_Render.End ( );
 
-        if ( m_mode == AppMode::Front && m_Front ) {
-            m_Front->Render ( ); // DWrite Text
+        // 4) DWrite HUD/text (pipeline-independent overlays)
+        if ( m_mode == AppMode::Session && m_Session )
+        {
+            m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) );
         }
-        else if ( m_Session ) {
-            m_Session->RenderHUD ( m_Time->FPS ( ) , m_Time->FixedDelta ( ) ); // DWrite Text
-        }
+
+        // 5) Present
         m_Render.Present ( );
     }
+
 
 
     void GameApp::InitRendererUI ( HWND hWnd , int w , int h )

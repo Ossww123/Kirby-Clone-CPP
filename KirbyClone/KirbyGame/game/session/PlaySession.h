@@ -38,6 +38,8 @@ namespace game {
 #include "game/entities/monsters/MonsterTypes.h"
 #include "game/data/StageCSV.h"                 // DoorCSV
 #include "game/session/SessionState.h"          // SessionState
+#include "game/effects/Fade2D.h"
+#include "game/render/ZOrder.h"
 
 namespace game {
 
@@ -86,10 +88,10 @@ namespace game {
         // (temp) expose player events to GameApp if needed
         void DrainPlayerEvents ( std::vector<game::PlayerEvent>& out );
 
-        // --- Fade API ---
-        void StartFadeIn ( float seconds , uint32_t rgb = 0xFFFFFFu );
-        void StartFadeOut ( float seconds , uint32_t rgb = 0xFFFFFFu );
-        bool IsFading ( ) const { return m_fade.mode != Fade::None; }
+        // --- Fade API (z-layer selectable) ---
+        void StartFadeIn ( float seconds , uint32_t rgb = 0xFFFFFFu , int16_t z = game::Z::OverlayTop );
+        void StartFadeOut ( float seconds , uint32_t rgb = 0xFFFFFFu , int16_t z = game::Z::OverlayTop );
+        bool IsFading ( ) const { return m_fade.Active ( ); }
 
         // ---- Door / Transition API ----
         void StartTransitionTo ( const std::string& target ,
@@ -176,12 +178,7 @@ namespace game {
         std::unordered_map<std::string , int>        m_playerHVActive;
 
         // --- Fade Effect ---
-        struct Fade {
-            enum Mode { None , In , Out } mode = None;
-            float    t = 0.f;           // elapsed
-            float    dur = 0.f;           // total duration
-            uint32_t rgb = 0xFFFFFFu;     // color (white default)
-        } m_fade;
+        game::Fade2D m_fade;
 
         // ---- Door / Transition ----
         std::vector<game::DoorCSV> m_Doors; // StageCSV format as-is

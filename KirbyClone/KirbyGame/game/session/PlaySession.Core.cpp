@@ -16,6 +16,9 @@
 #include "game/data/GameConfig.h"
 #include "game/entities/monsters/WhispyWoods.h"
 #include "game/entities/player/Player.h"
+#include "game/data/StagePath.h" // StageJsonPathFromId
+#include "protocol/SaveSchema.h" // protocol::SetCleared / ProgressT1
+#include "game/render/ZOrder.h"
 
 namespace game {
 
@@ -64,22 +67,39 @@ namespace game {
     }
 
     void PlaySession::FixedUpdate ( double fixedDt , const engine::Input& input ) {
-        // 1) Player FSM
+        const float fdt = static_cast< float >( fixedDt );
+
+        // 0) Fade always advances, even during clear sequences
+        m_fade.Update ( fixedDt );
+
+        // 1) Clear sequence cinematic (takes over gameplay when active)
+        if ( IsClearSequenceActive ( ) ) {
+            updateClearFlow ( fdt );
+            return;
+        }
+
+        // 2) Player FSM
         m_PlayerFSM.Step ( fixedDt , input );
-        std::vector<game::PlayerEvent> evs; m_PlayerFSM.DrainEvents ( evs );
+        std::vector<game::PlayerEvent> evs;
+        m_PlayerFSM.DrainEvents ( evs );
         if ( !evs.empty ( ) ) handlePlayerEvents ( evs );
 
-        // 2) Monsters
+        // 3) Monsters
         updateMonsters ( fixedDt , input );
 
-        // 3) Combat (build targets → step systems → apply)
+        // 4) Combat (build targets → step systems → apply)
         std::vector<game::ProjectileSystem::Target> projT;
         std::vector<game::HitVolumeSystem::Target>  hvT;
         buildTargets ( projT , hvT );
+
         m_projSys.Step ( fixedDt , projT );
         m_hitSys.Step ( fixedDt , hvT );
-        std::vector<game::ProjectileSystem::HitEvent> phits; m_projSys.DrainHitEvents ( phits );
-        std::vector<game::HitVolumeSystem::HitEvent>  hvHits; m_hitSys.DrainHitEvents ( hvHits );
+
+        std::vector<game::ProjectileSystem::HitEvent> phits;
+        m_projSys.DrainHitEvents ( phits );
+        std::vector<game::HitVolumeSystem::HitEvent>  hvHits;
+        m_hitSys.DrainHitEvents ( hvHits );
+
         if ( !phits.empty ( ) ) applyProjectileHits ( phits );
         if ( !hvHits.empty ( ) ) applyHitVolumeHits ( hvHits );
 
@@ -88,28 +108,22 @@ namespace game {
         m_hitSys.DrainDespawnEvents ( hvDes );
         if ( !hvDes.empty ( ) ) handleHitVolumeDespawns ( hvDes );
 
-        // 3.5) Clear flow — before transition
-        updateClearFlow ( static_cast< float >( fixedDt ) );
+        // 4.5) Clear flow — before transition (e.g., emblem, autopilot, dance)
+        updateClearFlow ( fdt );
 
-        // 4) Anim / camera / spawns / transition
-        if ( m_Player && m_Player->Animator ( ) ) m_Player->Animator ( )->Update ( static_cast< float >( fixedDt ) );
-        if ( m_Player ) m_Cam.SetLookAt ( m_Player->Center ( ) );
+        // 5) Anim / camera / spawns / transition
+        if ( m_Player && m_Player->Animator ( ) )
+            m_Player->Animator ( )->Update ( fdt );
+
+        if ( m_Player )
+            m_Cam.SetLookAt ( m_Player->Center ( ) );
 
         updateBossCameraLock ( );
-        applyCamRectBlend ( static_cast< float >( fixedDt ) );
+        applyCamRectBlend ( fdt );
         m_Cam.Update ( fixedDt );
 
         flushPendingSpawns ( );
         updateTransition ( fixedDt );
-
-        // 5) Fade
-        if ( m_fade.mode != Fade::None && m_fade.dur > 0.f ) {
-            m_fade.t += static_cast< float >( fixedDt );
-            if ( m_fade.t >= m_fade.dur ) {
-                m_fade.t = m_fade.dur;
-                m_fade.mode = Fade::None;
-            }
-        }
     }
 
     static int iLerp ( int a , int b , float t ) { return static_cast< int >( std::lroundf ( a + ( b - a ) * t ) ); }
@@ -186,7 +200,13 @@ namespace game {
         out.swap ( m_pendingPlayerEvents );
     }
 
-    void PlaySession::StartFadeIn ( float seconds , uint32_t rgb ) { m_fade = { Fade::In , 0.f , std::max ( 0.f,seconds ) , rgb }; }
-    void PlaySession::StartFadeOut ( float seconds , uint32_t rgb ) { m_fade = { Fade::Out, 0.f , std::max ( 0.f,seconds ) , rgb }; }
+    void PlaySession::StartFadeIn ( float seconds , uint32_t rgb , int16_t z ) {
+        game::Fade2D::Params p; p.duration = seconds; p.rgb = rgb; p.z = z;
+        m_fade.StartIn ( p );
+    }
+    void PlaySession::StartFadeOut ( float seconds , uint32_t rgb , int16_t z ) {
+        game::Fade2D::Params p; p.duration = seconds; p.rgb = rgb; p.z = z;
+        m_fade.StartOut ( p );
+    }
 
 } // namespace game

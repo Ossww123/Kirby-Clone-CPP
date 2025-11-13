@@ -76,24 +76,50 @@ namespace engine {
 
     bool SaveStorage::Save ( int slot , const protocol::SaveData& in ) const noexcept {
         slot = clamp_slot ( slot );
-        try {
-            fs::create_directories ( "saves" );
-        }
-        catch ( ... ) {
-            // directory creation failed; still try write (may succeed if already exists)
+
+        std::error_code ec;
+        fs::create_directories ( "saves" , ec ); // best-effort
+
+        const std::string finalPath = SlotPath ( slot );
+        fs::path finalP ( finalPath );
+        fs::path tmpP = finalP; tmpP += ".tmp";
+        fs::path bakP = finalP; bakP += ".bak";
+
+        // 1) write to tmp
+        {
+            std::ofstream f ( tmpP , std::ios::out | std::ios::binary | std::ios::trunc );
+            if ( !f ) return false;
+            f << "version=" << in.version << "\n";
+            f << "lastHub=" << in.lastHub << "\n";
+            f << "lastStage=" << in.lastStage << "\n";
+            f << "lastSpawn=" << in.lastSpawn << "\n";
+            for ( const auto& kv : in.flags ) {
+                f << "flag:" << kv.first << "=" << ( kv.second ? "1" : "0" ) << "\n";
+            }
+            f.flush ( );
+            if ( !f.good ( ) ) return false;
         }
 
-        std::ofstream f ( SlotPath ( slot ) , std::ios::out | std::ios::binary | std::ios::trunc );
-        if ( !f ) return false;
-
-        f << "version=" << in.version << "\n";
-        f << "lastHub=" << in.lastHub << "\n";
-        f << "lastStage=" << in.lastStage << "\n";
-        f << "lastSpawn=" << in.lastSpawn << "\n";
-        for ( const auto& kv : in.flags ) {
-            f << "flag:" << kv.first << "=" << ( kv.second ? "1" : "0" ) << "\n";
+        // 2) rotate backup (best-effort)
+        if ( fs::exists ( bakP , ec ) ) fs::remove ( bakP , ec );
+        if ( fs::exists ( finalP , ec ) ) {
+            fs::rename ( finalP , bakP , ec );
+            // if rename fails, we still proceed; finalP may remain
         }
 
+        // 3) atomically replace final with tmp
+        fs::rename ( tmpP , finalP , ec );
+        if ( ec ) {
+            // rollback: try to restore from bak (best-effort)
+            if ( fs::exists ( bakP ) ) {
+                std::error_code ec2;
+                if ( fs::exists ( finalP , ec2 ) ) fs::remove ( finalP , ec2 );
+                fs::rename ( bakP , finalP , ec2 );
+            }
+            // ensure tmp removed
+            std::error_code ec3; fs::remove ( tmpP , ec3 );
+            return false;
+        }
         return true;
     }
 

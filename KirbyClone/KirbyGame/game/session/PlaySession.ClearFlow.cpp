@@ -5,6 +5,7 @@
 //
 #include "game/session/PlaySession.h"
 #include "protocol/SaveSchema.h"
+#include "game/data/StagePath.h"   // StageJsonPathFromId
 
 namespace {
     // fallback: derive "door_mX" from "t1/s1/mX"
@@ -83,8 +84,14 @@ namespace game {
                 }
 
                 // === Hub Transition ===
+                // NOTE: StartTransitionTo expects a stage *JSON path*. Convert ID -> path.
+                const std::string hubJson = game::StageJsonPathFromId ( "t1/hub" );
                 // out=0 to avoid double fade (we already faded out)
-                StartTransitionTo ( "t1/hub" , /*out*/0.f , /*in*/m_clear.tFade , /*spawnOverride*/ m_clear.hubSpawnKey.c_str ( ) );
+                StartTransitionTo ( hubJson ,
+                                    /*out*/0.f ,
+                                    /*in*/m_clear.tFade ,
+                                    /*spawnOverride*/ m_clear.hubSpawnKey.c_str ( ) );
+
                 m_clear.st = ClearState::FadeIn;
             }
             break;

@@ -70,9 +70,7 @@ namespace game {
             m_BgTex , 0.f , 0.f , ( float ) sw , ( float ) sh , &src ,
             engine::win32::RGBA8 ( 255 , 255 , 255 ) ,
             0.f , 0.f , 0.f ,
-            /*zSort*/ -30000 ,
-            engine::BlendMode::Alpha ,
-            engine::SamplerMode::Linear
+            /*z*/ game::Z::BG , engine::BlendMode::Alpha , engine::SamplerMode::Linear
          );
     }
 
@@ -269,24 +267,7 @@ namespace game {
 
     void PlaySession::RenderOverlayFade ( int sw , int sh ) {
         if ( !m_RenderSys || !m_WhiteTex.srv ) return;
-        if ( m_fade.mode == Fade::None || m_fade.dur <= 0.f ) return;
-
-        const float t = std::clamp ( m_fade.t / std::max ( 0.0001f , m_fade.dur ) , 0.f , 1.f );
-        const float alpha = ( m_fade.mode == Fade::Out ) ? t : ( 1.f - t ); // Out: 0→1, In: 1→0
-        const uint8_t a = ( uint8_t ) std::lround ( alpha * 255.f );
-
-        const uint8_t r = ( uint8_t ) ( ( m_fade.rgb >> 16 ) & 0xFF );
-        const uint8_t g = ( uint8_t ) ( ( m_fade.rgb >> 8 ) & 0xFF );
-        const uint8_t b = ( uint8_t ) ( m_fade.rgb & 0xFF );
-
-        m_RenderSys->DrawSprite (
-            m_WhiteTex , 0.f , 0.f , ( float ) sw , ( float ) sh , nullptr ,
-            engine::win32::RGBA8 ( r , g , b , a ) ,
-            0.f , 0.f , 0.f ,
-            /*zSort*/ +30000 ,
-            engine::BlendMode::Alpha ,
-            engine::SamplerMode::Linear
-        );
+        m_fade.Render ( m_RenderSys , m_WhiteTex , sw , sh );
     }
 
 } // namespace game

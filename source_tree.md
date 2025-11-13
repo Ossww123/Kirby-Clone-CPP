@@ -104,4 +104,10 @@
 
   /frontend
     FrontFlow.* — 부팅~시작까지의 메뉴 상태머신.
+
+  /render
+    ZOrder.h — 레이어 인자 값들을 정의
+
+  /effects
+    Fade2D.h — 페이드 인/아웃 연출 유틸
 ```

@@ -26,6 +26,16 @@ namespace game {
         m_trans.fadeIn = i;
         if ( spawnOverride && *spawnOverride ) m_trans.spawn = spawnOverride;
         StartFadeOut ( o );
+
+        // ---- Snapshot savepoint right before leaving this stage ----
+        if ( m_Session ) {
+            auto & sd = m_Session->MutData ( );
+            sd.lastStage = target;
+            if ( spawnOverride && *spawnOverride ) sd.lastSpawn = spawnOverride;
+            // If we are in hub now, keep hub continuity explicit
+            if ( m_stageId == "t1/hub" ) sd.lastHub = "t1/hub";
+            ( void ) m_Session->SaveToDisk ( );
+        }
     }
 
     bool PlaySession::checkDoorInteract ( )
