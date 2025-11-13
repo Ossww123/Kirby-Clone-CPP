@@ -4,6 +4,7 @@
 // Non-Goals:      Gameplay/world/physics; async IO; fancy UI widgets.
 // Call-Context:   Main thread; driven by GameApp fixed-step and rendered with DWriteTextHUD.
 //
+
 #include <functional>
 #include <array>
 #include <string>
@@ -43,7 +44,6 @@ namespace game {
 
     private:
         enum class Screen { Title , SaveSelect , ModeSelect } m_scr{ Screen::Title };
-        enum class FadeLayer { OverlayTop , UnderLogo };
 
         struct SlotInfo {
             bool has{ false };
@@ -60,7 +60,6 @@ namespace game {
         int                     m_sw{} , m_sh{};
 
         // ui state
-        int   m_focus{ 0 };        // generic focus (ModeSelect)
         int   m_slotFocus{ 0 };    // 0..2
         float m_navCd{ 0.f };      // navigation cooldown for axis edge
         int   m_selectedSlot{ 1 }; // last picked slot (1..3)
@@ -74,7 +73,6 @@ namespace game {
         engine::Tex2D       m_whiteTex{};
         engine::Animator    m_titleAnim{};
         game::Fade2D        m_fade;
-        float               m_time{ 0.f };
         bool                m_waitTitleToSave{ false };
 
         // save select resources

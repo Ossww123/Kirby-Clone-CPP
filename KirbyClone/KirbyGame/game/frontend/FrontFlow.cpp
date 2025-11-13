@@ -33,6 +33,13 @@ namespace {
         }
         return idx; // 마지막으로 만족한 스텝
     }
+
+    // Save 슬롯 행의 기준 Y (240x160 기준 좌표)
+    inline constexpr float kSlotBaseY[ 3 ] = {
+        47.f ,  // slot 1
+        87.f ,  // slot 2
+        127.f   // slot 3
+    };
 }
 
 
@@ -42,8 +49,8 @@ namespace game {
         m_Text = d.text; m_Input = d.input; m_Save = d.save; m_State = d.state;
         m_Renderer = d.renderer; m_RenderSys = d.renderSys;
         m_sw = d.screenW; m_sh = d.screenH;
-        m_focus = 0; m_slotFocus = 0; m_modeFocus = 0; m_navCd = 0.f; m_selectedSlot = 1;
-        m_time = 0.f; m_fade = {};
+        m_slotFocus = 0; m_modeFocus = 0; m_navCd = 0.f; m_selectedSlot = 1;
+        m_fade = {};
 
         refreshSlotInfos ( );
 
@@ -59,7 +66,6 @@ namespace game {
     void FrontFlow::Update ( double fixedDt ) {
         m_navCd = std::max ( 0.f , m_navCd - static_cast< float >( fixedDt ) );
         m_fade.Update ( fixedDt );
-        m_time += static_cast< float >( fixedDt );
 
         // 타이틀에서 Confirm → 페이드아웃 시작 (중복 방지: 이미 페이드 중이면 무시)
         if ( m_scr == Screen::Title && m_Input && m_Input->ActionPressed ( "Confirm" ) ) {
@@ -124,7 +130,6 @@ namespace game {
             m_slotFocus = std::clamp ( m_selectedSlot - 1 , 0 , 2 );
         }
         else if ( s == Screen::ModeSelect ) {
-            m_focus = 0;
             m_modeFocus = 0;
         }
     }
@@ -252,8 +257,8 @@ namespace game {
             const float scale = std::max ( 1.0f , std::floor ( std::min ( bbW / 240.f , bbH / 160.f ) ) );
             const float drawW = frameW * scale;
             const float drawH = frameH * scale;
-            const float x = ( bbW - drawW ) * 0.5f;
-            const float y = 16.f * scale;
+            const float x = 96.f;
+            const float y = 0.f;
 
             m_RenderSys->DrawSprite (
                 m_titleLogo ,
@@ -282,8 +287,8 @@ namespace game {
 
         const float ay = m_Input->GetAxis ( "MoveY" );
         if ( m_navCd <= 0.f ) {
-            if ( ay < -0.5f ) { m_slotFocus = ( m_slotFocus + 2 ) % 3; m_navCd = 0.14f; }
-            if ( ay > 0.5f ) { m_slotFocus = ( m_slotFocus + 1 ) % 3; m_navCd = 0.14f; }
+            if ( ay < -0.5f ) { m_slotFocus = ( m_slotFocus + 1 ) % 3; m_navCd = 0.14f; }
+            if ( ay > 0.5f )  { m_slotFocus = ( m_slotFocus + 2 ) % 3; m_navCd = 0.14f; }
         }
 
         if ( m_Input->ActionPressed ( "Back" ) ) {
@@ -309,7 +314,8 @@ namespace game {
         }
     }
 
-    void FrontFlow::renderSave ( ) {
+    void FrontFlow::renderSave ( )
+    {
         if ( !m_RenderSys ) {
             // 안전장치: 렌더러 없으면 기존 텍스트 버전 유지
             if ( !m_Text ) return;
@@ -339,7 +345,7 @@ namespace game {
             m_RenderSys->DrawSprite (
                 m_fileBG ,
                 baseX , baseY , drawW , drawH ,
-                /*src*/nullptr ,
+                nullptr ,
                 0xFFFFFFFFu ,
                 0.f , 0.f , 0.f ,
                 /*z*/ game::Z::BG ,
@@ -347,13 +353,6 @@ namespace game {
                 engine::SamplerMode::Linear
             );
         }
-
-        // 각 슬롯의 세로 위치 (240x160 기준)
-        const float slotBaseY[ 3 ] = {
-            52.f,   // slot 1
-            86.f,   // slot 2
-            120.f   // slot 3
-        };
 
         // 2) Slots: focus icon + progress card
         for ( int i = 0; i < 3; ++i ) {
@@ -368,31 +367,24 @@ namespace game {
                 focused ? m_fileProgFocus[ stepIdx ]
                 : m_fileProgNormal[ stepIdx ];
 
-            if ( !cardTex.srv ) continue;
+            if ( !cardTex.srv )
+                continue;
 
             const float cardW = cardTex.width * scale;
             const float cardH = cardTex.height * scale;
-            const float slotY = baseY + slotBaseY[ i ] * scale;
+            const float slotY = baseY + kSlotBaseY[ i ] * scale - 12.f;
 
-            // 카드 기본 X (중앙 정렬)
-            float cardX = baseX + ( drawW - cardW ) * 0.5f;
+            // 카드 X/Y는 현재 튜닝된 매직 넘버 유지
+            const float cardX = 740.f;
 
-            // 포커스인 경우 카드 살짝 오른쪽으로 밀기
-            const float focusCardOffsetX = 6.f * scale;    // 느낌 안 맞으면 여기 숫자만 조절하면 됨
-            if ( focused ) {
-                cardX += focusCardOffsetX;
-            }
-
-            // 2-1) Focus icon (left of card, focused slot만)
+            // 2-1) Focus icon (focused slot만)
             if ( focused ) {
                 const engine::Tex2D& focusTex = m_slotFocusTex[ i ];
                 if ( focusTex.srv ) {
                     const float fxW = focusTex.width * scale;
                     const float fxH = focusTex.height * scale;
 
-                    // 카드 왼쪽에 살짝 띄우기
-                    const float gap = 4.f * scale;
-                    const float fxX = cardX - fxW - gap;
+                    const float fxX = 0.f;
                     const float fxY = slotY + ( cardH - fxH ) * 0.5f;
 
                     m_RenderSys->DrawSprite (
@@ -401,7 +393,7 @@ namespace game {
                         nullptr ,
                         0xFFFFFFFFu ,
                         0.f , 0.f , 0.f ,
-                        /*z*/ game::Z::UIBase ,      // 배경 위, 카드와 비슷한 레이어
+                        /*z*/ game::Z::UIBase ,
                         engine::BlendMode::Alpha ,
                         engine::SamplerMode::Point
                     );
@@ -411,17 +403,17 @@ namespace game {
             // 2-2) Progress card
             m_RenderSys->DrawSprite (
                 cardTex ,
-                cardX , slotY , cardW , cardH ,
+                cardX , slotY + 12.f , cardW , cardH ,
                 nullptr ,
                 0xFFFFFFFFu ,
                 0.f , 0.f , 0.f ,
-                /*z*/ game::Z::UIBase + 10 ,       // 포커스 아이콘보다 살짝 위
+                /*z*/ game::Z::UIBase + 10 ,
                 engine::BlendMode::Alpha ,
                 engine::SamplerMode::Point
             );
         }
 
-        // 3) 텍스트 보조 (디버그/설명용)
+        // 3) 텍스트 보조
         if ( m_Text ) {
             m_Text->Begin ( );
 
@@ -432,6 +424,7 @@ namespace game {
                 wchar_t line[ 256 ];
                 const bool cur = ( i == m_slotFocus );
                 const auto& s = m_slots[ i ];
+
                 if ( !s.has ) {
                     std::swprintf (
                         line , _countof ( line ) ,
@@ -449,6 +442,7 @@ namespace game {
                         cur ? L'▶' : L' ' , i + 1 , prog , last
                     );
                 }
+
                 m_Text->DrawTextLine ( line , baseX + 8.f * scale , yTxt );
                 yTxt += 20.f * scale;
             }
@@ -464,22 +458,27 @@ namespace game {
     }
 
 
-
     // ---- ModeSelect ----
     void FrontFlow::updateMode ( double ) {
         if ( !m_Input ) return;
 
         const float ay = m_Input->GetAxis ( "MoveY" );
         if ( m_navCd <= 0.f ) {
-            if ( ay < -0.5f ) { m_focus = ( m_focus + 2 ) % 3; m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0; m_navCd = 0.14f; }
-            if ( ay > 0.5f ) { m_focus = ( m_focus + 1 ) % 3; m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0; m_navCd = 0.14f; }
+            if ( ay < -0.5f || ay > 0.5f ) { 
+                m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0; m_navCd = 0.14f; 
+            }
         }
+
         if ( m_Input->ActionPressed ( "Back" ) ) { enter ( Screen::SaveSelect ); return; }
 
         if ( m_Input->ActionPressed ( "Confirm" ) ) {
-            if ( m_focus == 0 ) { if ( onStartSolo ) onStartSolo ( m_selectedSlot ); }
-            else if ( m_focus == 1 ) { /* Co-op (coming soon) */ }
-            else { enter ( Screen::SaveSelect ); }
+            if ( m_modeFocus == 0 ) {
+                // Solo
+                if ( onStartSolo ) onStartSolo ( m_selectedSlot );
+            }
+            else {
+                // Co-op (coming soon)
+            }
         }
     }
 
@@ -520,9 +519,32 @@ namespace game {
         const float ovW = ovTex->width * scale;
         const float ovH = ovTex->height * scale;
 
-        // 일단 중앙 근처에 띄우기 (수치는 나중에 직접 조정)
-        const float ovX = baseX + ( drawW - ovW ) * 0.5f;
-        const float ovY = baseY + ( drawH - ovH ) * 0.5f;
+        const float ovX = 480.f;
+
+        // 현재 선택된 슬롯 인덱스(0~2)에 맞춰 Y를 정렬
+        const int slotIndex = std::clamp ( m_slotFocus , 0 , 2 );
+
+        // 이 슬롯의 카드가 그려지는 기준 Y (카드 top)
+        const float cardTopY = baseY + kSlotBaseY[ slotIndex ] * scale;
+
+        // 진행도에 해당하는 카드 텍스처 하나 골라서 높이를 알아낸다
+        const auto& si = m_slots[ slotIndex ];
+        const int prog = si.has ? protocol::ProgressT1 ( si.data ) : 0;
+        const int stepIdx = ProgressBucketIndex ( prog );
+        const engine::Tex2D& cardTex = m_fileProgNormal[ stepIdx ]; // normal/focus 둘 다 크기는 같다고 가정
+
+        float ovY = cardTopY;
+
+        if ( cardTex.srv ) {
+            const float cardH = cardTex.height * scale;
+            const float cardCenter = cardTopY + cardH * 0.5f;
+            // 오버레이 중앙을 카드 중앙에 맞춤
+            ovY = cardCenter - ovH * 0.5f;
+        }
+        else {
+            // 카드 텍스처가 없으면 대략적인 정렬만
+            ovY = cardTopY - ovH * 0.5f;
+        }
 
         m_RenderSys->DrawSprite (
             *ovTex ,
@@ -530,10 +552,11 @@ namespace game {
             nullptr ,
             0xFFFFFFFFu ,
             0.f , 0.f , 0.f ,
-            /*z*/ game::Z::OverlayTop ,         // 슬롯/텍스트 위 최상단
+            /*z*/ game::Z::OverlayTop ,
             engine::BlendMode::Alpha ,
             engine::SamplerMode::Point
         );
+
 
         // 텍스트 안내 정도는 남겨둘 수 있음 (옵션)
         if ( m_Text ) {
