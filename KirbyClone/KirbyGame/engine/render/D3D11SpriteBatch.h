@@ -37,7 +37,7 @@ namespace engine {
 
     // Submission item (with sort key)
     struct SpriteItem {
-        std::uint64_t sortKeyHi = 0;  // [blend:8 | sampler:8 | z:16 | pad:32]
+        std::uint64_t sortKeyHi = 0;  // [z:16 | blend:8 | sampler:8 | pad:32]
         std::uint64_t seq = 0;        // submission order (stable tie-breaker)
         const Tex2D*  tex = nullptr;
         IntRect       src{ 0,0,0,0 };   // kept for backward compat (see IntRect overload)

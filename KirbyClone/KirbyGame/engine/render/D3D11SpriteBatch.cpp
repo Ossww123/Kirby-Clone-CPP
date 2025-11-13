@@ -14,14 +14,15 @@
 
 namespace engine {
 
-    // pack [blend:8 | sampler:8 | z:16] into hi 32bits
+    // pack [z:16 | blend:8 | sampler:8 | pad:32]
     static inline std::uint64_t packHi ( BlendMode b , SamplerMode s , int16_t z )
     {
-        std::uint64_t hi = 0;
-        hi |= ( std::uint64_t ( std::uint8_t ( b ) ) & 0xFFu ) << 56;
-        hi |= ( std::uint64_t ( std::uint8_t ( s ) ) & 0xFFu ) << 48;
         const uint16_t zb = static_cast< uint16_t >( static_cast< int >( z ) + 32768 );
-        hi |= ( uint64_t ( zb ) & 0xFFFFu ) << 32;
+
+        std::uint64_t hi = 0;
+        hi |= ( std::uint64_t ( zb ) & 0xFFFFu ) << 48;
+        hi |= ( std::uint64_t ( std::uint8_t ( b ) ) & 0xFFu ) << 40;
+        hi |= ( std::uint64_t ( std::uint8_t ( s ) ) & 0xFFu ) << 32;
         return hi;
     }
 
@@ -324,8 +325,9 @@ float4 main(float4 pos:SV_Position, float2 uv:TEXCOORD0, float4 col:COLOR) : SV_
 
         for ( std::size_t i = 0; i < m_items.size ( ); ++i ) {
             const auto& it = m_items[ i ];
-            BlendMode   b = static_cast< BlendMode >( ( it.sortKeyHi >> 56 ) & 0xFF );
-            SamplerMode s = static_cast< SamplerMode >( ( it.sortKeyHi >> 48 ) & 0xFF );
+            const uint16_t zb = static_cast< uint16_t >( ( it.sortKeyHi >> 48 ) & 0xFFFFu );
+            BlendMode   b = static_cast< BlendMode >( ( it.sortKeyHi >> 40 ) & 0xFF );
+            SamplerMode s = static_cast< SamplerMode >( ( it.sortKeyHi >> 32 ) & 0xFF );
             const Tex2D* t = it.tex;
 
             const bool groupBreak = ( i == 0 ) ? false : ( b != curBlend || s != curSamp || t != curTex );
