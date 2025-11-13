@@ -64,6 +64,7 @@ namespace game {
         int   m_slotFocus{ 0 };    // 0..2
         float m_navCd{ 0.f };      // navigation cooldown for axis edge
         int   m_selectedSlot{ 1 }; // last picked slot (1..3)
+        int   m_modeFocus{ 0 };    // 0: solo, 1: multi
 
         std::array<SlotInfo , 3> m_slots{};
 
@@ -75,6 +76,14 @@ namespace game {
         game::Fade2D        m_fade;
         float               m_time{ 0.f };
         bool                m_waitTitleToSave{ false };
+
+        // save select resources
+        engine::Tex2D       m_fileBG{};                           // file_select_background
+        engine::Tex2D       m_slotFocusTex[ 3 ]{};                // slot_1/2/3_focus
+        engine::Tex2D       m_fileProgNormal[ 6 ]{};              // 0,20,40,60,80,100 normal
+        engine::Tex2D       m_fileProgFocus[ 6 ]{};               // 0,20,40,60,80,100 focus
+        engine::Tex2D       m_fileOverlaySolo{};                  // file_select_overlay_solo
+        engine::Tex2D       m_fileOverlayMulti{};                 // file_select_overlay_multi
 
     private:
         void enter ( Screen s );

@@ -21,13 +21,28 @@
 inline void DBGLOG ( const wchar_t* msg ) { ::OutputDebugStringW ( msg ); ::OutputDebugStringW ( L"\n" ); }
 #endif
 
+namespace {
+
+    // Clamp and bucketize 0..100 → {0,20,40,60,80,100} index(0..5)
+    inline int ProgressBucketIndex ( int percent ) {
+        static const int kSteps[ 6 ] = { 0,20,40,60,80,100 };
+        percent = std::clamp ( percent , 0 , 100 );
+        int idx = 0;
+        for ( int i = 0; i < 6; ++i ) {
+            if ( percent >= kSteps[ i ] ) idx = i;
+        }
+        return idx; // 마지막으로 만족한 스텝
+    }
+}
+
+
 namespace game {
 
     void FrontFlow::Initialize ( const FrontFlowCreate& d ) {
         m_Text = d.text; m_Input = d.input; m_Save = d.save; m_State = d.state;
         m_Renderer = d.renderer; m_RenderSys = d.renderSys;
         m_sw = d.screenW; m_sh = d.screenH;
-        m_focus = 0; m_slotFocus = 0; m_navCd = 0.f; m_selectedSlot = 1;
+        m_focus = 0; m_slotFocus = 0; m_modeFocus = 0; m_navCd = 0.f; m_selectedSlot = 1;
         m_time = 0.f; m_fade = {};
 
         refreshSlotInfos ( );
@@ -110,6 +125,7 @@ namespace game {
         }
         else if ( s == Screen::ModeSelect ) {
             m_focus = 0;
+            m_modeFocus = 0;
         }
     }
 
@@ -132,6 +148,7 @@ namespace game {
         ID3D11DeviceContext* ctx = nullptr;
         if ( !m_Renderer->GetD3D11Handles ( &dev , &ctx ) ) return false;
 
+        // --- Title ---
         engine::LoadTextureWIC ( dev , L"assets/ui/title_background.png" , &m_titleBG );
         engine::LoadTextureWIC ( dev , L"assets/ui/title_logo.png" , &m_titleLogo );
         engine::CreateSolidTexture1x1 ( dev , 0xFFFFFFFFu , &m_whiteTex );
@@ -139,7 +156,50 @@ namespace game {
         game::LoadAnimCSV ( "assets/ui/title_logo.anim.csv" , &m_titleAnim , /*clear=*/true );
         if ( m_titleAnim.HasClip ( "IDLE" ) ) { m_titleAnim.Play ( "IDLE" , true ); }
 
-        return ( m_titleBG.srv && m_titleLogo.srv && m_whiteTex.srv );
+        // --- Save Select background / slot focus ---
+        engine::LoadTextureWIC ( dev , L"assets/ui/file_select_background.png" , &m_fileBG );
+
+        engine::LoadTextureWIC ( dev , L"assets/ui/slot_1_focus.png" , &m_slotFocusTex[ 0 ] );
+        engine::LoadTextureWIC ( dev , L"assets/ui/slot_2_focus.png" , &m_slotFocusTex[ 1 ] );
+        engine::LoadTextureWIC ( dev , L"assets/ui/slot_3_focus.png" , &m_slotFocusTex[ 2 ] );
+
+        // --- Save Select progress cards ---
+        struct StepEntry { int percent; const wchar_t* suffix; };
+        static const StepEntry kSteps[ 6 ] = {
+            {  0,  L"0"   },
+            { 20,  L"20"  },
+            { 40,  L"40"  },
+            { 60,  L"60"  },
+            { 80,  L"80"  },
+            { 100, L"100" },
+        };
+
+        for ( int i = 0; i < 6; ++i ) {
+            const auto& s = kSteps[ i ];
+
+            wchar_t pathN[ 256 ];
+            wchar_t pathF[ 256 ];
+            std::swprintf ( pathN , _countof ( pathN ) ,
+                            L"assets/ui/file_select_%ls_normal.png" , s.suffix );
+            std::swprintf ( pathF , _countof ( pathF ) ,
+                            L"assets/ui/file_select_%ls_focus.png" , s.suffix );
+
+            engine::LoadTextureWIC ( dev , pathN , &m_fileProgNormal[ i ] );
+            engine::LoadTextureWIC ( dev , pathF , &m_fileProgFocus[ i ] );
+        }
+
+        // --- Save Select overlays (mode select UI) ---
+        engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_solo.png" , &m_fileOverlaySolo );
+        engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_multi.png" , &m_fileOverlayMulti );
+
+        // 필수 최소 리소스만 체크 (나머지는 없으면 없는대로 처리)
+        const bool titleOk =
+            ( m_titleBG.srv && m_titleLogo.srv && m_whiteTex.srv );
+
+        const bool saveOk =
+            m_fileBG.srv != nullptr;
+
+        return titleOk && saveOk;
     }
 
     void FrontFlow::renderFade ( ) {
@@ -250,35 +310,160 @@ namespace game {
     }
 
     void FrontFlow::renderSave ( ) {
-        // 아직은 기존 텍스트 버전 유지(다음 단계에서 스프라이트 교체)
-        if ( !m_Text ) return;
-        m_Text->Begin ( );
-        m_Text->DrawTextLine ( L"[SAVE] reachable" , 8.f , 48.f );
-
-        drawCenter ( L"Select Save Slot" , m_sh * 0.22f );
-        const float x = 80.f;
-        float y = m_sh * 0.35f;
-        for ( int i = 0; i < 3; ++i ) {
-            wchar_t line[ 256 ];
-            const bool cur = ( i == m_slotFocus );
-            const auto& s = m_slots[ i ];
-            if ( !s.has ) {
-                std::swprintf ( line , _countof ( line ) , L"%lc [%d] Slot %d — Empty" ,
-                              cur ? L'▶' : L' ' , i + 1 , i + 1 );
-                m_Text->DrawTextLine ( line , x , y );
-            }
-            else {
-                const int prog = protocol::ProgressT1 ( s.data );
-                wchar_t last[ 128 ]; std::swprintf ( last , _countof ( last ) , L"%hs" , s.data.lastStage.c_str ( ) );
-                std::swprintf ( line , _countof ( line ) , L"%lc [%d] Slot %d — %d%%   Last: %ls" ,
-                              cur ? L'▶' : L' ' , i + 1 , i + 1 , prog , last );
-                m_Text->DrawTextLine ( line , x , y );
-            }
-            y += 36.f;
+        if ( !m_RenderSys ) {
+            // 안전장치: 렌더러 없으면 기존 텍스트 버전 유지
+            if ( !m_Text ) return;
+            m_Text->Begin ( );
+            m_Text->DrawTextLine ( L"[SAVE] reachable (no RenderSys)" , 8.f , 48.f );
+            m_Text->End ( );
+            return;
         }
-        m_Text->DrawTextLine ( L"Back: Backspace" , x , y + 12.f );
-        m_Text->End ( );
+
+        const int bbW = m_RenderSys->BackbufferWidth ( );
+        const int bbH = m_RenderSys->BackbufferHeight ( );
+
+        const float BASE_W = 240.f;
+        const float BASE_H = 160.f;
+        const float scale = std::max (
+            1.0f ,
+            std::floor ( std::min ( bbW / BASE_W , bbH / BASE_H ) )
+        );
+
+        const float drawW = BASE_W * scale;
+        const float drawH = BASE_H * scale;
+        const float baseX = ( bbW - drawW ) * 0.5f;
+        const float baseY = ( bbH - drawH ) * 0.5f;
+
+        // 1) Background (full screen)
+        if ( m_fileBG.srv ) {
+            m_RenderSys->DrawSprite (
+                m_fileBG ,
+                baseX , baseY , drawW , drawH ,
+                /*src*/nullptr ,
+                0xFFFFFFFFu ,
+                0.f , 0.f , 0.f ,
+                /*z*/ game::Z::BG ,
+                engine::BlendMode::Alpha ,
+                engine::SamplerMode::Linear
+            );
+        }
+
+        // 각 슬롯의 세로 위치 (240x160 기준)
+        const float slotBaseY[ 3 ] = {
+            52.f,   // slot 1
+            86.f,   // slot 2
+            120.f   // slot 3
+        };
+
+        // 2) Slots: focus icon + progress card
+        for ( int i = 0; i < 3; ++i ) {
+            const auto& si = m_slots[ i ];
+            const bool focused = ( i == m_slotFocus );
+
+            // 진행도 → 버킷 index (0,20,40,60,80,100)
+            const int prog = si.has ? protocol::ProgressT1 ( si.data ) : 0;
+            const int stepIdx = ProgressBucketIndex ( prog );
+
+            const engine::Tex2D& cardTex =
+                focused ? m_fileProgFocus[ stepIdx ]
+                : m_fileProgNormal[ stepIdx ];
+
+            if ( !cardTex.srv ) continue;
+
+            const float cardW = cardTex.width * scale;
+            const float cardH = cardTex.height * scale;
+            const float slotY = baseY + slotBaseY[ i ] * scale;
+
+            // 카드 기본 X (중앙 정렬)
+            float cardX = baseX + ( drawW - cardW ) * 0.5f;
+
+            // 포커스인 경우 카드 살짝 오른쪽으로 밀기
+            const float focusCardOffsetX = 6.f * scale;    // 느낌 안 맞으면 여기 숫자만 조절하면 됨
+            if ( focused ) {
+                cardX += focusCardOffsetX;
+            }
+
+            // 2-1) Focus icon (left of card, focused slot만)
+            if ( focused ) {
+                const engine::Tex2D& focusTex = m_slotFocusTex[ i ];
+                if ( focusTex.srv ) {
+                    const float fxW = focusTex.width * scale;
+                    const float fxH = focusTex.height * scale;
+
+                    // 카드 왼쪽에 살짝 띄우기
+                    const float gap = 4.f * scale;
+                    const float fxX = cardX - fxW - gap;
+                    const float fxY = slotY + ( cardH - fxH ) * 0.5f;
+
+                    m_RenderSys->DrawSprite (
+                        focusTex ,
+                        fxX , fxY , fxW , fxH ,
+                        nullptr ,
+                        0xFFFFFFFFu ,
+                        0.f , 0.f , 0.f ,
+                        /*z*/ game::Z::UIBase ,      // 배경 위, 카드와 비슷한 레이어
+                        engine::BlendMode::Alpha ,
+                        engine::SamplerMode::Point
+                    );
+                }
+            }
+
+            // 2-2) Progress card
+            m_RenderSys->DrawSprite (
+                cardTex ,
+                cardX , slotY , cardW , cardH ,
+                nullptr ,
+                0xFFFFFFFFu ,
+                0.f , 0.f , 0.f ,
+                /*z*/ game::Z::UIBase + 10 ,       // 포커스 아이콘보다 살짝 위
+                engine::BlendMode::Alpha ,
+                engine::SamplerMode::Point
+            );
+        }
+
+        // 3) 텍스트 보조 (디버그/설명용)
+        if ( m_Text ) {
+            m_Text->Begin ( );
+
+            drawCenter ( L"Select Save Slot" , baseY + 16.f * scale );
+
+            float yTxt = baseY + 40.f * scale;
+            for ( int i = 0; i < 3; ++i ) {
+                wchar_t line[ 256 ];
+                const bool cur = ( i == m_slotFocus );
+                const auto& s = m_slots[ i ];
+                if ( !s.has ) {
+                    std::swprintf (
+                        line , _countof ( line ) ,
+                        L"%lc Slot %d — Empty" ,
+                        cur ? L'▶' : L' ' , i + 1
+                    );
+                }
+                else {
+                    const int prog = protocol::ProgressT1 ( s.data );
+                    wchar_t last[ 128 ];
+                    std::swprintf ( last , _countof ( last ) , L"%hs" , s.data.lastStage.c_str ( ) );
+                    std::swprintf (
+                        line , _countof ( line ) ,
+                        L"%lc Slot %d — %d%%   Last: %ls" ,
+                        cur ? L'▶' : L' ' , i + 1 , prog , last
+                    );
+                }
+                m_Text->DrawTextLine ( line , baseX + 8.f * scale , yTxt );
+                yTxt += 20.f * scale;
+            }
+
+            m_Text->DrawTextLine (
+                L"Back: Backspace" ,
+                baseX + 8.f * scale ,
+                baseY + drawH - 24.f * scale
+            );
+
+            m_Text->End ( );
+        }
     }
+
+
 
     // ---- ModeSelect ----
     void FrontFlow::updateMode ( double ) {
@@ -286,8 +471,8 @@ namespace game {
 
         const float ay = m_Input->GetAxis ( "MoveY" );
         if ( m_navCd <= 0.f ) {
-            if ( ay < -0.5f ) { m_focus = ( m_focus + 2 ) % 3; m_navCd = 0.14f; }
-            if ( ay > 0.5f ) { m_focus = ( m_focus + 1 ) % 3; m_navCd = 0.14f; }
+            if ( ay < -0.5f ) { m_focus = ( m_focus + 2 ) % 3; m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0; m_navCd = 0.14f; }
+            if ( ay > 0.5f ) { m_focus = ( m_focus + 1 ) % 3; m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0; m_navCd = 0.14f; }
         }
         if ( m_Input->ActionPressed ( "Back" ) ) { enter ( Screen::SaveSelect ); return; }
 
@@ -299,21 +484,74 @@ namespace game {
     }
 
     void FrontFlow::renderMode ( ) {
-        if ( !m_Text ) return;
-        m_Text->Begin ( );
-        drawCenter ( L"Select Mode" , m_sh * 0.22f );
-
-        const wchar_t* items[ 3 ] = { L"Solo", L"Co-op (coming soon)", L"Back" };
-        const float x = 120.f;
-        float y = m_sh * 0.40f;
-        for ( int i = 0; i < 3; ++i ) {
-            wchar_t line[ 256 ];
-            std::swprintf ( line , _countof ( line ) , L"%lc %ls" , ( i == m_focus ) ? L'▶' : L' ' , items[ i ] );
-            m_Text->DrawTextLine ( line , x , y );
-            y += 36.f;
+        if ( !m_RenderSys ) {
+            // 안전장치: 텍스트 폴백만
+            if ( !m_Text ) return;
+            m_Text->Begin ( );
+            drawCenter ( L"Select Mode (Solo/Multi overlay missing)" , m_sh * 0.22f );
+            m_Text->End ( );
+            return;
         }
-        m_Text->End ( );
+
+        // 0) 먼저 Save 화면을 그대로 그린다 (배경 + 슬롯 카드 + 텍스트)
+        renderSave ( );
+
+        // 1) 오버레이 텍스처 선택 (solo / multi)
+        const engine::Tex2D* ovTex =
+            ( m_modeFocus == 0 ) ? &m_fileOverlaySolo : &m_fileOverlayMulti;
+
+        if ( !ovTex || !ovTex->srv ) return;
+
+        const int bbW = m_RenderSys->BackbufferWidth ( );
+        const int bbH = m_RenderSys->BackbufferHeight ( );
+
+        const float BASE_W = 240.f;
+        const float BASE_H = 160.f;
+        const float scale = std::max (
+            1.0f ,
+            std::floor ( std::min ( bbW / BASE_W , bbH / BASE_H ) )
+        );
+
+        const float drawW = BASE_W * scale;
+        const float drawH = BASE_H * scale;
+        const float baseX = ( bbW - drawW ) * 0.5f;
+        const float baseY = ( bbH - drawH ) * 0.5f;
+
+        const float ovW = ovTex->width * scale;
+        const float ovH = ovTex->height * scale;
+
+        // 일단 중앙 근처에 띄우기 (수치는 나중에 직접 조정)
+        const float ovX = baseX + ( drawW - ovW ) * 0.5f;
+        const float ovY = baseY + ( drawH - ovH ) * 0.5f;
+
+        m_RenderSys->DrawSprite (
+            *ovTex ,
+            ovX , ovY , ovW , ovH ,
+            nullptr ,
+            0xFFFFFFFFu ,
+            0.f , 0.f , 0.f ,
+            /*z*/ game::Z::OverlayTop ,         // 슬롯/텍스트 위 최상단
+            engine::BlendMode::Alpha ,
+            engine::SamplerMode::Point
+        );
+
+        // 텍스트 안내 정도는 남겨둘 수 있음 (옵션)
+        if ( m_Text ) {
+            m_Text->Begin ( );
+            m_Text->DrawTextLine (
+                ( m_modeFocus == 0 ) ? L"Solo" : L"Multi" ,
+                ovX + 8.f * scale ,
+                ovY + ovH + 8.f * scale
+            );
+            m_Text->DrawTextLine (
+                L"↑/↓: Change   Enter: Confirm   Backspace: Back" ,
+                baseX + 8.f * scale ,
+                baseY + drawH - 20.f * scale
+            );
+            m_Text->End ( );
+        }
     }
+
 
     // ---- draw helpers ----
     void FrontFlow::drawCenter ( const wchar_t* text , float y ) {

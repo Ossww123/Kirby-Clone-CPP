@@ -3,6 +3,7 @@ namespace game::Z {
     // UI/FrontFlow
     inline constexpr int16_t TitleBG        = -20000;
     inline constexpr int16_t TitleLogo      = -19000;
+    inline constexpr int16_t UIBase         = -18000;
 
     // In-world
     inline constexpr int16_t BG             = -20000;  // parallax/tile BG
