@@ -31,10 +31,10 @@ namespace {
         for ( int i = 0; i < 6; ++i ) {
             if ( percent >= kSteps[ i ] ) idx = i;
         }
-        return idx; // 마지막으로 만족한 스텝
+        return idx;
     }
 
-    // Save 슬롯 행의 기준 Y (240x160 기준 좌표)
+    // axis based on 240x160
     inline constexpr float kSlotBaseY[ 3 ] = {
         47.f ,  // slot 1
         87.f ,  // slot 2
@@ -54,7 +54,6 @@ namespace game {
 
         refreshSlotInfos ( );
 
-        // --- 타이틀 리소스 로드 ---
         loadTitleAssets ( );
 
         enter ( Screen::Title );
@@ -67,7 +66,6 @@ namespace game {
         m_navCd = std::max ( 0.f , m_navCd - static_cast< float >( fixedDt ) );
         m_fade.Update ( fixedDt );
 
-        // 타이틀에서 Confirm → 페이드아웃 시작 (중복 방지: 이미 페이드 중이면 무시)
         if ( m_scr == Screen::Title && m_Input && m_Input->ActionPressed ( "Confirm" ) ) {
             if ( !m_fade.Active ( ) ) {
                 startFadeOut ( 0.6f , 0xFFFFFFu , game::Z::OverlayTop );
@@ -75,7 +73,6 @@ namespace game {
             }
         }
 
-        // 페이드아웃 완료 시점에 화면 전환
         if ( m_waitTitleToSave && !m_fade.Active ( ) ) {
             enter ( Screen::SaveSelect );
             startFadeIn ( 0.6f , 0xFFFFFFu , game::Z::OverlayTop );
@@ -98,7 +95,7 @@ namespace game {
 
     void FrontFlow::Render ( ) {
         if ( !m_RenderSys ) {
-            // 텍스트 폴백
+            // text fallback
             DBGLOG ( L"[FrontFlow] Render() sprite path missing; text-only fallback" );
             if ( !m_Text ) return;
             m_Text->Begin ( );
@@ -112,7 +109,6 @@ namespace game {
             return;
         }
 
-        // 스프라이트 렌더
         switch ( m_scr ) {
         case Screen::Title:      renderTitle ( ); break;
         case Screen::SaveSelect: renderSave ( );  break;
@@ -121,7 +117,6 @@ namespace game {
 
         renderFade ( );
 
-        // 디버그 텍스트(있으면)
         if ( m_Text ) {
             m_Text->Begin ( );
             m_Text->DrawTextLine ( L"[FrontFlow] Render() watermark" , 8.f , 28.f );
@@ -204,7 +199,6 @@ namespace game {
         engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_solo.png" , &m_fileOverlaySolo );
         engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_multi.png" , &m_fileOverlayMulti );
 
-        // 필수 최소 리소스만 체크 (나머지는 없으면 없는대로 처리)
         const bool titleOk =
             ( m_titleBG.srv && m_titleLogo.srv && m_whiteTex.srv );
 
@@ -287,8 +281,6 @@ namespace game {
         }
     }
 
-
-    // ---- SaveSelect ---- (스프라이트 적용은 다음 단계에서 확장)
     void FrontFlow::updateSave ( double ) {
         if ( !m_Input ) return;
 
@@ -324,7 +316,7 @@ namespace game {
     void FrontFlow::renderSave ( )
     {
         if ( !m_RenderSys ) {
-            // 안전장치: 렌더러 없으면 기존 텍스트 버전 유지
+            // text fallback
             if ( !m_Text ) return;
             m_Text->Begin ( );
             m_Text->DrawTextLine ( L"[SAVE] reachable (no RenderSys)" , 8.f , 48.f );
@@ -366,7 +358,6 @@ namespace game {
             const auto& si = m_slots[ i ];
             const bool focused = ( i == m_slotFocus );
 
-            // 진행도 → 버킷 index (0,20,40,60,80,100)
             const int prog = si.has ? protocol::ProgressT1 ( si.data ) : 0;
             const int stepIdx = ProgressBucketIndex ( prog );
 
@@ -381,7 +372,6 @@ namespace game {
             const float cardH = cardTex.height * scale;
             const float slotY = baseY + kSlotBaseY[ i ] * scale - 12.f;
 
-            // 카드 X/Y는 현재 튜닝된 매직 넘버 유지
             const float cardX = 740.f;
 
             // 2-1) Focus icon (focused slot만)
@@ -420,7 +410,7 @@ namespace game {
             );
         }
 
-        // 3) 텍스트 보조
+        // 3) text fallback
         if ( m_Text ) {
             m_Text->Begin ( );
 
@@ -496,7 +486,7 @@ namespace game {
 
     void FrontFlow::renderMode ( ) {
         if ( !m_RenderSys ) {
-            // 안전장치: 텍스트 폴백만
+            // text fallback
             if ( !m_Text ) return;
             m_Text->Begin ( );
             drawCenter ( L"Select Mode (Solo/Multi overlay missing)" , m_sh * 0.22f );
@@ -504,10 +494,8 @@ namespace game {
             return;
         }
 
-        // 0) 먼저 Save 화면을 그대로 그린다 (배경 + 슬롯 카드 + 텍스트)
         renderSave ( );
 
-        // 1) 오버레이 텍스처 선택 (solo / multi)
         const engine::Tex2D* ovTex =
             ( m_modeFocus == 0 ) ? &m_fileOverlaySolo : &m_fileOverlayMulti;
 
@@ -533,28 +521,23 @@ namespace game {
 
         const float ovX = 480.f;
 
-        // 현재 선택된 슬롯 인덱스(0~2)에 맞춰 Y를 정렬
         const int slotIndex = std::clamp ( m_slotFocus , 0 , 2 );
 
-        // 이 슬롯의 카드가 그려지는 기준 Y (카드 top)
         const float cardTopY = baseY + kSlotBaseY[ slotIndex ] * scale;
 
-        // 진행도에 해당하는 카드 텍스처 하나 골라서 높이를 알아낸다
         const auto& si = m_slots[ slotIndex ];
         const int prog = si.has ? protocol::ProgressT1 ( si.data ) : 0;
         const int stepIdx = ProgressBucketIndex ( prog );
-        const engine::Tex2D& cardTex = m_fileProgNormal[ stepIdx ]; // normal/focus 둘 다 크기는 같다고 가정
+        const engine::Tex2D& cardTex = m_fileProgNormal[ stepIdx ];
 
         float ovY = cardTopY;
 
         if ( cardTex.srv ) {
             const float cardH = cardTex.height * scale;
             const float cardCenter = cardTopY + cardH * 0.5f;
-            // 오버레이 중앙을 카드 중앙에 맞춤
             ovY = cardCenter - ovH * 0.5f;
         }
         else {
-            // 카드 텍스처가 없으면 대략적인 정렬만
             ovY = cardTopY - ovH * 0.5f;
         }
 
@@ -569,8 +552,6 @@ namespace game {
             engine::SamplerMode::Point
         );
 
-
-        // 텍스트 안내 정도는 남겨둘 수 있음 (옵션)
         if ( m_Text ) {
             m_Text->Begin ( );
             m_Text->DrawTextLine (

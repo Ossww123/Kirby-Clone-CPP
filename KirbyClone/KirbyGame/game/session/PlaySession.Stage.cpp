@@ -201,6 +201,12 @@ namespace game {
 
         // Rebuild combat systems after world/colliders/player placement
         initCombatSystems ( );
+
+        // 임시 페이드 인
+        if ( desc.id == "t1/hub" && m_trans.state == Transition::Idle ) {
+            StartFadeIn ( 0.6f , 0xFFFFFFu , game::Z::OverlayTop );
+        }
+
         return true;
     }
 
