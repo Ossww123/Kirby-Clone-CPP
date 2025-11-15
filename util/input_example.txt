@@ -1,0 +1,6 @@
+C:/Users/User/AppData/Local/Programs/Python/Python312/python.exe \
+  c:/Users/User/Desktop/Kirby/Kirby-Clone-CPP/util/make_tiles.py \
+  --input  c:/Users/User/Desktop/Kirby/Kirby-Clone-CPP/util/stage01_full.png \
+  --tileset c:/Users/User/Desktop/Kirby/Kirby-Clone-CPP/util/stage01_tileset.png \
+  --tilemap c:/Users/User/Desktop/Kirby/Kirby-Clone-CPP/util/stage01_tilemap.csv \
+  --tile-size 16
