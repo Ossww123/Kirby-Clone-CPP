@@ -201,6 +201,7 @@
     <ClInclude Include="game\entities\monsters\WhispyWoods.h" />
     <ClInclude Include="game\session\SessionState.h" />
     <ClInclude Include="game\session\SpawnSelector.h" />
+    <ClInclude Include="game\world\TileLayerRuntime.h" />
     <ClInclude Include="protocol\SaveSchema.h" />
     <ClInclude Include="res\Resource.h" />
     <ClInclude Include="engine\world\WorldSystem.h" />
@@ -262,6 +263,7 @@
     <ClCompile Include="game\entities\monsters\HotHead.cpp" />
     <ClCompile Include="game\session\SessionState.cpp" />
     <ClCompile Include="game\session\SpawnSelector.cpp" />
+    <ClCompile Include="game\world\TileLayerRuntime.cpp" />
     <ClCompile Include="KirbyGame.cpp" />
     <ClCompile Include="engine\world\WorldSystem.cpp" />
     <ClCompile Include="engine\core\RenderSystem.cpp" />

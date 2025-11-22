@@ -25,6 +25,34 @@
 #include "game/session/SpawnSelector.h"
 #include "game/session/HubCoverUnlock.h"
 
+#ifndef DBGLOG
+#include <string>
+#include <windows.h>
+inline void DBGLOG ( const wchar_t* msg ) { ::OutputDebugStringW ( msg ); ::OutputDebugStringW ( L"\n" ); }
+static void ShowAssetLoadWarning ( const char* kind , const char* path )
+{
+    // kind: "tilemap", "tiledefs", "monsters" 같은 용도 이름
+    // path: 실패한 파일 경로 (UTF-8 / narrow)
+
+    std::wstring wKind = engine::ToWide ( kind ? kind : "" );
+    std::wstring wPath = engine::ToWide ( path ? path : "(null)" );
+
+    std::wstring msg = L"[Stage] Failed to load ";
+    msg += wKind;
+    msg += L" file:\n";
+    msg += wPath;
+
+    DBGLOG ( msg.c_str ( ) ); // 디버그 출력도 같이
+
+    ::MessageBoxW (
+        nullptr ,
+        msg.c_str ( ) ,
+        L"Asset Load Error" ,
+        MB_OK | MB_ICONWARNING
+    );
+}
+#endif
+
 namespace game {
 
     bool PlaySession::LoadStage ( const char* jsonPath ) {
@@ -32,7 +60,61 @@ namespace game {
         m_stageJsonPath = jsonPath ? jsonPath : m_stageJsonPath;
 
         game::StageDesc desc{};
-        if ( !game::LoadStageDesc ( m_stageJsonPath.c_str ( ) , desc ) ) return false;
+        if ( !game::LoadStageDesc ( m_stageJsonPath.c_str ( ) , desc ) ) {
+            std::wstring msg = L"[Stage] LoadStage: LoadStageDesc FAILED for '" +
+                engine::ToWide ( m_stageJsonPath ) + L"'";
+            DBGLOG ( msg.c_str ( ) );
+            return false;
+        }
+
+        {
+            std::wstring msg = L"[Stage] StageDesc.id='" + engine::ToWide ( desc.id ) + L"'";
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] tileset     = " + engine::ToWide ( desc.tileset );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] tiledefs    = " + engine::ToWide ( desc.tiledefs );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] tilemap     = " + engine::ToWide ( desc.tilemap );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] monsters    = " + engine::ToWide ( desc.monsters );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] items       = " + engine::ToWide ( desc.items );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] player_start= " + engine::ToWide ( desc.player_start );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] background  = " + engine::ToWide ( desc.background );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] doors       = " + engine::ToWide ( desc.doors );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] cover_tile  = " + engine::ToWide ( desc.cover_tilemap );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] unlocks     = " + engine::ToWide ( desc.unlocks );
+            DBGLOG ( msg.c_str ( ) );
+        }
+        {
+            std::wstring msg = L"[Stage] layers      = " + engine::ToWide ( desc.layers );
+            DBGLOG ( msg.c_str ( ) );
+        }
 
         m_stageId = desc.id;
 
@@ -44,21 +126,28 @@ namespace game {
         m_World.SetWorldTileSize ( game::TILE_PX , game::TILE_PX );
 
         int mw = 0 , mh = 0; std::vector<int> ids;
-        game::LoadTileMapCSV ( desc.tilemap.c_str ( ) , mw , mh , ids );
+        if ( !game::LoadTileMapCSV ( desc.tilemap.c_str ( ) , mw , mh , ids ) ) {
+            ShowAssetLoadWarning ( "tilemap" , desc.tilemap.c_str ( ) );
+            return false;
+        }
         m_World.SetMapFromMemory ( mw , mh , ids.data ( ) );
 
         std::vector<game::TileDefCSV> tdefs;
-        if ( game::LoadTileDefsCSV ( desc.tiledefs.c_str ( ) , tdefs ) && !tdefs.empty ( ) ) {
-            const int cw = 16 , ch = 16;
-            for ( const auto& r : tdefs ) {
-                engine::TileDef d{};
-                d.solid = ( r.solid != 0 );
-                d.oneway = ( r.oneway != 0 );
-                if ( r.gx >= 0 && r.gy >= 0 )
-                    d.src = engine::IntRect{ r.gx * cw, r.gy * ch, r.gx * cw + cw, r.gy * ch + ch };
-                m_World.DefineTile ( r.id , d );
-            }
+        if ( !game::LoadTileDefsCSV ( desc.tiledefs.c_str ( ) , tdefs ) || tdefs.empty ( ) ) {
+            ShowAssetLoadWarning ( "tiledefs" , desc.tiledefs.c_str ( ) );
+            return false;
         }
+
+        const int cw = 16 , ch = 16;
+        for ( const auto& r : tdefs ) {
+            engine::TileDef d{};
+            d.solid = ( r.solid != 0 );
+            d.oneway = ( r.oneway != 0 );
+            if ( r.gx >= 0 && r.gy >= 0 )
+                d.src = engine::IntRect{ r.gx * cw, r.gy * ch, r.gx * cw + cw, r.gy * ch + ch };
+            m_World.DefineTile ( r.id , d );
+        }
+
 
         // ---- Cover layer (hub blockers) ----
         bool rebuilt = false;
@@ -67,6 +156,13 @@ namespace game {
             if ( game::LoadTileMapCSV ( desc.cover_tilemap.c_str ( ) , cw , ch , cids ) ) {
                 m_World.SetCoverFromMemory ( cw , ch , cids.data ( ) );
             }
+            else {
+                ShowAssetLoadWarning ( "cover_tilemap" , desc.cover_tilemap.c_str ( ) );
+                m_World.ClearCover ( );
+            }
+        }
+        else {
+            m_World.ClearCover ( ); // 허브가 아닌 스테이지에서 커버 잔류 방지
         }
 
         // ---- Hub unlocks (erase cover tiles for cleared stages) ----
@@ -105,6 +201,70 @@ namespace game {
             m_BgTex = {};
         }
 
+        // ---- Optional tile layers (from stage.json "layers") ----
+        m_TileLayers.clear ( );
+
+        if ( !desc.layers.empty ( ) ) {
+            std::vector<game::TileLayerCSV> ldefs;
+            if ( game::LoadTileLayersCSV ( desc.layers.c_str ( ) , ldefs ) ) {
+                m_TileLayers.reserve ( ldefs.size ( ) );
+
+                for ( const auto& r : ldefs ) {
+                    game::TileLayerRuntime layer{};
+                    layer.name = r.name;
+                    layer.offsetX = r.offsetPxX;
+                    layer.offsetY = r.offsetPxY;
+                    layer.collides = ( r.collides != 0 );
+                    layer.z = r.z;
+
+                    // Tileset 로드
+                    if ( !layer.tiles.LoadAtlas ( d3d->Device ( ) ,
+                        engine::ToWide ( r.tileset ).c_str ( ) ,
+                        16 , 16 ) ) {
+                        continue; // 이 레이어는 스킵
+                    }
+                    layer.tiles.SetWorldTileSize ( game::TILE_PX , game::TILE_PX );
+
+                    // TileDefs 로드 → TileSet.Define
+                    std::vector<game::TileDefCSV> defs;
+                    if ( game::LoadTileDefsCSV ( r.tiledefs.c_str ( ) , defs ) && !defs.empty ( ) ) {
+                        const int cw = 16 , ch = 16;
+                        for ( const auto& td : defs ) {
+                            engine::TileDef d{};
+                            d.solid = ( td.solid != 0 );
+                            d.oneway = ( td.oneway != 0 );
+                            if ( td.gx >= 0 && td.gy >= 0 ) {
+                                d.src = engine::IntRect{
+                                    td.gx * cw ,
+                                    td.gy * ch ,
+                                    td.gx * cw + cw ,
+                                    td.gy * ch + ch
+                                };
+                            }
+                            layer.tiles.Define ( td.id , d );
+                        }
+                    }
+
+                    // TileMap 로드 → TileMap.LoadFromMemory
+                    int lw = 0 , lh = 0;
+                    std::vector<int> ids;
+                    if ( !game::LoadTileMapCSV ( r.tilemap.c_str ( ) , lw , lh , ids ) ) {
+                        continue;
+                    }
+                    layer.map.LoadFromMemory ( lw , lh , ids.data ( ) );
+
+                    m_TileLayers.push_back ( std::move ( layer ) );
+                }
+
+                // z 오름차순 정렬 (작을수록 BG, 클수록 FG)
+                std::sort ( m_TileLayers.begin ( ) , m_TileLayers.end ( ) ,
+                            [ ] ( const game::TileLayerRuntime& a , const game::TileLayerRuntime& b ) {
+                                return a.z < b.z;
+                            } );
+            }
+        }
+
+
         // ---- Spawn resolve (override → spawns.csv → save.lastSpawn → default → player_start.csv) ----
         if ( m_Player ) {
             game::ResolvedSpawn rs{};
@@ -120,6 +280,47 @@ namespace game {
                 );
                 m_Cam.SetLookAt ( { rs.x, rs.y } );
                 m_Cam.SnapImmediate ( );
+            }
+        }
+
+        // ---- Items (clear emblem, pickups) ----
+        m_Items.clear ( );
+        if ( !desc.items.empty ( ) ) {
+            std::vector<game::ItemCSV> itemDefs;
+            if ( game::LoadItemsCSV ( desc.items.c_str ( ) , itemDefs ) ) {
+                const int itemSize = game::TILE_PX; // 한 타일 크기(16x16) 픽업으로 가정
+                const int half = itemSize / 2;
+
+                for ( const auto& ic : itemDefs ) {
+                    // type 문자열 → 내부 Kind 매핑
+                    std::string t = ic.type;
+                    std::transform ( t.begin ( ) , t.end ( ) , t.begin ( ) ,
+                                     [ ] ( unsigned char c ) { return static_cast< char >( std::tolower ( c ) ); } );
+
+                    ItemRuntime it{};
+
+                    if ( t == "clear_emblem" || t == "clear" || t == "emblem" ) {
+                        it.kind = ItemRuntime::Kind::ClearEmblem;
+                    }
+                    else {
+                        continue; // 아직은 클리어 엠블렘만 처리
+                    }
+
+                    const int cx = static_cast< int >( ic.x );
+                    const int cy = static_cast< int >( ic.y );
+
+                    // (cx,cy)를 중심으로 하는 itemSize x itemSize 박스
+                    it.x = cx - half;
+                    it.y = cy - half;
+                    it.w = itemSize;
+                    it.h = itemSize;
+                    it.collected = false;
+
+                    m_Items.push_back ( it );
+                }
+            }
+            else {
+                ShowAssetLoadWarning ( "items" , desc.items.c_str ( ) );
             }
         }
 

@@ -18,6 +18,7 @@ namespace game {
         std::string tiledefs;         // assets/tilesets/grasslands.tiledefs.csv
         std::string tilemap;          // assets/stages/.../tilemap.csv
         std::string monsters;         // assets/stages/.../monsters.csv
+        std::string items;            // optional: assets/stages/.../items.csv (pickups/emblems)
         std::string player_start;     // assets/stages/.../player_start.csv
         std::string background;       // assets/backgrounds/sky_day.png
         std::string doors;            // optional: assets/stages/.../doors.csv
@@ -25,6 +26,9 @@ namespace game {
         // hub-only (optional)
         std::string cover_tilemap;    // cover layer tilemap csv
         std::string unlocks;          // unlock rules csv
+
+        // tile layers (optional)
+        std::string layers;
 
         // optional boss arena
         bool has_boss_arena{ false };

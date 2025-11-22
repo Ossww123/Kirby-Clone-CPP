@@ -1,10 +1,15 @@
 {
-  "tileset": "assets/tilesets/grasslands.png",
-  "tiledefs": "assets/tilesets/grasslands.tiledefs.csv",
-  "tilemap": "assets/stages/stage03/tilemap.csv",
-  "monsters": "assets/stages/stage03/monsters.csv",
-  "player_start": "assets/stages/stage03/player_start.csv",
-  "background": "assets/backgrounds/sky_day.png",
-  "doors": "assets/stages/stage03/doors.csv",
-  "boss": { "arena": { "x": 512, "y": 256, "w": 960, "h": 640 } }
+  "id": "t1/s1/m3",
+
+  "tileset": "assets/tilesets/vegetable_valley_02_tileset.png",
+  "tiledefs": "assets/tilesets/vegetable_valley_02.tiledefs.csv",
+
+  "tilemap": "assets/stages/t1/s1/m3/tilemap.csv",
+  "monsters": "assets/stages/t1/s1/m3/monsters.csv",
+  "player_start": "assets/stages/t1/s1/m3/player_start.csv",
+  "background": "assets/backgrounds/bg2.png",
+
+  "doors": "assets/stages/t1/s1/m3/doors.csv",
+
+  "layers": "assets/stages/t1/s1/m3/layers.csv",
 }

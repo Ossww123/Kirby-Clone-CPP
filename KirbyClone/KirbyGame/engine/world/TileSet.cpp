@@ -31,10 +31,10 @@ namespace engine {
         const int gx = idx % c;
         const int gy = idx / c;
 
-        const int left = gx * m_cellW;
-        const int top = gy * m_cellH;
-        const int right = left + m_cellW;
-        const int bottom = top + m_cellH;
+        const int left      = gx * m_cellW;
+        const int top       = gy * m_cellH;
+        const int right     = left + m_cellW;
+        const int bottom    = top + m_cellH;
 
         if ( right > m_atlas.width || bottom > m_atlas.height ) return false;
 

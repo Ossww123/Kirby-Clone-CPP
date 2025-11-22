@@ -110,4 +110,7 @@
 
   /effects
     Fade2D.h — 페이드 인/아웃 연출 유틸
+
+  /world
+    TileLayerRuntime.* — 스테이지 타일 레이어 런타임 래퍼(TileSet + TileMap + 오프셋/z/충돌 플래그).
 ```

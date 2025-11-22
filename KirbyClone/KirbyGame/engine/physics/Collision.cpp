@@ -6,6 +6,8 @@ namespace engine::physics {
     void CollisionSystem::Clear ( ) {
         m_static.clear ( );
         m_oneway.clear ( );
+        m_water.clear ( );
+        m_ladder.clear ( );
     }
 
     void CollisionSystem::AddStaticBox ( const IntRect& r ) { m_static.push_back ( r ); }
@@ -16,6 +18,16 @@ namespace engine::physics {
     void CollisionSystem::AddOneWayBox ( const IntRect& r ) { m_oneway.push_back ( r ); }
     void CollisionSystem::AddOneWayBox ( int x , int y , int w , int h ) {
         m_oneway.push_back ( IntRect{ x, y, x + w, y + h } );
+    }
+
+    void CollisionSystem::AddWaterBox ( const IntRect& r ) { m_water.push_back ( r ); }
+    void CollisionSystem::AddWaterBox ( int x , int y , int w , int h ) {
+        m_water.push_back ( IntRect{ x, y, x + w, y + h } );
+    }
+
+    void CollisionSystem::AddLadderBox ( const IntRect& r ) { m_ladder.push_back ( r ); }
+    void CollisionSystem::AddLadderBox ( int x , int y , int w , int h ) {
+        m_ladder.push_back ( IntRect{ x, y, x + w, y + h } );
     }
 
     void CollisionSystem::MoveAndCollide ( IntRect& aabb ,
@@ -81,6 +93,14 @@ namespace engine::physics {
                     break;
                 }
             }
+        }
+
+        // 4) Triggers: water / ladder (no position/velocity change)
+        for ( const IntRect& w : m_water ) {
+            if ( Overlap ( aabb , w ) ) { rep.inWater = true; break; }
+        }
+        for ( const IntRect& l : m_ladder ) {
+            if ( Overlap ( aabb , l ) ) { rep.onLadder = true; break; }
         }
 
         if ( out ) *out = rep;

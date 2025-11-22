@@ -43,9 +43,12 @@ namespace game {
             else if ( key == "tiledefs" && isString ) out.tiledefs = m[ 2 ].str ( );
             else if ( key == "tilemap" && isString ) out.tilemap = m[ 2 ].str ( );
             else if ( key == "monsters" && isString ) out.monsters = m[ 2 ].str ( );
+            else if ( key == "items" && isString ) out.items = m[ 2 ].str ( );
             else if ( key == "player_start" && isString ) out.player_start = m[ 2 ].str ( );
             else if ( key == "background" && isString ) out.background = m[ 2 ].str ( );
             else if ( key == "doors" && isString ) out.doors = m[ 2 ].str ( );
+            // tile layers (optional)
+            else if ( key == "layers" && isString ) out.layers = m[ 2 ].str ( );
 
             it = m.suffix ( ).first;
         }

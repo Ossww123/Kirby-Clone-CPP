@@ -86,6 +86,53 @@ namespace game {
             c.excludeOwner = true;
             HitVolumeFactory::Register ( "InhaleField" , c );
         }
+
+        // Water jet (horizontal): box ≈ 2 x 1.5 tiles
+        {
+            HitVolume::Cfg c{};
+            c.behavior = HitBehavior::Attached;   // 플레이어에 붙어서 유지
+            c.shape = HitShape::Box;
+            c.w = 32.f;    // 2 tiles (if tile = 16px)
+            c.h = 24.f;    // 1.5 tiles
+
+            // 한 번 누르면 짧게 남도록, 홀드시 매 프레임 재스폰하는 패턴을 상정
+            c.ttl = 0.14f;   // 한 번 뿜는 지속시간
+            c.armTime = 0.f;
+            c.followFacing = true;          // 좌/우 반전
+            c.localOffset = { 0.f, 0.f };  // 정확한 입 위치는 SpawnDesc/스폰 코드에서
+
+            c.payload.effect = HitEffect::Damage;
+            c.payload.damage = 1;
+            c.payload.knockback = { 140.f, -60.f }; // 대략 앞+약간 위로 (튜닝 포인트)
+
+            c.perTargetOnce = true;
+            c.excludeOwner = true;
+
+            HitVolumeFactory::Register ( "WaterJetH" , c );
+        }
+
+        // Water jet (vertical): box ≈ 1.5 x 2 tiles
+        {
+            HitVolume::Cfg c{};
+            c.behavior = HitBehavior::Attached;
+            c.shape = HitShape::Box;
+            c.w = 24.f;    // 1.5 tiles
+            c.h = 32.f;    // 2 tiles
+
+            c.ttl = 0.14f;
+            c.armTime = 0.f;
+            c.followFacing = false;         // 위/아래는 좌우 반전 의미 없음
+            c.localOffset = { 0.f, 0.f };  // 위/아래 offset 도 스폰 코드에서 처리
+
+            c.payload.effect = HitEffect::Damage;
+            c.payload.damage = 1;
+            c.payload.knockback = { 0.f, -140.f };  // 기본은 위로 튕기는 느낌 (아래 방향은 스폰할 때 뒤집기)
+
+            c.perTargetOnce = true;
+            c.excludeOwner = true;
+
+            HitVolumeFactory::Register ( "WaterJetV" , c );
+        }
     }
 
 } // namespace game

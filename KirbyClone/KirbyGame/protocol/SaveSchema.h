@@ -19,7 +19,7 @@ namespace protocol {
     // ---- Canonical stage IDs for Theme 1 (t1) ----
     // NOTE: Use forward slashes '/' consistently in IDs.
     inline constexpr std::array<std::string_view , 5> kT1Stages = {
-        "t1/s1/m1", "t1/s1/m2", "t1/s1/m3", "t1/s1/m4", "t1/s1/m5" // m5 = boss
+        "t1/s1", "t1/s2", "t1/s3", "t1/s4", "t1/s5" // m5 = boss
     };
 
     // ---- Data model ----

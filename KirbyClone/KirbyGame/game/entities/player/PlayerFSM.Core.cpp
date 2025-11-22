@@ -213,8 +213,10 @@ namespace game {
     // ===== common systems =====
     void PlayerFSM::IntegrateAndCollide ( double fixedDt , const engine::Input& , Ctx& c )
     {
+        // 1) 물리 통합 (DesiredRunAxis 는 movement state 가 세팅)
         c.body->AdvanceKinematics ( fixedDt );
 
+        // 2) 코요테 / 점프 버퍼 → 자동 점프
         if ( c.body->Grounded ( ) ) m_dbg.coyoteT = m_cfg.coyoteMs;
 
         if ( ( c.body->Grounded ( ) || m_dbg.coyoteT > 0.f ) && m_dbg.bufferT > 0.f ) {
@@ -224,16 +226,34 @@ namespace game {
             RequestMove ( std::make_unique<M_Jump> ( ) , MState::Jump );
         }
 
+        // 3) 이번 프레임 예측 AABB
         float nx = 0.f , ny = 0.f;
-        c.aabb = c.body->ProposeAABB ( fixedDt , &c.prevBottom , &nx , &ny ); // IntRect
+        c.aabb = c.body->ProposeAABB ( fixedDt , &c.prevBottom , &nx , &ny );
 
         c.vel = c.body->Velocity ( );
         c.ignoreOneWay = ( m_dbg.dropT > 0.f ) || ( c.vel.y < 0.f );
 
-        // IntRect collision path
-        c.col->MoveAndCollide ( c.aabb , c.vel , &c.rep , c.ignoreOneWay , c.prevBottom );
+        // 4) 월드 충돌 (solid / one-way / water 등)
+        engine::physics::CollisionParams params{};
+        c.col->MoveAndCollide ( c.aabb , c.vel , &c.rep , c.ignoreOneWay , c.prevBottom , params );
         c.body->ApplyCollisionResult ( c.aabb , c.vel , c.rep , nx , ny );
 
+        // 5) 환경 플래그 업데이트 (CollisionReport 쪽에 inWater 가 있다고 가정)
+        c.inWater = c.rep.inWater;
+        c.waterGround = ( c.rep.inWater && c.rep.grounded );
+        c.underwater = ( c.rep.inWater && !c.rep.grounded );
+        m_dbg.inWater = c.inWater;
+
+        // 6) 물 속에서는 전체 속도를 조금 줄여서 둔감하게
+        if ( c.inWater ) {
+            auto v = c.body->Velocity ( );
+            const float drag = 0.5f; // 나중에 m_cfg.waterDrag 로 바꿔도 됨
+            v.x *= drag;
+            v.y *= drag;
+            c.body->SetVelocity ( v );
+        }
+
+        // 7) 지상 관련 보조 / 롱폴 바운스 / 숏홉
         if ( c.rep.grounded ) m_dbg.groundHoldT = m_cfg.groundHoldMs;
 
         if ( c.rep.grounded && m_mState == MState::Fall && m_inLongFall && !m_bounceQueued ) {
@@ -244,6 +264,7 @@ namespace game {
             auto v = c.body->Velocity ( ); v.y *= m_cfg.shortHopMul; c.body->SetVelocity ( v );
         }
     }
+
 
     void PlayerFSM::UpdateFacing ( const Ctx& c )
     {

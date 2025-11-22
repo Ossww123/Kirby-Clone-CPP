@@ -1,14 +1,19 @@
 {
   "id": "t1/hub",
-  "tileset": "assets/tilesets/grasslands.png",
-  "tiledefs": "assets/tilesets/grasslands.tiledefs.csv",
-  "tilemap": "assets/stages/t1/s1/m1/tilemap.csv",
-  "monsters": "assets/stages/t1/s1/m1/monsters.csv",
-  "background": "assets/backgrounds/sky_day.png",
-  "doors": "assets/stages/t1/s1/m1/doors.csv",
-  "cover_tilemap": "assets/stages/t1/hub/cover.csv",
-  "unlocks": "assets/stages/t1/hub/unlocks.csv",
   "spawns": "assets/stages/t1/hub/spawns.csv",
-  "player_start": "assets/stages/t1/s1/m1/player_start.csv",
-  "boss": { "arena": { "x":0,"y":0,"w":0,"h":0 } }
+
+  "tileset": "assets/tilesets/t1_hub_tileset.png",
+  "tiledefs": "assets/tilesets/t1_hub.tiledefs.csv",
+
+  "tilemap": "assets/stages/t1/hub/tilemap.csv",
+  "monsters": "assets/stages/t1/hub/monsters.csv",
+  "player_start": "assets/stages/t1/hub/player_start.csv",
+  "background": "assets/backgrounds/vegetable_valley_hub.png",
+
+  "doors": "assets/stages/t1/hub/doors.csv",
+
+  "cover_tilemap": "assets/stages/t1/hub/cover_tilemap.csv",
+  "unlocks": "assets/stages/t1/hub/unlocks.csv",
+
+  "layers": "assets/stages/t1/hub/layers.csv"
 }

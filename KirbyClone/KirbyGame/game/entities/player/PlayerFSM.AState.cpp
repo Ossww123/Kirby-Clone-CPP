@@ -15,16 +15,31 @@ namespace game {
     // ===== Action root =====
     void PlayerFSM::A_Neutral::Update ( Ctx& c , PlayerFSM& f )
     {
-        // Priority: (1) spit item (2) air puff (3) ability attack (4) inhale
-        if ( f.m_mouthFull && c.attackPressed ) { f.RequestAct ( std::make_unique<A_SpitObject> ( ) , AState::SpitObject ); return; }
-        if ( f.m_mState == MState::Inflated && c.attackPressed ) { f.RequestAct ( std::make_unique<A_AirPuff> ( ) , AState::AirPuff ); return; }
-        if ( f.m_ability != Ability::None && c.attackPressed ) {
-            f.RequestAct ( std::make_unique<A_AbilityAtk> ( ) , AState::AbilityAtk ); return;
+        // --- 물 속 전용: inhale / ability 금지, 물뿜기만 허용 ---
+        if ( c.inWater ) {
+            if ( c.attackPressed ) {
+                f.RequestAct ( std::make_unique<A_WaterShot> ( ) , AState::WaterShot );
+            }
+            return;
         }
-        // Guard: no inhale while crouching/sliding or holding down
+
+        // Priority: (1) spit item (2) air puff (3) ability attack (4) inhale
+        if ( f.m_mouthFull && c.attackPressed ) {
+            f.RequestAct ( std::make_unique<A_SpitObject> ( ) , AState::SpitObject );
+            return;
+        }
+        if ( f.m_mState == MState::Inflated && c.attackPressed ) {
+            f.RequestAct ( std::make_unique<A_AirPuff> ( ) , AState::AirPuff );
+            return;
+        }
+        if ( f.m_ability != Ability::None && c.attackPressed ) {
+            f.RequestAct ( std::make_unique<A_AbilityAtk> ( ) , AState::AbilityAtk );
+            return;
+        }
         const bool crouchLike = ( f.m_mState == MState::Crouch || f.m_mState == MState::Slide || c.ay < -0.5f );
         if ( !f.m_mouthFull && c.attackHeld && f.m_ability == Ability::None && !crouchLike ) {
-            f.RequestAct ( std::make_unique<A_Inhale> ( ) , AState::Inhale ); return;
+            f.RequestAct ( std::make_unique<A_Inhale> ( ) , AState::Inhale );
+            return;
         }
     }
 
@@ -82,6 +97,8 @@ namespace game {
         if ( !f.m_spitEmitted ) {
             PlayerEvent ev{ PlayerEvent::SpitStar };
             ev.facing = f.m_facing;
+            ev.dx = f.m_facing;
+            ev.dy = 0;
             f.m_events.push_back ( ev );
             f.m_spitLockT = 0.18f;    // short lock
             f.m_mouthFull = false;
@@ -103,7 +120,7 @@ namespace game {
     {
         // One-shot emit
         if ( f.m_spitLockT <= 0.f ) {
-            PlayerEvent ev{ PlayerEvent::AirPuffShot }; ev.facing = f.m_facing; f.m_events.push_back ( ev );
+            PlayerEvent ev{ PlayerEvent::AirPuffShot }; ev.facing = f.m_facing; ev.dx = f.m_facing; ev.dy = 0; f.m_events.push_back ( ev );
             f.m_spitLockT = 0.14f;
 
             // Leave Inflate immediately
@@ -130,18 +147,21 @@ namespace game {
             switch ( f.m_ability ) {
             case Ability::Fire: {
                 PlayerEvent ev{ PlayerEvent::AbilityFire }; ev.facing = f.m_facing; ev.ability = f.m_ability;
+                ev.dx = f.m_facing; ev.dy = 0;
                 f.m_events.push_back ( ev );
                 f.m_spitLockT = 0.22f;
                 break;
             }
             case Ability::Spark: {
                 PlayerEvent ev{ PlayerEvent::AbilitySpark }; ev.facing = f.m_facing; ev.ability = f.m_ability;
+                ev.dx = f.m_facing; ev.dy = 0;
                 f.m_events.push_back ( ev );
                 f.m_spitLockT = 0.25f;
                 break;
             }
             case Ability::Beam: {
                 PlayerEvent ev{ PlayerEvent::AbilityBeam }; ev.facing = f.m_facing; ev.ability = f.m_ability;
+                ev.dx = f.m_facing; ev.dy = 0;
                 f.m_events.push_back ( ev );
                 f.m_spitLockT = 0.18f;
                 break;
@@ -163,5 +183,46 @@ namespace game {
         f.m_spitLockT = std::max ( 0.f , f.m_spitLockT - c.dt );
         if ( f.m_spitLockT <= 0.f ) f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
     }
+
+    void PlayerFSM::A_WaterShot::OnEnter ( Ctx& c ) { Play ( c.anim , "WaterShot" , true ); }
+    void PlayerFSM::A_WaterShot::Update ( Ctx& c , PlayerFSM& f )
+    {
+        // 상/하/좌/우 방향 결정 (입력 없으면 바라보는 방향)
+        int dx = 0 , dy = 0;
+        const float absAx = std::fabs ( c.ax );
+        const float absAy = std::fabs ( c.ay );
+        constexpr float DIR_EPS = 0.25f;
+
+        if ( absAx < DIR_EPS && absAy < DIR_EPS ) {
+            // 입력이 거의 없으면 바라보는 방향
+            dx = ( f.m_facing >= 0 ? +1 : -1 );
+        }
+        else if ( absAx >= absAy ) {
+            // 좌/우 우선
+            dx = ( c.ax >= 0.f ? +1 : -1 );
+        }
+        else {
+            // 상/하
+            dy = ( c.ay >= 0.f ? +1 : -1 );
+        }
+
+        PlayerEvent ev{ PlayerEvent::WaterShot };
+        ev.facing = f.m_facing;  // 레거시(좌우)도 유지
+        ev.dx = dx;
+        ev.dy = dy;
+        f.m_events.push_back ( ev );
+
+        // 짧은 공격 락
+        f.m_spitLockT = 0.16f;
+
+        // 공격 중에는 좌우 입력 잠그기
+        c.mod.lockRunAxis = true;
+
+        f.m_spitLockT = std::max ( 0.f , f.m_spitLockT - c.dt );
+        if ( f.m_spitLockT <= 0.f ) {
+            f.RequestAct ( std::make_unique<A_Neutral> ( ) , AState::Neutral );
+        }
+    }
+
 
 } // namespace game

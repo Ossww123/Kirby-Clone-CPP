@@ -160,19 +160,59 @@ namespace game {
         return true;
     }
 
+    bool LoadItemsCSV ( const char* path , std::vector<ItemCSV>& out )
+    {
+        std::ifstream f ( path );
+        if ( !f ) return false;
+
+        std::vector<std::string> hdr;
+        if ( !read_header ( f , hdr ) ) return false;
+
+        // Schema: type,x,y
+        const int it = findIdx ( hdr , "type" );
+        const int ix = findIdx ( hdr , "x" );
+        const int iy = findIdx ( hdr , "y" );
+        if ( it < 0 || ix < 0 || iy < 0 ) return false;
+
+        std::string line;
+        out.clear ( );
+        out.reserve ( out.size ( ) + 16 );
+
+        while ( std::getline ( f , line ) ) {
+            line.erase ( std::remove ( line.begin ( ) , line.end ( ) , '\r' ) , line.end ( ) );
+            line = trim ( line );
+            if ( line.empty ( ) || line[ 0 ] == '#' || line[ 0 ] == ';' ) continue;
+
+            const auto row = splitCSV ( line );
+            const int maxIdx = std::max ( { it, ix, iy } );
+            if ( static_cast< int >( row.size ( ) ) <= maxIdx ) continue;
+
+            ItemCSV item{};
+            item.type = row[ it ];
+            item.x = to<float> ( row[ ix ] , 0.f );
+            item.y = to<float> ( row[ iy ] , 0.f );
+
+            out.push_back ( std::move ( item ) );
+        }
+
+        return true;
+    }
+
     bool LoadTileDefsCSV ( const char* path , std::vector<TileDefCSV>& out ) {
         std::ifstream f ( path ); if ( !f ) return false;
 
         std::vector<std::string> hdr;
         if ( !read_header ( f , hdr ) ) return false;
 
-        const int iId = findIdx ( hdr , "id" );
-        const int iS = findIdx ( hdr , "solid" );
-        const int iO = findIdx ( hdr , "oneway" );
-        const int iGx = findIdx ( hdr , "gx" );
-        const int iGy = findIdx ( hdr , "gy" );
-
-        if ( iId < 0 || ( iS < 0 && iO < 0 ) ) return false;
+        const int iId  = findIdx ( hdr , "id" );
+        const int iS   = findIdx ( hdr , "solid" );
+        const int iO   = findIdx ( hdr , "oneway" );
+        const int iW   = findIdx ( hdr , "water" );
+        const int iL   = findIdx ( hdr , "ladder" );
+        const int iSB  = findIdx ( hdr , "star_block" );
+        const int iSlp = findIdx ( hdr , "slope" );
+        const int iGx  = findIdx ( hdr , "gx" );
+        const int iGy  = findIdx ( hdr , "gy" );
 
         std::string line;
         out.reserve ( out.size ( ) + 128 );
@@ -182,10 +222,17 @@ namespace game {
             if ( line.empty ( ) || line[ 0 ] == '#' || line[ 0 ] == ';' ) continue;
 
             const auto row = splitCSV ( line );
+
             TileDefCSV r{};
+
             if ( iId < static_cast< int >( row.size ( ) ) ) r.id = to<int> ( row[ iId ] , 0 );
-            if ( iS < static_cast< int >( row.size ( ) ) ) r.solid = to<int> ( row[ iS ] , 0 );
-            if ( iO < static_cast< int >( row.size ( ) ) ) r.oneway = to<int> ( row[ iO ] , 0 );
+            if ( iS >= 0 && iS < static_cast< int >( row.size ( ) ) ) r.solid = to<int> ( row[ iS ] , 0 );
+            if ( iO >= 0 && iO < static_cast< int >( row.size ( ) ) ) r.oneway = to<int> ( row[ iO ] , 0 );
+            if ( iW >= 0 && iW < static_cast< int >( row.size ( ) ) ) r.water = to<int> ( row[ iW ] , 0 );
+            if ( iL >= 0 && iL < static_cast< int >( row.size ( ) ) ) r.ladder = to<int> ( row[ iL ] , 0 );
+            if ( iSB >= 0 && iSB < static_cast< int >( row.size ( ) ) ) r.star_block = to<int> ( row[ iSB ] , 0 );
+            if ( iSlp >= 0 && iSlp < static_cast< int >( row.size ( ) ) ) r.slope = to<int> ( row[ iSlp ] , 0 );
+
             if ( iGx >= 0 && iGx < static_cast< int >( row.size ( ) ) ) r.gx = to<int> ( row[ iGx ] , -1 );
             if ( iGy >= 0 && iGy < static_cast< int >( row.size ( ) ) ) r.gy = to<int> ( row[ iGy ] , -1 );
 
@@ -326,6 +373,55 @@ namespace game {
             out.push_back ( u );
         }
         return true;
+    }
+
+    bool LoadTileLayersCSV ( const char* path , std::vector<TileLayerCSV>& out )
+    {
+        std::ifstream f ( path ); if ( !f ) return false;
+
+        std::vector<std::string> hdr;
+        if ( !read_header ( f , hdr ) ) return false;
+
+        const int in = findIdx ( hdr , "name" );
+        const int its = findIdx ( hdr , "tileset" );
+        const int itd = findIdx ( hdr , "tiledefs" );
+        const int itm = findIdx ( hdr , "tilemap" );
+        const int iox = findIdx ( hdr , "offset_px_x" );
+        const int ioy = findIdx ( hdr , "offset_px_y" );
+        const int ic = findIdx ( hdr , "collides" );
+        const int iz = findIdx ( hdr , "z" );
+
+        // name,tileset,tiledefs,tilemap 는 필수
+        if ( in < 0 || its < 0 || itd < 0 || itm < 0 ) return false;
+
+        std::string line;
+        out.clear ( );
+        out.reserve ( out.size ( ) + 8 );
+
+        while ( std::getline ( f , line ) ) {
+            line.erase ( std::remove ( line.begin ( ) , line.end ( ) , '\r' ) , line.end ( ) );
+            line = trim ( line );
+            if ( line.empty ( ) || line[ 0 ] == '#' || line[ 0 ] == ';' ) continue;
+
+            const auto row = splitCSV ( line );
+            const int maxIdx = std::max ( { in, its, itd, itm, iox, ioy, ic, iz } );
+            if ( static_cast< int >( row.size ( ) ) <= maxIdx ) continue;
+
+            TileLayerCSV L{};
+            L.name = row[ in ];
+            L.tileset = row[ its ];
+            L.tiledefs = row[ itd ];
+            L.tilemap = row[ itm ];
+
+            if ( iox >= 0 ) L.offsetPxX = to<int> ( row[ iox ] , 0 );
+            if ( ioy >= 0 ) L.offsetPxY = to<int> ( row[ ioy ] , 0 );
+            if ( ic >= 0 ) L.collides = to_bool01 ( row[ ic ] , 1 );
+            if ( iz >= 0 ) L.z = to<int> ( row[ iz ] , 0 );
+
+            out.push_back ( std::move ( L ) );
+        }
+
+        return !out.empty ( );
     }
 
 } // namespace game

@@ -1,0 +1,16 @@
+{
+  "id": "t1/s1/m4",
+
+  "tileset": "assets/tilesets/vegetable_valley_01_tileset.png",
+  "tiledefs": "assets/tilesets/vegetable_valley_01.tiledefs.csv",
+
+  "tilemap": "assets/stages/t1/s1/m4/tilemap.csv",
+  "monsters": "assets/stages/t1/s1/m4/monsters.csv",
+  "items": "assets/stages/t1/s1/m4/items.csv",
+  "player_start": "assets/stages/t1/s1/m4/player_start.csv",
+  "background": "assets/backgrounds/bg1.png",
+
+  "doors": "assets/stages/t1/s1/m4/doors.csv",
+
+  "layers": "assets/stages/t1/s1/m4/layers.csv",
+}

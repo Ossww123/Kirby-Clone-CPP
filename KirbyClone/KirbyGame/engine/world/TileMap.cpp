@@ -111,7 +111,7 @@ namespace engine {
     // Render (1x)
     // -----------------------------
     void TileMap::Render ( D3D11SpriteBatch& batch , const TileSet& tiles ,
-                         int camOffX , int camOffY , int screenW , int screenH ) const
+                           int camOffX , int camOffY , int screenW , int screenH ) const
     {
         if ( !tiles.Atlas ( ).srv ) return;
         if ( m_w <= 0 || m_h <= 0 ) return;
@@ -122,7 +122,7 @@ namespace engine {
 
         int tx0 , ty0 , tx1 , ty1;
         computeVisibleTileRect ( camOffX , camOffY , screenW , screenH , tw , th , m_w , m_h ,
-                               tx0 , ty0 , tx1 , ty1 );
+                                 tx0 , ty0 , tx1 , ty1 );
 
         for ( int y = ty0; y < ty1; ++y ) {
             for ( int x = tx0; x < tx1; ++x ) {
@@ -144,7 +144,7 @@ namespace engine {
     // RenderScaled (dst integer scale)
     // -----------------------------
     void TileMap::RenderScaled ( D3D11SpriteBatch& batch , const TileSet& tiles ,
-                               int camOffX , int camOffY , int screenW , int screenH , int scale ) const
+                                 int camOffX , int camOffY , int screenW , int screenH , int scale ) const
     {
         if ( !tiles.Atlas ( ).srv ) return;
         if ( m_w <= 0 || m_h <= 0 ) return;
@@ -156,7 +156,7 @@ namespace engine {
 
         int tx0 , ty0 , tx1 , ty1;
         computeVisibleTileRect ( camOffX , camOffY , screenW , screenH , tw , th , m_w , m_h ,
-                               tx0 , ty0 , tx1 , ty1 );
+                                 tx0 , ty0 , tx1 , ty1 );
 
         const float dw = float ( tw * scale );
         const float dh = float ( th * scale );
@@ -177,19 +177,19 @@ namespace engine {
         }
     }
 
-    bool TileMap::SetAt(int x, int y, int id) {
-        if (x < 0 || y < 0 || x >= m_w || y >= m_h) return false;
-        m_ids[y * m_w + x] = id;
+    bool TileMap::SetAt ( int x , int y , int id ) {
+        if ( x < 0 || y < 0 || x >= m_w || y >= m_h ) return false;
+        m_ids[ y * m_w + x ] = id;
         return true;
     }
 
-    void TileMap::FillRect(int tx, int ty, int w, int h, int id) {
-        if (w <= 0 || h <= 0) return;
-        const int x1 = std::min(m_w, tx + w);
-        const int y1 = std::min(m_h, ty + h);
-        for (int y = std::max(0, ty); y < y1; ++y)
-            for (int x = std::max(0, tx); x < x1; ++x)
-                m_ids[y * m_w + x] = id;
+    void TileMap::FillRect ( int tx , int ty , int w , int h , int id ) {
+        if ( w <= 0 || h <= 0 ) return;
+        const int x1 = std::min ( m_w , tx + w );
+        const int y1 = std::min ( m_h , ty + h );
+        for ( int y = std::max ( 0 , ty ); y < y1; ++y )
+            for ( int x = std::max ( 0 , tx ); x < x1; ++x )
+                m_ids[ y * m_w + x ] = id;
     }
 
 } // namespace engine

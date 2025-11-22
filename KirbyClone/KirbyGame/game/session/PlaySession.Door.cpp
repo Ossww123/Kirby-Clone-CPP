@@ -7,6 +7,16 @@
 #include "game/session/PlaySession.h"
 #include "game/entities/player/Player.h"
 
+#include <cwchar> 
+
+#ifndef DBGLOG
+#include <windows.h>
+inline void DBGLOG ( const wchar_t* msg ) {
+    ::OutputDebugStringW ( msg );
+    ::OutputDebugStringW ( L"\n" );
+}
+#endif
+
 namespace {
     // Local overlap for engine::IntRect to avoid extra collision includes.
     inline bool OverlapIR ( const engine::IntRect& a , const engine::IntRect& b ) noexcept {
@@ -62,20 +72,38 @@ namespace game {
     {
         switch ( m_trans.state ) {
         case Transition::Idle:
+            //DBGLOG(L"[Trans] Idle");
             break;
 
         case Transition::FadingOut:
             if ( !IsFading ( ) ) {
+                DBGLOG ( L"[Trans] FadingOut done -> Loading" );
                 m_trans.state = Transition::Loading;
+
                 // Load target stage, then fade in
-                LoadStage ( m_trans.target.c_str ( ) );
+                const char* targetJson = m_trans.target.c_str ( );
+                const bool ok = LoadStage ( targetJson );
+
+                wchar_t buf[ 256 ];
+                std::swprintf (
+                    buf , _countof ( buf ) ,
+                    L"[Trans] Loading  target=%hs  result=%ls  spawn=%hs" ,
+                    targetJson ,
+                    ok ? L"OK" : L"FAIL" ,
+                    m_trans.spawn.c_str ( )
+                );
+                DBGLOG ( buf );
+
                 StartFadeIn ( m_trans.fadeIn );
                 m_trans.state = Transition::FadingIn;
             }
             break;
 
         case Transition::FadingIn:
-            if ( !IsFading ( ) ) m_trans.state = Transition::Idle;
+            if ( !IsFading ( ) ) {
+                DBGLOG ( L"[Trans] FadingIn done -> Idle" );
+                m_trans.state = Transition::Idle;
+            }
             break;
 
         case Transition::Loading:

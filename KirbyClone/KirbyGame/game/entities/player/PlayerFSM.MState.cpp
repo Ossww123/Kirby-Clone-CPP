@@ -16,6 +16,12 @@ namespace game {
     // ===== Grounded / Airborne base =====
     void PlayerFSM::M_Grounded::Update ( Ctx& c , PlayerFSM& f )
     {
+        // 물 위 지상에서는 기본 이동 속도 조금 낮추기
+        if ( c.inWater ) {
+            // Inhale 등에서 이미 runAxisMul 을 바꿀 수 있으니 곱셈으로만 보정
+            c.mod.runAxisMul *= 0.6f; // 60% 속도
+        }
+
         const float axis = c.ax * ( c.mod.lockRunAxis ? 0.f : c.mod.runAxisMul );
         c.body->SetDesiredRunAxis ( axis );
 
@@ -81,12 +87,19 @@ namespace game {
         M_Grounded::Update ( c , f );
         if ( f.m_mState != MState::Walk ) return;
 
-        if ( std::abs ( c.ax ) <= RUN_TOGGLE_AX ) { f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle ); return; }
+        if ( std::abs ( c.ax ) <= RUN_TOGGLE_AX ) {
+            f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+            return;
+        }
 
-        // Double-tap → Run
-        if ( f.m_runQueued ) {
+        // Double-tap → Run (물 속에서는 금지)
+        if ( !c.inWater && f.m_runQueued ) {
             f.m_runQueued = false;
             f.RequestMove ( std::make_unique<M_Run> ( ) , MState::Run );
+        }
+        else if ( c.inWater ) {
+            // 물 속에서는 Run 큐 자체를 버림
+            f.m_runQueued = false;
         }
     }
 
@@ -96,8 +109,20 @@ namespace game {
         M_Grounded::Update ( c , f );
         if ( f.m_mState != MState::Run ) return;
 
-        if ( std::abs ( c.ax ) < 0.75f ) { f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk ); return; }
-        if ( c.ay < -0.5f ) { f.RequestMove ( std::make_unique<M_Crouch> ( ) , MState::Crouch ); return; }
+        // 물 속에 들어간 시점: Run 유지 금지 → Walk 로 떨어뜨리기
+        if ( c.inWater ) {
+            f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk );
+            return;
+        }
+
+        if ( std::abs ( c.ax ) < 0.75f ) {
+            f.RequestMove ( std::make_unique<M_Walk> ( ) , MState::Walk );
+            return;
+        }
+        if ( c.ay < -0.5f ) {
+            f.RequestMove ( std::make_unique<M_Crouch> ( ) , MState::Crouch );
+            return;
+        }
     }
 
     void PlayerFSM::M_Crouch::OnEnter ( Ctx& c ) { Play ( c.anim , "Crouch" , true ); }
@@ -105,16 +130,18 @@ namespace game {
     {
         c.body->SetDesiredRunAxis ( 0.f );
 
-        // Slide on jump/attack
-        if ( c.jumpPressed || c.attackPressed ) {
+        // Slide on jump/attack (물 속에서는 슬라이딩 금지)
+        if ( !c.inWater && ( c.jumpPressed || c.attackPressed ) ) {
             f.m_slideT = SLIDE_TIME;
-            auto v = c.body->Velocity ( ); v.x = static_cast< float >( f.m_facing ) * SLIDE_VX;
+            auto v = c.body->Velocity ( );
+            v.x = static_cast< float >( f.m_facing ) * SLIDE_VX;
             c.body->SetVelocity ( v );
             f.RequestMove ( std::make_unique<M_Slide> ( ) , MState::Slide );
             return;
         }
 
-        if ( c.ay >= -0.5f ) f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
+        if ( c.ay >= -0.5f )
+            f.RequestMove ( std::make_unique<M_Idle> ( ) , MState::Idle );
     }
 
     void PlayerFSM::M_Slide::OnEnter ( Ctx& c ) { Play ( c.anim , "Slide" , true ); }
@@ -122,6 +149,11 @@ namespace game {
     {
         // Keep momentum; ignore input
         c.body->SetDesiredRunAxis ( static_cast< float >( f.m_facing ) );
+
+        // 물에 들어가면 슬라이드를 바로 끝내는 방향으로
+        if ( c.inWater ) {
+            f.m_slideT = 0.f;
+        }
 
         if ( f.m_slideT <= 0.f ) {
             if ( c.ay < -0.5f ) f.RequestMove ( std::make_unique<M_Crouch> ( ) , MState::Crouch );

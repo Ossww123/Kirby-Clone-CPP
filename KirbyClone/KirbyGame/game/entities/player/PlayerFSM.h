@@ -25,18 +25,20 @@ namespace game {
 
     // ---- Parallel tracks ----
     enum class MState { Idle , Walk , Run , Crouch , Slide , Jump , Fall , Inflated , Ladder };
-    enum class AState { Neutral , Inhale , MouthFull , SpitObject , AirPuff , AbilityAtk };
+    enum class AState { Neutral , Inhale , MouthFull , SpitObject , AirPuff , AbilityAtk, WaterShot };
     enum class ZState { None , Damaged , Dead , DoorEnter , Dance , GameOver };
 
     // ---- Events from FSM to Game/World ----
     struct PlayerEvent {
         enum Type {
-            InhaleVolume , SpitStar , AirPuffShot , SwallowAbility , AbilityGained ,
+            InhaleVolume , SpitStar , AirPuffShot , WaterShot , SwallowAbility , AbilityGained ,
             AbilityFire , AbilitySpark , AbilityBeam ,
             DoorInteract
         } type;
         engine::IntRect rect{};         // world-space AABB (for InhaleVolume)
         int             facing{ +1 };   // +1 right, -1 left
+        int             dx{ 0 };        // shot x (-1,0,+1)
+        int             dy{ 0 };        // shot y (-1,0,+1)
         Ability         ability{ Ability::None };
     };
 
@@ -54,6 +56,7 @@ namespace game {
         switch ( s ) {
         case AState::Neutral: return "Neutral"; case AState::Inhale: return "Inhale";
         case AState::MouthFull: return "MouthFull"; case AState::SpitObject: return "SpitObject";
+        case AState::WaterShot:  return "WaterShot";
         case AState::AirPuff: return "AirPuff"; case AState::AbilityAtk: return "AbilityAtk";
         default: return "?";
         }
@@ -89,6 +92,12 @@ namespace game {
             float fallLongMs = 0.70f;        // time threshold for FALL2
             float fallLongHeightPx = 400.f;  // height threshold for FALL2
             float bounceSpeedUp = 400.f;     // initial up-speed on long-fall bounce
+            // water movement
+            float waterWalkSpeed = 80.f;
+            float waterRunSpeed = 0.f;  // not used
+            float swimSpeed = 110.f;    
+            float waterGravity = 500.f; 
+            float waterDrag = 6.f;      
         };
 
         // shared tuning constants (available across .cpp)
@@ -108,6 +117,9 @@ namespace game {
             float vx{ 0.f } , vy{ 0.f };
             engine::IntRect lastAABB{};
             int prevBottom{ 0 };
+            // --- environment ---
+            bool inWater{ false };
+            bool onLadder{ false };
             // health
             int   hp{ 0 };
             float iFrameT{ 0.f };
@@ -203,6 +215,11 @@ namespace game {
             engine::Vec2                    vel{ 0.f, 0.f };
             engine::physics::CollisionReport rep{};
             bool                            ignoreOneWay{ false };
+            // environment
+            bool inWater{ false };
+            bool waterGround{ false };
+            bool underwater{ false };
+            bool onLadder{ false };
             // modifiers from Action -> Movement
             struct Mod { float runAxisMul = 1.f; bool lockRunAxis = false; } mod;
         };
@@ -232,6 +249,7 @@ namespace game {
         struct A_SpitObject : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
         struct A_AirPuff : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
         struct A_AbilityAtk : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_WaterShot : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
 
         // overlay states
         struct Z_None : ZBase { void Update ( Ctx& , PlayerFSM& ) override; };

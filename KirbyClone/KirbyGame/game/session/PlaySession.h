@@ -40,6 +40,7 @@ namespace game {
 #include "game/session/SessionState.h"          // SessionState
 #include "game/effects/Fade2D.h"
 #include "game/render/ZOrder.h"
+#include "game/world/TileLayerRuntime.h"
 
 namespace game {
 
@@ -110,6 +111,7 @@ namespace game {
         void registerDefaultFactories ( );
         void initCombatSystems ( );
         void updateMonsters ( double fixedDt , const engine::Input& input );
+        void updateItems ( double fixedDt );
         void handlePlayerEvents ( const std::vector<game::PlayerEvent>& evs );
         void buildTargets ( std::vector<game::ProjectileSystem::Target>& projT ,
                                              std::vector<game::HitVolumeSystem::Target>& hvT );
@@ -122,6 +124,10 @@ namespace game {
 
         // --- Clear Flow ---
         enum class ClearState { Idle , Emblem , AutoPilot , Dance , FadeOut , SaveAndHub , FadeIn };
+
+        // Debug helper: convert ClearState to wide string (for logs / HUD)
+        static const wchar_t* ClearStateName ( ClearState st );
+
         struct ClearCtx {
             ClearState st{ ClearState::Idle };
             float t{ 0.f };
@@ -155,6 +161,9 @@ namespace game {
         engine::WorldSystem         m_World;
         engine::Camera              m_Cam;
 
+        // Stage tile layers
+        std::vector<game::TileLayerRuntime> m_TileLayers;
+
         game::Player*               m_Player = nullptr;
         game::PlayerFSM             m_PlayerFSM;
         game::PlayerFSM::Cfg        m_playerFsmCfg{ .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
@@ -168,6 +177,23 @@ namespace game {
         // Options
         std::string m_stageJsonPath{ "assets/stages/stage01/stage.json" };
         std::string m_stageId{};
+
+        // --- Items / pickups (clear emblem etc.) ---
+        struct ItemRuntime {
+            enum class Kind { ClearEmblem };
+
+            Kind kind = Kind::ClearEmblem;
+
+            // Axis-aligned bounds in world pixel space (left/top/width/height)
+            int x = 0;
+            int y = 0;
+            int w = 0;
+            int h = 0;
+
+            bool collected = false;
+        };
+
+        std::vector<ItemRuntime> m_Items;
 
         // ---- Combat / monsters ----
         std::vector<std::unique_ptr<game::Monster>> m_Monsters;

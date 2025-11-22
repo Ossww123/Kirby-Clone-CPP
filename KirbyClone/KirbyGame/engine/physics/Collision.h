@@ -23,6 +23,10 @@ namespace engine::physics {
         bool hitX = false;
         bool hitY = false;
         bool grounded = false; // contacted below
+
+        // --- triggers (no resolution) ---
+        bool inWater = false; // overlapping any water volume
+        bool onLadder = false; // overlapping any ladder volume
     };
 
     struct CollisionParams {
@@ -41,6 +45,13 @@ namespace engine::physics {
         void AddOneWayBox ( const IntRect& r );
         void AddOneWayBox ( int x , int y , int w , int h );
 
+        // --- Triggers: water / ladder ---
+        void AddWaterBox ( const IntRect& r );
+        void AddWaterBox ( int x , int y , int w , int h );
+
+        void AddLadderBox ( const IntRect& r );
+        void AddLadderBox ( int x , int y , int w , int h );
+
         // prevBottom: previous frame bottom (pixels). Use INT32_MIN if unknown.
         void MoveAndCollide ( IntRect& aabb ,
                             engine::Vec2& vel ,
@@ -51,10 +62,17 @@ namespace engine::physics {
 
         const std::vector<IntRect>& Statics ( ) const { return m_static; }
         const std::vector<IntRect>& OneWays ( ) const { return m_oneway; }
+        const std::vector<IntRect>& Water ( ) const { return m_water; }
+        const std::vector<IntRect>& Ladders ( ) const { return m_ladder; }
 
     private:
         std::vector<IntRect> m_static;
         std::vector<IntRect> m_oneway;
+
+        // Trigger volumes
+        std::vector<IntRect> m_water;
+        std::vector<IntRect> m_ladder;
     };
+
 
 } // namespace engine::physics

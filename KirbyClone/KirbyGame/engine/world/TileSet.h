@@ -16,10 +16,23 @@ struct ID3D11Device;
 
 namespace engine {
 
+    // Optional slope shape for ground tiles.
+    enum class TileSlope : std::uint8_t {
+        None = 0 ,
+        UpRight45 ,   // 45deg,    low at left,  high at right
+        UpLeft45 ,    // 45deg,    high at left, low at right
+        UpRight22 ,   // ~22.5deg, low at left,  high at right
+        UpLeft22      // ~22.5deg, high at left, low at right
+    };
+
     struct TileDef {
-        bool    solid = false;             // blocks movement
-        bool    oneway = false;             // one-way platform
-        IntRect src{ 0, 0, 0, 0 };          // atlas pixel rect (empty -> auto from index)
+        bool    solid      = false;            
+        bool    oneway     = false;           
+        bool    water      = false;            
+        bool    ladder     = false;         
+        bool    star_block = false;
+        TileSlope slope = TileSlope::None;
+        IntRect src{ 0, 0, 0, 0 };
     };
 
     class TileSet {
@@ -27,7 +40,7 @@ namespace engine {
         // Load atlas texture and remember cell (source slice) size, e.g. 16x16.
         // Pre: dev!=nullptr, path!=nullptr, cellW>0, cellH>0
         bool LoadAtlas ( ID3D11Device* dev , const wchar_t* path ,
-                       int cellW , int cellH );
+                         int cellW , int cellH );
 
         // Set world tile size (destination size), e.g. 64x64.
         void SetWorldTileSize ( int tileW , int tileH ) { m_tileW = tileW; m_tileH = tileH; }
@@ -62,9 +75,9 @@ namespace engine {
 
     private:
         Tex2D m_atlas{};                           // atlas SRV + size (pixels)
-        int   m_cellW = 0 , m_cellH = 0;            // source cell size (atlas slice)
-        int   m_tileW = 0 , m_tileH = 0;            // world tile size (destination)
-        std::unordered_map<int , TileDef> m_defs;   // id -> definition
+        int   m_cellW = 0 , m_cellH = 0;           // source cell size (atlas slice)
+        int   m_tileW = 0 , m_tileH = 0;           // world tile size (destination)
+        std::unordered_map<int , TileDef> m_defs;  // id -> definition
     };
 
 } // namespace engine

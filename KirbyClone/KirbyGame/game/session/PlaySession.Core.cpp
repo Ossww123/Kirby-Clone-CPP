@@ -29,6 +29,7 @@ namespace game {
         m_RenderSys = d.renderSys;
         m_TextHUD = d.textHUD;
         m_Scene = d.scene;
+        m_Session = d.session;
 
         // Player / camera
         initPlayerAndCamera ( d.rcClient );
@@ -75,6 +76,7 @@ namespace game {
         // 1) Clear sequence cinematic (takes over gameplay when active)
         if ( IsClearSequenceActive ( ) ) {
             updateClearFlow ( fdt );
+            updateTransition ( fixedDt );
             return;
         }
 
@@ -108,6 +110,9 @@ namespace game {
         m_hitSys.DrainDespawnEvents ( hvDes );
         if ( !hvDes.empty ( ) ) handleHitVolumeDespawns ( hvDes );
 
+        // 4.25) Items / pickups (clear emblem etc.)
+        updateItems ( fixedDt );
+
         // 4.5) Clear flow — before transition (e.g., emblem, autopilot, dance)
         updateClearFlow ( fdt );
 
@@ -121,6 +126,10 @@ namespace game {
         updateBossCameraLock ( );
         applyCamRectBlend ( fdt );
         m_Cam.Update ( fixedDt );
+
+        for ( auto& layer : m_TileLayers ) {
+            layer.Tick ( fdt );
+        }
 
         flushPendingSpawns ( );
         updateTransition ( fixedDt );
@@ -137,6 +146,44 @@ namespace game {
         r.b = iLerp ( A.b , B.b , t );
         return r;
     }
+
+    void PlaySession::updateItems ( double /*fixedDt*/ )
+    {
+        if ( !m_Player ) return;
+        if ( m_Items.empty ( ) ) return;
+
+        int px , py , pw , ph;
+        m_Player->GetBounds ( px , py , pw , ph );
+
+        const int pRight = px + pw;
+        const int pBottom = py + ph;
+
+        for ( auto& it : m_Items ) {
+            if ( it.collected ) continue;
+
+            const int iRight = it.x + it.w;
+            const int iBottom = it.y + it.h;
+
+            const bool overlap =
+                ( px < iRight ) &&
+                ( pRight > it.x ) &&
+                ( py < iBottom ) &&
+                ( pBottom > it.y );
+
+            if ( !overlap )
+                continue;
+
+            // 현재는 ClearEmblem 하나만 처리
+            if ( it.kind == ItemRuntime::Kind::ClearEmblem ) {
+                it.collected = true;
+                BeginClearSequence ( );
+            }
+
+            // 한 틱에 하나만 처리
+            break;
+        }
+    }
+
 
     void PlaySession::applyCamRectBlend ( float dt ) {
         if ( !m_camBlend.active ) return;

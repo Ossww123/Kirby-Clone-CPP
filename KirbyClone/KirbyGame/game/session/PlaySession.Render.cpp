@@ -75,8 +75,26 @@ namespace game {
     }
 
     void PlaySession::RenderWorld ( int ox , int oy , int sw , int sh ) {
-        // 1) Tiles
-        m_World.RenderVisible ( m_RenderSys->Batch ( ) , ox , oy , sw , sh );
+        if ( !m_RenderSys ) return;
+
+        auto& batch = m_RenderSys->Batch ( );
+
+        // 0) Tile layers with z < 0 (background relative to base world)
+        for ( const auto& layer : m_TileLayers ) {
+            if ( layer.z < 0 ) {
+                layer.RenderScaled ( batch , ox , oy , sw , sh , game::SCALE );
+            }
+        }
+
+        // 1) Base world tiles (WorldSystem: ground + cover)
+        m_World.RenderVisible ( batch , ox , oy , sw , sh );
+
+        // 1.5) Tile layers with z >= 0 (overlays)
+        for ( const auto& layer : m_TileLayers ) {
+            if ( layer.z >= 0 ) {
+                layer.RenderScaled ( batch , ox , oy , sw , sh , game::SCALE );
+            }
+        }
 
         // 2) Player
         if ( m_Player ) {
@@ -88,9 +106,10 @@ namespace game {
                 const float sy = ( ( py + ph ) - vh - oy );
                 engine::IntRect src{};
                 if ( auto* a = m_Player->Animator ( ) ) src = a->CurrentSrc ( );
-                m_RenderSys->Batch ( ).Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
-                                ( src.r > src.l ) ? &src : nullptr ,
-                                engine::win32::RGBA8 ( 255 , 255 , 255 ) );
+                batch.Draw ( *tex , sx , sy ,
+                             vw * game::SCALE , vh * game::SCALE ,
+                             ( src.r > src.l ) ? &src : nullptr ,
+                             engine::win32::RGBA8 ( 255 , 255 , 255 ) );
             }
         }
 
@@ -103,10 +122,12 @@ namespace game {
             const float sx = ( ( mx + mw * 0.5f ) - vw * 0.5f - ox );
             const float sy = ( ( my + mh ) - vh - oy );
             engine::IntRect src = m->SpriteSrc ( );
-            m_RenderSys->Batch ( ).Draw ( *tex , sx , sy , vw * game::SCALE , vh * game::SCALE ,
-                            &src , engine::win32::RGBA8 ( 255 , 255 , 255 ) );
+            batch.Draw ( *tex , sx , sy ,
+                         vw * game::SCALE , vh * game::SCALE ,
+                         &src , engine::win32::RGBA8 ( 255 , 255 , 255 ) );
         }
     }
+
 
     void PlaySession::RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh , bool drawEnabled ) {
         if ( !drawEnabled || !m_RenderSys ) return;
@@ -154,6 +175,17 @@ namespace game {
         // Doors
         for ( const auto& d : m_Doors ) {
             dbg->WorldRect ( d.x , d.y , d.w , d.h , ox , oy , engine::win32::RGBA8 ( 0 , 200 , 255 ) );
+        }
+
+        // Items (clear emblem etc.)
+        for ( const auto& it : m_Items ) {
+            if ( it.collected ) continue;
+
+            dbg->WorldRect (
+                it.x , it.y , it.w , it.h ,
+                ox , oy ,
+                engine::win32::RGBA8 ( 0 , 255 , 255 )
+            );
         }
 
         // Boss arena AABB (magenta)

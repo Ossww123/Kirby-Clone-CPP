@@ -167,9 +167,7 @@ namespace engine {
             m_Time->ConsumeFixedStep ( );
         }
 
-        DBGLOG ( L"[DoOneFrame] RenderFrame about to be called" );
         RenderFrame ( );
-        DBGLOG ( L"[DoOneFrame] RenderFrame returned" );
         return true;
     }
 
