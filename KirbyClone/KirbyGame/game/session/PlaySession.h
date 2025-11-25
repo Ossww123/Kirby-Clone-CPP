@@ -104,6 +104,14 @@ namespace game {
         void BeginClearSequence ( );
         bool IsClearSequenceActive ( ) const;
 
+        // Player slots
+        enum class PlayerSlot : uint8_t { P1 = 0 , P2 = 1 , Count };
+
+        // === Life API ===
+        void ResetLives ( int initialLives = 2 );   // 새 런(허브 시작) 전용
+        int  Lives ( ) const noexcept;
+        bool IsGameOver ( ) const noexcept;
+
     private:
         // Internals
         void initPlayerAndCamera ( const engine::IntRect& rcClient );
@@ -146,6 +154,24 @@ namespace game {
         // --- Boss Arena / Camera Lock ---
         void updateBossCameraLock ( );
         bool isBossAlive ( ) const;
+
+        struct LifeState {
+            // 설정
+            int   initialLives = 2;
+            bool  useSharedLives = true;   // true: 공용 목숨, false: per-player 목숨 (나중 확장용)
+
+            // 공용 목숨 모드
+            int   sharedLives = 2;
+
+            // per-player 모드 대비 (지금은 안 씀)
+            int   perPlayerLives[ static_cast< int >( PlayerSlot::Count ) ]{};
+
+            // 게임오버 플래그 (GameApp이 보고 타이틀로 돌아갈지 결정)
+            bool  gameOver = false;
+        } m_life{};
+
+        // 죽음 처리 진입점 (PlayerEvent::Died 처리에서 호출)
+        void onPlayerDied ( PlayerSlot who );
 
     private:
         // Provided handles (non-owning)

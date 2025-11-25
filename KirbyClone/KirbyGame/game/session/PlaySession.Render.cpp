@@ -265,8 +265,11 @@ namespace game {
         m_TextHUD->DrawTextLine ( mons , 8.f , 148.f );
 
         wchar_t hpLine[ 64 ];
-        std::swprintf ( hpLine , _countof ( hpLine ) , L"HP: %d" , dbg.hp );
+        std::swprintf ( hpLine , _countof ( hpLine ) ,
+                        L"HP: %d  Lives: %d" ,
+                        dbg.hp , Lives ( ) );
         m_TextHUD->DrawTextLine ( hpLine , 8.f , 168.f );
+
 
         // 6) Ability name
         const wchar_t* abilityName = L"None";

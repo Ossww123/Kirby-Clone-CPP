@@ -33,7 +33,8 @@ namespace game {
         enum Type {
             InhaleVolume , SpitStar , AirPuffShot , WaterShot , SwallowAbility , AbilityGained ,
             AbilityFire , AbilitySpark , AbilityBeam ,
-            DoorInteract
+            DoorInteract,
+            Died
         } type;
         engine::IntRect rect{};         // world-space AABB (for InhaleVolume)
         int             facing{ +1 };   // +1 right, -1 left
@@ -155,6 +156,9 @@ namespace game {
 
         void Step ( double fixedDt , const engine::Input& input );
 
+        // respawn
+        void ResetForRespawn ( );
+
         // accessors
         MState MoveState ( ) const { return m_mState; }
         AState ActState ( )  const { return m_aState; }
@@ -230,39 +234,40 @@ namespace game {
         struct ZBase { virtual ~ZBase ( ) = default; virtual void OnEnter ( Ctx& ) {}; virtual void OnExit ( ) {}; virtual void Update ( Ctx& , PlayerFSM& ) = 0; };
 
         // movement states (declare; define in .cpps)
-        struct M_Grounded : MBase { void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Airborne : MBase { void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Idle : M_Grounded { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Walk : M_Grounded { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Run : M_Grounded { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Crouch : M_Grounded { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Slide : M_Grounded { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Jump : M_Airborne { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Fall : M_Airborne { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Inflated : M_Airborne { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct M_Ladder : MBase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Grounded   : MBase         { void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Airborne   : MBase         { void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Idle       : M_Grounded    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Walk       : M_Grounded    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Run        : M_Grounded    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Crouch     : M_Grounded    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Slide      : M_Grounded    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Jump       : M_Airborne    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Fall       : M_Airborne    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Inflated   : M_Airborne    { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct M_Ladder     : MBase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
 
         // action states
-        struct A_Neutral : ABase { void Update ( Ctx& , PlayerFSM& ) override; };
-        struct A_Inhale : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct A_MouthFull : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct A_SpitObject : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct A_AirPuff : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct A_AbilityAtk : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct A_WaterShot : ABase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_Neutral    : ABase         { void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_Inhale     : ABase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_MouthFull  : ABase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_SpitObject : ABase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_AirPuff    : ABase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_AbilityAtk : ABase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct A_WaterShot  : ABase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
 
         // overlay states
-        struct Z_None : ZBase { void Update ( Ctx& , PlayerFSM& ) override; };
-        struct Z_Damaged : ZBase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct Z_Dead : ZBase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct Z_DoorEnter : ZBase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct Z_Dance : ZBase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
-        struct Z_GameOver : ZBase { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct Z_None       : ZBase         { void Update ( Ctx& , PlayerFSM& ) override; };
+        struct Z_Damaged    : ZBase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct Z_Dead       : ZBase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct Z_DoorEnter  : ZBase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct Z_Dance      : ZBase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
+        struct Z_GameOver   : ZBase         { void OnEnter ( Ctx& ) override; void Update ( Ctx& , PlayerFSM& ) override; };
 
         // utilities
-        void        UpdateFacing ( const Ctx& c );
+        void UpdateFacing ( const Ctx& c );
         engine::IntRect MakeInhaleBox ( const Ctx& c ) const;
-        void        ResetFallAccumulators ( );
+        void ResetFallAccumulators ( );
+        void HardResetRuntime ( );
 
         // transitions per track
         void RequestMove ( std::unique_ptr<MBase> ns , MState tag );

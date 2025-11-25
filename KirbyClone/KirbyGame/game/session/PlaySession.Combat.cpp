@@ -114,6 +114,13 @@ namespace game {
             break;
         }
 
+        case PlayerEvent::Died:
+            // 지금은 1P만 있으니 P1으로 고정.
+            // 나중에 2P를 추가하면: 각 PlayerFSM에서 이벤트를 받을 때
+            // "어느 슬롯의 FSM인지"에 따라 PlayerSlot::P1 / P2를 넘기면 된다.
+            onPlayerDied ( PlayerSlot::P1 );
+            break;
+
         default: break;
         }
     }

@@ -111,6 +111,9 @@ namespace engine {
                 m_Renderer.get ( ), &m_Render, m_TextHUD.get ( ),
                 m_Scene.get ( ), engine::win32::FromRECT ( rc ), &m_State
             } );
+
+            m_Session->ResetLives ( 2 );
+
             m_Session->LoadStage ( stageJson.c_str ( ) );
 
             // 4) switch mode
@@ -198,8 +201,55 @@ namespace engine {
             if ( m_Front ) m_Front->Update ( fixedDt );
             return;
         }
-        if ( m_Session ) m_Session->FixedUpdate ( fixedDt , *m_Input );
+        if ( m_mode == AppMode::Session && m_Session ) {
+            m_Session->FixedUpdate ( fixedDt , *m_Input );
+
+            if ( m_Session->IsGameOver ( ) ) {
+                m_Session.reset ( );
+
+                auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
+                const int sw = d3d ? d3d->Width ( ) : m_Render.BackbufferWidth ( );
+                const int sh = d3d ? d3d->Height ( ) : m_Render.BackbufferHeight ( );
+
+                m_mode = AppMode::Front;
+                m_Front = std::make_unique<game::FrontFlow> ( );
+
+                game::FrontFlowCreate fc{};
+                fc.text = m_TextHUD.get ( );
+                fc.input = m_Input.get ( );
+                fc.save = &m_Save;
+                fc.state = &m_State;
+                fc.renderer = m_Renderer.get ( );
+                fc.renderSys = &m_Render;
+                fc.screenW = sw;
+                fc.screenH = sh;
+
+                m_Front->Initialize ( fc );
+
+                // onStartSolo
+                m_Front->onStartSolo = [ this ] ( int slot ) {
+                    m_State.SetActiveSlot ( slot );
+                    ( void ) m_State.LoadFromDisk ( );
+                    const auto& sd = m_State.Data ( );
+                    const std::string hubId = sd.lastHub.empty ( ) ? std::string ( "t1/hub" ) : sd.lastHub;
+                    const std::string stageJson = game::StageJsonPathFromId ( hubId );
+
+                    m_Session = std::make_unique<game::PlaySession> ( );
+                    RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
+                    m_Session->Initialize ( {
+                        m_Renderer.get ( ), &m_Render, m_TextHUD.get ( ),
+                        m_Scene.get ( ), engine::win32::FromRECT ( rc ), &m_State
+                    } );
+                    m_Session->ResetLives ( 2 );
+                    m_Session->LoadStage ( stageJson.c_str ( ) );
+
+                    m_mode = AppMode::Session;
+                    m_Front.reset ( );
+                    };
+            }
+        }
     }
+
 
     void GameApp::RenderFrame ( )
     {

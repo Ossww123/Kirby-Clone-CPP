@@ -28,7 +28,7 @@ namespace protocol {
         std::string lastHub = "t1/hub";
         std::string lastStage = "t1/hub";
         std::string lastSpawn = "default";
-        std::unordered_map<std::string , bool> flags;  // e.g., flags["clear_t1/s1/m1"] = true
+        std::unordered_map<std::string , bool> flags;  // e.g., flags["clear_t1/s1"] = true
     };
 
     // ---- Flag helpers ----

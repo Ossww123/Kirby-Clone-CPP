@@ -256,4 +256,77 @@ namespace game {
         m_fade.StartOut ( p );
     }
 
+        void PlaySession::ResetLives ( int initialLives )
+        {
+            if ( initialLives < 0 ) initialLives = 0;
+
+            m_life.initialLives = initialLives;
+            m_life.useSharedLives = true;           // 현재는 공유 목숨만 사용
+            m_life.sharedLives = initialLives;
+            m_life.gameOver = false;
+
+            for ( int i = 0; i < static_cast< int >( PlayerSlot::Count ); ++i ) {
+                m_life.perPlayerLives[ i ] = initialLives;
+            }
+        }
+
+        int PlaySession::Lives ( ) const noexcept
+        {
+            if ( m_life.useSharedLives ) return m_life.sharedLives;
+            // per-player 모드일 때는 필요에 따라 합산/최댓값 등 선택
+            int maxL = 0;
+            for ( int i = 0; i < static_cast< int >( PlayerSlot::Count ); ++i )
+                maxL = std::max ( maxL , m_life.perPlayerLives[ i ] );
+            return maxL;
+        }
+
+        bool PlaySession::IsGameOver ( ) const noexcept
+        {
+            return m_life.gameOver;
+        }
+
+        void PlaySession::onPlayerDied ( PlayerSlot who )
+        {
+            if ( m_life.gameOver ) return;  // 이미 게임오버면 무시
+
+            if ( m_life.useSharedLives ) {
+                // === 공유 목숨 모드 ===
+                if ( m_life.sharedLives > 0 ) {
+                    --m_life.sharedLives;
+
+                    m_PlayerFSM.ResetForRespawn ( );
+
+                    // 남은 목숨이 있으면 현재 스테이지 리로드
+                    ( void ) ReloadStage ( );
+                }
+                else {
+                    // 0에서 한 번 더 죽음 → 게임오버
+                    m_life.gameOver = true;
+                    // 이후 GameApp이 IsGameOver()를 보고 타이틀로 돌아감
+                }
+            }
+            else {
+                // === (나중용) 개별 목숨 모드 ===
+                const int idx = static_cast< int >( who );
+                if ( idx < 0 || idx >= static_cast< int >( PlayerSlot::Count ) ) return;
+
+                if ( m_life.perPlayerLives[ idx ] > 0 ) {
+                    --m_life.perPlayerLives[ idx ];
+                    ( void ) ReloadStage ( );
+                }
+                else {
+                    bool allOut = true;
+                    for ( int i = 0; i < static_cast< int >( PlayerSlot::Count ); ++i ) {
+                        if ( m_life.perPlayerLives[ i ] > 0 ) {
+                            allOut = false;
+                            break;
+                        }
+                    }
+                    if ( allOut ) {
+                        m_life.gameOver = true;
+                    }
+                }
+            }
+        }
+
 } // namespace game

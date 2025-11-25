@@ -25,43 +25,12 @@ namespace game {
                           engine::Animator* anim ,
                           const Cfg& cfg )
     {
-        m_body = body; m_col = worldCol; m_anim = anim; m_cfg = cfg;
+        m_body = body;
+        m_col = worldCol;
+        m_anim = anim;
+        m_cfg = cfg;
 
-        m_health.Reset ( m_cfg.maxHp , m_cfg.iFrameMs );
-
-        // --- hard reset runtime ---
-        m_events.clear ( );
-        m_mouthFull = false;
-        m_caughtGift = Ability::None;
-        m_ability = Ability::None;
-        m_facing = +1;
-        m_jumpLockT = 0.f;
-        m_damagedT = 0.f;
-        m_inhaleT = 0.f;
-        m_spitLockT = 0.f;
-        m_tapT = 0.f;
-        m_slideT = 0.f;
-        m_runQueued = false;
-        m_lastTapDir = 0;
-        m_pendingKB = { 0.f, 0.f };
-
-        // fall/bounce
-        m_fallT = 0.f; m_fallY0 = 0.f; m_tumbleT = 0.f;
-        m_fellFromJump = false; m_inLongFall = false; m_bounceQueued = false;
-
-        m_mPending.reset ( ); m_aPending.reset ( ); m_zPending.reset ( );
-        m_transitionBudget = 0;
-
-        m_move = std::make_unique<M_Idle> ( );    m_mState = MState::Idle;    m_mNeedEnter = true;
-        m_action = std::make_unique<A_Neutral> ( ); m_aState = AState::Neutral; m_aNeedEnter = true;
-        m_overlay = std::make_unique<Z_None> ( );    m_zState = ZState::None;    m_zNeedEnter = true;
-
-        if ( m_anim ) m_anim->Play ( "Idle" , true );
-
-        m_dbg = {};
-        m_dbg.hp = m_health.hp; m_dbg.iFrameT = m_health.iFrameT;
-        m_dbg.mState = m_mState; m_dbg.aState = m_aState; m_dbg.zState = m_zState;
-        m_dbg.facing = m_facing; m_dbg.mouthFull = m_mouthFull; m_dbg.ability = m_ability;
+        HardResetRuntime ( );
     }
 
     void PlayerFSM::Step ( double fixedDt , const engine::Input& input )
@@ -174,28 +143,60 @@ namespace game {
         m_dbg.fallT = m_fallT; m_dbg.longFall = m_inLongFall;
     }
 
-    // damage / mouth / door / snapshot (unchanged except style)
-    bool PlayerFSM::ApplyDamage ( const Damage& d ) { /* ... 그대로 ... */ return
-        [ & ] {
-                if ( m_zState == ZState::Dead || m_zState == ZState::GameOver ) return false;
-                bool applied = d.ignoreIFrames
-                    ? ( m_health.hp = std::max ( 0 , m_health.hp - std::max ( 0 , d.amount ) ) , m_health.iFrameT = m_cfg.iFrameMs , true )
-                    : m_health.Apply ( d.amount );
-                if ( !applied ) return false;
-
-                auto kb = d.knockback;
-                const float k = m_cfg.hurtKnockbackClamp;
-                kb.x = std::clamp ( kb.x , -k , k );
-                kb.y = std::clamp ( kb.y , -k , k );
-                if ( d.additiveImpulse ) { auto v = m_body->Velocity ( ); m_body->SetVelocity ( v + kb ); }
-                else { m_body->SetVelocity ( kb ); }
-
-                if ( m_mouthFull ) { m_mouthFull = false; m_caughtGift = Ability::None; }
-                m_damagedT = m_cfg.damagedStun;
-                RequestOver ( std::make_unique<Z_Damaged> ( ) , ZState::Damaged );
-                return true;
-        }( );
+    void PlayerFSM::ResetForRespawn ( )
+    {
+        HardResetRuntime ( );
     }
+
+    // damage / mouth / door / snapshot (unchanged except style)
+    bool PlayerFSM::ApplyDamage ( const Damage& d )
+    {
+        return [ & ] {
+            // 이미 사망/게임오버 상태면 추가 데미지 무시
+            if ( m_zState == ZState::Dead || m_zState == ZState::GameOver )
+                return false;
+
+            bool applied = d.ignoreIFrames
+                ? ( m_health.hp = std::max ( 0 , m_health.hp - std::max ( 0 , d.amount ) ) ,
+                    m_health.iFrameT = m_cfg.iFrameMs ,
+                    true )
+                : m_health.Apply ( d.amount );
+
+            if ( !applied )
+                return false;
+
+            auto kb = d.knockback;
+            const float k = m_cfg.hurtKnockbackClamp;
+            kb.x = std::clamp ( kb.x , -k , k );
+            kb.y = std::clamp ( kb.y , -k , k );
+            if ( d.additiveImpulse ) {
+                auto v = m_body->Velocity ( );
+                m_body->SetVelocity ( v + kb );
+            }
+            else {
+                m_body->SetVelocity ( kb );
+            }
+
+            if ( m_mouthFull ) {
+                m_mouthFull = false;
+                m_caughtGift = Ability::None;
+            }
+
+            m_damagedT = m_cfg.damagedStun;
+
+            if ( m_health.hp <= 0 ) {
+                // 치명타 → 즉시 사망 오버레이
+                RequestOver ( std::make_unique<Z_Dead> ( ) , ZState::Dead );
+            }
+            else {
+                // 일반 피격 → Hurt 상태
+                RequestOver ( std::make_unique<Z_Damaged> ( ) , ZState::Damaged );
+            }
+
+            return true;
+            }( );
+    }
+
 
     void PlayerFSM::OnMouthCatch ( Ability gift ) { m_mouthFull = true; m_caughtGift = gift; }
 
@@ -312,8 +313,43 @@ namespace game {
         m_mState = m_mPendingTag;
         m_mNeedEnter = true;
     }
-    void PlayerFSM::ApplyPendingAct ( Ctx& ) { if ( !m_aPending ) return; if ( !CanAct ( m_aState , m_aPendingTag , {} ) ) { m_aPending.reset ( ); return; } if ( m_action ) m_action->OnExit ( ); m_action = std::move ( m_aPending ); m_aState = m_aPendingTag; m_aNeedEnter = true; }
-    void PlayerFSM::ApplyPendingOver ( Ctx& ) { if ( !m_zPending ) return; if ( !CanOver ( m_zState , m_zPendingTag , {} ) ) { m_zPending.reset ( ); return; } if ( m_overlay ) m_overlay->OnExit ( ); m_overlay = std::move ( m_zPending ); m_zState = m_zPendingTag; m_zNeedEnter = true; }
+    void PlayerFSM::ApplyPendingAct ( Ctx& ) {
+        if ( !m_aPending ) return;
+        if ( !CanAct ( m_aState , m_aPendingTag , {} ) ) {
+            m_aPending.reset ( ); return; 
+        }
+        if ( m_action ) m_action->OnExit ( );
+        m_action = std::move ( m_aPending );
+        m_aState = m_aPendingTag;
+        m_aNeedEnter = true; 
+    }
+
+    void PlayerFSM::ApplyPendingOver ( Ctx& c )
+    {
+        if ( !m_zPending ) return;
+
+        if ( !CanOver ( m_zState , m_zPendingTag , c ) ) {
+            m_zPending.reset ( );
+            return;
+        }
+
+        const ZState prev = m_zState;
+        const ZState next = m_zPendingTag;
+
+        if ( m_overlay ) m_overlay->OnExit ( );
+
+        m_overlay = std::move ( m_zPending );
+        m_zState = next;
+        m_zNeedEnter = true;
+
+        if ( prev != ZState::Dead && next == ZState::Dead ) {
+            PlayerEvent ev{ PlayerEvent::Died };
+            ev.rect = c.aabb;
+            ev.facing = m_facing;
+            m_events.push_back ( ev );
+        }
+    }
+
 
     bool PlayerFSM::CanMove ( MState from , MState to , const Ctx& ) const {
         if ( from == to ) return false;
@@ -332,6 +368,64 @@ namespace game {
         if ( from == to ) return false;
         if ( from == ZState::Dead && to != ZState::GameOver ) return false;
         return true;
+    }
+
+    void PlayerFSM::HardResetRuntime ( )
+    {
+        m_health.Reset ( m_cfg.maxHp , m_cfg.iFrameMs );
+
+        m_events.clear ( );
+        m_mouthFull = false;
+        m_caughtGift = Ability::None;
+        m_ability = Ability::None;
+        m_facing = +1;
+
+        m_jumpLockT = 0.f;
+        m_damagedT = 0.f;
+        m_inhaleT = 0.f;
+        m_spitLockT = 0.f;
+        m_tapT = 0.f;
+        m_slideT = 0.f;
+        m_runQueued = false;
+        m_lastTapDir = 0;
+        m_pendingKB = { 0.f, 0.f };
+
+        // fall/bounce
+        m_fallT = 0.f;
+        m_fallY0 = 0.f;
+        m_tumbleT = 0.f;
+        m_fellFromJump = false;
+        m_inLongFall = false;
+        m_bounceQueued = false;
+
+        m_mPending.reset ( );
+        m_aPending.reset ( );
+        m_zPending.reset ( );
+        m_transitionBudget = 0;
+
+        m_move = std::make_unique<M_Idle> ( );
+        m_mState = MState::Idle;
+        m_mNeedEnter = true;
+
+        m_action = std::make_unique<A_Neutral> ( );
+        m_aState = AState::Neutral;
+        m_aNeedEnter = true;
+
+        m_overlay = std::make_unique<Z_None> ( );
+        m_zState = ZState::None;
+        m_zNeedEnter = true;
+
+        if ( m_anim ) m_anim->Play ( "Idle" , true );
+
+        m_dbg = {};
+        m_dbg.hp = m_health.hp;
+        m_dbg.iFrameT = m_health.iFrameT;
+        m_dbg.mState = m_mState;
+        m_dbg.aState = m_aState;
+        m_dbg.zState = m_zState;
+        m_dbg.facing = m_facing;
+        m_dbg.mouthFull = m_mouthFull;
+        m_dbg.ability = m_ability;
     }
 
 } // namespace game
