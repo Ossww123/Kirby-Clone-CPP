@@ -72,8 +72,9 @@ namespace game {
         void RenderParallaxBG ( int ox , int oy , int sw , int sh );
         void RenderWorld ( int ox , int oy , int sw , int sh );
         void RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh , bool drawEnabled );
-        void RenderHUD ( int fps , double fixedDt );
+        void RenderHUD ( int fps , double fixedDt );  // 이름 변경 예정
         void RenderOverlayFade ( int sw , int sh ); // (later) fade may move out
+        void RenderGameHUDSprites ( int sw , int sh );
         void RenderGameOverOverlay ( int sw , int sh );
 
         // 5) Camera/world helpers
@@ -203,6 +204,7 @@ namespace game {
         engine::Tex2D m_EnemiesTex{};
         engine::Tex2D m_WhiteTex{};
         engine::Tex2D m_BgTex{};
+        engine::Tex2D m_HudTex{};
         engine::Tex2D m_GameOverTex{};
 
         // Options

@@ -40,6 +40,7 @@ namespace game {
             if ( !m_PlayerTex.srv )    engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/player.png" , &m_PlayerTex );
             if ( !m_EnemiesTex.srv )   engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/enemies.png" , &m_EnemiesTex );
             if ( !m_GameOverTex.srv )  engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/ui/gameover.png" , &m_GameOverTex );
+            if ( !m_HudTex.srv )        engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/ui/HUD.png" , &m_HudTex );
             if ( !m_WhiteTex.srv )     engine::CreateSolidTexture1x1 ( d3d->Device ( ) , 0xFFFFFFFFu , &m_WhiteTex );
         }
 

@@ -200,6 +200,9 @@ namespace game {
         Persistent SnapshotPersistent ( ) const;
         void       RestorePersistent ( const Persistent& s );
 
+        int  Hp ( ) const noexcept { return m_health.hp; }
+        int  MaxHp ( ) const noexcept { return m_cfg.maxHp; }
+
     private:
         // per-frame context
         struct Ctx {

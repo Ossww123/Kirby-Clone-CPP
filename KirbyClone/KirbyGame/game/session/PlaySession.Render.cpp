@@ -305,6 +305,173 @@ namespace game {
         m_fade.Render ( m_RenderSys , m_WhiteTex , sw , sh );
     }
 
+    void PlaySession::RenderGameHUDSprites ( int sw , int sh )
+    {
+        if ( !m_RenderSys ) return;
+        if ( !m_HudTex.srv ) return;
+
+        auto& batch = m_RenderSys->Batch ( );
+        const int scale = game::SCALE;
+
+        // ==== 공통 상수 ====
+        const int hudSrcH = 16;
+        const int lifeIconW = 24;
+        const int digitW = 8;
+        const int hpCellW = 8;
+        const int bossFrameW = 80;
+        const int bossBarW = 80;
+
+        // 화면 하단 기준 마진 (픽셀 단위, 스케일 적용된 좌표)
+        const float marginBottom = 8.f * scale;
+        const float marginSide = 8.f * scale;
+
+        // -------------------------------------------------
+        // 1) 커비 생명수 (중앙 하단)
+        // -------------------------------------------------
+        const int lives = std::clamp ( Lives ( ) , 0 , 99 );
+
+        const int tens = lives / 10;
+        const int ones = lives % 10;
+
+        const float lifeIconDstW = lifeIconW * scale;
+        const float lifeIconDstH = hudSrcH * scale;
+        const float digitDstW = digitW * scale;
+        const float digitDstH = hudSrcH * scale;
+
+        // "아이콘 + 공백 + 2자리 숫자" 전체 폭
+        const float gapPx = 4.f * scale; // 아이콘과 숫자 사이 간격
+        const float totalW =
+            lifeIconDstW + gapPx + digitDstW * 2.f;
+
+        const float baseY = sh - marginBottom - lifeIconDstH;
+        const float baseX = ( sw - totalW ) * 0.5f;
+
+        // 1-1) 생명 아이콘 src rect: 0~23
+        engine::IntRect srcLife{ 0, 0, lifeIconW, hudSrcH };
+        batch.Draw (
+            m_HudTex ,
+            baseX , baseY ,
+            lifeIconDstW , lifeIconDstH ,
+            &srcLife ,
+            engine::win32::RGBA8 ( 255 , 255 , 255 )
+        );
+
+        // 1-2) 숫자 rect helper
+        auto digitSrcRect = [ ] ( int d ) -> engine::IntRect {
+            const int x0 = 32 + d * 8;
+            return engine::IntRect{ x0 , 0 , x0 + 8 , 16 };
+            };
+
+        const float digit0X = baseX + lifeIconDstW + gapPx;
+        const float digit1X = digit0X + digitDstW;
+
+        engine::IntRect srcTens = digitSrcRect ( tens );
+        engine::IntRect srcOnes = digitSrcRect ( ones );
+
+        batch.Draw (
+            m_HudTex ,
+            digit0X , baseY ,
+            digitDstW , digitDstH ,
+            &srcTens ,
+            engine::win32::RGBA8 ( 255 , 255 , 255 )
+        );
+        batch.Draw (
+            m_HudTex ,
+            digit1X , baseY ,
+            digitDstW , digitDstH ,
+            &srcOnes ,
+            engine::win32::RGBA8 ( 255 , 255 , 255 )
+        );
+
+        // -------------------------------------------------
+        // 2) 플레이어 HP (커비 생명 위쪽에 6칸 나열)
+        // -------------------------------------------------
+        const int hp = std::clamp ( m_PlayerFSM.Hp ( ) , 0 , m_PlayerFSM.MaxHp ( ) );
+        const int maxHp = m_PlayerFSM.MaxHp ( ); // 현재는 6
+
+        engine::IntRect srcHpFull{ 112 , 0 , 120 , 16 }; // 112~119
+        engine::IntRect srcHpEmpty{ 120 , 0 , 128 , 16 }; // 120~127
+
+        const float hpCellDstW = hpCellW * scale;
+        const float hpCellDstH = hudSrcH * scale;
+
+        const float hpTotalW = hpCellDstW * maxHp;
+        const float hpBaseX = ( sw - hpTotalW ) * 0.5f;
+        const float hpBaseY = baseY - hpCellDstH - 4.f * scale; // 생명 표시 바로 위
+
+        for ( int i = 0; i < maxHp; ++i ) {
+            const bool filled = ( i < hp );
+            const float x = hpBaseX + i * hpCellDstW;
+            const float y = hpBaseY;
+
+            const engine::IntRect& src = filled ? srcHpFull : srcHpEmpty;
+
+            batch.Draw (
+                m_HudTex ,
+                x , y ,
+                hpCellDstW , hpCellDstH ,
+                &src ,
+                engine::win32::RGBA8 ( 255 , 255 , 255 )
+            );
+        }
+
+        // -------------------------------------------------
+        // 3) 보스 HP (우측 하단)
+        // -------------------------------------------------
+        // 아직 실제 보스 HP 시스템이 없으면, 나중에
+        // float ratio = BossHpRatio(); // 0~1
+        // 같은 식으로 빼서 연결하면 됨.
+        //
+        // 여기 예시는 "보스가 있을 때만" 그린다고 가정하고,
+        // 일단 isBossAlive()가 true일 때만 표시하도록 한다.
+        if ( isBossAlive ( ) ) {
+            const float ratio = 1.0f; // TODO: 실제 보스 HP / MaxHP 로 교체
+
+            engine::IntRect srcFrame{ 128 , 0 , 128 + bossFrameW , 16 }; // 128~207
+            engine::IntRect srcBarFull{ 208 , 0 , 208 + bossBarW , 16 }; // 208~287
+
+            const float frameDstW = bossFrameW * scale;
+            const float frameDstH = hudSrcH * scale;
+
+            const float frameX = sw - marginSide - frameDstW;
+            const float frameY = sh - marginBottom - frameDstH;
+
+            // 3-1) 체력바: ratio만큼 잘라서 먼저 그림
+            const int   barSrcFullW = srcBarFull.r - srcBarFull.l; // 80
+            const int   barSrcW = static_cast< int >( std::round ( barSrcFullW * std::clamp ( ratio , 0.f , 1.f ) ) );
+            const float barDstW = barSrcW * scale;
+            const float barDstH = frameDstH;
+
+            engine::IntRect srcBar{
+                srcBarFull.l ,
+                srcBarFull.t ,
+                srcBarFull.l + barSrcW ,
+                srcBarFull.b
+            };
+
+            // 단순히 프레임 안쪽 왼쪽에서부터 채운다고 가정
+            const float barX = frameX;
+            const float barY = frameY;
+
+            batch.Draw (
+                m_HudTex ,
+                barX , barY ,
+                barDstW , barDstH ,
+                &srcBar ,
+                engine::win32::RGBA8 ( 255 , 255 , 255 )
+            );
+
+            // 3-2) 프레임을 위에 덮어서 테두리 강조
+            batch.Draw (
+                m_HudTex ,
+                frameX , frameY ,
+                frameDstW , frameDstH ,
+                &srcFrame ,
+                engine::win32::RGBA8 ( 255 , 255 , 255 )
+            );
+        }
+    }
+
     void PlaySession::RenderGameOverOverlay ( int sw , int sh )
     {
         if ( !m_RenderSys )      return;
