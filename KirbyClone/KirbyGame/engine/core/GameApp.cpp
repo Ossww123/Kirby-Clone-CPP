@@ -271,6 +271,7 @@ namespace engine {
             const auto [ox , oy] = m_Session->CameraOffsetInt ( );
             m_Session->RenderParallaxBG ( ox , oy , sw , sh );
             m_Session->RenderWorld ( ox , oy , sw , sh );
+            m_Session->RenderGameOverOverlay ( sw , sh );
             m_Session->RenderOverlayFade ( sw , sh );
             m_Session->RenderDebugGridAndColliders ( ox , oy , sw , sh , m_debugDrawEnabled );
         }

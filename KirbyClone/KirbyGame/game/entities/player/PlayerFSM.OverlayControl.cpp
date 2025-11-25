@@ -25,4 +25,9 @@ namespace game {
         RequestOver ( std::make_unique<Z_None> ( ) , ZState::None );
     }
 
+    void PlayerFSM::BeginGameOver ( )
+    {
+        RequestOver ( std::make_unique<Z_GameOver> ( ) , ZState::GameOver );
+    }
+
 } // namespace game

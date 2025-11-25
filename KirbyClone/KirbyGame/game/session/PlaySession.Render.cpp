@@ -305,4 +305,30 @@ namespace game {
         m_fade.Render ( m_RenderSys , m_WhiteTex , sw , sh );
     }
 
+    void PlaySession::RenderGameOverOverlay ( int sw , int sh )
+    {
+        if ( !m_RenderSys )      return;
+        if ( !m_GameOverTex.srv ) return;
+
+        // 게임오버 화면이 진행 중이거나, 이미 끝났지만 아직 세션이 살아있는 한은 계속 그려줘도 됨
+        if ( !m_life.gameOverScreenActive && !m_life.gameOver )
+            return;
+
+        const float dstW = static_cast< float >( sw );
+        const float dstH = static_cast< float >( sh );
+
+        m_RenderSys->DrawSprite (
+            m_GameOverTex ,
+            0.f , 0.f ,
+            dstW , dstH ,
+            nullptr ,
+            engine::win32::RGBA8 ( 255 , 255 , 255 ) ,
+            0.f , 0.f , 0.f ,
+            game::Z::OverlayTop ,          // 항상 최상단
+            engine::BlendMode::Alpha ,
+            engine::SamplerMode::Linear
+        );
+    }
+
+
 } // namespace game

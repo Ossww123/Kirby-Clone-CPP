@@ -74,6 +74,7 @@ namespace game {
         void RenderDebugGridAndColliders ( int ox , int oy , int sw , int sh , bool drawEnabled );
         void RenderHUD ( int fps , double fixedDt );
         void RenderOverlayFade ( int sw , int sh ); // (later) fade may move out
+        void RenderGameOverOverlay ( int sw , int sh );
 
         // 5) Camera/world helpers
         std::pair<int , int> CameraOffsetInt ( ) const { return m_Cam.OffsetInt ( ); }
@@ -166,8 +167,11 @@ namespace game {
             // per-player 모드 대비 (지금은 안 씀)
             int   perPlayerLives[ static_cast< int >( PlayerSlot::Count ) ]{};
 
-            // 게임오버 플래그 (GameApp이 보고 타이틀로 돌아갈지 결정)
-            bool  gameOver = false;
+            // 게임오버 진행 상태
+            bool  gameOver = false;            
+            bool  gameOverScreenActive = false;
+            float gameOverScreenT = 0.f;       
+            float gameOverScreenMin = 2.f;     
         } m_life{};
 
         // 죽음 처리 진입점 (PlayerEvent::Died 처리에서 호출)
@@ -199,6 +203,7 @@ namespace game {
         engine::Tex2D m_EnemiesTex{};
         engine::Tex2D m_WhiteTex{};
         engine::Tex2D m_BgTex{};
+        engine::Tex2D m_GameOverTex{};
 
         // Options
         std::string m_stageJsonPath{ "assets/stages/stage01/stage.json" };

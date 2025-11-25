@@ -194,6 +194,7 @@ namespace game {
         void EndDoorEnter ( );
         void BeginDance ( );   // enter Z_Dance
         void EndDance ( );     // back to Z_None
+        void BeginGameOver ( );
 
         // persistence I/O
         Persistent SnapshotPersistent ( ) const;
