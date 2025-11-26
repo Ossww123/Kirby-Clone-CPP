@@ -16,32 +16,23 @@
 /* std */
 #include <algorithm>
 
-/* engine core */
+/* engine */
 #include "engine/core/Time.h"
 #include "engine/core/Input.h"
 #include "engine/core/Scene.h"
-
-/* renderer */
 #include "engine/render/IRenderer.h"
 #include "engine/render/D3D11Renderer.h"
 #include "engine/render/D3D11SpriteBatch.h"
 #include "engine/render/D3D11DebugDraw.h"
 #include "engine/render/DWriteText.h"
 #include "engine/platform/win32/RectUtil.h"
+#include "engine/util/DebugLog.h"
 
 /* game */
 #include "game/session/PlaySession.h"
 #include "game/frontend/FrontFlow.h"
 #include "game/data/StagePath.h" // StageJsonPathFromId
-
-#ifndef DBGLOG
-#include <string>
-#include <windows.h>
-inline void DBGLOG ( const wchar_t* msg ) {
-    ::OutputDebugStringW ( msg );
-    ::OutputDebugStringW ( L"\n" );
-}
-#endif
+#include "game/data/GameConfig.h"
 
 namespace game {
 
@@ -80,54 +71,7 @@ namespace game {
         DBGLOG ( L"[Init] InitRendererUI done" );
 
         // === Boot FrontFlow (Title → SaveSelect → ModeSelect) ===
-        m_mode = AppMode::Front;
-        m_Front = std::make_unique<game::FrontFlow> ( );
-
-        auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
-        const int sw = d3d ? d3d->Width ( ) : w;
-        const int sh = d3d ? d3d->Height ( ) : h;
-
-        // inject renderer & render system so FrontFlow can load textures and draw sprites
-        game::FrontFlowCreate fc{};
-        fc.text = m_TextHUD.get ( );
-        fc.input = m_Input.get ( );
-        fc.save = &m_Save;
-        fc.state = &m_State;
-        fc.renderer = m_Renderer.get ( );
-        fc.renderSys = &m_Render;
-        fc.screenW = sw;
-        fc.screenH = sh;
-
-        m_Front->Initialize ( fc );
-        DBGLOG ( L"[Init] FrontFlow initialized" );
-
-        // Front → Session handoff
-        m_Front->onStartSolo = [ this ] ( int slot ) {
-            // 1) activate slot + load
-            m_State.SetActiveSlot ( slot );
-            ( void ) m_State.LoadFromDisk ( );
-            const auto& sd = m_State.Data ( );
-
-            // 2) resolve stage path (hub)
-            const std::string hubId = sd.lastHub.empty ( ) ? std::string ( "t1/hub" ) : sd.lastHub;
-            const std::string stageJson = game::StageJsonPathFromId ( hubId );
-
-            // 3) create session and load stage
-            m_Session = std::make_unique<game::PlaySession> ( );
-            RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
-            m_Session->Initialize ( {
-                m_Renderer.get ( ), &m_Render, m_TextHUD.get ( ),
-                m_Scene.get ( ), engine::win32::FromRECT ( rc ), &m_State
-            } );
-
-            m_Session->ResetLives ( 2 );
-
-            m_Session->LoadStage ( stageJson.c_str ( ) );
-
-            // 4) switch mode
-            m_mode = AppMode::Session;
-            m_Front.reset ( );
-        };
+        BootFrontFlow ( );
     }
 
 
@@ -215,49 +159,10 @@ namespace game {
             if ( m_Session->IsGameOver ( ) ) {
                 m_Session.reset ( );
 
-                auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
-                const int sw = d3d ? d3d->Width ( ) : m_Render.BackbufferWidth ( );
-                const int sh = d3d ? d3d->Height ( ) : m_Render.BackbufferHeight ( );
-
-                m_mode = AppMode::Front;
-                m_Front = std::make_unique<game::FrontFlow> ( );
-
-                game::FrontFlowCreate fc{};
-                fc.text = m_TextHUD.get ( );
-                fc.input = m_Input.get ( );
-                fc.save = &m_Save;
-                fc.state = &m_State;
-                fc.renderer = m_Renderer.get ( );
-                fc.renderSys = &m_Render;
-                fc.screenW = sw;
-                fc.screenH = sh;
-
-                m_Front->Initialize ( fc );
-
-                // onStartSolo
-                m_Front->onStartSolo = [ this ] ( int slot ) {
-                    m_State.SetActiveSlot ( slot );
-                    ( void ) m_State.LoadFromDisk ( );
-                    const auto& sd = m_State.Data ( );
-                    const std::string hubId = sd.lastHub.empty ( ) ? std::string ( "t1/hub" ) : sd.lastHub;
-                    const std::string stageJson = game::StageJsonPathFromId ( hubId );
-
-                    m_Session = std::make_unique<game::PlaySession> ( );
-                    RECT rc{}; ::GetClientRect ( m_hWnd , &rc );
-                    m_Session->Initialize ( {
-                        m_Renderer.get ( ), &m_Render, m_TextHUD.get ( ),
-                        m_Scene.get ( ), engine::win32::FromRECT ( rc ), &m_State
-                    } );
-                    m_Session->ResetLives ( 2 );
-                    m_Session->LoadStage ( stageJson.c_str ( ) );
-
-                    m_mode = AppMode::Session;
-                    m_Front.reset ( );
-                    };
+                BootFrontFlow ( );
             }
         }
     }
-
 
     void GameApp::RenderFrame ( )
     {
@@ -317,5 +222,53 @@ namespace game {
 
         DBGLOG ( L"[InitRendererUI] TextHUD Initialize OK" );
     }
+
+    void GameApp::BootFrontFlow ( )
+    {
+        const int sw = m_Render.BackbufferWidth ( );
+        const int sh = m_Render.BackbufferHeight ( );
+
+        m_mode = AppMode::Front;
+        m_Front = std::make_unique<game::FrontFlow> ( );
+
+        game::FrontFlowCreate fc{};
+        fc.text = m_TextHUD.get ( );
+        fc.input = m_Input.get ( );
+        fc.save = &m_Save;
+        fc.state = &m_State;
+        fc.renderer = m_Renderer.get ( );
+        fc.renderSys = &m_Render;
+        fc.screenW = sw;
+        fc.screenH = sh;
+
+        m_Front->Initialize ( fc );
+        DBGLOG ( L"[GameApp] FrontFlow initialized" );
+
+        // Front → Session handoff
+        m_Front->onStartSolo = [ this ] ( int slot ) {
+            m_State.SetActiveSlot ( slot );
+            ( void ) m_State.LoadFromDisk ( );
+            const auto& sd = m_State.Data ( );
+
+            const std::string hubId =
+                sd.lastHub.empty ( ) ? std::string ( "t1/hub" ) : sd.lastHub;
+            const std::string stageJson = game::StageJsonPathFromId ( hubId );
+
+            m_Session = std::make_unique<game::PlaySession> ( );
+            RECT rc{};
+            ::GetClientRect ( m_hWnd , &rc );
+            m_Session->Initialize ( {
+                m_Renderer.get ( ), &m_Render, m_TextHUD.get ( ),
+                m_Scene.get ( ), engine::win32::FromRECT ( rc ), &m_State
+            } );
+
+            m_Session->ResetLives ( DEFAULT_LIVES );
+            m_Session->LoadStage ( stageJson.c_str ( ) );
+
+            m_mode = AppMode::Session;
+            m_Front.reset ( );
+            };
+    }
+
 
 } // namespace engine

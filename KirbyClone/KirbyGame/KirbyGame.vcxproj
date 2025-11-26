@@ -140,6 +140,7 @@
     <ClInclude Include="engine\platform\win32\ColorUtil.h" />
     <ClInclude Include="engine\render\D3D11DebugDrawAdapter.h" />
     <ClInclude Include="engine\render\IDebugDraw.h" />
+    <ClInclude Include="engine\util\DebugLog.h" />
     <ClInclude Include="game\effects\Fade2D.h" />
     <ClInclude Include="game\render\ZOrder.h" />
     <ClInclude Include="engine\save\SaveStorage.h" />

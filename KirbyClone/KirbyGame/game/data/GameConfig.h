@@ -29,4 +29,7 @@ namespace game {
     inline constexpr int PLAYER_COLL_PX = O_PLAYER_COLL_PX * SCALE; // Kirby AABB (scaled)
     inline constexpr int ENEMY_COLL_PX = O_ENEMY_COLL_PX * SCALE; // default enemy AABB (scaled)
 
+
+    inline constexpr int DEFAULT_LIVES = 2;
+
 } // namespace game

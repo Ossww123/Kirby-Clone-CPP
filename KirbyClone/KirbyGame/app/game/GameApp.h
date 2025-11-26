@@ -1,8 +1,8 @@
 ﻿#pragma once
-// engine/core/GameApp.h
+// app/game/GameApp.h
 //
 // Role: App bootstrap + main loop (owns time/input/scene/render/session).
-// Note: No direct gameplay logic or low-level D3D state here.
+// Note: App-level wiring only (Win32/D3D11 + engine + game); no per-entity gameplay logic here.
 //
 
 #include <memory>
@@ -42,8 +42,10 @@ namespace game {
     private:
         void FixedUpdate ( double fixedDt );  // physics / gameplay tick
         void RenderFrame ( );                 // tile / player / HUD / debug
+
         void InitBindings ( );
         void InitRendererUI ( HWND hWnd , int w , int h );
+        void BootFrontFlow ( );
 
         enum class AppMode { Front , Session };
 
@@ -73,4 +75,4 @@ namespace game {
         game::SessionState  m_State;
     };
 
-} // namespace engine
+} // namespace game
