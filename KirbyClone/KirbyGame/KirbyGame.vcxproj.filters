@@ -24,7 +24,7 @@
     <ClInclude Include="engine\core\Input.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="engine\core\GameApp.h">
+    <ClInclude Include="game\app\GameApp.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\Object.h">
@@ -248,7 +248,7 @@
     <ClCompile Include="engine\physics\PhysicsBody.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="engine\core\GameApp.cpp">
+    <ClCompile Include="game\app\GameApp.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="engine\world\WorldSystem.cpp">

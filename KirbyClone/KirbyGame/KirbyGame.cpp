@@ -1,18 +1,14 @@
-﻿//
-// KirbyGame.cpp
-//
-// Responsibility: Win32 bootstrap — register/create the window, bridge window messages to GameApp,
-//                 and run the main loop.
-// Non-Goals: Engine subsystems, rendering details, or gameplay logic (handled by GameApp/engine).
-// Call-Context: Windows desktop app (UTF-16 entry point; single-threaded main loop).
+﻿// KirbyGame.cpp
+// 
+// Role: Win32 bootstrap (window + message loop → GameApp).
+// Note: No engine/render/gameplay logic here.
 //
 
+/* win 32 & std */
 #include <windows.h>
 #include <cstdint>
-#include "engine/core/GameApp.h"
-#include "game/session/PlaySession.h"
-#include "game/frontend/FrontFlow.h"
-#include "game/data/GameConfig.h"
+
+/* engine */
 #include "engine/core/Time.h"
 #include "engine/core/Input.h"
 #include "engine/core/Scene.h"
@@ -21,6 +17,12 @@
 #include "engine/render/D3D11DebugDraw.h"
 #include "engine/render/DWriteText.h"
 
+/* game */
+#include "game/app/GameApp.h"
+#include "game/session/PlaySession.h"
+#include "game/frontend/FrontFlow.h"
+#include "game/data/GameConfig.h"
+
 static int gClientW = game::CLIENT_W;  // 240*4 = 960
 static int gClientH = game::CLIENT_H;  // 160*4 = 640
 static engine::GameApp gApp;
@@ -28,7 +30,8 @@ static engine::GameApp gApp;
 // Win32 window procedure: dispatch messages and hand off what we care about to GameApp/Input.
 LRESULT CALLBACK WndProc ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam )
 {
-    // 1) Bridge to GameApp (cast to platform-agnostic signature).
+    // Bridge to GameApp (cast to platform-agnostic signature).
+    // platform-agnostic: 플랫폼(SW)에 대한 지식이 없어도 기능을 사용할 수 있다.
     const auto r = gApp.OnWndMessage (
         hWnd ,
         static_cast< unsigned >( msg ) ,

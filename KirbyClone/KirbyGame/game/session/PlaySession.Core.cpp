@@ -40,7 +40,7 @@ namespace game {
             if ( !m_PlayerTex.srv )    engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/player.png" , &m_PlayerTex );
             if ( !m_EnemiesTex.srv )   engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/enemies.png" , &m_EnemiesTex );
             if ( !m_GameOverTex.srv )  engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/ui/gameover.png" , &m_GameOverTex );
-            if ( !m_HudTex.srv )        engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/ui/HUD.png" , &m_HudTex );
+            if ( !m_HudTex.srv )       engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/ui/HUD.png" , &m_HudTex );
             if ( !m_WhiteTex.srv )     engine::CreateSolidTexture1x1 ( d3d->Device ( ) , 0xFFFFFFFFu , &m_WhiteTex );
         }
 
@@ -79,7 +79,7 @@ namespace game {
             // 최소 표시 시간만큼 지나면 GameOver 완료 플래그 ON
             if ( m_life.gameOverScreenT >= m_life.gameOverScreenMin ) {
                 m_life.gameOverScreenActive = false;
-                m_life.gameOver = true;   // ★ 이때부터 GameApp이 IsGameOver()로 감지
+                m_life.gameOver = true;   // 이때부터 GameApp이 IsGameOver()로 감지
             }
 
             // 이 동안에는 월드/플레이어 업데이트 안 함 (화면 정지 느낌 유지)

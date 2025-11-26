@@ -1,8 +1,8 @@
 ﻿#pragma once
+// engine/core/GameApp.h
 //
-// Responsibility: App bootstrap + main loop. Owns input/time/scene and wires renderer & session.
-// Non-Goals:      Direct gameplay logic or low-level D3D state; those live in subsystems.
-// Call-Context:   Win32 windowed app (single-threaded game loop).
+// Role: App bootstrap + main loop (owns time/input/scene/render/session).
+// Note: No direct gameplay logic or low-level D3D state here.
 //
 
 #include <memory>
@@ -35,8 +35,7 @@ namespace engine {
         ~GameApp ( );
 
         void Init ( HWND hWnd );
-        std::intptr_t OnWndMessage ( HWND hWnd , unsigned msg ,
-                                    std::uintptr_t wParam , std::intptr_t lParam );
+        std::intptr_t OnWndMessage ( HWND hWnd , unsigned msg , std::uintptr_t wParam , std::intptr_t lParam );
         void OnResize ( int w , int h );
         bool DoOneFrame ( );
 

@@ -1,30 +1,35 @@
-﻿#include "engine/core/GameApp.h"
+﻿#include "game/app/GameApp.h"
 
-// Win32 / COM
+// engine/core/GameApp.cpp
+//
+// Role: Tie Win32 renderer/time/input to FrontFlow and PlaySession.
+// Note: High-level app loop only; gameplay lives in game layer.
+//
+
+/* Win32 & COM */
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
 #include <objbase.h>
 
-// std
+/* std */
 #include <algorithm>
 
-// engine core
+/* engine core */
 #include "engine/core/Time.h"
 #include "engine/core/Input.h"
 #include "engine/core/Scene.h"
 
-// renderer pieces
+/* renderer */
 #include "engine/render/IRenderer.h"
 #include "engine/render/D3D11Renderer.h"
 #include "engine/render/D3D11SpriteBatch.h"
 #include "engine/render/D3D11DebugDraw.h"
 #include "engine/render/DWriteText.h"
-
 #include "engine/platform/win32/RectUtil.h"
 
-// game
+/* game */
 #include "game/session/PlaySession.h"
 #include "game/frontend/FrontFlow.h"
 #include "game/data/StagePath.h" // StageJsonPathFromId
@@ -32,7 +37,10 @@
 #ifndef DBGLOG
 #include <string>
 #include <windows.h>
-inline void DBGLOG ( const wchar_t* msg ) { ::OutputDebugStringW ( msg ); ::OutputDebugStringW ( L"\n" ); }
+inline void DBGLOG ( const wchar_t* msg ) {
+    ::OutputDebugStringW ( msg );
+    ::OutputDebugStringW ( L"\n" );
+}
 #endif
 
 namespace engine {
