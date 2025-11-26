@@ -152,7 +152,7 @@
     <ClInclude Include="engine\render\D3D11Sprite.h" />
     <ClInclude Include="engine\render\D3D11SpriteBatch.h" />
     <ClInclude Include="engine\render\DWriteText.h" />
-    <ClInclude Include="game\app\GameApp.h" />
+    <ClInclude Include="app\game\GameApp.h" />
     <ClInclude Include="engine\core\Input.h" />
     <ClInclude Include="engine\render\IRenderer.h" />
     <ClInclude Include="engine\util\Math.h" />
@@ -219,7 +219,7 @@
     <ClCompile Include="engine\render\D3D11Sprite.cpp" />
     <ClCompile Include="engine\render\D3D11SpriteBatch.cpp" />
     <ClCompile Include="engine\render\D3D11TextureLoader.cpp" />
-    <ClCompile Include="game\app\GameApp.cpp" />
+    <ClCompile Include="app\game\GameApp.cpp" />
     <ClCompile Include="engine\physics\PhysicsBody.cpp" />
     <ClCompile Include="engine\render\DWriteText.cpp" />
     <ClCompile Include="engine\save\SaveStorage.cpp" />

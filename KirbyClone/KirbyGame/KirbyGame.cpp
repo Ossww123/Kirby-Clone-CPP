@@ -18,14 +18,14 @@
 #include "engine/render/DWriteText.h"
 
 /* game */
-#include "game/app/GameApp.h"
+#include "app/game/GameApp.cpp"
 #include "game/session/PlaySession.h"
 #include "game/frontend/FrontFlow.h"
 #include "game/data/GameConfig.h"
 
 static int gClientW = game::CLIENT_W;  // 240*4 = 960
 static int gClientH = game::CLIENT_H;  // 160*4 = 640
-static engine::GameApp gApp;
+static game::GameApp gApp;
 
 // Win32 window procedure: dispatch messages and hand off what we care about to GameApp/Input.
 LRESULT CALLBACK WndProc ( HWND hWnd , UINT msg , WPARAM wParam , LPARAM lParam )

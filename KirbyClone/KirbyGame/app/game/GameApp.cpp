@@ -1,6 +1,6 @@
-﻿#include "game/app/GameApp.h"
+﻿#include "app/game/GameApp.h"
 
-// engine/core/GameApp.cpp
+// app/game/GameApp.cpp
 //
 // Role: Tie Win32 renderer/time/input to FrontFlow and PlaySession.
 // Note: High-level app loop only; gameplay lives in game layer.
@@ -43,7 +43,7 @@ inline void DBGLOG ( const wchar_t* msg ) {
 }
 #endif
 
-namespace engine {
+namespace game {
 
     GameApp::~GameApp ( )
     {
@@ -58,9 +58,9 @@ namespace engine {
         m_hWnd = hWnd;
 
         // Core singletons
-        m_Time = std::make_unique<Time> ( );   m_Time->Init ( );
-        m_Input = std::make_unique<Input> ( );  m_Input->Init ( hWnd );
-        m_Scene = std::make_unique<Scene> ( );
+        m_Time = std::make_unique<engine::Time> ( );   m_Time->Init ( );
+        m_Input = std::make_unique<engine::Input> ( );  m_Input->Init ( hWnd );
+        m_Scene = std::make_unique<engine::Scene> ( );
         InitBindings ( );
 
         // COM for WIC / DWrite
@@ -303,9 +303,9 @@ namespace engine {
     void GameApp::InitRendererUI ( HWND hWnd , int w , int h )
     {
         // 1) renderer
-        m_Renderer = std::make_unique<D3D11Renderer> ( );
+        m_Renderer = std::make_unique<engine::D3D11Renderer> ( );
         if ( !m_Renderer->Initialize ( hWnd , w , h , /*vsync=*/false ) ) { ::PostQuitMessage ( -1 ); return; }
-        auto* d3d = static_cast< D3D11Renderer* >( m_Renderer.get ( ) );
+        auto* d3d = static_cast< engine::D3D11Renderer* >( m_Renderer.get ( ) );
 
         // 2) HUD text (DWrite)
         m_TextHUD = std::make_unique<engine::DWriteTextHUD> ( );

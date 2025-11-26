@@ -28,7 +28,7 @@ namespace engine {
 
 namespace game { class PlaySession; class FrontFlow; }
 
-namespace engine {
+namespace game {
 
     class GameApp {
     public:
@@ -50,14 +50,14 @@ namespace engine {
     private:
         // Window/Core
         HWND   m_hWnd{};
-        std::unique_ptr<Time>  m_Time;
-        std::unique_ptr<Input> m_Input;
-        std::unique_ptr<Scene> m_Scene;
+        std::unique_ptr<engine::Time>  m_Time;
+        std::unique_ptr<engine::Input> m_Input;
+        std::unique_ptr<engine::Scene> m_Scene;
 
         // Rendering
-        std::unique_ptr<IRenderer>        m_Renderer;
-        std::unique_ptr<DWriteTextHUD>    m_TextHUD;
-        RenderSystem                      m_Render{};
+        std::unique_ptr<engine::IRenderer>        m_Renderer;
+        std::unique_ptr<engine::DWriteTextHUD>    m_TextHUD;
+        engine::RenderSystem                      m_Render{};
 
         // Misc
         bool m_comInitialized = false;
