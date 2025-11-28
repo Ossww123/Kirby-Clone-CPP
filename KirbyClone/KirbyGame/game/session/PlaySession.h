@@ -15,7 +15,6 @@ namespace engine {
     class IRenderer;
     class RenderSystem;
     class DWriteTextHUD;
-    class Scene;
     class Input;
     struct Tex2D;
 }
@@ -50,11 +49,11 @@ namespace game {
             engine::IRenderer*          renderer = nullptr;     // for size queries
             engine::RenderSystem*       renderSys = nullptr;
             engine::DWriteTextHUD*      textHUD = nullptr;
-            engine::Scene*              scene = nullptr;        // to spawn Player
             engine::IntRect             rcClient{};             // initial client rect
             game::SessionState*         session = nullptr;
         };
 
+        PlaySession ( );
         ~PlaySession ( );
 
         // 1) Lifetime / init
@@ -86,7 +85,7 @@ namespace game {
         int PlayerFacing ( )                     const { return m_PlayerFSM.Facing ( ); }
 
         // (temp) player handle
-        game::Player* Player ( ) const { return m_Player; }
+        game::Player* Player ( ) const { return m_Player.get(); }
 
         // (temp) expose player events to GameApp if needed
         void DrainPlayerEvents ( std::vector<game::PlayerEvent>& out );
@@ -183,7 +182,6 @@ namespace game {
         engine::IRenderer*          m_Renderer = nullptr;
         engine::RenderSystem*       m_RenderSys = nullptr;
         engine::DWriteTextHUD*      m_TextHUD = nullptr;
-        engine::Scene*              m_Scene = nullptr;
 
         // SessionState
         game::SessionState*         m_Session = nullptr;
@@ -195,9 +193,9 @@ namespace game {
         // Stage tile layers
         std::vector<game::TileLayerRuntime> m_TileLayers;
 
-        game::Player*               m_Player = nullptr;
-        game::PlayerFSM             m_PlayerFSM;
-        game::PlayerFSM::Cfg        m_playerFsmCfg{ .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
+        std::unique_ptr<game::Player> m_Player;
+        game::PlayerFSM               m_PlayerFSM;
+        game::PlayerFSM::Cfg          m_playerFsmCfg{ .jumpSpeed = 700.f, .coyoteMs = 0.08f, .bufferMs = 0.10f, .dropMs = 0.20f };
 
         // Resources
         engine::Tex2D m_PlayerTex{};

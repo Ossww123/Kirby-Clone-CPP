@@ -1,9 +1,14 @@
 ```
+/app
+  /game
+    GameApp.* — Win32 창·D3D11 렌더러·입력 같은 엔진 코어, 그리고 FrontFlow/PlaySession 같은 게임 세션을 묶어 메인 루프를 돌린다.
+
 /protocol
   SaveSchema.h — 게임/엔진 전 계층이 공유하는 세이브 데이터 스키마와 유틸(계약 계층).
+  
 /engine
   /core
-    GameApp.* — 앱 루프·입력/타이밍 관리·렌더/세션 초기화와 오케스트레이션
+    
     RenderSystem.* — 프레임 시작/종료, 카메라 변환, 배치·디버그 드로우 오케스트레이션
     Scene.* — 오브젝트 컨테이너: 생성/업데이트/정리.
     Time.* — 프레임 타이밍(가변 dt + 고정 스텝) 및 FPS 카운터(QPC 기반).

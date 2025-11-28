@@ -1,5 +1,5 @@
 ﻿#include "engine/core/Input.h"
-#include <windows.h>
+#include <cassert>
 
 namespace engine {
 
@@ -40,7 +40,6 @@ namespace engine {
     {
         switch ( msg ) {
         case WM_MOUSEWHEEL: {
-            // GET_WHEEL_DELTA_WPARAM 은 WPARAM 필요 → 캐스팅해서 사용
             const int notches = GET_WHEEL_DELTA_WPARAM ( static_cast< WPARAM >( wParam ) ) / WHEEL_DELTA; // +/-1
             m_wheelAccum += notches;
             return 0;
@@ -63,17 +62,20 @@ namespace engine {
 
     bool Input::Down ( int vk ) const
     {
-        return m_state[ vk ].down;
+        assert ( vk >= 0 && vk < static_cast< int >( m_state.size ( ) ) );
+        return m_state[ static_cast< std::size_t >( vk ) ].down;
     }
 
     bool Input::Pressed ( int vk ) const
     {
-        return m_state[ vk ].pressed;
+        assert ( vk >= 0 && vk < static_cast< int >( m_state.size ( ) ) );
+        return m_state[ static_cast< std::size_t >( vk ) ].pressed;
     }
 
     bool Input::Released ( int vk ) const
     {
-        return m_state[ vk ].released;
+        assert ( vk >= 0 && vk < static_cast< int >( m_state.size ( ) ) );
+        return m_state[ static_cast< std::size_t >( vk ) ].released;
     }
 
     int Input::ConsumeWheel ( )
@@ -117,7 +119,7 @@ namespace engine {
         m_axisMap[ name ].push_back ( b );
     }
 
-    float Input::GetAxis ( const std::string& name ) const
+    float Input::Axis ( const std::string& name ) const
     {
         float v = 0.f;
         auto it = m_axisMap.find ( name );

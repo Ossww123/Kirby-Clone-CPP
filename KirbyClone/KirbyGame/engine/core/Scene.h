@@ -1,17 +1,19 @@
-﻿#pragma once
+﻿// engine/core/Scene.h
 //
-// Responsibility: Simple object container; Update/Render dispatch; spawning.
-// Non-Goals:      Spatial queries, ordering, lifetime policies beyond Clear().
-// Call-Context:   Main thread; call Update/Render once per frame.
+// Role: Simple object container that owns Objects and dispatches fixed-step Update.
+// Note: No spatial queries, explicit ordering, or lifetime policy beyond Clear(). Call from main thread.
 //
+
+#pragma once
+
 #include <vector>
 #include <memory>
 #include <utility>
 
 namespace engine {
 
-    class Input;            // fwd
-    class Object;           // fwd
+    class Input;
+    class Object;
 
     class Scene
     {

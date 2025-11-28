@@ -22,13 +22,13 @@
 
 namespace game {
 
+    PlaySession::PlaySession ( ) = default;
     PlaySession::~PlaySession ( ) = default;
 
     void PlaySession::Initialize ( const CreateDesc& d ) {
         m_Renderer = d.renderer;
         m_RenderSys = d.renderSys;
         m_TextHUD = d.textHUD;
-        m_Scene = d.scene;
         m_Session = d.session;
 
         // Player / camera

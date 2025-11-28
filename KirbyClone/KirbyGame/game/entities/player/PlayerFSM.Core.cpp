@@ -42,8 +42,8 @@ namespace game {
         c.dt = static_cast< float >( fixedDt );
 
         // --- input ---
-        c.ax = input.GetAxis ( "MoveX" );
-        c.ay = input.GetAxis ( "MoveY" );
+        c.ax = input.Axis ( "MoveX" );
+        c.ay = input.Axis ( "MoveY" );
         c.jumpPressed = input.ActionPressed ( "Jump" );
         c.jumpHeld = input.ActionDown ( "Jump" );
         c.attackPressed = input.ActionPressed ( "Attack" );

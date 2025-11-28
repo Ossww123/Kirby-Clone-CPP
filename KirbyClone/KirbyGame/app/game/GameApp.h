@@ -1,9 +1,10 @@
-﻿#pragma once
-// app/game/GameApp.h
+﻿// app/game/GameApp.h
 //
 // Role: App bootstrap + main loop (owns time/input/scene/render/session).
 // Note: App-level wiring only (Win32/D3D11 + engine + game); no per-entity gameplay logic here.
 //
+
+#pragma once
 
 #include <memory>
 #include <cstdint>
@@ -20,7 +21,6 @@ using HWND = HWND__*;
 namespace engine {
     class Time;
     class Input;
-    class Scene;
 
     class IRenderer;
     class DWriteTextHUD;
@@ -54,7 +54,6 @@ namespace game {
         HWND   m_hWnd{};
         std::unique_ptr<engine::Time>  m_Time;
         std::unique_ptr<engine::Input> m_Input;
-        std::unique_ptr<engine::Scene> m_Scene;
 
         // Rendering
         std::unique_ptr<engine::IRenderer>        m_Renderer;

@@ -284,7 +284,7 @@ namespace game {
     void FrontFlow::updateSave ( double ) {
         if ( !m_Input ) return;
 
-        const float ay = m_Input->GetAxis ( "MoveY" );
+        const float ay = m_Input->Axis ( "MoveY" );
         if ( m_navCd <= 0.f ) {
             if ( ay < -0.5f ) { m_slotFocus = ( m_slotFocus + 1 ) % 3; m_navCd = 0.14f; }
             if ( ay > 0.5f )  { m_slotFocus = ( m_slotFocus + 2 ) % 3; m_navCd = 0.14f; }
@@ -460,7 +460,7 @@ namespace game {
         if ( !m_Input ) return;
         if ( m_waitModeToStartSolo ) return;
 
-        const float ay = m_Input->GetAxis ( "MoveY" );
+        const float ay = m_Input->Axis ( "MoveY" );
         if ( m_navCd <= 0.f ) {
             if ( ay < -0.5f || ay > 0.5f ) { 
                 m_modeFocus = ( m_modeFocus == 0 ) ? 1 : 0;

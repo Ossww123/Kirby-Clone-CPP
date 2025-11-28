@@ -19,7 +19,6 @@
 /* engine */
 #include "engine/core/Time.h"
 #include "engine/core/Input.h"
-#include "engine/core/Scene.h"
 #include "engine/render/IRenderer.h"
 #include "engine/render/D3D11Renderer.h"
 #include "engine/render/D3D11SpriteBatch.h"
@@ -51,7 +50,6 @@ namespace game {
         // Core singletons
         m_Time = std::make_unique<engine::Time> ( );   m_Time->Init ( );
         m_Input = std::make_unique<engine::Input> ( );  m_Input->Init ( hWnd );
-        m_Scene = std::make_unique<engine::Scene> ( );
         InitBindings ( );
 
         // COM for WIC / DWrite
@@ -203,8 +201,6 @@ namespace game {
         m_Render.Present ( );
     }
 
-
-
     void GameApp::InitRendererUI ( HWND hWnd , int w , int h )
     {
         // 1) renderer
@@ -216,7 +212,7 @@ namespace game {
         m_TextHUD = std::make_unique<engine::DWriteTextHUD> ( );
         m_TextHUD->Initialize ( d3d->SwapChain ( ) );
 
-        // 3) RenderSystem (여기서 내부 batch/debug를 생성함)
+        // 3) RenderSystem
         m_Render.Init ( m_Renderer.get ( ) );
         m_Render.OnResize ( w , h );
 
@@ -259,7 +255,7 @@ namespace game {
             ::GetClientRect ( m_hWnd , &rc );
             m_Session->Initialize ( {
                 m_Renderer.get ( ), &m_Render, m_TextHUD.get ( ),
-                m_Scene.get ( ), engine::win32::FromRECT ( rc ), &m_State
+                engine::win32::FromRECT ( rc ), &m_State
             } );
 
             m_Session->ResetLives ( DEFAULT_LIVES );
@@ -267,8 +263,6 @@ namespace game {
 
             m_mode = AppMode::Session;
             m_Front.reset ( );
-            };
+        };
     }
-
-
-} // namespace engine
+} // namespace game

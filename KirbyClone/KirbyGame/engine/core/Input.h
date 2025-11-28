@@ -1,11 +1,12 @@
-﻿// TODO : 액션 / 축 매핑을 game 으로 분리하면 좋음.
+﻿// engine/core/Input.h
+//
+// // TODO : 액션 / 축 매핑을 game 으로 분리하면 좋음.
+// 
+// Role: Poll keyboard/mouse, track edge flags, and provide a simple action/axis map.
+// Note: Main-thread only; no IME/text input, rebind UI, or game-level semantics.
+//
 
 #pragma once
-//
-// Responsibility: Poll keyboard/mouse; edge flags; simple action/axis map.
-// Non-Goals:      IME, text input, rebind UI, game-level semantics.
-// Call-Context:   Main thread; call BeginFrame() once per frame; no heap in hot path.
-//
 
 #include <windows.h>
 #include <array>
@@ -59,7 +60,7 @@ namespace engine {
 
         // axis map
         void  BindAxis ( const std::string& name , const AxisBinding& b );
-        float GetAxis ( const std::string& name ) const;
+        float Axis ( const std::string& name ) const;
 
     private:
         void ClearAll ( );

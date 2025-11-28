@@ -15,7 +15,6 @@
 #include "engine/util/StringConv.h"
 #include "engine/util/Types.h"
 #include "engine/world/TileSet.h"
-#include "engine/core/Scene.h"
 
 #include "game/data/StageCSV.h"
 #include "game/data/StageDesc.h"
@@ -412,8 +411,7 @@ namespace game {
     }
 
     void PlaySession::initPlayerAndCamera ( const engine::IntRect& rcClient ) {
-        if ( !m_Scene ) return;
-        m_Player = m_Scene->Spawn<game::Player> ( rcClient );
+        m_Player = std::make_unique<game::Player> ( rcClient /* + 필요하면 나머지 인자 */ );
         m_PlayerFSM.Init ( &m_Player->Body ( ) , &m_World.Collision ( ) , m_Player->Animator ( ) , m_playerFsmCfg );
 
         const int w = rcClient.r - rcClient.l;

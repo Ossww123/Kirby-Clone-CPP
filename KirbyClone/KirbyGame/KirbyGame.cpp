@@ -11,14 +11,13 @@
 /* engine */
 #include "engine/core/Time.h"
 #include "engine/core/Input.h"
-#include "engine/core/Scene.h"
 #include "engine/render/IRenderer.h"
 #include "engine/render/D3D11SpriteBatch.h"
 #include "engine/render/D3D11DebugDraw.h"
 #include "engine/render/DWriteText.h"
 
 /* game */
-#include "app/game/GameApp.cpp"
+#include "app/game/GameApp.h"
 #include "game/session/PlaySession.h"
 #include "game/frontend/FrontFlow.h"
 #include "game/data/GameConfig.h"

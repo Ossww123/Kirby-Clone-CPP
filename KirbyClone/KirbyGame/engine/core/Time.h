@@ -1,9 +1,10 @@
-﻿#pragma once
+﻿// engine/core/Time.h
 //
-// Responsibility: Frame timing (variable dt) + fixed-step accumulator, FPS.
-// Non-Goals:      Scheduling, profiling, multithread timing.
-// Call-Context:   Main thread only.
+// Role: Frame timing helper (variable dt + fixed-step accumulator and FPS).
+// Note: Main-thread only; no scheduling/profiling or multithread timing.
 //
+
+#pragma once
 
 #include <memory>
 

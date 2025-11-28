@@ -1,9 +1,10 @@
-﻿#pragma once
+﻿// engine/core/Object.h
 //
-// Responsibility: Base game object; common Id; virtual Update entry.
-// Non-Goals:      Ownership/lifetime, physics/render specifics.
-// Call-Context:   Main thread; Update(fixed dt).
+// Role: Base game object with a common EntityId and virtual Update entry point.
+// Note: No ownership/lifetime policy or physics/render details; main-thread Update only.
 //
+
+#pragma once
 
 #include <cstdint>
 #include <atomic>
