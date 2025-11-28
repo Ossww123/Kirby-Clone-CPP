@@ -148,27 +148,32 @@ namespace game {
     }
 
     // ---- Title ----
-    bool FrontFlow::loadTitleAssets ( ) {
+    bool FrontFlow::loadTitleAssets ( )
+    {
         if ( !m_Renderer ) return false;
 
         ID3D11Device* dev = nullptr;
         ID3D11DeviceContext* ctx = nullptr;
         if ( !m_Renderer->GetD3D11Handles ( &dev , &ctx ) ) return false;
 
+        bool ok = true;
+
         // --- Title ---
-        engine::LoadTextureWIC ( dev , L"assets/ui/title_background.png" , &m_titleBG );
-        engine::LoadTextureWIC ( dev , L"assets/ui/title_logo.png" , &m_titleLogo );
-        engine::CreateSolidTexture1x1 ( dev , 0xFFFFFFFFu , &m_whiteTex );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/title_background.png" , &m_titleBG );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/title_logo.png" , &m_titleLogo );
+        ok &= engine::CreateSolidTexture1x1 ( dev , 0xFFFFFFFFu , &m_whiteTex );
 
         game::LoadAnimCSV ( "assets/ui/title_logo.anim.csv" , &m_titleAnim , /*clear=*/true );
-        if ( m_titleAnim.HasClip ( "IDLE" ) ) { m_titleAnim.Play ( "IDLE" , true ); }
+        if ( m_titleAnim.HasClip ( "IDLE" ) ) {
+            m_titleAnim.Play ( "IDLE" , true );
+        }
 
         // --- Save Select background / slot focus ---
-        engine::LoadTextureWIC ( dev , L"assets/ui/file_select_background.png" , &m_fileBG );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/file_select_background.png" , &m_fileBG );
 
-        engine::LoadTextureWIC ( dev , L"assets/ui/slot_1_focus.png" , &m_slotFocusTex[ 0 ] );
-        engine::LoadTextureWIC ( dev , L"assets/ui/slot_2_focus.png" , &m_slotFocusTex[ 1 ] );
-        engine::LoadTextureWIC ( dev , L"assets/ui/slot_3_focus.png" , &m_slotFocusTex[ 2 ] );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/slot_1_focus.png" , &m_slotFocusTex[ 0 ] );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/slot_2_focus.png" , &m_slotFocusTex[ 1 ] );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/slot_3_focus.png" , &m_slotFocusTex[ 2 ] );
 
         // --- Save Select progress cards ---
         struct StepEntry { int percent; const wchar_t* suffix; };
@@ -187,26 +192,25 @@ namespace game {
             wchar_t pathN[ 256 ];
             wchar_t pathF[ 256 ];
             std::swprintf ( pathN , _countof ( pathN ) ,
-                            L"assets/ui/file_select_%ls_normal.png" , s.suffix );
+                          L"assets/ui/file_select_%ls_normal.png" , s.suffix );
             std::swprintf ( pathF , _countof ( pathF ) ,
-                            L"assets/ui/file_select_%ls_focus.png" , s.suffix );
+                          L"assets/ui/file_select_%ls_focus.png" , s.suffix );
 
-            engine::LoadTextureWIC ( dev , pathN , &m_fileProgNormal[ i ] );
-            engine::LoadTextureWIC ( dev , pathF , &m_fileProgFocus[ i ] );
+            ok &= engine::LoadTextureWIC ( dev , pathN , &m_fileProgNormal[ i ] );
+            ok &= engine::LoadTextureWIC ( dev , pathF , &m_fileProgFocus[ i ] );
         }
 
         // --- Save Select overlays (mode select UI) ---
-        engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_solo.png" , &m_fileOverlaySolo );
-        engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_multi.png" , &m_fileOverlayMulti );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_solo.png" , &m_fileOverlaySolo );
+        ok &= engine::LoadTextureWIC ( dev , L"assets/ui/file_select_overlay_multi.png" , &m_fileOverlayMulti );
 
-        const bool titleOk =
-            ( m_titleBG.srv && m_titleLogo.srv && m_whiteTex.srv );
+        if ( !ok ) {
+            DBGLOG ( L"[FrontFlow] Failed to load one or more UI textures." );
+        }
 
-        const bool saveOk =
-            m_fileBG.srv != nullptr;
-
-        return titleOk && saveOk;
+        return ok;
     }
+
 
     void FrontFlow::renderFade ( ) {
         if ( !m_RenderSys ) return;

@@ -19,6 +19,7 @@
 #include "game/data/StagePath.h" // StageJsonPathFromId
 #include "protocol/SaveSchema.h" // protocol::SetCleared / ProgressT1
 #include "game/render/ZOrder.h"
+#include "engine/util/DebugLog.h"
 
 namespace game {
 
@@ -37,11 +38,24 @@ namespace game {
         // Textures (D3D11-only path stays in .cpp)
         auto* d3d = dynamic_cast< engine::D3D11Renderer* >( m_Renderer );
         if ( d3d ) {
-            if ( !m_PlayerTex.srv )    engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/player.png" , &m_PlayerTex );
-            if ( !m_EnemiesTex.srv )   engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/enemies.png" , &m_EnemiesTex );
-            if ( !m_GameOverTex.srv )  engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/ui/gameover.png" , &m_GameOverTex );
-            if ( !m_HudTex.srv )       engine::LoadTextureWIC ( d3d->Device ( ) , L"assets/ui/HUD.png" , &m_HudTex );
-            if ( !m_WhiteTex.srv )     engine::CreateSolidTexture1x1 ( d3d->Device ( ) , 0xFFFFFFFFu , &m_WhiteTex );
+            ID3D11Device* dev = d3d->Device ( );
+
+            bool texOk = true;
+
+            if ( !m_PlayerTex.srv )
+                texOk &= engine::LoadTextureWIC ( dev , L"assets/player.png" , &m_PlayerTex );
+            if ( !m_EnemiesTex.srv )
+                texOk &= engine::LoadTextureWIC ( dev , L"assets/enemies.png" , &m_EnemiesTex );
+            if ( !m_GameOverTex.srv )
+                texOk &= engine::LoadTextureWIC ( dev , L"assets/ui/gameover.png" , &m_GameOverTex );
+            if ( !m_HudTex.srv )
+                texOk &= engine::LoadTextureWIC ( dev , L"assets/ui/HUD.png" , &m_HudTex );
+            if ( !m_WhiteTex.srv )
+                texOk &= engine::CreateSolidTexture1x1 ( dev , 0xFFFFFFFFu , &m_WhiteTex );
+
+            if ( !texOk ) {
+                DBGLOG ( L"[PlaySession] One or more textures failed to load." );
+            }
         }
 
         if ( m_Player && m_PlayerTex.srv ) {
